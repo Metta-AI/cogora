@@ -15,7 +15,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/Metta-AI/cogora.git",
-        "path": "."
+        "path": "plugin"
       }
     }
   ]
