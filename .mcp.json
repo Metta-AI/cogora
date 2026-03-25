@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "cogora": {
-      "command": "uv",
-      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "cogora-server"],
+      "command": "bash",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/run.sh"],
       "env": {}
     }
   }
