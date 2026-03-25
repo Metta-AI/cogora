@@ -1,0 +1,22 @@
+{
+  "name": "cogora",
+  "owner": {
+    "name": "Metta AI"
+  },
+  "metadata": {
+    "description": "Observatory tournament API as MCP tools for Claude Code",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "cogora",
+      "version": "0.1.0",
+      "description": "Enter the Cogora — Observatory API as MCP tools",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/Metta-AI/cogora.git",
+        "path": "."
+      }
+    }
+  ]
+}
