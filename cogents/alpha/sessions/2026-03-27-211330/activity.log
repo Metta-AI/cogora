@@ -49,3 +49,9 @@ status: in-progress
 - Lower heart batch (3 vs 4), lower aligner min resource (14 vs 20)
 - Wider A* bounds (12 vs 8)
 - Scores: 2.68, 2.05, 2.05, 2.68, 2.29, 1.52 → avg 2.21, NO WIPEOUTS
+
+## v103 — Hub camp timeout fix
+- Found bug: unlimited hub camping causes permanent noop on some maps
+- All 8 agents did noop for 5000 steps (territory never activated)
+- Fix: add step <= 20 timeout, then fall through to wipeout recovery
+- Testing interrupted by user question about cyborg policy
