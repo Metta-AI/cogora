@@ -57,6 +57,25 @@ cogames match-artifacts <match-id>
 - **Map**: 88x88 with walls, ~65 junctions, ~200 extractors.
 - **Hub initial resources**: num_agents * 3 of each element = 24 each for 8 agents.
 
+## Policy Logging
+
+Instrument the policy with print-based logging so you can learn from game
+replays. After a `cogames play` run, read the log file to extract experience.
+
+Key things to log (prefix all lines with `[COG]` for easy grep):
+- **Per-step**: agent id, position, action taken, inventory summary
+- **Decisions**: why a target was chosen, what alternatives were considered
+- **Events**: aligned a junction, got scrambled, picked up gear, deposited resources
+- **Periodic summary** (every ~100 steps): score, total alignments, resources in hub
+
+After a game, extract learnings:
+```bash
+grep '\[COG\]' /tmp/cogames/latest.log | tail -200
+```
+
+Record insights in `activity.log` and `learnings.md`. This is how you
+build understanding of what strategies work.
+
 ## Architecture
 
 - `src/cvc/cogent/player_cog/` - Main policy package
