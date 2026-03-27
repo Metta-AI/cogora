@@ -1,0 +1,11 @@
+# Activity Log: 2026-03-27-220812
+
+status: in-progress
+
+## Session Start
+- Previous session (211330) interrupted, cleaned up
+- v103 was last version: hub camp timeout fix
+- Best avg: ~2.73 (v98), baseline after sync ~2.10
+- Key bottleneck: economy (miners can't keep up with aligner heart needs)
+- Ship scrambles cause ~65% alignment loss
+- Goal: score > 10, currently ~3x away
