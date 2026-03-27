@@ -788,8 +788,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     self._shared_ship_positions[pos] = count + 1
 
     def _is_in_ship_danger_zone(self, position: tuple[int, int]) -> bool:
-        """Check if junction has been scrambled multiple times (likely near a ship)."""
-        return self._shared_ship_positions.get(position, 0) >= 2
+        """Check if junction has been scrambled (likely near a ship)."""
+        return self._shared_ship_positions.get(position, 0) >= 1
 
     def _shared_junction_entities(
         self,
