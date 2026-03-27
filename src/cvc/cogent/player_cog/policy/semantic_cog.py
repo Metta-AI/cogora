@@ -555,20 +555,18 @@ class SemanticCogAgentPolicy(AgentPolicy):
         candidates: list[tuple[int, float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
+            # Skip junctions in ship danger zones — they'll just get scrambled again
+            if self._is_in_ship_danger_zone(pos):
+                continue
             staleness = step - last_seen_step
-            # Ships scramble every 70 ticks — check anything older than 100
-            if staleness < 100:
+            # Ships scramble every 70 ticks — check anything older than 50
+            if staleness < 50:
                 continue
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
                 continue
-            # Priority: 0 = in danger zone (most likely scrambled), 1 = was friendly, 2 = was neutral
-            if self._is_in_ship_danger_zone(pos):
-                priority = 0
-            elif owner == team_id:
-                priority = 1
-            else:
-                priority = 2
+            # Priority: 0 = was friendly (likely scrambled), 1 = was neutral
+            priority = 0 if owner == team_id else 1
             candidates.append((priority, float(distance), staleness, pos))
 
         if not candidates:
@@ -1331,10 +1329,10 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # 2 aligners first 30 steps to avoid gear station contention,
-            # then full 5 aligners. Smooth economy-based scaling prevents crash.
-            if step < 30:
-                pressure_budget = 2
+            # Ramp aligners quickly: 4 from step 0, 5 from step 20.
+            # Station targets are per-agent so contention is minimal.
+            if step < 20:
+                pressure_budget = 4
             else:
                 pressure_budget = 5  # Full pressure
                 # Smooth economy scaling: reduce aligners as economy drops
