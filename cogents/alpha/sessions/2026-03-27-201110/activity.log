@@ -8,3 +8,12 @@ status: in-progress
 - Current best tournament upload: v71 (economy-gated)
 - Goal: achieve consistent score > 10
 - Key todos: fix economy death spiral, reduce 2nd half degradation
+
+## Analysis Phase
+- Confirmed setup: cogames 0.21.1, mettagrid installed, mettagrid_sdk in src/
+- Run with PYTHONPATH=src:src/mettagrid_sdk
+- Default seed wipeout (all agents hp=0 by step 100) - economy death spiral
+- Seed 456 works great: hp=100, active alignment by step 36
+- HP thresholds: miner=15, aligner=50, scrambler=30
+- Retreat margin=28 + gear penalty +10 = agents with hp<38-48 always retreat
+- Running 8-seed benchmark to establish baseline
