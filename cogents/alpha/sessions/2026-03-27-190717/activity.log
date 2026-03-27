@@ -75,7 +75,33 @@ Full 9-seed results:
 ## v88: 2nd scrambler at step 1500 (instead of 3000)
 - Avg: 4.52 across 7 seeds, no wipeouts but not as high as v85
 
-## v89: 2nd scrambler at step 2000 — testing
+## v89: 2nd scrambler at step 2000
+- Avg: 4.11 across 7 seeds — not better
+
+## v90: deposit threshold 28 (instead of 20)
+- Avg: 3.63 — worse, miners die with more resources on them
+
+## v91: 7 pressure when economy booming
+- Avg: 2.00 — terrible, 1 miner can't sustain
+
+## v92: stronger expansion bonus (4.0 uncapped vs 3.0 capped)
+- Avg: 5.14, 2 seeds > 10 — mixed results
+
+## v93 (BEST): economy protection + upstream's 2nd scrambler at step 1000
+| Seed | Score |
+|------|-------|
+| 42   | 3.61  |
+| 123  | 0.00  |
+| 456  | 5.14  |
+| 1337 | 9.73  |
+| 999  | 12.74 |
+| 7777 | 3.75  |
+| 100  | 19.59 |
+| 200  | 5.68  |
+| 300  | 4.83  |
+| 500  | 21.35 |
+**Avg: 8.64** — BEST EVER! 4 seeds > 10, 1 wipeout (0.00)
+Uploaded as alpha.0:v79, v81
 
 ## Key Insights
 - Game has massive internal randomness: same code, same seed → 0.00 or 19.19
