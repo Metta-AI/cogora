@@ -43,7 +43,7 @@ def resource_total(state: MettagridState) -> int:
 
 def deposit_threshold(state: MettagridState) -> int:
     if has_role_gear(state, "miner"):
-        return 40
+        return 20
     return 4
 
 
@@ -126,8 +126,12 @@ def heart_batch_target(state: MettagridState, role: str) -> int:
         return 0
     target = _HEART_BATCH_TARGETS[role]
     step = state.step or 0
-    if role == "aligner" and step >= 3_000:
-        target = 3
+    if role == "aligner" and step >= 500:
+        target = max(target, 6)
+    if role == "aligner" and step >= 2_000:
+        target = max(target, 7)
+    if role == "aligner" and step >= 5_000:
+        target = max(target, 8)
     return target
 
 

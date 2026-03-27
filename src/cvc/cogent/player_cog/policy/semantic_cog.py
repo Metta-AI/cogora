@@ -812,6 +812,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                         agent_id=self._agent_id,
                         step=self._step_index,
                     ),
+                    hub_position=hub_pos,
+                    in_ship_danger_zone=self._is_in_ship_danger_zone(entity.position),
                 ),
                 entity.position,
             ),
@@ -835,12 +837,16 @@ class SemanticCogAgentPolicy(AgentPolicy):
             entity_type="junction",
             predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
         )
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
         sticky_score = _h.aligner_target_score(
             current_position=current_pos,
             candidate=sticky,
             unreachable=[entity for entity in neutral_junctions if entity.position != sticky.position],
             enemy_junctions=enemy_junctions,
             claimed_by_other=False,
+            hub_position=hub_pos,
+            in_ship_danger_zone=self._is_in_ship_danger_zone(sticky.position),
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -853,6 +859,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 agent_id=self._agent_id,
                 step=self._step_index,
             ),
+            hub_position=hub_pos,
+            in_ship_danger_zone=self._is_in_ship_danger_zone(candidate.position),
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate

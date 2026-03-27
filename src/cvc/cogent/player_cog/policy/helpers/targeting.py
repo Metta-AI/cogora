@@ -33,6 +33,8 @@ def aligner_target_score(
     unreachable: list[KnownEntity],
     enemy_junctions: list[KnownEntity],
     claimed_by_other: bool,
+    hub_position: tuple[int, int] | None = None,
+    in_ship_danger_zone: bool = False,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     expansion = sum(
@@ -43,11 +45,24 @@ def aligner_target_score(
         if any(manhattan(candidate.position, enemy.position) <= _JUNCTION_AOE_RANGE for enemy in enemy_junctions)
         else 0.0
     )
+    # Prefer hub-proximal junctions: less travel, safer from ships
+    hub_penalty = 0.0
+    if hub_position is not None:
+        hub_dist = float(manhattan(hub_position, candidate.position))
+        if hub_dist > 30:
+            hub_penalty = (hub_dist - 30) * 3.0 + 20.0
+        elif hub_dist > 20:
+            hub_penalty = (hub_dist - 20) * 1.5 + 5.0
+        else:
+            hub_penalty = hub_dist * 0.3
+    ship_penalty = 100.0 if in_ship_danger_zone else 0.0
     return (
         distance
         - min(expansion * 3.0, 24.0)
         + enemy_aoe * 8.0
-        + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0),
+        + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
+        + hub_penalty
+        + ship_penalty,
         -float(expansion),
     )
 
@@ -78,14 +93,22 @@ def scramble_target_score(
     hub_position: tuple[int, int],
     candidate: KnownEntity,
     neutral_junctions: list[KnownEntity],
+    friendly_junctions: list[KnownEntity] | None = None,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     blocked_neutrals = sum(
         1 for neutral in neutral_junctions if manhattan(candidate.position, neutral.position) <= _JUNCTION_AOE_RANGE
     )
     corner_pressure = min(manhattan(hub_position, candidate.position) / 8.0, 10.0)
+    # Prioritize enemy junctions near our friendly network (defending our score)
+    threat_bonus = 0.0
+    if friendly_junctions:
+        threatened = sum(
+            1 for f in friendly_junctions if manhattan(candidate.position, f.position) <= _JUNCTION_ALIGN_DISTANCE
+        )
+        threat_bonus = threatened * 6.0
     return (
-        distance - blocked_neutrals * 4.0 - corner_pressure,
+        distance - blocked_neutrals * 4.0 - corner_pressure - threat_bonus,
         -float(blocked_neutrals),
     )
 
