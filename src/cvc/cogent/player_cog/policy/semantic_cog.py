@@ -508,14 +508,12 @@ class SemanticCogAgentPolicy(AgentPolicy):
         if patrol_target is not None:
             return self._move_to_position(state, patrol_target, summary="patrol_junction", vibe="change_vibe_aligner")
 
-        # Deposit only if very close — don't waste time traveling to depot
-        if _h.resource_total(state) > 0:
-            depot = self._nearest_friendly_depot(state)
-            if depot is not None and _h.manhattan(_h.absolute_position(state), depot.position) <= 5:
-                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+        # Frontier exploration — find new neutral junctions beyond our network edge.
+        frontier_target = self._frontier_explore_target(state)
+        if frontier_target is not None:
+            return self._move_to_position(state, frontier_target, summary="frontier_explore", vibe="change_vibe_aligner")
 
-        # When no junctions to align, mine to help economy (hearts are bottleneck)
-        return self._miner_action(state, summary_prefix="idle_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
 
     def _scrambler_action(self, state: MettagridState) -> tuple[Action, str]:
         hearts = int(state.self_state.inventory.get("heart", 0))
@@ -557,9 +555,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
         candidates: list[tuple[int, float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
-            # Skip junctions in ship danger zones — they'll just get scrambled again
-            if self._is_in_ship_danger_zone(pos):
-                continue
             staleness = step - last_seen_step
             # Ships scramble every 70 ticks — check anything older than 100
             if staleness < 100:
@@ -567,8 +562,13 @@ class SemanticCogAgentPolicy(AgentPolicy):
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
                 continue
-            # Priority: 0 = was friendly (likely scrambled), 1 = was neutral
-            priority = 0 if owner == team_id else 1
+            # Priority: 0 = in danger zone (most likely scrambled), 1 = was friendly, 2 = was neutral
+            if self._is_in_ship_danger_zone(pos):
+                priority = 0
+            elif owner == team_id:
+                priority = 1
+            else:
+                priority = 2
             candidates.append((priority, float(distance), staleness, pos))
 
         if not candidates:
