@@ -7,3 +7,12 @@ status: in-progress
 - Key carryover finding: SharedWorldModel is NOT shared between agents (each gets own instance)
 - Goal: improve score to >10
 - Plan: 1) Read current policy code, 2) Fix shared world model, 3) Improve strategy, 4) Test and iterate
+
+## Progress
+- Fixed __init__.py import bug: grouped try/except made MettagridSemanticPolicy=None when anthropic not installed
+- Tested shared world model fix: REGRESSION to score 0. prune_missing_extractors causes agents to delete each other's data. Reverted.
+- Baseline with __init__.py fix: score 3.32 (5000 steps), 2.78 (full game)
+- Tried aggressive 6-aligner budget: score 1.91, economy couldn't sustain. Reverted to 5 max.
+- Current changes: tighter aligner explore offsets (12 then 20 vs 22), no 2nd scrambler, lower min_resource threshold
+- Key insight: shared_junctions dict already handles junction sharing. WorldModel is for extractor memory per-agent.
+- Testing current configuration next
