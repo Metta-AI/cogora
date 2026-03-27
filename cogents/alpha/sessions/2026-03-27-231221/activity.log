@@ -25,3 +25,13 @@ status: in-progress
 - Expansion bonus: 5.0 per reachable junction (chain building)
 - Defensive scrambler: threat_bonus * 10 for friendly junctions
 - 10-game avg: 2.38 (non-wipeout 2.41), best single: 3.46
+
+## v116 Territory Pathfinding (REVERTED)
+- A* cost +1 outside hub territory range (10 tiles)
+- Scores: 1.96, 2.69, 2.35, 2.35, 1.87 → avg 2.24 (worse than v112)
+- Penalty made miner paths too expensive, reverted
+
+## Tournament Update
+- Spotted real opponent: gtlm-reactive competing against our v100
+- v105 being scheduled in qualifying pool
+- No completed match results yet
