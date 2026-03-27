@@ -21,3 +21,7 @@ started: 2026-03-27T03:55:31Z
 - Uploaded v15 and v16 to tournament. Best local score: 0.97 (avg ~0.1).
 - Key remaining issues: agents with aligner+heart can't reliably find junctions to align.
 - Tournament v14 scores 0.7-2.0. My policy underperforms - need mettagrid_sdk for existing policy.
+- Ported mettagrid_sdk from metta-ai/metta repo (git clone with GITHUB_TOKEN).
+- MettagridSemanticPolicy now loads and runs! Score 2.0-3.35 locally (203 alignments best).
+- Uploaded as alpha.0:v17 with SDK bundled.
+- Next: analyze semantic_cog to understand strategy, iterate on improvements to beat score 10.
