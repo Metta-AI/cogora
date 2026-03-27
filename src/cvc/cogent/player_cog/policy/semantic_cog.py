@@ -775,6 +775,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
     def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
         team_id = _h.team_id(state)
         current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
         hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
         friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
         network_sources = [*hubs, *friendly_junctions]
@@ -812,7 +814,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                         step=self._step_index,
                     ),
                     hub_position=hub_pos,
-                    in_ship_danger_zone=self._is_in_ship_danger_zone(entity.position),
+                    in_ship_danger_zone=False,
                 ),
                 entity.position,
             ),
@@ -845,7 +847,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             enemy_junctions=enemy_junctions,
             claimed_by_other=False,
             hub_position=hub_pos,
-            in_ship_danger_zone=self._is_in_ship_danger_zone(sticky.position),
+            in_ship_danger_zone=False,
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -859,7 +861,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 step=self._step_index,
             ),
             hub_position=hub_pos,
-            in_ship_danger_zone=self._is_in_ship_danger_zone(candidate.position),
+            in_ship_danger_zone=False,
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate
