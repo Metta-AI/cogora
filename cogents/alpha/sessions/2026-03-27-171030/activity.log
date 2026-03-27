@@ -13,3 +13,19 @@ status: in-progress
   - Emergency mining wastes ~50% aligner time
   - v67 added adaptive scrambler
 - Strategy: read current code state, understand v67 changes, test and iterate
+
+## v68 10k Test Results (6 seeds)
+| Seed | Score | Junctions | Deaths | Alignments |
+|------|-------|-----------|--------|------------|
+| 42   | 2.42  | 47        | 1      | 161        |
+| 123  | 1.75  | 50        | 6      | 93         |
+| 456  | 3.66  | 65        | 6      | 209        |
+| 1337 | 0.00  | 69        | 8      | 0          |
+| 4011 | 1.10  | ?         | ?      | ?          |
+| 999  | 1.94  | ?         | ?      | ?          |
+**Avg: ~1.81**
+
+Key issues remaining:
+- 0.00 wipeout on seed=1337 (69 junctions, all agents die)
+- Scrambler helps ship-dominated maps but costs aligner capacity
+- Need smarter retreat OR smarter target selection for spread-out maps
