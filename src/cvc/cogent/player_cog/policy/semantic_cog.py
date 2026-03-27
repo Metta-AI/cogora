@@ -446,6 +446,20 @@ class SemanticCogAgentPolicy(AgentPolicy):
         current_pos = _h.absolute_position(state)
         station = self._world_model.nearest(position=current_pos, entity_type=station_type)
         if station is not None:
+            if current_pos == station.position:
+                # Already on station but didn't get gear — need to step off and back on.
+                # If team can't afford, go mine instead of waiting.
+                if not _h.team_can_afford_gear(state, role):
+                    return self._miner_action(state, summary_prefix=f"fund_{role}_gear_")
+                # Step away from station to re-trigger pickup on next step
+                blocked = self._world_model.occupied_cells(exclude={station.position})
+                for direction in _h.unstick_directions(self._agent_id, self._step_index):
+                    dx, dy = _h._MOVE_DELTAS[direction]
+                    nxt = (current_pos[0] + dx, current_pos[1] + dy)
+                    if nxt not in blocked:
+                        self._last_attempt = MoveAttempt(direction=direction, stationary_use=False)
+                        return self._action(f"move_{direction}", vibe="change_vibe_gear"), f"retry_{role}_gear"
+                return self._hold(summary=f"get_{role}_gear_hold", vibe="change_vibe_gear")
             return self._move_to_known(state, station, summary=f"get_{role}_gear", vibe="change_vibe_gear")
 
         target = _h.spawn_relative_station_target(self._agent_id, role)
@@ -1229,16 +1243,26 @@ class SemanticCogAgentPolicy(AgentPolicy):
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index
         num_agents = len(state.team_summary.members) if state.team_summary else 8
+        min_res = _h.team_min_resource(state)
 
         if num_agents <= 4:
             pressure_budget = 2
-            if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
+            if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # Aggressive start: 5 aligners immediately to burn initial hearts
-            pressure_budget = 5
-            if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
-                pressure_budget = 5
+            # Stagger gear acquisition: start mining, ramp up aligners as economy grows
+            if step < 30:
+                # First 30 steps: only 2 aligners (use initial hub resources)
+                pressure_budget = 2
+            elif step < 100:
+                # Steps 30-100: 3 aligners if economy allows
+                pressure_budget = 3 if min_res >= 10 else 2
+            elif step < 300:
+                # Steps 100-300: 4 aligners if economy strong
+                pressure_budget = 4 if min_res >= _MINING_ALIGNER_MIN_RESOURCE else 3
+            else:
+                # After 300: full 5 aligners if economy sustains
+                pressure_budget = 5 if min_res >= _MINING_ALIGNER_MIN_RESOURCE else 4
 
         scrambler_budget = 0
         if num_agents > 4 and step >= 2_000 and _h.team_can_refill_hearts(state):
