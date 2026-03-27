@@ -29,3 +29,23 @@ Key issues remaining:
 - 0.00 wipeout on seed=1337 (69 junctions, all agents die)
 - Scrambler helps ship-dominated maps but costs aligner capacity
 - Need smarter retreat OR smarter target selection for spread-out maps
+
+## v69: 6 aligners, no scrambler, no aligner emergency mining
+FAILED — only 2 miners can't sustain 6 aligners' heart demand
+5k Results: 42→2.07, 123→0.98, 456→1.89 → Avg 1.65 (WORSE)
+
+## v70: 5 pressure (4 aligners + 1 scrambler), no aligner emergency mining
+Key changes:
+- Aligners NEVER do emergency mining (only scramblers)
+- Emergency threshold lowered from 3 to 1
+- Patrol only friendly junctions within 20 tiles (was all within 25)
+- Economy reduction only at min_res < 1 (was < 3)
+- Heart batch 5 (was 4)
+
+5k Results: 42→2.16, 123→4.08, 456→6.55 → **Avg 4.26** (BEST EVER!)
+- Zero emergency mining events
+- Patrol ~20% of aligner time (was 60%+)
+- 88 scrambles by scrambler in 456 seed
+- 141 alignments gained, 88 lost in best run
+
+10k tests running...

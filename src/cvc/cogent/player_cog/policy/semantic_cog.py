@@ -1332,20 +1332,18 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 3
         else:
             # 2 aligners first 30 steps to avoid gear station contention,
-            # then ramp to 6 aligners (2 miners sustain economy).
+            # then 5 pressure agents (3 miners sustain economy).
             if step < 30:
                 pressure_budget = 2
-            elif step < 100:
-                pressure_budget = 4  # Ramp up
             else:
-                pressure_budget = 6  # Maximum alignment pressure
-                # Only reduce if economy is completely exhausted
+                pressure_budget = 5
+                # Only reduce if economy is critically low
                 if step > 200 and min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 4
+                    pressure_budget = 3
 
-        # No scrambler — all pressure agents are aligners for maximum score
-        scrambler_budget = 0
-        aligner_budget = pressure_budget
+        # 1 scrambler to disrupt ship chains from step 200
+        scrambler_budget = 1 if step >= 200 else 0
+        aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":
