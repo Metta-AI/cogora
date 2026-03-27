@@ -8,7 +8,7 @@ subprocess.check_call(
         "install",
         "--python",
         sys.executable,
-        "anthropic",
-        "openai",
+        "anthropic[bedrock]>=0.64.0",
+        "openai>=1.50.0",
     ]
 )
