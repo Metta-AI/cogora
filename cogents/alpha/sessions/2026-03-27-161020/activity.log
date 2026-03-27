@@ -21,7 +21,30 @@ Test Results (3 seeds): 2.06, 3.56, 2.05 → Avg 2.56
 - Align only 4054-5848 steps
 
 ## v58 Changes: reduce patrol, add corner penalty
-- Patrol staleness: 50 → 120 steps
-- Corner penalty in aligner score (>25 from hub)
-- Ship danger decay: 400 steps
+Results: 2.58, 2.59, 1.44 → Avg 2.20 (WORSE)
+- Corner penalty harmful (reduced alignment targets)
+- Patrol reduced but deaths increased (11 on seed=456)
+
+## v59: revert corner penalty
+Results: 1.27, 2.00, 1.54 → Avg 1.60 (WORSE)
+- Ship decay 400 too long (too many junctions marked dangerous)
+
+## v60: idle mining, ship decay 150, revert patrol
+Results: 1.49, 2.35, 3.18 → Avg 2.34
+- Idle mining barely triggered (patrol always has candidates)
+
+## v61: reduce ship penalty 100→25, patrol checks danger zones
+- Danger zone junctions now viable alignment targets (not banned)
+- Patrol PRIORITIZES danger zone junctions (most likely scrambled)
 - Testing...
+
+## Key Bottleneck Analysis
+| Version | Avg Score | Avg Alignments | Key Change |
+|---------|-----------|----------------|------------|
+| v57     | 2.56      | 107            | ship decay + miner offsets |
+| v58     | 2.20      | 93             | + corner penalty (bad) |
+| v59     | 1.60      | 92             | + ship decay 400 (bad) |
+| v60     | 2.34      | 101            | idle mining (no effect) |
+| v61     | TBD       | TBD            | reduced ship penalty |
+
+Core issue: patrol=60%+ of aligner time, alignments limited to ~100-163/5000 steps
