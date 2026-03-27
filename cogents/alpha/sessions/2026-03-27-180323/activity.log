@@ -1,0 +1,9 @@
+# Activity Log: 2026-03-27-180323
+
+status: in-progress
+
+## Session Start
+- Previous session: v68-v74, v74 scored 11.68 on seed=456 (first >10!)
+- Average still ~5.03 across seeds, seed=123 wipeout in v74
+- Key todos: fix wipeout consistency, raise average above 10
+- Strategy: investigate v74 seed=123 wipeout, fix it, then optimize further
