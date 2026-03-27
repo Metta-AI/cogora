@@ -6,18 +6,35 @@ status: in-progress
 - Previous session: v51, avg score ~2.06 (5 aligners staggered)
 - Tournament best: v38 at #4 (1.76)
 - Goal: achieve score > 10
-- Strategy: need fundamental changes, not just parameter tuning
 
 ## Progress
 - 5x batch (v51): 3.74, 2.45, 0.59, 3.02, 3.33 = avg 2.63
-- Tightened aligner explore to max ring 2 (22 from hub, removed ring 3 at 35)
+- Tightened aligner explore to ring 2 max (22 from hub, removed ring 3)
 - 5x batch (v54): 1.30, 1.43, 2.10, **6.00**, 0.74 = avg 2.31
-  - **NEW BEST: 6.00 on seed 1337!**
-  - Tighter explore helps best-case dramatically but hurts avg slightly
-  - Map variance still dominates
-- v54 uploaded to tournament
-- Key insight: staying close to hub can yield 6.0 score on favorable maps
-- To reach >10 consistently, need to:
-  1. Align ALL hub-proximal junctions fast (within first 500 steps)
-  2. Keep them aligned (detect and quickly re-align scrambled ones)
-  3. Build chains only into proven safe zones
+  - **BEST SINGLE: 6.00 on seed 1337!**
+- Tested more aggressive patrol — REVERTED (hurt best case: 6.00→4.05)
+- v55 uploaded (same as v54 config)
+
+## Key Improvements This Session (v48→v55)
+- Fixed num_agents bug: was 0-2, now defaults to 8
+- Step-based pressure: 2 aligners first 30 steps, then 5
+- Station retry: step off and retry instead of waiting forever
+- Tighter aligner explore: max ring 2 at 22 from hub
+- Hub proximity bias: 3x penalty >30 from hub
+- Heart batch 3/4 (was 2/3)
+- Removed scramblers to maximize alignment
+
+## Scores Across Tests
+| Config | Seeds | Scores | Avg |
+|--------|-------|--------|-----|
+| v51 (5 aligners stagger) | 5x batch | 3.74,2.45,0.59,3.02,3.33 | **2.63** |
+| v54 (tight explore) | 5 seeds | 1.30,1.43,2.10,**6.00**,0.74 | 2.31 |
+
+## What Would Get Us to >10
+- Need ~10 junctions permanently aligned
+- Hub alignment range 25 covers ~20 junctions
+- Ship scramble kills junctions every 70 ticks
+- Safe zone (>15 from all ships) has ~10-15 junctions on good maps
+- If ALL safe junctions aligned and maintained, score could reach 10-15
+- Key blocker: agents still waste time on distant/dangerous junctions
+- Need better ship detection (know ship locations earlier from limited data)
