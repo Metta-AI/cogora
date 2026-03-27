@@ -316,7 +316,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
     def reset(self, simulation=None) -> None:
         self._memory = MemoryStore()
         self._previous_state = None
-        self._world_model.reset()
         self._last_global_pos = None
         self._last_attempt = None
         self._temp_blocks.clear()
@@ -1368,13 +1367,14 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
         self._shared_claims: dict[tuple[int, int], tuple[int, int]] = {}
         self._shared_junctions: dict[tuple[int, int], tuple[str | None, int]] = {}
         self._shared_ship_positions: dict[tuple[int, int], int] = {}
+        self._shared_world_model = SharedWorldModel()
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = SemanticCogAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
-                world_model=SharedWorldModel(),
+                world_model=self._shared_world_model,
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_ship_positions=self._shared_ship_positions,
@@ -1384,5 +1384,6 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
     def reset(self) -> None:
         self._shared_claims.clear()
         self._shared_junctions.clear()
+        self._shared_world_model.reset()
         for policy in self._agent_policies.values():
             policy.reset()
