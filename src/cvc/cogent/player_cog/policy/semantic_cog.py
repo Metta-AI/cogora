@@ -388,9 +388,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
         if self._should_retreat(state, role, safe_target):
             self._clear_target_claim()
             self._clear_sticky_target()
-            # If economy is dead, mine instead of retreating/sitting idle
-            if not _h.team_can_refill_hearts(state) and _h.needs_emergency_mining(state):
-                return self._miner_action(state, summary_prefix="survival_")
             if safe_target is not None and safe_distance > 2:
                 return self._move_to_known(state, safe_target, summary="retreat_to_hub")
             if _h.has_role_gear(state, role):
