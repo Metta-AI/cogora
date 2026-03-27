@@ -1373,27 +1373,23 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # 2 aligners first 30 steps to avoid early economy drain,
-            # then 5 pressure (3 miners) until late game.
+            # Aggressive alignment: maximize aligners, economy permitting.
+            # 2 aligners first 30 steps to avoid gear station contention,
+            # then 6 pressure agents (2 miners) for maximum alignment throughput.
             if step < 30:
                 pressure_budget = 2
-            elif step < 3000:
-                pressure_budget = 5  # 3 miners
-                if step > 200 and min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 3
-            else:
-                pressure_budget = 6  # Late game: 2 miners, economy established
+            elif step < 200:
+                pressure_budget = 5  # 3 miners while economy bootstraps
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 3
-                elif min_res < 3:
-                    pressure_budget = 4  # 4 miners to rebuild
-                # If economy is booming, use all pressure
-                elif heart_supply >= 15 and step >= 1000:
-                    pressure_budget = 7  # 1 miner, max alignment!
+            else:
+                pressure_budget = 6  # 2 miners - economy should be established
+                if min_res < 1 and not _h.team_can_refill_hearts(state):
+                    pressure_budget = 4
 
-        # Scramblers to disrupt ship chains (earlier start = better defense)
-        if step >= 3000:
-            scrambler_budget = 2  # Late game: 4 aligners + 2 scramblers
+        # Scramblers to disrupt ship chains — 2nd scrambler at step 1000
+        if step >= 1000:
+            scrambler_budget = 2
         elif step >= 100:
             scrambler_budget = 1
         else:
