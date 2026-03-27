@@ -1307,7 +1307,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
 
 class MettagridSemanticPolicy(MultiAgentPolicy):
-    short_names = ["mettagrid-semantic", "semantic-cog", "sdk-semantic"]
+    short_names = ["mettagrid-semantic", "semantic-cog", "sdk-semantic", "cvc-cog"]
 
     def __init__(self, policy_env_info: PolicyEnvInterface, device: str = "cpu", **kwargs) -> None:
         super().__init__(policy_env_info, device=device, **kwargs)
