@@ -79,4 +79,26 @@ Key changes:
 | v71 (fix emerg) | 3.34 | 1.97 | 3.40 | 2.90 | conservative |
 | v72 (2 scramblers@3k) | 2.10 | **7.03** | 2.72 | 3.95 | |
 | v73 (patrol+retreat) | 3.40 | 3.24 | 3.27 | 3.30 | |
-| v74 (best combo) | 3.40 | 0.00 | **11.68** | 5.03 | UPLOADED |
+| v74 (best combo) | 3.40 | 0.00 | **11.68** | 5.03 | v60 |
+| v76 (survival mining) | 2.56 | 0.00 | 2.12 | 1.56 | regressed |
+| v77 (revert surv) | 3.89 | 2.97 | 0.00 | 2.29 | variance |
+| v78 (6 pressure@3k) | 3.49 | 5.61 | 2.53 | 3.88 | v62, stable |
+
+## Key Discovery: High Variance
+- Same seed can score 0.00 or 11.68 on different runs
+- Game has internal randomness beyond the seed
+- Wipeouts occur when ALL agents hit hp=0 from step 100
+- Best strategy: maximize avg across many seeds, accept variance
+
+## v78 Details
+- step 0-30: 2 aligners, 6 miners
+- step 30-200: 5 aligners (0 scramblers), 3 miners
+- step 200-3000: 4 aligners + 1 scrambler, 3 miners
+- step 3000+: 4 aligners + 2 scramblers, 2 miners
+- No aligner emergency mining (aligners only mine when economy truly dead)
+- Scrambler prioritizes threats near friendly junctions
+- Patrol: only friendly junctions within 12 tiles, staleness >80
+- Emergency resource threshold: 1 (was 3)
+- Heart batch: 5 base, scales to 7 at step 8000
+- Retreat margin: 28 (was 32)
+- Uploaded as alpha.0:v62
