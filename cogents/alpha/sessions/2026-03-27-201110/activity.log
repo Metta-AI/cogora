@@ -74,3 +74,17 @@ status: interrupted
 - Tournament uses 10K steps which should give higher scores (more late-game time)
 - Key changes: hub camping, v91 pressure budgets, retreat margin 22, heart batching 6/7/8
 - Uploaded v76, v78, v80 to tournament — awaiting results
+
+## v98-v100 Wipeout investigation
+- v98: hold at hub when hp=0 → agents stuck forever at hub (territory never heals them)
+- v99: extended camping to step 50 → still wipeouts (20% of games)
+- HP=0 at hub is unrecoverable — territory healing doesn't work for some game instances
+- v100: wipeout agents mine nearby instead of waiting — at least contributes resources
+- Parallel session changed ship_penalty from 100 to 40
+- Uploaded v82-v85 to tournament
+
+## Summary
+- Key improvements: hub camping, aggressive pressure (6 from step 200), heart batching
+- Wipeout ~20% of games is unresolved (game non-determinism, territory may not activate)
+- Avg score on non-wipeout games: ~3.5 (5K steps), higher for 10K
+- Tournament versions: v75-v85 uploaded, awaiting results
