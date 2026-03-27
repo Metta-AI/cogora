@@ -26,16 +26,16 @@ _STATION_OFFSETS = {
     "scout": (3, 4),
 }
 _TEMP_BLOCK_STEPS = 10
-_RETREAT_MARGIN = 18
-_DEFAULT_BOUND_MARGIN = 16
+_RETREAT_MARGIN = 20
+_DEFAULT_BOUND_MARGIN = 8
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
-_SHARED_JUNCTION_MEMORY_STEPS = 10000
+_SHARED_JUNCTION_MEMORY_STEPS = 400
 _OSCILLATION_HISTORY_STEPS = 6
 _OSCILLATION_UNSTICK_STEPS = 4
-_MINING_ALIGNER_MIN_RESOURCE = 14
-_ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 3
-_ALIGNER_PRIORITY = (3, 2, 4, 5, 6, 7, 0)
+_MINING_ALIGNER_MIN_RESOURCE = 20
+_ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 2
+_ALIGNER_PRIORITY = (4, 5, 6, 7, 3)
 _SCRAMBLER_PRIORITY = (7, 6)
 _HUB_OFFSETS = COGSGUARD_BOOTSTRAP_HUB_OFFSETS
 _COGSGUARD_SURFACE = CogsguardSemanticSurface()
@@ -60,11 +60,6 @@ class NavigationObservation:
     subtask: str
     target_kind: str
     target_position: tuple[int, int] | None
-
-
-_CLIPS_SCRAMBLE_RADIUS = 15
-_CLIPS_SHIP_SAFE_MARGIN = 2
-_SHIP_DANGER_DECAY_STEPS = 100
 
 
 class SharedWorldModel:
@@ -158,9 +153,7 @@ class SharedWorldModel:
         return {
             entity.position
             for entity in self._entities.values()
-            if entity.position not in excluded
-            and entity.entity_type != "agent"
-            and not entity.entity_type.endswith("_extractor")
+            if entity.position not in excluded and entity.entity_type != "agent"
         }
 
     def is_occupied(self, position: tuple[int, int]) -> bool:
@@ -207,14 +200,12 @@ class SemanticCogAgentPolicy(AgentPolicy):
         world_model: SharedWorldModel,
         shared_claims: dict[tuple[int, int], tuple[int, int]],
         shared_junctions: dict[tuple[int, int], tuple[str | None, int]],
-        shared_ship_positions: dict[tuple[int, int], tuple[int, int]] | None = None,
     ) -> None:
         super().__init__(policy_env_info)
         self._agent_id = agent_id
         self._world_model = world_model
         self._shared_claims = shared_claims
         self._shared_junctions = shared_junctions
-        self._shared_ship_positions = shared_ship_positions if shared_ship_positions is not None else {}
         self._memory = MemoryStore()
         self._previous_state: MettagridState | None = None
         self._last_global_pos: tuple[int, int] | None = None
@@ -261,7 +252,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         self._world_model.update(state)
         self._update_shared_junctions(state)
-        self._detect_clips_ships(state)
         self._world_model.prune_missing_extractors(
             current_position=_h.absolute_position(state),
             visible_entities=state.visible_entities,
@@ -301,15 +291,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
             "directive_target_region": directive.target_region or "",
             **macro_snapshot,
         }
-        step = state.step or self._step_index
-        if step % 100 == 0 or summary.startswith("align_") or summary.startswith("scramble_") or summary.startswith("patrol_"):
-            hp = int(state.self_state.inventory.get("hp", 0))
-            hearts = int(state.self_state.inventory.get("heart", 0))
-            inv = _h.resource_total(state)
-            tgt = _h.format_position(self._current_target_position) if self._current_target_position else "none"
-            team_res = _h.team_min_resource(state)
-            print(f"[COG] s={step} a={self._agent_id} pos={_h.format_position(current_pos)} role={role} "
-                  f"act={summary} hp={hp} hearts={hearts} inv={inv} tgt={tgt} tres={team_res}")
         self._previous_state = state
         self._last_global_pos = current_pos
         self._last_inventory_signature = _h.inventory_signature(state)
@@ -386,31 +367,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
             self._clear_sticky_target()
         safe_target = self._nearest_hub(state)
         safe_distance = 0 if safe_target is None else _h.manhattan(_h.absolute_position(state), safe_target.position)
-
-        # EARLY-GAME SURVIVAL: HP starts at 50, drains 1/tick, territory heals +100/tick.
-        # Territory radius is 10 tiles from hub/network junctions.
-        hp = int(state.self_state.inventory.get("hp", 0))
-        step = state.step or self._step_index
-
-        # Stay at hub until HP reaches 100. Territory heals +100/tick when in range.
-        # This prevents the non-deterministic wipeout where agents die before territory activates.
-        if hp < 100 and step <= 50 and safe_target is not None and safe_distance <= 3:
-            return self._hold(summary="hub_camp_heal", vibe="change_vibe_default")
-
-        # If far from territory in early game, rush back before dying.
-        if step < 150 and safe_target is not None and safe_distance > 8:
-            # At distance 8+, likely outside territory. Rush back if HP draining.
-            if hp < 40 or (hp < 50 and safe_distance > 15):
-                return self._move_to_known(state, safe_target, summary="survival_retreat")
-
-        # WIPEOUT RECOVERY: If hp=0, move around near hub to try to trigger healing.
-        # Territory healing may require movement or specific positions.
-        if hp == 0 and safe_target is not None:
-            if safe_distance > 5:
-                return self._move_to_known(state, safe_target, summary="wipeout_return_hub")
-            # Walk around near hub — explore nearby extractors to contribute
-            return self._miner_action(state, summary_prefix="wipeout_mine_")
-
         if self._should_retreat(state, role, safe_target):
             self._clear_target_claim()
             self._clear_sticky_target()
@@ -426,9 +382,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             return self._unstick_action(state, role)
 
         if role != "miner" and _h.needs_emergency_mining(state):
-            # Aligners only emergency mine if economy is completely dead (can't afford hearts)
-            if role != "aligner" or not _h.team_can_refill_hearts(state):
-                return self._miner_action(state, summary_prefix="emergency_")
+            return self._miner_action(state, summary_prefix="emergency_")
 
         if role == "aligner" and not _h.has_role_gear(state, role):
             if (state.step or self._step_index) < _ALIGNER_GEAR_DELAY_STEPS:
@@ -456,20 +410,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
         current_pos = _h.absolute_position(state)
         station = self._world_model.nearest(position=current_pos, entity_type=station_type)
         if station is not None:
-            if current_pos == station.position:
-                # Already on station but didn't get gear — need to step off and back on.
-                # If team can't afford, go mine instead of waiting.
-                if not _h.team_can_afford_gear(state, role):
-                    return self._miner_action(state, summary_prefix=f"fund_{role}_gear_")
-                # Step away from station to re-trigger pickup on next step
-                blocked = self._world_model.occupied_cells(exclude={station.position})
-                for direction in _h.unstick_directions(self._agent_id, self._step_index):
-                    dx, dy = _h._MOVE_DELTAS[direction]
-                    nxt = (current_pos[0] + dx, current_pos[1] + dy)
-                    if nxt not in blocked:
-                        self._last_attempt = MoveAttempt(direction=direction, stationary_use=False)
-                        return self._action(f"move_{direction}", vibe="change_vibe_gear"), f"retry_{role}_gear"
-                return self._hold(summary=f"get_{role}_gear_hold", vibe="change_vibe_gear")
             return self._move_to_known(state, station, summary=f"get_{role}_gear", vibe="change_vibe_gear")
 
         target = _h.spawn_relative_station_target(self._agent_id, role)
@@ -530,25 +470,12 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         self._clear_target_claim()
         self._clear_sticky_target()
-
-        # Deposit only if very close — don't waste time traveling to depot
         if _h.resource_total(state) > 0:
             depot = self._nearest_friendly_depot(state)
-            if depot is not None and _h.manhattan(_h.absolute_position(state), depot.position) <= 5:
+            if depot is not None:
                 return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
-        # Patrol stale junctions to detect scrambles and re-align.
-        patrol_target = self._patrol_stale_junction(state)
-        if patrol_target is not None:
-            return self._move_to_position(state, patrol_target, summary="patrol_junction", vibe="change_vibe_aligner")
-
-        # Frontier exploration — find new neutral junctions beyond our network edge.
-        frontier_target = self._frontier_explore_target(state)
-        if frontier_target is not None:
-            return self._move_to_position(state, frontier_target, summary="frontier_explore", vibe="change_vibe_aligner")
-
-        # When truly idle (no junctions, no patrol, no frontier), mine to boost economy
-        return self._miner_action(state, summary_prefix="idle_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
 
     def _scrambler_action(self, state: MettagridState) -> tuple[Action, str]:
         hearts = int(state.self_state.inventory.get("heart", 0))
@@ -572,109 +499,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         self._clear_sticky_target()
         return self._explore_action(state, role="scrambler", summary="find_enemy_junction")
-
-    def _patrol_stale_junction(self, state: MettagridState) -> tuple[int, int] | None:
-        """Patrol stale junctions to detect scrambles and re-align them.
-
-        Priority: previously-friendly junctions (most likely scrambled),
-        then neutral junctions that might now be alignable.
-        """
-        hub = self._nearest_hub(state)
-        if hub is None:
-            return None
-        step = state.step or self._step_index
-        current_pos = _h.absolute_position(state)
-        team_id = _h.team_id(state)
-
-        max_patrol_distance = 15  # Patrol radius
-        candidates: list[tuple[int, float, int, tuple[int, int]]] = []
-        for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
-            # Only patrol previously-friendly junctions — these affect score
-            if owner != team_id:
-                continue
-            pos = (hub.global_x + dx, hub.global_y + dy)
-            # Skip junctions in ship danger zones — they'll just get scrambled again
-            if self._is_in_ship_danger_zone(pos):
-                continue
-            staleness = step - last_seen_step
-            # Check junctions frequently — ships scramble every 70 ticks
-            if staleness < 35:
-                continue
-            distance = _h.manhattan(current_pos, pos)
-            if distance > max_patrol_distance:
-                continue
-            priority = 0  # All are formerly-friendly
-            candidates.append((priority, float(distance), staleness, pos))
-
-        if not candidates:
-            return None
-
-        candidates.sort(key=lambda c: (c[0], c[1], -c[2]))
-
-        # Stagger among agents — spread patrol across different directions
-        index = self._agent_id % min(len(candidates), 5)
-        return candidates[index][3]
-
-    def _frontier_explore_target(self, state: MettagridState) -> tuple[int, int] | None:
-        """Find the best position to explore for new junctions.
-
-        Strategy: identify the outermost friendly junctions and explore
-        ~12 tiles beyond them (junction align distance is 15), where new
-        neutral junctions would be within alignment range of our network.
-        """
-        team_id = _h.team_id(state)
-        hub = self._nearest_hub(state)
-        if hub is None:
-            return None
-        current_pos = _h.absolute_position(state)
-        hub_pos = hub.position
-
-        # Get all known friendly junctions
-        friendly = self._known_junctions(state, predicate=lambda e: e.owner == team_id)
-        if not friendly:
-            return None
-
-        # Find the furthest friendly junction in each cardinal direction from hub
-        # and explore ~12 tiles beyond it
-        directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
-        candidates: list[tuple[float, tuple[int, int]]] = []
-        for dx, dy in directions:
-            # Find friendly junction most aligned with this direction
-            best = None
-            best_proj = -999
-            for j in friendly:
-                rel_x = j.global_x - hub_pos[0]
-                rel_y = j.global_y - hub_pos[1]
-                proj = rel_x * dx + rel_y * dy
-                if proj > best_proj:
-                    best_proj = proj
-                    best = j
-            if best is None:
-                continue
-            # Explore 12 tiles further in that direction
-            explore_x = best.global_x + dx * 12
-            explore_y = best.global_y + dy * 12
-            explore_pos = (explore_x, explore_y)
-            # Skip if in ship danger zone
-            if self._is_in_ship_danger_zone(explore_pos):
-                continue
-            distance = _h.manhattan(current_pos, explore_pos)
-            # Skip if very far from agent (not efficient)
-            if distance > 30:
-                continue
-            # Skip if too far from hub (outside territory)
-            hub_distance = _h.manhattan(hub_pos, explore_pos)
-            if hub_distance > 30:
-                continue
-            candidates.append((distance, explore_pos))
-
-        if not candidates:
-            return None
-
-        # Stagger among agents to avoid all going to the same frontier
-        candidates.sort()
-        index = self._agent_id % min(len(candidates), 4)
-        return candidates[index][1]
 
     def _explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
         current_pos = _h.absolute_position(state)
@@ -884,70 +708,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 state.step or self._step_index,
             )
 
-    def _detect_clips_ships(self, state: MettagridState) -> None:
-        """Detect scramble-prone junctions by tracking owner flips.
-
-        Ship positions now store (count, last_marked_step) and decay after
-        _SHIP_DANGER_DECAY_STEPS so that aligners can reclaim junctions
-        once a ship has likely moved on.
-        """
-        hub = self._nearest_hub(state)
-        if hub is None:
-            return
-        step = state.step or self._step_index
-        team_id = _h.team_id(state)
-        ship_range = _CLIPS_SCRAMBLE_RADIUS + _CLIPS_SHIP_SAFE_MARGIN
-
-        # Decay old danger markers
-        stale = [
-            pos for pos, (_, last_step) in self._shared_ship_positions.items()
-            if step - last_step > _SHIP_DANGER_DECAY_STEPS
-        ]
-        for pos in stale:
-            self._shared_ship_positions.pop(pos)
-
-        for entity in state.visible_entities:
-            if entity.entity_type != "junction":
-                continue
-            gx = _h.attr_int(entity, "global_x", entity.position.x)
-            gy = _h.attr_int(entity, "global_y", entity.position.y)
-            pos = (gx, gy)
-            owner = entity.attributes.get("owner")
-            current_owner = None if owner in {None, "neutral"} else str(owner)
-
-            # Clear danger if junction is now friendly or neutral (ship moved on)
-            if current_owner in {None, team_id} and pos in self._shared_ship_positions:
-                prev_count, prev_step = self._shared_ship_positions[pos]
-                # Only clear proactive marks (count == 1); keep reactive marks longer
-                if prev_count <= 1 and step - prev_step > 70:
-                    self._shared_ship_positions.pop(pos)
-
-            # PROACTIVE: enemy-owned junctions indicate a ship is within 15 tiles
-            if current_owner is not None and current_owner != team_id:
-                if pos not in self._shared_ship_positions:
-                    self._shared_ship_positions[pos] = (1, step)
-
-            # REACTIVE: detect scrambled friendly junctions
-            rel_pos = (gx - hub.global_x, gy - hub.global_y)
-            if rel_pos in self._shared_junctions:
-                prev_owner, _ = self._shared_junctions[rel_pos]
-                if prev_owner == team_id and current_owner is None:
-                    prev = self._shared_ship_positions.get(pos, (0, step))
-                    self._shared_ship_positions[pos] = (prev[0] + 1, step)
-                    for (jdx, jdy) in self._shared_junctions:
-                        jpos = (hub.global_x + jdx, hub.global_y + jdy)
-                        if _h.manhattan(pos, jpos) <= ship_range:
-                            if jpos not in self._shared_ship_positions:
-                                self._shared_ship_positions[jpos] = (1, step)
-
-    def _is_in_ship_danger_zone(self, position: tuple[int, int]) -> bool:
-        """Check if junction has been recently scrambled (likely near a ship)."""
-        entry = self._shared_ship_positions.get(position)
-        if entry is None:
-            return False
-        count, last_step = entry
-        return count >= 1
-
     def _shared_junction_entities(
         self,
         state: MettagridState,
@@ -993,8 +753,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
     def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
         team_id = _h.team_id(state)
         current_pos = _h.absolute_position(state)
-        hub = self._nearest_hub(state)
-        hub_pos = hub.position if hub is not None else None
         hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
         friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
         network_sources = [*hubs, *friendly_junctions]
@@ -1031,8 +789,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
                         agent_id=self._agent_id,
                         step=self._step_index,
                     ),
-                    hub_position=hub_pos,
-                    in_ship_danger_zone=self._is_in_ship_danger_zone(entity.position),
                 ),
                 entity.position,
             ),
@@ -1048,8 +804,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         current_pos = _h.absolute_position(state)
         team_id = _h.team_id(state)
-        hub = self._nearest_hub(state)
-        hub_pos = hub.position if hub is not None else None
         neutral_junctions = self._world_model.entities(
             entity_type="junction",
             predicate=lambda junction: junction.owner in {None, "neutral"},
@@ -1064,8 +818,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
             unreachable=[entity for entity in neutral_junctions if entity.position != sticky.position],
             enemy_junctions=enemy_junctions,
             claimed_by_other=False,
-            hub_position=hub_pos,
-            in_ship_danger_zone=self._is_in_ship_danger_zone(sticky.position),
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -1078,8 +830,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 agent_id=self._agent_id,
                 step=self._step_index,
             ),
-            hub_position=hub_pos,
-            in_ship_danger_zone=self._is_in_ship_danger_zone(candidate.position),
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate
@@ -1179,7 +929,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
         current_pos = _h.absolute_position(state)
         hub = self._nearest_hub(state)
         neutral_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner in {None, "neutral"})
-        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
         enemy_junctions = self._known_junctions(
             state,
             predicate=lambda entity: entity.owner not in {None, "neutral", team_id},
@@ -1198,7 +947,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     hub_position=hub_position,
                     candidate=entity,
                     neutral_junctions=neutral_junctions,
-                    friendly_junctions=friendly_junctions,
                 ),
                 entity.position,
             ),
@@ -1234,27 +982,23 @@ class SemanticCogAgentPolicy(AgentPolicy):
             return sticky
 
         current_pos = _h.absolute_position(state)
-        team_id = _h.team_id(state)
         hub = self._nearest_hub(state)
         hub_position = current_pos if hub is None else hub.position
         neutral_junctions = self._world_model.entities(
             entity_type="junction",
             predicate=lambda entity: entity.owner in {None, "neutral"},
         )
-        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
         sticky_score = _h.scramble_target_score(
             current_position=current_pos,
             hub_position=hub_position,
             candidate=sticky,
             neutral_junctions=neutral_junctions,
-            friendly_junctions=friendly_junctions,
         )[0]
         candidate_score = _h.scramble_target_score(
             current_position=current_pos,
             hub_position=hub_position,
             candidate=candidate,
             neutral_junctions=neutral_junctions,
-            friendly_junctions=friendly_junctions,
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate
@@ -1364,51 +1108,17 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index
-        num_agents = max(len(state.team_summary.members), 8) if state.team_summary else 8
-        min_res = _h.team_min_resource(state)
-        can_hearts = _h.team_can_refill_hearts(state)
 
-        if num_agents <= 4:
-            pressure_budget = 2
-            if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
-                pressure_budget = 3
-        else:
-            # Economy-responsive pressure: scale aligners based on resource health.
-            # Phase 1 (0-10): hub camping + initial mining, 2 aligners
-            # Phase 2 (10-100): ramp up as economy allows
-            # Phase 3 (100+): full pressure, dynamically adjusted
-            if step < 10:
-                pressure_budget = 2
-            elif step < 100:
-                # Early ramp: 3 pressure (5 miners) to build economy fast
-                pressure_budget = 3
-                if min_res >= 10:
-                    pressure_budget = 4  # Economy healthy, add another aligner
-            else:
-                # Base pressure scales with game phase
-                if step < 2000:
-                    base_pressure = 5  # 3 miners
-                else:
-                    base_pressure = 6  # 2 miners late game
+        pressure_budget = 4
+        if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
+            pressure_budget = 5
 
-                # Dynamic economy adjustment — scale DOWN based on resource health
-                if min_res < 1 and not can_hearts:
-                    pressure_budget = 2  # Critical: 6 miners emergency
-                elif min_res < 5:
-                    pressure_budget = max(base_pressure - 2, 2)  # Low: more miners
-                elif min_res < 15:
-                    pressure_budget = max(base_pressure - 1, 3)  # Moderate: slightly fewer aligners
-                else:
-                    pressure_budget = base_pressure  # Healthy economy
-
-        # Scramblers — 1 early, 2 mid-game, but only if economy supports it
-        if step < 80:
-            scrambler_budget = 0
-        elif step < 800:
-            scrambler_budget = 1 if min_res >= 3 else 0
-        else:
-            scrambler_budget = 2 if min_res >= 5 else (1 if min_res >= 1 else 0)
-        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        scrambler_budget = 0
+        if step >= 1_500:
+            scrambler_budget = 1
+        if step >= 5_000 and _h.team_can_refill_hearts(state):
+            scrambler_budget = 2
+        aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":
@@ -1430,17 +1140,16 @@ class SemanticCogAgentPolicy(AgentPolicy):
         if safe_target is None:
             return hp <= _h.retreat_threshold(state, role)
 
-        distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
-        safe_steps = max(0, distance - _h._JUNCTION_AOE_RANGE)
+        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
         margin = _RETREAT_MARGIN
         if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
             margin += 10
-        margin += min(int(state.self_state.inventory.get("heart", 0)), 3) * 3
-        margin += min(_h.resource_total(state), 12) // 3
+        margin += int(state.self_state.inventory.get("heart", 0)) * 5
+        margin += min(_h.resource_total(state), 12) // 2
         if not _h.has_role_gear(state, role):
             margin += 10
         if (state.step or 0) >= 2_500:
-            margin += 5
+            margin += 10 if role in {"aligner", "scrambler"} else 5
         return hp <= safe_steps + margin
 
     def _should_deposit_resources(self, state: MettagridState) -> bool:
@@ -1545,14 +1254,13 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
 
 class MettagridSemanticPolicy(MultiAgentPolicy):
-    short_names = ["mettagrid-semantic", "semantic-cog", "sdk-semantic", "cvc-cog"]
+    short_names = ["mettagrid-semantic", "semantic-cog", "sdk-semantic"]
 
     def __init__(self, policy_env_info: PolicyEnvInterface, device: str = "cpu", **kwargs) -> None:
         super().__init__(policy_env_info, device=device, **kwargs)
         self._agent_policies: dict[int, SemanticCogAgentPolicy] = {}
         self._shared_claims: dict[tuple[int, int], tuple[int, int]] = {}
         self._shared_junctions: dict[tuple[int, int], tuple[str | None, int]] = {}
-        self._shared_ship_positions: dict[tuple[int, int], tuple[int, int]] = {}
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
@@ -1562,7 +1270,6 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
                 world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
-                shared_ship_positions=self._shared_ship_positions,
             )
         return self._agent_policies[agent_id]
 

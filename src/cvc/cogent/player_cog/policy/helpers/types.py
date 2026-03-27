@@ -20,44 +20,23 @@ _MOVE_DELTAS = {
 }
 
 _ALIGNER_EXPLORE_OFFSETS = (
-    # Ring 1: close to hub, safe territory
-    (0, -16),
-    (11, -11),
-    (16, 0),
-    (11, 11),
-    (0, 16),
-    (-11, 11),
-    (-16, 0),
-    (-11, -11),
-    # Ring 2: moderate reach for junction chaining (stay within safe zone)
     (0, -22),
-    (15, -15),
+    (16, -16),
     (22, 0),
-    (15, 15),
+    (16, 16),
     (0, 22),
-    (-15, 15),
+    (-16, 16),
     (-22, 0),
-    (-15, -15),
+    (-16, -16),
 )
-_MINER_EXPLORE_OFFSETS = (
-    # Ring 1: close to hub, within territory
-    (-10, -10), (10, -10), (-10, 10), (10, 10),
-    (0, -14), (14, 0), (0, 14), (-14, 0),
-    # Ring 2: moderate reach, still within territory range
-    (-18, -18), (18, -18), (-18, 18), (18, 18),
-    (0, -22), (22, 0), (0, 22), (-22, 0),
-)
-_SCRAMBLER_EXPLORE_OFFSETS = (
-    # Target ship frontier zone (~25-30 tiles from hub, between hub and corners)
-    (25, -25), (25, 25), (-25, 25), (-25, -25),
-    (0, -30), (30, 0), (0, 30), (-30, 0),
-)
+_MINER_EXPLORE_OFFSETS = ((-28, -28), (28, -28), (-28, 28), (28, 28))
+_SCRAMBLER_EXPLORE_OFFSETS = ((36, -36), (36, 36), (-36, 36), (-36, -36))
 
 _ELEMENTS = ("carbon", "oxygen", "germanium", "silicon")
 _HP_THRESHOLDS = COGSGUARD_ROLE_HP_THRESHOLDS
 _GEAR_COSTS = COGSGUARD_GEAR_COSTS
-_EMERGENCY_RESOURCE_LOW = 1
-_HEART_BATCH_TARGETS = {"aligner": 3, "scrambler": 2}
+_EMERGENCY_RESOURCE_LOW = 3
+_HEART_BATCH_TARGETS = {"aligner": 4, "scrambler": 2}
 _HUB_ALIGN_DISTANCE = COGSGUARD_HUB_ALIGN_DISTANCE
 _JUNCTION_ALIGN_DISTANCE = COGSGUARD_JUNCTION_ALIGN_DISTANCE
 _JUNCTION_AOE_RANGE = COGSGUARD_JUNCTION_AOE_RANGE
