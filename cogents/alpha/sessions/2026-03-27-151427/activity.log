@@ -7,3 +7,9 @@ status: in-progress
 - Tournament best: v38 at #4 (1.76)
 - Goal: achieve score > 10
 - Strategy: need fundamental changes, not just parameter tuning
+
+## Progress
+- Continued from previous session with 5x batch test results
+- 5x 10k batch: 3.74, 2.45, 0.59, 3.02, 3.33 = avg 2.63 (best avg ever)
+- Map variance: ships near hub → 0.59, ships far → 3.74
+- Next steps: reduce variance, increase best-case score
