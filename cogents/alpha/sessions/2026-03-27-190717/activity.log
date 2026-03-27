@@ -1,0 +1,9 @@
+# Activity Log: 2026-03-27-190717
+
+status: in-progress
+
+## Session Start
+- Previous session (180323): interrupted, v74 scored 11.68 on seed=456 (first >10!) but avg ~5.03
+- Key context: seed=123 still wipeout in v74, need to fix consistency
+- Goal: raise average score above 10 across all seeds
+- Strategy: investigate what makes seed=456 work (11.68) vs seed=123 fail, fix wipeout
