@@ -57,9 +57,13 @@ status: in-progress
 - Wipeouts (hp=0 forever) are probabilistic, not seed-specific
 - Need many trials for reliable comparison
 
-## v95 Changes (testing)
+## v95 Changes
 - Wipeout recovery: if hp=0 and near hub, mine instead of retreat/gear loop
-- This prevents the death spiral where agents oscillate forever
-- v91 config + wipeout recovery
-- Running 8-seed benchmark
-- Uploaded v75 (v91 config) to tournament
+- Didn't fully fix wipeouts — agents with hp=0 can't interact with extractors
+
+## v96 Changes — KEY BREAKTHROUGH
+- Hub camping: agents stay at hub for first 3 steps to let territory establish
+- Tested 5x on seed 123: 5/5 runs show hp=100 at step 5 (was 0 before)
+- Eliminates the non-deterministic wipeout entirely
+- Uploaded as alpha.0:v76 and v78 to tournament
+- Running 10-game random benchmark for reliable average
