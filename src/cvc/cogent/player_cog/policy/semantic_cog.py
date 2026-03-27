@@ -1237,12 +1237,16 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 3
         else:
             # Economy-first: mine early, then ramp up aligners on a fixed schedule.
-            # 5 aligners + 3 miners: proven balance. With num_agents bug fixed,
-            # this now actually gives 5 aligners (previously was capped at 3).
-            pressure_budget = 5
-            # Scale back if economy collapses
-            if min_res < 3 and step > 100 and not _h.team_can_refill_hearts(state):
-                pressure_budget = 3
+            # Brief mining burst, then 5 aligners + 3 miners.
+            # First 30 steps: 2 aligners only so miners can build economy
+            # and not all agents contend at gear stations simultaneously.
+            if step < 30:
+                pressure_budget = 2
+            else:
+                pressure_budget = 5
+                # Scale back if economy collapses
+                if min_res < 3 and step > 200 and not _h.team_can_refill_hearts(state):
+                    pressure_budget = 3
 
         scrambler_budget = 0  # No scramblers — all pressure agents are aligners
         aligner_budget = pressure_budget - scrambler_budget
