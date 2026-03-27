@@ -1145,24 +1145,25 @@ class SemanticCogAgentPolicy(AgentPolicy):
         min_res = _h.team_min_resource(state)
         can_hearts = _h.team_can_refill_hearts(state)
 
-        # Economy-responsive: start conservative, ramp when economy allows
-        if step < 10:
-            pressure_budget = 2  # Hub camping phase
-        elif step < 100:
-            pressure_budget = 3  # Early: 5 miners build economy
-            if min_res >= 10:
-                pressure_budget = 4
-        else:
-            # Base: 4 pressure (4 miners). Ramp to 5 when economy sustains it.
-            pressure_budget = 4
-            if min_res >= _MINING_ALIGNER_MIN_RESOURCE:
-                pressure_budget = 5
-            # Scale down if economy dying
+        # 2 aligners first 30 steps, then ramp up aggressively.
+        if step < 30:
+            pressure_budget = 2
+        elif step < 3000:
+            pressure_budget = 5  # 4 aligners + 1 scrambler, 3 miners
             if min_res < 1 and not can_hearts:
-                pressure_budget = 2  # Emergency: all mine
+                pressure_budget = 2  # Critical: 6 miners
+            elif min_res < 3:
+                pressure_budget = 4  # Low: 4 miners
+        else:
+            pressure_budget = 6  # Late game: 4a+2s, 2 miners
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 3
 
+        # Scramblers to disrupt ship chains
         scrambler_budget = 0
-        if step >= 1_500 and min_res >= 5:
+        if step >= 3000:
+            scrambler_budget = 2
+        elif step >= 100:
             scrambler_budget = 1
         aligner_budget = max(pressure_budget - scrambler_budget, 0)
         if objective == "resource_coverage":
