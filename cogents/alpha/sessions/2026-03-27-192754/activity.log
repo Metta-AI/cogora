@@ -10,25 +10,29 @@ status: in-progress
 
 ## Critical Finding: Game is NOT Deterministic
 - Same code + same seed gives different scores across runs
-- seed=456: got 17.24, 14.13, 2.66 across 3 runs of v78
-- seed=1337: got 10.41, 1.27 across 2 runs
-- This means all single-run comparisons were unreliable!
+- seed=42: 2.67, 2.83, 3.42 across 3 runs
+- seed=456: 2.07, 2.16, 3.40 across 3 runs (also 14.46 in another run!)
+- This means single-run comparisons were unreliable
 - Need tournament results for reliable evaluation
 
-## Experiments v86-v91 (all relative to v78 base)
-- v86 ship decay 100: worse (150 optimal)
-- v87 heart batch 6: 4 wipeouts
-- v88 wider scrambler explore: worse
-- v89 faster ramp-up: wipeout
-- v90 station stall fix: worse
-- v91 late game 3 miners: mixed (wipeout + some improvements)
+## Parallel Session Conflicts
+- Another session kept changing pressure budgets to be more aggressive
+- Their changes caused seed=42 wipeouts (agents start at 50 HP, economy drain)
+- Had to repeatedly resolve merge conflicts and restore v78 conservative logic
+- Key principle: 2 aligners first 30 steps, 5 pressure until step 3000
 
-## Parallel Session Code (v81-v85)
-- Economy-gated role assignment, dynamic heart batching
-- Reverted — simpler v78 code performs better on average
+## Experiments Tested
+- v86: ship decay 100 → worse
+- v87: heart batch 6 → 4 wipeouts
+- v88: wider scrambler explore → worse
+- v89: faster ramp-up → wipeout
+- v90: station stall fix → worse
+- v91: late game 3 miners → mixed
+- v92-v93: restoring v78 base and fixing parallel session regressions
 
-## Current State
-- v78 base code with 2nd scrambler@1500 (from parallel session)
-- Uploaded as alpha.0:v72, v73
-- Waiting for tournament results to evaluate
-- Key parameters: staleness=35, patrol=15, retreat=28, ship_decay=150
+## Final State
+- v78 base code fully restored: staleness=35, patrol=15, retreat=28, ship_decay=150
+- 2 aligners first 30 steps, 5 pressure until 3000, 6 late game
+- 2nd scrambler at step 3000, 1st at step 200
+- Uploaded as alpha.0:v72, v73, v74, v77
+- v93 test: seed=42:2.66, seed=456:4.63, seed=1337:7.64 (no wipeouts)
