@@ -32,8 +32,22 @@ status: in-progress
 - Agent 3 (last aligner): 25 gear switches! Massive churn problem
 - Scrambler (agent 7): 65 scrambles, 4 alignments — effective
 
-## v115 Changes (testing)
+## v115 Results — BIG IMPROVEMENT
 - Reduced gear churn threshold: min_res < 3 (was < 5) to switch 5→4 aligners
 - Earlier scrambler: step 300 (was 400), min_res >= 3 (was >= 5)
 - Heart batch: 3 base → 4 at 500 → 5 at 2000 (was 2 → 6 → 7 → 8)
 - Stronger hub proximity in targeting (steeper penalties beyond 10/15/25 tiles)
+- Scores: 3.98, 3.86, 1.46, 5.82, 6.18 → avg 4.26 (was 2.38!)
+- Best single: 6.18 (was 3.46)
+- Seed 4: 187 alignments, 87 lost, 0 deaths — agent 3 now does 49 alignments (was 21)
+
+## v116 Results — WORSE (reverted)
+- Added 2nd scrambler at step 800
+- Scores: 2.56, 1.26, 1.15, 2.60, 1.40 → avg 1.79
+- 2 scramblers steal too much from alignment output
+
+## v117 Changes (testing)
+- Back to v115 pressure budgets (4 aligners + 1 scrambler)
+- Increased expansion bonus: 8.0 per junction, cap 50 (was 5.0, cap 30)
+- Faster heart batch ramp: 4 at 300, 5 at 1000, 6 at 3000
+- Tighter aligner explore offsets: radius 14 (was 22) to match hub proximity bias

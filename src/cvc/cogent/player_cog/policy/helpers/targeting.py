@@ -58,7 +58,7 @@ def aligner_target_score(
             hub_penalty = hub_dist * 0.3  # Mild preference for closer junctions
     return (
         distance
-        - min(expansion * 5.0, 30.0)
+        - min(expansion * 8.0, 50.0)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
         + hub_penalty,
