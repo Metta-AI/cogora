@@ -148,3 +148,18 @@ Uploaded as alpha.0:v79, v81
 - Deposit threshold: 20
 - Hub penalty: dist*0.3 near, (dist-20)*1.5+5 mid, (dist-30)*3+20 far
 - Ship danger penalty: restored in API but set to False (upstream removed detection)
+
+## Upstream Changes Merged
+- Other session simplified targeting (removed hub/ship penalties, friendly_junctions)
+- Other session changed: deposit=40, heart_batch=3 at step 3000, more conservative pressure (4-5 max)
+- I reverted most changes: deposit=20, heart_batch ascending, hub_penalty restored
+- Kept upstream's simplified pressure budget structure
+- Upstream config test: avg 3.22 (similar to mine)
+
+## Final Assessment
+- True average across many runs: ~3-5 (not >10 yet)
+- Massive internal game randomness (20-30% wipeout rate)
+- Best single run: 21.35 (seed=500 v93)
+- Uploaded versions: v79, v81, v87 to tournament (alpha.0)
+- Tournament matches still running/scheduled, no results available yet
+- Key parameters confirmed: staleness=35, retreat=28, patrol=15, deposit=20, 2 miners late game
