@@ -35,8 +35,8 @@ _OSCILLATION_HISTORY_STEPS = 6
 _OSCILLATION_UNSTICK_STEPS = 4
 _MINING_ALIGNER_MIN_RESOURCE = 12
 _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 3
-_ALIGNER_PRIORITY = (3, 2, 4, 5, 6, 7)
-_SCRAMBLER_PRIORITY = (7, 3)
+_ALIGNER_PRIORITY = (4, 5, 6, 7, 3)
+_SCRAMBLER_PRIORITY = (7,)
 _HUB_OFFSETS = COGSGUARD_BOOTSTRAP_HUB_OFFSETS
 _COGSGUARD_SURFACE = CogsguardSemanticSurface()
 
@@ -1166,10 +1166,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 5
 
         scrambler_budget = 0
-        if num_agents > 4 and step >= 1_500:
+        if num_agents > 4 and step >= 2_000 and _h.team_can_refill_hearts(state):
             scrambler_budget = 1
-        if num_agents > 4 and step >= 5_000 and _h.team_can_refill_hearts(state):
-            scrambler_budget = 2
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
             return 0, 0
