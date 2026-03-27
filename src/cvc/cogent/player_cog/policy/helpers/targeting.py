@@ -34,6 +34,7 @@ def aligner_target_score(
     enemy_junctions: list[KnownEntity],
     claimed_by_other: bool,
     hub_position: tuple[int, int] | None = None,
+    in_ship_danger_zone: bool = False,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     expansion = sum(
@@ -49,12 +50,15 @@ def aligner_target_score(
     if hub_position is not None:
         hub_dist = float(manhattan(hub_position, candidate.position))
         hub_penalty = hub_dist * 0.15
+    # Heavy penalty for junctions in clips ship scramble range — they'll be auto-scrambled every 70 ticks
+    ship_penalty = 50.0 if in_ship_danger_zone else 0.0
     return (
         distance
         - min(expansion * 3.0, 24.0)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
-        + hub_penalty,
+        + hub_penalty
+        + ship_penalty,
         -float(expansion),
     )
 

@@ -23,4 +23,18 @@ status: in-progress
   4. Reduced heart batch target 4→2 (faster aligner deployment)
   5. Reduced deposit threshold 40→20 (faster resource flow)
   6. Earlier scrambler (step 500 vs 2000) to disrupt enemy
-- Testing v1 changes...
+- v1 test: 1.10 (up from 0.59 baseline) — patrol working
+- v2 test (post-rebase): 1.63 — better with upstream changes
+- v3 test: 1.25 — hub proximity too aggressive
+- v4 test: 0.64 — patrol too spread out (11k patrol events vs 2k aligns)
+- v5 test: 1.15 — tighter 20-tile patrol
+- 3-run average: 0.88, 0.00, ~1.0 — HUGE variance, run 2 = total wipe
+- CRITICAL DISCOVERY: clips ships are STATIONARY, not mobile agents!
+  - Ships auto-scramble junctions within 15 cells every 70 ticks
+  - Ships also auto-align neutral junctions for clips team
+  - Junctions OUTSIDE ship range persist once aligned!
+  - Game is 10,000 steps (not 5,000 as I was testing)
+  - Score counts CONNECTED junctions in network (connectivity matters)
+- Tournament results: v29=1.90, v30=0.96, v31=1.76 — #1 on leaderboard at 1.87
+- Strategy shift: avoid ship zones, focus on safe junctions
+- Implementing ship detection + danger zone avoidance in aligner targeting

@@ -62,6 +62,10 @@ class NavigationObservation:
     target_position: tuple[int, int] | None
 
 
+_CLIPS_SCRAMBLE_RADIUS = 15
+_CLIPS_SHIP_SAFE_MARGIN = 2
+
+
 class SharedWorldModel:
     def __init__(self) -> None:
         self._entities: dict[str, KnownEntity] = {}
@@ -202,12 +206,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
         world_model: SharedWorldModel,
         shared_claims: dict[tuple[int, int], tuple[int, int]],
         shared_junctions: dict[tuple[int, int], tuple[str | None, int]],
+        shared_ship_positions: set[tuple[int, int]] | None = None,
     ) -> None:
         super().__init__(policy_env_info)
         self._agent_id = agent_id
         self._world_model = world_model
         self._shared_claims = shared_claims
         self._shared_junctions = shared_junctions
+        self._shared_ship_positions = shared_ship_positions if shared_ship_positions is not None else set()
         self._memory = MemoryStore()
         self._previous_state: MettagridState | None = None
         self._last_global_pos: tuple[int, int] | None = None
@@ -254,6 +260,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         self._world_model.update(state)
         self._update_shared_junctions(state)
+        self._detect_clips_ships(state)
         self._world_model.prune_missing_extractors(
             current_position=_h.absolute_position(state),
             visible_entities=state.visible_entities,
@@ -756,6 +763,23 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 state.step or self._step_index,
             )
 
+    def _detect_clips_ships(self, state: MettagridState) -> None:
+        """Detect clips ship positions from visible entities."""
+        for entity in state.visible_entities:
+            # Ships have entity_type like "clips:ship" or contain "ship" in labels
+            if "ship" in entity.entity_type or any("ship" in label for label in entity.labels):
+                gx = _h.attr_int(entity, "global_x", entity.position.x)
+                gy = _h.attr_int(entity, "global_y", entity.position.y)
+                self._shared_ship_positions.add((gx, gy))
+
+    def _is_in_ship_danger_zone(self, position: tuple[int, int]) -> bool:
+        """Check if position is within clips ship scramble radius."""
+        danger_radius = _CLIPS_SCRAMBLE_RADIUS + _CLIPS_SHIP_SAFE_MARGIN
+        for ship_pos in self._shared_ship_positions:
+            if _h.manhattan(position, ship_pos) <= danger_radius:
+                return True
+        return False
+
     def _shared_junction_entities(
         self,
         state: MettagridState,
@@ -840,6 +864,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                         step=self._step_index,
                     ),
                     hub_position=hub_pos,
+                    in_ship_danger_zone=self._is_in_ship_danger_zone(entity.position),
                 ),
                 entity.position,
             ),
@@ -872,6 +897,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             enemy_junctions=enemy_junctions,
             claimed_by_other=False,
             hub_position=hub_pos,
+            in_ship_danger_zone=self._is_in_ship_danger_zone(sticky.position),
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -885,6 +911,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 step=self._step_index,
             ),
             hub_position=hub_pos,
+            in_ship_danger_zone=self._is_in_ship_danger_zone(candidate.position),
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate
@@ -1322,6 +1349,7 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
         self._agent_policies: dict[int, SemanticCogAgentPolicy] = {}
         self._shared_claims: dict[tuple[int, int], tuple[int, int]] = {}
         self._shared_junctions: dict[tuple[int, int], tuple[str | None, int]] = {}
+        self._shared_ship_positions: set[tuple[int, int]] = set()
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
@@ -1331,6 +1359,7 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
                 world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
+                shared_ship_positions=self._shared_ship_positions,
             )
         return self._agent_policies[agent_id]
 
