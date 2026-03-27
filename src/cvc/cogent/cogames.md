@@ -25,7 +25,8 @@ cogames play -m machina_1 -c 8 -p starter -r log --autostart --steps=5000 > /tmp
 ## Uploading to Tournament
 
 ```bash
-cogames upload -p cvc-cog -n alpha.0 --skip-validation
+# IMPORTANT: Must use full class path and include source directories
+cogames upload -p "class=cvc.cogent.player_cog.policy.semantic_cog.MettagridSemanticPolicy" -n alpha.0 -f src/cvc -f src/mettagrid_sdk --skip-validation
 ```
 
 ## Checking Results
