@@ -67,3 +67,11 @@ status: interrupted
 - Key difference: AlphaCogAgentPolicy overrides pressure_budgets (4→5 aligners, no scramblers)
   and adds miner retreat distance limit (_MINER_MAX_HUB_DISTANCE=18)
 - TODO: test AlphaCyborgPolicy and establish new baseline
+
+## AlphaCyborgPolicy Baseline (5 games, 5K steps)
+- Scores: 1.96, 1.14, 1.98, 1.55, 1.72 → avg 1.67
+- No wipeouts, stable
+- Fixed bugs: hub_pos undefined, _is_in_ship_danger_zone removed
+- Installed anthropic + openai packages in venv
+- AlphaCogAgentPolicy uses fixed 4→5 aligners, 0 scramblers, miner retreat at 18 tiles
+- Lower than old MettagridSemanticPolicy (~2.7 avg) — the overrides may be too conservative

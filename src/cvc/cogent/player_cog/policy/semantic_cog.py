@@ -814,7 +814,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                         step=self._step_index,
                     ),
                     hub_position=hub_pos,
-                    in_ship_danger_zone=False,
+
                 ),
                 entity.position,
             ),
@@ -847,7 +847,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
             enemy_junctions=enemy_junctions,
             claimed_by_other=False,
             hub_position=hub_pos,
-            in_ship_danger_zone=False,
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -861,7 +860,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 step=self._step_index,
             ),
             hub_position=hub_pos,
-            in_ship_danger_zone=False,
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate

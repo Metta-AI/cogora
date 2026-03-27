@@ -34,7 +34,6 @@ def aligner_target_score(
     enemy_junctions: list[KnownEntity],
     claimed_by_other: bool,
     hub_position: tuple[int, int] | None = None,
-    in_ship_danger_zone: bool = False,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     expansion = sum(
@@ -55,14 +54,12 @@ def aligner_target_score(
             hub_penalty = (hub_dist - 15) * 2.0 + 5.0  # Moderate cost in outer ring
         else:
             hub_penalty = hub_dist * 0.5  # Mild preference for closer junctions
-    ship_penalty = 100.0 if in_ship_danger_zone else 0.0
     return (
         distance
         - min(expansion * 3.0, 24.0)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
-        + hub_penalty
-        + ship_penalty,
+        + hub_penalty,
         -float(expansion),
     )
 
