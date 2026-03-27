@@ -1379,8 +1379,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 5  # 3 miners
                 # Scale down pressure to boost economy when resources critical
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 2  # Emergency: 6 miners
-                elif min_res < 3:
+                    pressure_budget = 3  # Emergency: 5 miners
+                elif min_res < 2:
                     pressure_budget = 4  # 4 miners to rebuild
             else:
                 pressure_budget = 6  # Late game: 2 miners, economy established
