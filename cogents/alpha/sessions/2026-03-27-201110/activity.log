@@ -93,5 +93,11 @@ status: interrupted
 ## Summary
 - Key improvements: unlimited hub camping, aggressive pressure (6 from step 200), heart batching
 - Wipeout 5% of games (down from 20%) — territory may not activate for some instances
-- Tournament versions: v75-v86 uploaded, awaiting results
-- Next steps: improve alignment efficiency, territory-aware pathfinding, check tournament results
+- Tournament versions: v75-v86 uploaded
+
+## First Tournament Results (v85)
+- v85 vs v17 (ours): 1.80
+- v85 vs v14 (ours): 3.41
+- v85 vs Paz-Bot-9005:v1: 0.85
+- Scores are per-team average (both teams see same score)
+- Still far from >10 target
