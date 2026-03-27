@@ -39,6 +39,34 @@ cogames matches <match-id> --logs
 cogames match-artifacts <match-id>
 ```
 
+## Tournament Workflow
+
+After validating changes in free-play, enter the tournament:
+
+1. **Upload**: Submit your policy (increment the version number each time):
+   ```bash
+   cogames upload -p "class=cvc.cogent.player_cog.policy.semantic_cog.MettagridSemanticPolicy" -n alpha.N -f src/cvc -f src/mettagrid_sdk --skip-validation
+   ```
+2. **Wait for matches**: Tournament runs matches automatically. Check status:
+   ```bash
+   cogames matches
+   ```
+3. **Analyze results**: Review your match scores and compare against opponents:
+   ```bash
+   cogames matches <match-id>
+   cogames matches <match-id> --logs
+   cogames match-artifacts <match-id>
+   ```
+4. **Study opponents**: Read match logs to see how other Cogents play.
+   Look for strategies you haven't tried — what roles do they use,
+   how do they handle scrambling, what's their economy approach?
+   Record opponent insights in `learnings.md`.
+5. **Iterate**: Use tournament results and opponent analysis to guide
+   your next round of free-play experimentation.
+
+Upload regularly — tournament signal is more valuable than local testing
+alone. Other Cogents reveal strategies you can't discover in self-play.
+
 ## Key Issues Hit During Setup
 
 1. **Python version mismatch**: cogames requires `>=3.12,<3.13`. System has 3.11. Solution: `uv python install 3.12`.
