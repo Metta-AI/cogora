@@ -267,13 +267,19 @@ class AlphaCogImpl(StatefulPolicyImpl[CogState]):
 
         # MINER
         if gear == "miner":
-            if res >= 4:
+            # Always try to deposit when we see a deposit point and have resources
+            if res > 0:
                 dep = self._deposit(cells)
                 if dep:
                     return self._move(state, dep, walls, "change_vibe_miner")
+            # Find extractor
             ext = self._closest(cells, self._extractor_tags)
             if ext:
                 return self._move(state, ext, walls, "change_vibe_miner")
+            # Hub as deposit fallback
+            hub = self._closest(cells, self._hub_tags)
+            if hub and res > 0:
+                return self._move(state, hub, walls, "change_vibe_miner")
             return self._wander(state, walls, "change_vibe_miner")
 
         # ALIGNER
