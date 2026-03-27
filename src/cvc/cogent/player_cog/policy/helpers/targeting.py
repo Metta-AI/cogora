@@ -97,14 +97,22 @@ def scramble_target_score(
     hub_position: tuple[int, int],
     candidate: KnownEntity,
     neutral_junctions: list[KnownEntity],
+    friendly_junctions: list[KnownEntity] | None = None,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     blocked_neutrals = sum(
         1 for neutral in neutral_junctions if manhattan(candidate.position, neutral.position) <= _JUNCTION_AOE_RANGE
     )
     corner_pressure = min(manhattan(hub_position, candidate.position) / 8.0, 10.0)
+    # Prioritize enemy junctions near our friendly network (defending our score)
+    threat_bonus = 0.0
+    if friendly_junctions:
+        threatened = sum(
+            1 for f in friendly_junctions if manhattan(candidate.position, f.position) <= _JUNCTION_ALIGN_DISTANCE
+        )
+        threat_bonus = threatened * 6.0
     return (
-        distance - blocked_neutrals * 4.0 - corner_pressure,
+        distance - blocked_neutrals * 4.0 - corner_pressure - threat_bonus,
         -float(blocked_neutrals),
     )
 
