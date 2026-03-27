@@ -68,3 +68,10 @@ status: interrupted
 - Main bottleneck is 49% of aligner time SEARCHING (find_neutral_junction)
 - Ships at corners build expanding frontiers; hub-proximal junctions safest
 - Game variance is extreme (0.00 to 6.00) — need 20+ game averages
+
+### v70-v74 Progress (from concurrent sessions)
+- v70: avg **4.26** (BEST EVER) — no emergency mining, 4 aligners + 1 scrambler
+- v71-v74: tuning scramblers (2 late game), patrol 12/80, retreat margin 28
+- Current v74: 5 pressure, 1 scrambler@200, 2 scramblers@3000
+- Added deposit-close and idle mining for aligners
+- Uploaded v59 to tournament (network was up briefly)
