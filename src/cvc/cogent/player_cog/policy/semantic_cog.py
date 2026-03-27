@@ -1377,6 +1377,9 @@ class SemanticCogAgentPolicy(AgentPolicy):
             margin += 10
         if (state.step or 0) >= 2_500:
             margin += 5
+        # Extra margin when far from safety (outside territory, slow movement)
+        if distance > 15:
+            margin += (distance - 15) * 2
         return hp <= safe_steps + margin
 
     def _should_deposit_resources(self, state: MettagridState) -> bool:
