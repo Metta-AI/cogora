@@ -1,5 +1,8 @@
-# Session 2026-03-27-220812 — Summary
+# Session 2026-03-27-220812 (Interrupted)
 
-**Status**: in-progress
-
-Tested v104-v115, improving from baseline ~2.0 avg to v112 best of 3.46 (avg 2.93/5, 2.38/10 games). Key improvements: scrambler defense (+106 enemy scrambles/game), hub proximity bias (junctions last longer), reduced gear churn (fewer deaths + role switches). Uploaded v89/v91/v93/v95 to tournament. Fundamental bottleneck identified: heart production (~335/game) limits alignment count. Score > 10 requires either dramatically more hearts or longer-lasting alignments.
+Session was interrupted before completion. Key work:
+- v104-v114 experiment sweep
+- Best config: v112 (avg 2.38, best 3.46)
+- Hub proximity + scrambler + reduced gear churn = best combo
+- Identified heart production bottleneck: need alignments to last longer
+- Uploaded v89-v95 to tournament

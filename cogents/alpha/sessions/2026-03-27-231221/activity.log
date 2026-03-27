@@ -1,0 +1,10 @@
+# Activity Log: 2026-03-27-231221
+
+status: in-progress
+
+## Session Start
+- Previous session (220812) interrupted, cleaned up
+- Best config: v112 (avg 2.38, best 3.46, 5 aligners + 1 scrambler)
+- Goal: score > 10, currently ~4x away
+- Key bottleneck: alignments don't last long enough (ship scrambling)
+- Need to check tournament results for v89-v95
