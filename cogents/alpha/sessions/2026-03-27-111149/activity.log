@@ -28,4 +28,12 @@ status: in-progress
   - Shared extractors cause miners to target distant/stale positions
   - Inner explore ring (12) causes agents to get stuck near hub
   - Miner claims penalize nearby extractors, sending miners to worse targets
-- Running upstream-only 5k baseline to confirm performance
+- Upstream-only 5k: score 1.37 (50 alignments, 60 hearts) - LOWER than old baseline 2.13
+- Upstream changes (new priorities, single explore ring) HURT performance vs old code
+- Restored old explore offsets (2-ring: 12+20) and aligner priorities
+- Restored single scrambler at step 2000 (vs upstream's earlier + double scrambler)
+- V5 5k score: 1.52 (slightly better than upstream 1.37)
+- High single-run variance makes local testing unreliable
+- Uploaded v19 to tournament
+- Heart batch 6 tested: regressed (economy can't supply fast enough)
+- Running 3x 5k average test for reliable comparison
