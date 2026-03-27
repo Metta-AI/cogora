@@ -26,7 +26,7 @@ _STATION_OFFSETS = {
     "scout": (3, 4),
 }
 _TEMP_BLOCK_STEPS = 10
-_RETREAT_MARGIN = 20
+_RETREAT_MARGIN = 30
 _DEFAULT_BOUND_MARGIN = 12
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
@@ -1208,15 +1208,13 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            pressure_budget = 4
+            pressure_budget = 5
             if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
-                pressure_budget = 5
+                pressure_budget = 6
 
         scrambler_budget = 0
-        if num_agents > 4 and step >= 500 and _h.team_can_refill_hearts(state):
+        if num_agents > 4 and step >= 1_000 and _h.team_can_refill_hearts(state):
             scrambler_budget = 1
-        if num_agents > 4 and step >= 3_000 and _h.team_can_refill_hearts(state):
-            scrambler_budget = 2
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
             return 0, 0
