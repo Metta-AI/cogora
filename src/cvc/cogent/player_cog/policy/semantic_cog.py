@@ -27,7 +27,7 @@ _STATION_OFFSETS = {
 }
 _TEMP_BLOCK_STEPS = 10
 _RETREAT_MARGIN = 28
-_DEFAULT_BOUND_MARGIN = 12
+_DEFAULT_BOUND_MARGIN = 16
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
 _SHARED_JUNCTION_MEMORY_STEPS = 10000
@@ -804,6 +804,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             return
         step = state.step or self._step_index
         team_id = _h.team_id(state)
+        ship_range = _CLIPS_SCRAMBLE_RADIUS + _CLIPS_SHIP_SAFE_MARGIN
         for entity in state.visible_entities:
             if entity.entity_type != "junction":
                 continue
@@ -812,16 +813,26 @@ class SemanticCogAgentPolicy(AgentPolicy):
             pos = (gx, gy)
             owner = entity.attributes.get("owner")
             current_owner = None if owner in {None, "neutral"} else str(owner)
-            # Check if junction flipped from friendly to neutral (scrambled)
+
+            # PROACTIVE: enemy-owned junctions indicate ship presence nearby
+            # Ships auto-align junctions for the enemy team, so enemy junctions = ship marker
+            if current_owner is not None and current_owner != team_id:
+                if self._shared_ship_positions.get(pos, 0) < 1:
+                    self._shared_ship_positions[pos] = 1
+                    # Propagate to nearby known junctions
+                    for (jdx, jdy) in self._shared_junctions:
+                        jpos = (hub.global_x + jdx, hub.global_y + jdy)
+                        if _h.manhattan(pos, jpos) <= ship_range:
+                            if self._shared_ship_positions.get(jpos, 0) < 1:
+                                self._shared_ship_positions[jpos] = 1
+
+            # REACTIVE: detect scrambled friendly junctions
             rel_pos = (gx - hub.global_x, gy - hub.global_y)
             if rel_pos in self._shared_junctions:
                 prev_owner, _ = self._shared_junctions[rel_pos]
                 if prev_owner == team_id and current_owner is None:
-                    # Junction was scrambled — mark this and nearby junctions as ship zone
                     count = self._shared_ship_positions.get(pos, 0)
                     self._shared_ship_positions[pos] = count + 1
-                    # Propagate: any known junction within ship scramble radius is also in danger
-                    ship_range = _CLIPS_SCRAMBLE_RADIUS + _CLIPS_SHIP_SAFE_MARGIN
                     for (jdx, jdy) in self._shared_junctions:
                         jpos = (hub.global_x + jdx, hub.global_y + jdy)
                         if _h.manhattan(pos, jpos) <= ship_range:

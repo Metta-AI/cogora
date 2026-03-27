@@ -38,6 +38,15 @@ _ALIGNER_EXPLORE_OFFSETS = (
     (-17, 17),
     (-24, 0),
     (-17, -17),
+    # Ring 3: deep reach for distant safe junctions
+    (0, -35),
+    (25, -25),
+    (35, 0),
+    (25, 25),
+    (0, 35),
+    (-25, 25),
+    (-35, 0),
+    (-25, -25),
 )
 _MINER_EXPLORE_OFFSETS = (
     (-28, -28), (28, -28), (-28, 28), (28, 28),

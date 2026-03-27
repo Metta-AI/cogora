@@ -9,24 +9,24 @@ status: interrupted
 - Goal: achieve score > 10
 - Plan: 1) Check tournament results, 2) Analyze why variance is high, 3) Push score higher
 
-## Progress
-- Continued from previous session (interrupted but work continues)
-- v39 uploaded (scramble detection + 4-5 aligners + retreat margin 30)
-- v40 uploaded (stronger hub proximity bias for junctions >30 from hub)
-- Testing 6 aligner budget regressed (reverted to 4-5)
-- 3x average 10k test: 1.56, 0.59, 1.43 = avg 1.19
-- Map-dependent variance remains the #1 challenge
-- Ships at map corners → junctions >30 from hub likely in ship zone
-- Leaderboard: #1 v11 at 1.87, v38 at #4 (1.76)
-- v40 (stronger hub proximity): single test 1.97
-- v41 uploaded
-- 3x 10k average with hub proximity: 1.68, 2.38, 1.43 = avg 1.83 (up from 1.19!)
-- Hub proximity bias is helping consistently
-- Lowered scramble detection threshold to 1 (was 2)
-- v42 uploaded with faster detection
-- 3x 10k average: 2.73, 2.32, 2.59 = avg 2.55! (up from 1.83)
-- Huge improvement from scramble zone detection + hub proximity + fast detection
-- Still getting occasional 0.00 wipeouts on bad maps (seed-dependent)
-- v43 uploaded (merged upstream tighter hub proximity: 25 threshold, 1.5x penalty)
-- Confirmation 3x 10k: 2.79, 1.19, 2.25 = avg 2.08
-- Overall improvement: ~1.5 → ~2.3 average (50% improvement this session)
+## Progress (continued from previous session)
+- v44 uploaded: 5 aligners, reduced retreat, hub proximity bias, ship zone propagation
+- Tried sharing world model across agents — caused total gridlock (agents block each other), reverted
+- Reduced patrol from 77% to ~40% of aligner time (staleness 30→100, distance 25→15)
+- Ship zone propagation: when scramble detected, mark ALL junctions within ship range as dangerous
+- Ship penalty 50→100 in aligner scoring
+- Added ring 3 explore offsets (35 tiles) for distant safe junctions
+- Increased pathfinding margin 12→16
+- KEY INSIGHT: enemy-owned junctions indicate ship presence (ships auto-align for clips team)
+- Implemented proactive ship detection from enemy junctions (before alignment)
+- v46 uploaded with enemy-junction ship detection
+- Local test scores: 2.10, 1.71, 1.90 (more tests running)
+- Competition matches showing 0.5-1.8
+- Qualifying matches failing with server errors (1011 internal error)
+
+## Analysis
+- Map variance is HUGE: 47 vs 65 junctions per map, some maps cause 0-score wipeouts
+- Same 177 alignments give scores 1.79-3.52 depending on WHICH junctions aligned
+- Safe junctions (outside ship range) are 143x more valuable than ship-zone junctions
+- Key bottleneck: ship zone detection speed determines how many hearts wasted on ship zones
+- Patrol was consuming 77% of aligner time (fixed, now ~40%)
