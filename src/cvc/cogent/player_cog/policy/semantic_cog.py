@@ -795,17 +795,11 @@ class SemanticCogAgentPolicy(AgentPolicy):
             owner = entity.attributes.get("owner")
             current_owner = None if owner in {None, "neutral"} else str(owner)
 
-            # PROACTIVE: enemy-owned junctions indicate ship presence nearby
-            # Ships auto-align junctions for the enemy team, so enemy junctions = ship marker
+            # PROACTIVE: enemy-owned junctions indicate a ship is within 15 tiles
+            # Only mark the specific junction — don't propagate (too many false positives)
             if current_owner is not None and current_owner != team_id:
                 if self._shared_ship_positions.get(pos, 0) < 1:
                     self._shared_ship_positions[pos] = 1
-                    # Propagate to nearby known junctions
-                    for (jdx, jdy) in self._shared_junctions:
-                        jpos = (hub.global_x + jdx, hub.global_y + jdy)
-                        if _h.manhattan(pos, jpos) <= ship_range:
-                            if self._shared_ship_positions.get(jpos, 0) < 1:
-                                self._shared_ship_positions[jpos] = 1
 
             # REACTIVE: detect scrambled friendly junctions
             rel_pos = (gx - hub.global_x, gy - hub.global_y)
