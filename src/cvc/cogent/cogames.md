@@ -28,8 +28,13 @@ cogames play -m machina_1 -c 8 -p starter -r log --autostart --steps=5000 > /tmp
 ## Uploading to Tournament
 
 ```bash
-# IMPORTANT: Must use full class path and include source directories
-cogames upload -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" -n alpha.0 -f src/cvc -f src/mettagrid_sdk --skip-validation
+# IMPORTANT: Must use full class path, include source directories, and pass API key
+cogames upload \
+  -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" \
+  -n alpha.0 \
+  -f src/cvc -f src/mettagrid_sdk \
+  --secret-env ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+  --skip-validation
 ```
 
 ## Checking Results
@@ -48,7 +53,12 @@ After validating changes in free-play, enter the tournament:
 
 1. **Upload**: Submit your policy (increment the version number each time):
    ```bash
-   cogames upload -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" -n alpha.N -f src/cvc -f src/mettagrid_sdk --skip-validation
+   cogames upload \
+     -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" \
+     -n alpha.N \
+     -f src/cvc -f src/mettagrid_sdk \
+     --secret-env ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+     --skip-validation
    ```
 2. **Wait for matches**: Tournament runs matches automatically. Check status:
    ```bash
