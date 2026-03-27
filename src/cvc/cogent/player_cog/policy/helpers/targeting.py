@@ -44,11 +44,11 @@ def aligner_target_score(
         if any(manhattan(candidate.position, enemy.position) <= _JUNCTION_AOE_RANGE for enemy in enemy_junctions)
         else 0.0
     )
-    # Prefer junctions closer to hub — they're easier to defend and re-align
+    # Slight preference for hub-proximal junctions — easier to defend
     hub_penalty = 0.0
     if hub_position is not None:
         hub_dist = float(manhattan(hub_position, candidate.position))
-        hub_penalty = hub_dist * 0.3
+        hub_penalty = hub_dist * 0.15
     return (
         distance
         - min(expansion * 3.0, 24.0)
