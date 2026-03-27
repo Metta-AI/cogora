@@ -24,11 +24,13 @@ DIRECTIONS = ("north", "south", "east", "west")
 OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
 DIR_DELTA = {"north": (-1, 0), "south": (1, 0), "east": (0, 1), "west": (0, -1)}
 
+# Gear station offsets from hub: (row_delta, col_delta)
+# Original semantic_cog uses (x,y) = (col,row), so we swap to (row,col)
 GEAR_STATION_OFFSETS = {
-    "aligner": (-3, 4),
-    "scrambler": (-1, 4),
-    "miner": (1, 4),
-    "scout": (3, 4),
+    "aligner": (4, -3),
+    "scrambler": (4, -1),
+    "miner": (4, 1),
+    "scout": (4, 3),
 }
 
 # 2 miners, 5 aligners, 1 scrambler
@@ -273,29 +275,35 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
         return self._move_dir(d, state)
 
     def _explore(self, state: AlphaState, obs: AgentObservation) -> Action:
-        """Explore but stay within MAX_RANGE of hub."""
-        dist_from_hub = abs(state.est_row) + abs(state.est_col)
-        if dist_from_hub >= MAX_RANGE:
-            # Too far - go back toward hub
+        """Explore within territory range. Each agent explores a different direction."""
+        dist = abs(state.est_row) + abs(state.est_col)
+        if dist >= MAX_RANGE:
             return self._move_toward_global(0, 0, obs, state)
 
         state.explore_step += 1
-        patterns = [
-            ["north", "east", "south", "west"],
+
+        # Simple but effective: each agent goes in a different direction
+        # Cycle through directions with agent-specific offsets
+        dirs_order = [
             ["east", "south", "west", "north"],
             ["south", "west", "north", "east"],
             ["west", "north", "east", "south"],
-            ["north", "west", "south", "east"],
+            ["north", "east", "south", "west"],
             ["east", "north", "west", "south"],
             ["south", "east", "north", "west"],
             ["west", "south", "east", "north"],
+            ["north", "west", "south", "east"],
         ]
-        pattern = patterns[self._agent_id % len(patterns)]
-        idx = (state.explore_step // 10) % len(pattern)
+        pattern = dirs_order[self._agent_id % len(dirs_order)]
+        # Switch direction every 12 steps (covers ~2 observation widths)
+        idx = (state.explore_step // 12) % len(pattern)
         d = pattern[idx]
+
         walls = self._walls_around(obs)
         if d in walls:
             d = pattern[(idx + 1) % len(pattern)]
+        if d in walls:
+            d = pattern[(idx + 2) % len(pattern)]
         if d in walls:
             return self._wander(state, obs)
         return self._move_dir(d, state)
@@ -397,6 +405,23 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
                 state.phase = "do_job"
         else:
             state.phase = "do_job"
+
+        # Step 1 diagnostic: dump ALL tags
+        if state.step_count == 1 and self._agent_id == 0:
+            cr, cc = self._center
+            tag_counts: dict[int, int] = {}
+            for token in obs.tokens:
+                if token.feature.name != "tag":
+                    continue
+                loc = token.location
+                tag_counts[token.value] = tag_counts.get(token.value, 0) + 1
+                if loc is None:
+                    continue
+                if token.value in self._wall_tags:
+                    continue
+                print(f"[DIAG] tag={token.value} at obs({loc[0]},{loc[1]}) offset=({loc[0]-cr},{loc[1]-cc})", file=sys.stderr)
+            print(f"[DIAG] tag_counts={tag_counts}", file=sys.stderr)
+            print(f"[DIAG] gear_tags={self._gear_tags}", file=sys.stderr)
 
         if state.step_count % 1000 == 0:
             print(
