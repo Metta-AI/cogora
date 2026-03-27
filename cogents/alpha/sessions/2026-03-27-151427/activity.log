@@ -93,3 +93,14 @@ status: interrupted
 | 5000 | 2.92 |
 | 6000 | 2.28 |
 **Average: 2.37 (all), 2.64 (non-zero)**
+
+### Survival Retreat (KEY DISCOVERY)
+- HP starts at 50, drains -1/tick. Territory heals +100/tick in range 10.
+- Agents outside territory die in ~50 steps
+- Added survival_retreat: if hp<40 at dist>8 from hub in first 150 steps
+- **Improved batch avg from 2.37 to 2.73 (10 seeds, 5000 steps)**
+- Non-zero avg improved from 2.64 to **3.41**
+- Wipeouts are RANDOM game engine behavior, not preventable (~15% rate)
+- Best single: 6.59 (seed 1337)
+- Network down (SSL cert), unable to upload
+- User's v74 scored 11.68 on seed=456 at 10k steps
