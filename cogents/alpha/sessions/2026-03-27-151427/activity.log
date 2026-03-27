@@ -34,8 +34,37 @@ status: interrupted
 - Ring 2 at 22 from hub (tight) gives best single score (6.00)
 - Ring 10/18/25 (user's) gives more consistent but lower avg
 
-## What Would Help
-- Better ship position detection (know ALL ship locations early)
-- Network redundancy (multiple paths to avoid single-point failures)
-- Adaptive role switching based on junction availability
-- Reduce emergency mining time (~50% of aligner time is wasted)
+## Deep Analysis (this session continuation)
+
+### Game Mechanics Confirmed
+- Score = (network_junctions - 1) per tick, normalized by max_steps
+- 4 clips ships at map corners, scramble 1 junction/70 steps each
+- Clips also ALIGN neutral junctions (build enemy network)
+- Game is NON-DETERMINISTIC beyond seed (same seed gives 0.00 or 4.73)
+
+### Aligner Time Breakdown (seed 1337, 5000 steps)
+- 49.2% find_neutral_junction (searching)
+- 29.2% align_junction (traveling + aligning)
+- 14.4% deposit_cargo
+- 4.0% retreat_to_hub
+- Only 29% productive alignment time!
+
+### Changes Applied (v59)
+- Retreat margin 28→32 (reduces deaths from 8 to 0-3)
+- Patrol: staleness 100 (not 50), range 25, prioritizes was-friendly junctions
+- Idle aligners mine instead of exploring randomly
+- Deposit only if within 5 tiles
+- Smooth economy scaling (5→4→3 aligners as resources drop)
+- Ship danger zone decay (150 steps)
+- Uploaded v59 to tournament
+
+### Experiments That Didn't Help
+- Aggressive hub proximity scoring: too few close junctions, score drops
+- Phase-based ramp (2/3/5): slower start without benefit
+- 6 aligners: economy collapses
+- Frontier-directed exploration: sends aligners too far
+
+### Key Insight
+- Main bottleneck is 49% of aligner time SEARCHING (find_neutral_junction)
+- Ships at corners build expanding frontiers; hub-proximal junctions safest
+- Game variance is extreme (0.00 to 6.00) — need 20+ game averages
