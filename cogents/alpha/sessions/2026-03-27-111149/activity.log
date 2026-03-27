@@ -38,3 +38,10 @@ status: in-progress
 - Local 5k test: 1.15 per cog (some agents died 7 total deaths)
 - Agent death remains the #1 issue for score consistency
 - Waiting for competition match results
+- Bootstrap=3 avg across 5 runs: 1.71 (not significantly different from baseline ~1.93)
+- v34 (bootstrap=3) also in competition pool
+- Competition matches still running, waiting for results
+- Key blockers for >10 score:
+  1. Map variance: some seeds give 0 (all agents die), best gives 9.31
+  2. Average performance ~2 per match
+  3. Need either better map adaptability or ~5x throughput improvement
