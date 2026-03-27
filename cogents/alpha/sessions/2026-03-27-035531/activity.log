@@ -1,0 +1,23 @@
+status: in-progress
+started: 2026-03-27T03:55:31Z
+
+## Activity Log
+- Session started. First session as Alpha. Goal: score > 10 in CogsVsClips.
+- Plan: Review existing policy, run a test game, analyze results, iterate.
+- Ran setup, installed cogames and mettagrid.
+- Found mettagrid_sdk unavailable (not on PyPI). Existing semantic_cog.py depends on it.
+- Created alpha_policy.py from scratch using only mettagrid base APIs.
+- Discovered game mechanics through experimentation:
+  - Move costs 4 energy. Solar gives 1 energy/tick.
+  - Hub territory (strength 20, decay 1) heals +100 hp and +100 energy per tick.
+  - Agents MUST stay within ~18 tiles of hub or they drain HP and die.
+  - Hub starts with 24 of each element and 5 hearts.
+  - Hearts cost 7 of each element from hub.
+- v1 scored 0.18 (5 junctions aligned). Agents alive, mining, depositing.
+- Key issues: some agents die leaving territory, not enough resource variety mined.
+- v2: Added HP safety, range limiting, dead-reckoning navigation. No more deaths.
+- v3: Fixed gear station offset coordinates (were x,y not row,col). Added systematic exploration.
+- Discovered gear stations are outside initial 13x13 obs window - agents must navigate blind.
+- Uploaded v15 and v16 to tournament. Best local score: 0.97 (avg ~0.1).
+- Key remaining issues: agents with aligner+heart can't reliably find junctions to align.
+- Tournament v14 scores 0.7-2.0. My policy underperforms - need mettagrid_sdk for existing policy.
