@@ -17,3 +17,13 @@ status: in-progress
 - HP thresholds: miner=15, aligner=50, scrambler=30
 - Retreat margin=28 + gear penalty +10 = agents with hp<38-48 always retreat
 - Running 8-seed benchmark to establish baseline
+
+## v78 Baseline (partial)
+- Seed 42: 2.39 (135 alignments, 102 lost to ships, 102 scrambles)
+- Seed 123: 4.05
+
+## v91 Changes (testing)
+- Pressure budgets: 6 pressure (2 miners) from step 200 (was 3000)
+- Heart batching: 6 at step 500 (was 5 at step 2000), 7 at step 2000, 8 at step 5000
+- Retreat margin: 22 (was 28) — keep agents productive longer
+- 2nd scrambler at step 1000 (was 1500)

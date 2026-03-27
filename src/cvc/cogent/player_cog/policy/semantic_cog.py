@@ -26,7 +26,7 @@ _STATION_OFFSETS = {
     "scout": (3, 4),
 }
 _TEMP_BLOCK_STEPS = 10
-_RETREAT_MARGIN = 28
+_RETREAT_MARGIN = 22
 _DEFAULT_BOUND_MARGIN = 16
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
@@ -302,13 +302,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
             **macro_snapshot,
         }
         step = state.step or self._step_index
-        if step % 100 == 0 or summary.startswith("align_") or summary.startswith("scramble_") or summary.startswith("patrol_"):
+        if step <= 5 or (step <= 500 and step % 25 == 0) or step % 100 == 0 or summary.startswith("align_") or summary.startswith("scramble_") or summary.startswith("patrol_"):
             hp = int(state.self_state.inventory.get("hp", 0))
             hearts = int(state.self_state.inventory.get("heart", 0))
             inv = _h.resource_total(state)
             tgt = _h.format_position(self._current_target_position) if self._current_target_position else "none"
+            team_res = _h.team_min_resource(state)
             print(f"[COG] s={step} a={self._agent_id} pos={_h.format_position(current_pos)} role={role} "
-                  f"act={summary} hp={hp} hearts={hearts} inv={inv} tgt={tgt}")
+                  f"act={summary} hp={hp} hearts={hearts} inv={inv} tgt={tgt} tres={team_res}")
         self._previous_state = state
         self._last_global_pos = current_pos
         self._last_inventory_signature = _h.inventory_signature(state)
@@ -1357,26 +1358,26 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
+            # Aggressive alignment: maximize aligners, economy permitting.
             # 2 aligners first 30 steps to avoid gear station contention,
-            # then scale up pressure while keeping enough miners.
+            # then 6 pressure agents (2 miners) for maximum alignment throughput.
             if step < 30:
                 pressure_budget = 2
-            elif step < 3000:
-                pressure_budget = 5  # 3 miners
-                if step > 200 and min_res < 1 and not _h.team_can_refill_hearts(state):
+            elif step < 200:
+                pressure_budget = 5  # 3 miners while economy bootstraps
+                if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 3
             else:
-                # Late game: 2 miners, economy established
-                pressure_budget = 6
+                pressure_budget = 6  # 2 miners - economy should be established
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 4
 
-        # Scramblers to disrupt ship chains — 2nd scrambler at step 1500
-        # to counter ship expansion while economy is still strong.
-        if step >= 1500:
-            scrambler_budget = 2  # 4 aligners + 2 scramblers
+        # Scramblers to disrupt ship chains — 2nd scrambler at step 1000
+        # to counter ship expansion early while we have strong alignment.
+        if step >= 1000:
+            scrambler_budget = 2
         elif step >= 100:
-            scrambler_budget = 1  # Start disrupting early
+            scrambler_budget = 1
         else:
             scrambler_budget = 0
         aligner_budget = pressure_budget - scrambler_budget
