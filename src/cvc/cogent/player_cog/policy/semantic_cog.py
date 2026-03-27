@@ -397,12 +397,15 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 return self._move_to_known(state, safe_target, summary="survival_retreat")
 
         if self._should_retreat(state, role, safe_target):
-            self._clear_target_claim()
-            self._clear_sticky_target()
-            if safe_target is not None and safe_distance > 2:
-                return self._move_to_known(state, safe_target, summary="retreat_to_hub")
-            if _h.has_role_gear(state, role):
-                return self._hold(summary="retreat_hold", vibe="change_vibe_default")
+            # Skip retreat if already near hub and economy is dead — retreating
+            # just wastes steps oscillating. Better to keep trying to get gear/mine.
+            if not (safe_distance <= 3 and hp <= 5 and _h.needs_emergency_mining(state)):
+                self._clear_target_claim()
+                self._clear_sticky_target()
+                if safe_target is not None and safe_distance > 2:
+                    return self._move_to_known(state, safe_target, summary="retreat_to_hub")
+                if _h.has_role_gear(state, role):
+                    return self._hold(summary="retreat_hold", vibe="change_vibe_default")
 
         if self._oscillation_steps >= _OSCILLATION_UNSTICK_STEPS:
             return self._unstick_action(state, role)
@@ -1357,41 +1360,29 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # Economy-gated role assignment: don't assign pressure roles
-            # until hub has enough resources to sustain them.
-            # This prevents the death spiral where agents can't get gear.
-            if step < 60:
-                # Pure mining bootstrap: build resource buffer first.
-                # Only assign 2 aligners if economy is healthy.
-                if min_res >= 10:
-                    pressure_budget = 2
-                else:
-                    pressure_budget = 0  # All miners until economy established
-            elif step < 200:
-                # Gradual ramp-up: add aligners as economy allows
-                if min_res >= 8:
-                    pressure_budget = 4  # 4 miners
-                elif min_res >= 4:
-                    pressure_budget = 2  # 6 miners
-                else:
-                    pressure_budget = 0  # Economy struggling, all mine
+            # 2 aligners first 30 steps to avoid gear station contention,
+            # then scale up pressure while keeping enough miners.
+            if step < 30:
+                pressure_budget = 2
             elif step < 3000:
                 pressure_budget = 5  # 3 miners
-                # Scale down pressure to boost economy when resources critical
+                # Emergency economy protection: if resources critically low,
+                # scale down pressure to boost mining. This prevents the
+                # death spiral where hub runs dry and nobody can get gear.
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 3  # Emergency: 5 miners
-                elif min_res < 2:
-                    pressure_budget = 4  # 4 miners to rebuild
+                    pressure_budget = 2  # Critical: 6 miners
+                elif min_res < 3:
+                    pressure_budget = 4  # Low: 4 miners to rebuild
             else:
                 pressure_budget = 6  # Late game: 2 miners, economy established
-                if min_res < 3 and not _h.team_can_refill_hearts(state):
+                if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 3
 
-        # Scramblers to disrupt ship chains
+        # Scramblers to disrupt ship chains (earlier start = better defense)
         if step >= 3000:
             scrambler_budget = 2  # Late game: 4 aligners + 2 scramblers
-        elif step >= 200:
-            scrambler_budget = 1  # Start disrupting after economy stable
+        elif step >= 100:
+            scrambler_budget = 1  # Start disrupting early
         else:
             scrambler_budget = 0
         aligner_budget = pressure_budget - scrambler_budget

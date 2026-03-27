@@ -31,3 +31,21 @@ status: in-progress
 - Scramblers start at step 200 (was 100)
 - Survival retreat more aggressive: triggers at distance 5+ with hp < distance+10
 - Testing v81 with seeds 42, 123, 456
+
+## v81 Results
+- seed=42: 2.60, seed=123: 7.19, seed=456: 2.82 → Avg 4.20
+- Wipeout fixed but economy gating too aggressive, hurt good seeds
+
+## v82 Results (less aggressive gating)
+- seed=42: 2.29, seed=123: 2.29, seed=456: 3.96 → Avg 2.85
+- Still too conservative
+
+## v83 Results (minimal changes: economy protection only when critical)
+Changes: pressure drops to 2/4 when min_res < 1/3, but keeps v78 timing otherwise
+- seed=42: 2.69, seed=123: 2.48, seed=456: 11.79, seed=1337: 8.44, seed=999: 8.96, seed=7777: 1.02
+- **Avg: 5.90** — NO WIPEOUTS, best average yet!
+- Key insight: minimal economy protection is enough, don't slow down good seeds
+
+## v84 Changes (in progress)
+- Skip retreat when near hub with dead economy (prevents retreat oscillation)
+- Keep v83 economy protection
