@@ -391,9 +391,9 @@ class SemanticCogAgentPolicy(AgentPolicy):
         # If far from territory in early game, rush back before dying.
         hp = int(state.self_state.inventory.get("hp", 0))
         step = state.step or self._step_index
-        if step < 150 and safe_target is not None and safe_distance > 8:
-            # At distance 8+, likely outside territory. Rush back if HP draining.
-            if hp < 40 or (hp < 50 and safe_distance > 15):
+        if step < 200 and safe_target is not None and safe_distance > 5:
+            # Rush to territory if HP is dropping — must arrive before hp=0
+            if hp < safe_distance + 10 or (hp < 40 and safe_distance > 8):
                 return self._move_to_known(state, safe_target, summary="survival_retreat")
 
         if self._should_retreat(state, role, safe_target):
@@ -1357,10 +1357,24 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # 2 aligners first 30 steps to avoid gear station contention,
-            # then scale up pressure while keeping enough miners.
-            if step < 30:
-                pressure_budget = 2
+            # Economy-gated role assignment: don't assign pressure roles
+            # until hub has enough resources to sustain them.
+            # This prevents the death spiral where agents can't get gear.
+            if step < 60:
+                # Pure mining bootstrap: build resource buffer first.
+                # Only assign 2 aligners if economy is healthy.
+                if min_res >= 10:
+                    pressure_budget = 2
+                else:
+                    pressure_budget = 0  # All miners until economy established
+            elif step < 200:
+                # Gradual ramp-up: add aligners as economy allows
+                if min_res >= 8:
+                    pressure_budget = 4  # 4 miners
+                elif min_res >= 4:
+                    pressure_budget = 2  # 6 miners
+                else:
+                    pressure_budget = 0  # Economy struggling, all mine
             elif step < 3000:
                 pressure_budget = 5  # 3 miners
                 # Scale down pressure to boost economy when resources critical
@@ -1370,14 +1384,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     pressure_budget = 4  # 4 miners to rebuild
             else:
                 pressure_budget = 6  # Late game: 2 miners, economy established
-                if min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 4
+                if min_res < 3 and not _h.team_can_refill_hearts(state):
+                    pressure_budget = 3
 
-        # Scramblers to disrupt ship chains (earlier start = better defense)
+        # Scramblers to disrupt ship chains
         if step >= 3000:
             scrambler_budget = 2  # Late game: 4 aligners + 2 scramblers
-        elif step >= 100:
-            scrambler_budget = 1  # Start disrupting early
+        elif step >= 200:
+            scrambler_budget = 1  # Start disrupting after economy stable
         else:
             scrambler_budget = 0
         aligner_budget = pressure_budget - scrambler_budget

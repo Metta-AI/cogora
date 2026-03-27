@@ -7,3 +7,27 @@ status: in-progress
 - Key context: seed=123 still wipeout in v74, need to fix consistency
 - Goal: raise average score above 10 across all seeds
 - Strategy: investigate what makes seed=456 work (11.68) vs seed=123 fail, fix wipeout
+
+## Baseline Tests (v78)
+- seed=42: 0.00 (wipeout - all agents hp=0 from step 100, never recover)
+- seed=123: 7.02
+- seed=456: 19.19 (!)
+- Avg: 8.74 (but 0.00 wipeout drags it down)
+
+## Wipeout Analysis
+- Root cause: economy death spiral
+- Hub starts with 24 of each element, gets consumed by gear purchases
+- If hub runs dry before miners deposit, nobody can get gear or hearts
+- All agents stuck at hp=0 for entire game
+- Fix: economy-gated role assignment + better early survival retreat
+
+## v81 Changes
+- Economy-gated pressure budgets:
+  - Step 0-60: all miners unless min_res >= 10
+  - Step 60-200: gradual ramp (0/2/4 pressure based on min_res)
+  - Step 200-3000: 5 pressure (drop to 2 if economy struggling)
+  - Step 3000+: 6 pressure (drop to 3 if struggling)
+  - Economy thresholds raised from 1 to 3
+- Scramblers start at step 200 (was 100)
+- Survival retreat more aggressive: triggers at distance 5+ with hp < distance+10
+- Testing v81 with seeds 42, 123, 456
