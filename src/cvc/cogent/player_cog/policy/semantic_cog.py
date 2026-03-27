@@ -571,7 +571,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
         current_pos = _h.absolute_position(state)
         team_id = _h.team_id(state)
 
-        max_patrol_distance = 12  # Only nearby patrols to minimize wasted steps
+        max_patrol_distance = 15  # Slightly wider patrol radius
         candidates: list[tuple[int, float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             # Only patrol previously-friendly junctions — these affect score
@@ -582,8 +582,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if self._is_in_ship_danger_zone(pos):
                 continue
             staleness = step - last_seen_step
-            # Ships scramble every 70 ticks — check after 80 (only on 2nd scramble cycle)
-            if staleness < 80:
+            # Check junctions more frequently — ships scramble every 70 ticks
+            if staleness < 50:
                 continue
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
