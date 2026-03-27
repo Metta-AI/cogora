@@ -1237,19 +1237,12 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 3
         else:
             # Economy-first: mine early, then ramp up aligners on a fixed schedule.
-            # Resource-gating causes under-alignment because miners carry resources
-            # that don't show in team inventory.
-            if step < 40:
-                pressure_budget = 0  # All mine for first 40 steps
-            elif step < 80:
-                pressure_budget = 2  # 2 aligners while economy builds
-            elif step < 200:
-                pressure_budget = 4  # 4 aligners, 4 miners
-            else:
-                pressure_budget = 6  # 6 aligners, 2 miners for rest of game
-                # Scale back only if economy is truly starved
-                if min_res < 3 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 4
+            # 5 aligners + 3 miners: proven balance. With num_agents bug fixed,
+            # this now actually gives 5 aligners (previously was capped at 3).
+            pressure_budget = 5
+            # Scale back if economy collapses
+            if min_res < 3 and step > 100 and not _h.team_can_refill_hearts(state):
+                pressure_budget = 3
 
         scrambler_budget = 0  # No scramblers — all pressure agents are aligners
         aligner_budget = pressure_budget - scrambler_budget
