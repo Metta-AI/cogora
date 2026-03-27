@@ -1508,6 +1508,7 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
         self._shared_claims: dict[tuple[int, int], tuple[int, int]] = {}
         self._shared_junctions: dict[tuple[int, int], tuple[str | None, int]] = {}
         self._shared_ship_positions: dict[tuple[int, int], tuple[int, int]] = {}
+
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = SemanticCogAgentPolicy(
