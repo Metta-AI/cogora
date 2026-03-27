@@ -30,3 +30,22 @@ status: in-progress
 - 2 miners produce ~0.071 hearts/step; 4 aligners need ~0.27/step
 - Economy can barely support 1 aligner's heart needs
 - Hub-proximal junctions are much more efficient (less travel, safer from ships)
+
+## New Baseline from Sync (f92a07f)
+- Major sync: removed ship tracking, patrol, frontier, hub camping
+- Simplified pressure (fixed 4→5 based on tres>=20)
+- deposit_threshold=40, _MINING_ALIGNER_MIN_RESOURCE=20
+- _DEFAULT_BOUND_MARGIN=8 (A*), _SHARED_JUNCTION_MEMORY_STEPS=400
+- New baseline (5 games): 3.18, 0.00, 1.87, 3.18, 2.29 → avg 2.10
+
+## v101 (re-added hub camping + economy improvements)
+- Scores: 0.00, 2.19, 2.40, 2.17, 2.33 → avg 1.82
+- Hub camping too restrictive (safe_distance <= 2), still had wipeout
+
+## v102 (robust hub camping + economy responsive)
+- Extended hub camp to step<=10, distance<=8, rush if not at hub
+- Wipeout recovery at distance<=8
+- Economy-responsive pressure budgets
+- Lower heart batch (3 vs 4), lower aligner min resource (14 vs 20)
+- Wider A* bounds (12 vs 8)
+- Scores: 2.68, 2.05, 2.05, 2.68, 2.29, 1.52 → avg 2.21, NO WIPEOUTS

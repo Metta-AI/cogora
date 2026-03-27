@@ -27,13 +27,13 @@ _STATION_OFFSETS = {
 }
 _TEMP_BLOCK_STEPS = 10
 _RETREAT_MARGIN = 20
-_DEFAULT_BOUND_MARGIN = 8
+_DEFAULT_BOUND_MARGIN = 12
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
 _SHARED_JUNCTION_MEMORY_STEPS = 400
 _OSCILLATION_HISTORY_STEPS = 6
 _OSCILLATION_UNSTICK_STEPS = 4
-_MINING_ALIGNER_MIN_RESOURCE = 20
+_MINING_ALIGNER_MIN_RESOURCE = 14
 _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 2
 _ALIGNER_PRIORITY = (4, 5, 6, 7, 3)
 _SCRAMBLER_PRIORITY = (7, 6)
@@ -381,7 +381,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         # If far from territory in early game, rush back before dying.
         if step < 150 and safe_target is not None and safe_distance > 8:
-            # At distance 8+, likely outside territory. Rush back if HP draining.
             if hp < 40 or (hp < 50 and safe_distance > 15):
                 return self._move_to_known(state, safe_target, summary="survival_retreat")
 
@@ -1132,17 +1131,29 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
 
-        pressure_budget = 4
-        if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
-            pressure_budget = 5
+        # Economy-responsive: start conservative, ramp when economy allows
+        if step < 10:
+            pressure_budget = 2  # Hub camping phase
+        elif step < 100:
+            pressure_budget = 3  # Early: 5 miners build economy
+            if min_res >= 10:
+                pressure_budget = 4
+        else:
+            # Base: 4 pressure (4 miners). Ramp to 5 when economy sustains it.
+            pressure_budget = 4
+            if min_res >= _MINING_ALIGNER_MIN_RESOURCE:
+                pressure_budget = 5
+            # Scale down if economy dying
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 2  # Emergency: all mine
 
         scrambler_budget = 0
-        if step >= 1_500:
+        if step >= 1_500 and min_res >= 5:
             scrambler_budget = 1
-        if step >= 5_000 and _h.team_can_refill_hearts(state):
-            scrambler_budget = 2
-        aligner_budget = pressure_budget - scrambler_budget
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":
