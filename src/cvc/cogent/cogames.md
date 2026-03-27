@@ -28,13 +28,17 @@ cogames play -m machina_1 -c 8 -p starter -r log --autostart --steps=5000 > /tmp
 ## Uploading to Tournament
 
 ```bash
-# IMPORTANT: Must use full class path, include source directories, and pass API key
+# IMPORTANT: Must use full class path, include source directories, setup script, and API key
 cogames upload \
   -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" \
   -n alpha.0 \
   -f src/cvc -f src/mettagrid_sdk \
+  --setup-script src/cvc/setup_policy.py \
   --secret-env COGORA_ANTHROPIC_KEY=$COGORA_ANTHROPIC_KEY \
   --skip-validation
+
+# Use --dry-run to test locally without uploading:
+cogames upload ... --dry-run
 ```
 
 ## Checking Results
@@ -57,6 +61,7 @@ After validating changes in free-play, enter the tournament:
      -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" \
      -n alpha.N \
      -f src/cvc -f src/mettagrid_sdk \
+     --setup-script src/cvc/setup_policy.py \
      --secret-env COGORA_ANTHROPIC_KEY=$COGORA_ANTHROPIC_KEY \
      --skip-validation
    ```
