@@ -64,6 +64,23 @@ Key findings:
 - Huge variance: 0.86 to 5.73 across seeds
 
 ## v65: add 1 scrambler to slow ship expansion
-- 1 scrambler from step 200 (disrupts ship chain, slows frontier)
-- Heart batch 7 at step 8000
-- Testing with 10k steps...
+10k Results: 42→2.42(+147%), 123→1.75(-69%), 456→3.66(+326%)
+- Scrambler hugely helps ship-dominated maps
+- Hurts favorable maps (1 fewer aligner)
+- Average: 2.61 (BEST 10k average)
+
+## v66/v67: aggressive retreat + adaptive scrambler
+10k Results: 42→1.07, 123→1.59, 456→0.66 → Avg 1.11 (TERRIBLE)
+- Retreat margin too aggressive (seed=123: 232→61 alignments)
+- Adaptive scrambler threshold too finicky
+
+## v68: reverted to v65 config (best)
+Config: 1 scrambler from step 200, ship decay 150, miner offsets closer
+Uploaded to tournament
+
+## Summary of all 10k results
+| Version | seed=42 | seed=123 | seed=456 | Avg  |
+|---------|---------|----------|----------|------|
+| v63 (no scrambler) | 0.98 | **5.73** | 0.86 | 2.52 |
+| v65 (1 scrambler)  | **2.42** | 1.75 | **3.66** | **2.61** |
+| v67 (adaptive+retreat)| 1.07 | 1.59 | 0.66 | 1.11 |
