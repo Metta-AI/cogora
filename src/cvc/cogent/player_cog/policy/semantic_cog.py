@@ -200,12 +200,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
         world_model: SharedWorldModel,
         shared_claims: dict[tuple[int, int], tuple[int, int]],
         shared_junctions: dict[tuple[int, int], tuple[str | None, int]],
+        shared_extractors: dict[tuple[int, int], tuple[str, int]] | None = None,
     ) -> None:
         super().__init__(policy_env_info)
         self._agent_id = agent_id
         self._world_model = world_model
         self._shared_claims = shared_claims
         self._shared_junctions = shared_junctions
+        self._shared_extractors = shared_extractors if shared_extractors is not None else {}
         self._memory = MemoryStore()
         self._previous_state: MettagridState | None = None
         self._last_global_pos: tuple[int, int] | None = None
@@ -252,6 +254,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         self._world_model.update(state)
         self._update_shared_junctions(state)
+        self._update_shared_extractors(state)
         self._world_model.prune_missing_extractors(
             current_position=_h.absolute_position(state),
             visible_entities=state.visible_entities,
@@ -708,6 +711,16 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 state.step or self._step_index,
             )
 
+    def _update_shared_extractors(self, state: MettagridState) -> None:
+        step = state.step or self._step_index
+        for entity in state.visible_entities:
+            if not entity.entity_type.endswith("_extractor"):
+                continue
+            gx = int(entity.attributes.get("global_x", entity.position.x))
+            gy = int(entity.attributes.get("global_y", entity.position.y))
+            pos = (gx, gy)
+            self._shared_extractors[pos] = (entity.entity_type, step)
+
     def _shared_junction_entities(
         self,
         state: MettagridState,
@@ -863,18 +876,43 @@ class SemanticCogAgentPolicy(AgentPolicy):
             return None
 
         current_pos = _h.absolute_position(state)
+        step = state.step or self._step_index
         candidates: list[KnownEntity] = []
+        # Collect from local world model
+        local_positions: set[tuple[int, int]] = set()
         for resource_name in _h.resource_priority(state, resource_bias=self._resource_bias):
             matches = self._world_model.entities(
                 entity_type=f"{resource_name}_extractor",
-                predicate=lambda entity: _h.is_usable_recent_extractor(entity, step=state.step or self._step_index),
+                predicate=lambda entity: _h.is_usable_recent_extractor(entity, step=step),
             )
+            for m in matches:
+                local_positions.add(m.position)
             candidates.extend(
                 sorted(
                     matches,
                     key=lambda entity: (_h.manhattan(current_pos, entity.position), entity.position),
                 )
             )
+        # Add shared extractors not in local model
+        shared_extras: list[KnownEntity] = []
+        for pos, (etype, last_step) in self._shared_extractors.items():
+            if pos in local_positions:
+                continue
+            if step - last_step > _h._EXTRACTOR_MEMORY_STEPS:
+                continue
+            shared_extras.append(KnownEntity(
+                entity_type=etype,
+                global_x=pos[0],
+                global_y=pos[1],
+                labels=(),
+                team=None,
+                owner=None,
+                last_seen_step=last_step,
+                attributes={},
+            ))
+        if shared_extras:
+            shared_extras.sort(key=lambda e: (_h.manhattan(current_pos, e.position), e.position))
+            candidates.extend(shared_extras)
         if not candidates:
             return None
 
@@ -1268,6 +1306,7 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
         self._agent_policies: dict[int, SemanticCogAgentPolicy] = {}
         self._shared_claims: dict[tuple[int, int], tuple[int, int]] = {}
         self._shared_junctions: dict[tuple[int, int], tuple[str | None, int]] = {}
+        self._shared_extractors: dict[tuple[int, int], tuple[str, int]] = {}
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
@@ -1277,11 +1316,13 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
                 world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
+                shared_extractors=self._shared_extractors,
             )
         return self._agent_policies[agent_id]
 
     def reset(self) -> None:
         self._shared_claims.clear()
         self._shared_junctions.clear()
+        self._shared_extractors.clear()
         for policy in self._agent_policies.values():
             policy.reset()

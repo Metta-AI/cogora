@@ -7,3 +7,13 @@ status: in-progress
 - Prior session tried shared world model (regressed), 6-aligner (regressed)
 - Goal: achieve score > 10
 - Plan: 1) Read current policy code thoroughly, 2) Identify biggest bottlenecks, 3) Implement improvements, 4) Test and iterate
+
+## Progress
+- Read entire policy codebase: semantic_cog.py, helpers/{types,resources,targeting,geometry}.py
+- Identified key bottleneck: SharedWorldModel is per-agent, extractors not shared between agents
+- Previous session confirmed: sharing WorldModel breaks pathfinding (occupied_cells blocks everything)
+- Solution: added shared_extractors dict (like shared_junctions) for cross-agent extractor discovery
+- Added expanded aligner explore offsets (radius 30 ring) for better junction finding
+- Tested shared WorldModel directly → score 0 (pathfinding broken as expected)
+- Tested shared_extractors approach → score 0.30/500 steps (baseline 0.41/500)
+- Running 5000-step comparison test
