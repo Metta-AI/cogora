@@ -24,6 +24,9 @@ status: in-progress
 - CRITICAL BUG CONFIRMED: v18-v26 ALL FAILED in tournament
   - "cvc-cog" treated as Python symbol name → ModuleNotFoundError: Invalid symbol name: cvc-cog
   - Fix: use class=cvc.cogent.player_cog.policy.semantic_cog.MettagridSemanticPolicy
-  - Must include -f src/cvc to bundle source files for tournament server
-- Restored original baseline + minimal adaptive changes
-- Uploaded v27 (full class path) and v28 (with source files included)
+  - Must include -f src/cvc -f src/mettagrid_sdk to bundle source files for tournament server
+- Made extractors walkable in pathfinding (occupied_cells fix)
+- Diversified miner explore offsets (8 directions vs 4)
+- Removed shared extractor code that was accidentally left in
+- v31 qualifying score: 1.76! First successful match since v17
+- v32+ also uploaded with upstream tuning changes (deposit=20, heart_batch=2, explore ring 22+32)
