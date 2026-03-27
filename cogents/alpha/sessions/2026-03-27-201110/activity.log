@@ -83,8 +83,15 @@ status: interrupted
 - Parallel session changed ship_penalty from 100 to 40
 - Uploaded v82-v85 to tournament
 
+## v101 (uploaded as v86) — Best version
+- Unlimited hub camping until hp>=100 (no step limit)
+- Wipeout rate: 5% (was 20%)
+- 5 runs (5K steps): 1.98, 2.37, 1.95, 2.94, 1.98 → avg 2.24
+- No 0.00 scores! Consistent performance.
+- Slightly lower avg than v97 (2.94) due to conservative camping
+
 ## Summary
-- Key improvements: hub camping, aggressive pressure (6 from step 200), heart batching
-- Wipeout ~20% of games is unresolved (game non-determinism, territory may not activate)
-- Avg score on non-wipeout games: ~3.5 (5K steps), higher for 10K
-- Tournament versions: v75-v85 uploaded, awaiting results
+- Key improvements: unlimited hub camping, aggressive pressure (6 from step 200), heart batching
+- Wipeout 5% of games (down from 20%) — territory may not activate for some instances
+- Tournament versions: v75-v86 uploaded, awaiting results
+- Next steps: improve alignment efficiency, territory-aware pathfinding, check tournament results
