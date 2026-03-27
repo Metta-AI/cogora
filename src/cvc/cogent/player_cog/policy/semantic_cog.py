@@ -1302,13 +1302,17 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 3
         else:
             # 2 aligners first 30 steps to avoid gear station contention,
-            # then full 5 aligners. This was the best-tested configuration.
+            # then full 5 aligners. Smooth economy-based scaling prevents crash.
             if step < 30:
                 pressure_budget = 2
             else:
                 pressure_budget = 5  # Full pressure
-                if min_res < 3 and step > 200 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 3
+                # Smooth economy scaling: reduce aligners as economy drops
+                if step > 200:
+                    if min_res < 3 and not _h.team_can_refill_hearts(state):
+                        pressure_budget = 3
+                    elif min_res < 7:
+                        pressure_budget = 4
 
         scrambler_budget = 0  # No scramblers — all pressure agents are aligners
         aligner_budget = pressure_budget - scrambler_budget
