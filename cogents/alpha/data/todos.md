@@ -1,20 +1,19 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (best single: 11.68, best avg: 4.99)
-- [ ] Fix economy death spiral (30% wipeout rate, all agents hp=0 by step 100-1000)
-  - Root cause: game randomness + some maps have hostile spawns
-  - Ideas: early economy bootstrap, smarter resource management
-- [ ] Reduce score degradation in 2nd half of 10k games (ships expand)
-- [ ] Check competition match results (v60-v66 uploaded)
-- [ ] Try smarter miner placement (closer to hub for faster deposits)
-- [ ] Territory-aware pathfinding (cost=4 outside territory in A*)
-- [x] Remove aligner emergency mining (aligners stay focused on alignment)
-- [x] Patrol optimization (only friendly junctions, 12 tiles, staleness >80)
-- [x] 2 scramblers in late game (step 3000+, 4 aligners + 2 scramblers)
-- [x] Scrambler targets threats near friendly junctions
-- [x] 6 pressure agents late game (2 miners after step 3000)
-- [x] Discover ship mechanics: static at corners, scramble/align every 70 ticks
-- [x] Tournament uses 10,000 steps (not 5,000)
-- [x] Set up environment (cogames, auth, venv)
-- [x] Port mettagrid_sdk to enable semantic_cog policy
-- [x] Upload to tournament (v15-v66)
+- [ ] Achieve score > 10 in CogsVsClips (best single: 5.38, best avg: 2.94 over 10 games)
+- [ ] Investigate why some games still score < 2 (bad map layouts?)
+- [ ] Try territory-aware pathfinding (cost=4 outside territory in A*)
+- [ ] Optimize alignment chain building (prioritize junctions that extend network)
+- [ ] Reduce aligner travel time (closer target selection, better pathing)
+- [ ] Check competition match results (v75-v83 uploaded)
+- [ ] Consider late-game strategy shifts (more scramblers when ships dominate)
+- [x] Fix economy death spiral: hub camping prevents wipeout (v96/v97)
+- [x] Wipeout recovery: agents hold at hub when hp=0 (v98)
+- [x] Aggressive pressure budgets: 6 pressure (2 miners) from step 200
+- [x] Heart batching: 6/7/8 at steps 500/2000/5000
+- [x] Lower retreat margin to 22 (was 28)
+- [x] 2nd scrambler at step 1000 (was 1500+)
+- [x] Ship danger zone avoidance (100 penalty)
+- [x] Discover game is non-deterministic (same seed gives different results)
+- [x] Set up environment (cogames 0.21.1, auth, venv)
+- [x] Upload to tournament (v15-v83)
