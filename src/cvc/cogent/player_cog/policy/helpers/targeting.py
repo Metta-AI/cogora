@@ -45,15 +45,21 @@ def aligner_target_score(
         if any(manhattan(candidate.position, enemy.position) <= _JUNCTION_AOE_RANGE for enemy in enemy_junctions)
         else 0.0
     )
-    # Prefer hub-proximal junctions — far junctions are likely near ship zones
+    # Strongly prefer hub-proximal junctions:
+    # - Less travel time (more alignments/tick)
+    # - Less HP drain
+    # - More likely safe from ships (ships in corners)
     hub_penalty = 0.0
     if hub_position is not None:
         hub_dist = float(manhattan(hub_position, candidate.position))
-        # Junctions >25 from hub are likely near map corners where ships are
-        if hub_dist > 25:
-            hub_penalty = (hub_dist - 25) * 1.5 + 8.0
+        if hub_dist > 30:
+            # Very far — almost certainly in ship zone
+            hub_penalty = (hub_dist - 30) * 3.0 + 20.0
+        elif hub_dist > 20:
+            hub_penalty = (hub_dist - 20) * 1.5 + 5.0
         else:
-            hub_penalty = hub_dist * 0.25
+            # Close to hub — small linear penalty to still prefer closest
+            hub_penalty = hub_dist * 0.3
     # Very heavy penalty for junctions in ship scramble range — they'll be auto-scrambled every 70 ticks
     ship_penalty = 100.0 if in_ship_danger_zone else 0.0
     return (
