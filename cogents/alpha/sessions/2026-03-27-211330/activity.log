@@ -55,3 +55,15 @@ status: in-progress
 - All 8 agents did noop for 5000 steps (territory never activated)
 - Fix: add step <= 20 timeout, then fall through to wipeout recovery
 - Testing interrupted by user question about cyborg policy
+
+## Policy Architecture Switch
+- User directed: stop using MettagridSemanticPolicy directly
+- Switch to cyborg policies:
+  - AlphaCyborgPolicy: lightweight (no LLM), for fast local iteration
+  - AnthropicCyborgPolicy: full LLM cyborg, for tournament
+- semantic_cog.py remains as internal base class (pilot_base.py depends on it)
+- Removed MettagridSemanticPolicy from __init__.py exports
+- Updated cogames.md with new policy class paths
+- Key difference: AlphaCogAgentPolicy overrides pressure_budgets (4→5 aligners, no scramblers)
+  and adds miner retreat distance limit (_MINER_MAX_HUB_DISTANCE=18)
+- TODO: test AlphaCyborgPolicy and establish new baseline

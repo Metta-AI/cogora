@@ -12,11 +12,14 @@ cogames auth set-token $COGAMES_TOKEN
 ## Running Games Locally
 
 ```bash
-# Run with your policy (8 cogs, full game)
+# Run with lightweight cyborg policy (no LLM, fast iteration)
+cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog.policy.anthropic_pilot.AlphaCyborgPolicy -r log --autostart > /tmp/cogames/latest.log 2>&1
+
+# Run with full LLM cyborg (requires ANTHROPIC_API_KEY)
 cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy -r log --autostart > /tmp/cogames/latest.log 2>&1
 
 # Shorter test (100 steps)
-cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy -r log --autostart --steps=100 > /tmp/cogames/latest.log 2>&1
+cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog.policy.anthropic_pilot.AlphaCyborgPolicy -r log --autostart --steps=100 > /tmp/cogames/latest.log 2>&1
 
 # Run with starter policy for comparison
 cogames play -m machina_1 -c 8 -p starter -r log --autostart --steps=5000 > /tmp/cogames/starter.log 2>&1
@@ -110,9 +113,11 @@ build understanding of what strategies work.
 The policy uses a **cyborg** architecture: an LLM (Anthropic) reviews and adjusts
 decisions made by a Python heuristic baseline at runtime.
 
-- `src/cvc/cogent/player_cog/policy/semantic_cog.py` — Python heuristic baseline
+- `src/cvc/cogent/player_cog/policy/semantic_cog.py` — Python heuristic base (internal, do not use directly)
+- `src/cvc/cogent/player_cog/policy/anthropic_pilot.py` — Policy classes:
+  - `AlphaCyborgPolicy` — Lightweight (no LLM), for fast local iteration
+  - `AnthropicCyborgPolicy` — Full LLM cyborg (used in tournament)
 - `src/cvc/cogent/player_cog/policy/pilot_base.py` — Cyborg wrapper: LLM reviews runtime telemetry and adjusts strategy
-- `src/cvc/cogent/player_cog/policy/anthropic_pilot.py` — Anthropic-backed cyborg (used in tournament)
 - `src/cvc/cogent/player_cog/runtime/` — LLM session management, artifact storage
 
 The LLM detects stagnation patterns (oscillation, target fixation, resource bias
