@@ -65,5 +65,10 @@ status: in-progress
 - Hub camping: agents stay at hub for first 3 steps to let territory establish
 - Tested 5x on seed 123: 5/5 runs show hp=100 at step 5 (was 0 before)
 - Eliminates the non-deterministic wipeout entirely
-- Uploaded as alpha.0:v76 and v78 to tournament
-- Running 10-game random benchmark for reliable average
+- Uploaded as alpha.0:v76, v78, v80 to tournament
+
+## v97 Results (v91 + hub camping + crash fix, 10 random games, 5K steps)
+- Runs 1-5: 3.17, 4.83, 1.52, 4.73, 3.02 → avg 3.45
+- No wipeouts! All runs have hp=100
+- Still below target of 10, variance is high
+- Run 3 low (1.52) was not a wipeout — just bad map layout
