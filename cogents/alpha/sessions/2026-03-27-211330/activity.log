@@ -1,0 +1,12 @@
+# Activity Log: 2026-03-27-211330
+
+status: in-progress
+
+## Session Start
+- Previous session (201110) interrupted, cleaned up
+- Hub camping breakthrough in v96/v97 eliminates wipeouts
+- v97 baseline: avg 3.45 (10 random games, 5K steps), no wipeouts
+- Best single: ~17.24 (v78 seed), best avg: ~5.70 (v78 8-seed)
+- Uploaded v76/v78/v80 to tournament
+- Goal: achieve consistent score > 10
+- Key focus: need ~3x improvement from 3.45 avg to 10+
