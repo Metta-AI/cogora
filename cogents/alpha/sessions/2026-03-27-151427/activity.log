@@ -104,3 +104,19 @@ status: interrupted
 - Best single: 6.59 (seed 1337)
 - Network down (SSL cert), unable to upload
 - User's v74 scored 11.68 on seed=456 at 10k steps
+
+### v77-v79 Progress (from concurrent session)
+- v77: faster patrol (staleness 50, radius 15)
+- v78: patrol staleness 35 → **17.24 on seed=456**, 10.41 on seed=1337
+- v79: stronger hub proximity penalty, frontier explore capped at 25 tiles
+- v79 test (5k, my session): avg 3.06, 0 wipeouts (survival retreat helping)
+- 10k test: seed 456 at 7.19, seed 42 at 2.63
+
+### Summary of All Contributions This Session
+1. **Deep game mechanics analysis**: score formula, clips behavior, territory healing
+2. **Aligner time breakdown**: identified 49% search, 14% deposit as key bottlenecks
+3. **Survival retreat (KEY)**: HP=50, drain -1/tick, territory heals +100/tick
+   - Reduced wipeout-induced average loss by ~15%
+4. **Idle mining for aligners**: productive use of idle time
+5. **Deposit-only-close**: eliminates wasted aligner travel for deposits
+6. **Hub proximity analysis**: confirmed ships at corners, hub area safest
