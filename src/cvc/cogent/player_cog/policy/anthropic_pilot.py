@@ -47,7 +47,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Aggressive alignment with scrambler defense — v115."""
+        """Aggressive alignment with dual scrambler defense — v116."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
 
@@ -64,18 +64,23 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         if min_res < 1 and not _h.team_can_refill_hearts(state):
             return 3, 0
 
-        # Phase 3: 5 aligners + 1 scrambler, 2 miners
+        # Phase 3: Ramp up alignment then add scramblers
         aligner_budget = 5
         scrambler_budget = 0
 
-        # Only scale down if economy is really struggling (was < 5, now < 3)
+        # Only scale down if economy is really struggling
         if min_res < 3:
             aligner_budget = 4
 
-        # Add scrambler earlier (step 300, was 400) with lower threshold
+        # First scrambler at step 300
         if step >= 300 and min_res >= 3:
             scrambler_budget = 1
             aligner_budget = min(aligner_budget, 4)
+
+        # Second scrambler at step 800 for stronger defense
+        if step >= 800 and min_res >= 5:
+            scrambler_budget = 2
+            aligner_budget = min(aligner_budget, 3)
 
         if objective == "resource_coverage":
             return 0, 0

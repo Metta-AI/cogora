@@ -26,12 +26,14 @@ status: in-progress
 - Defensive scrambler: threat_bonus * 10 for friendly junctions
 - 10-game avg: 2.38 (non-wipeout 2.41), best single: 3.46
 
-## v116 Territory Pathfinding (REVERTED)
-- A* cost +1 outside hub territory range (10 tiles)
-- Scores: 1.96, 2.69, 2.35, 2.35, 1.87 → avg 2.24 (worse than v112)
-- Penalty made miner paths too expensive, reverted
+## Baseline Test (this session)
+- Score: 1.87 (132 alignments, 65 lost to clips, 197 hearts, 1 death)
+- Each aligner only ~30 alignments in 5000 steps (1 per ~167 steps — too slow)
+- Agent 3 (last aligner): 25 gear switches! Massive churn problem
+- Scrambler (agent 7): 65 scrambles, 4 alignments — effective
 
-## Tournament Update
-- Spotted real opponent: gtlm-reactive competing against our v100
-- v105 being scheduled in qualifying pool
-- No completed match results yet
+## v115 Changes (testing)
+- Reduced gear churn threshold: min_res < 3 (was < 5) to switch 5→4 aligners
+- Earlier scrambler: step 300 (was 400), min_res >= 3 (was >= 5)
+- Heart batch: 3 base → 4 at 500 → 5 at 2000 (was 2 → 6 → 7 → 8)
+- Stronger hub proximity in targeting (steeper penalties beyond 10/15/25 tiles)
