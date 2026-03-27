@@ -43,4 +43,10 @@ status: in-progress
 - Tournament v34 in competition matches (vs other policies!)
 - v30 is #1 on leaderboard at 1.92, we hold top 5 spots
 - v6 10k test: 1.66, v7 10k test: 1.21 (high variance persists)
-- Upload failures due to S3 503 errors
+- Upload failures due to S3 503 errors (resolved)
+- **BREAKTHROUGH: v8 scored 4.92 in 10k test!**
+  - Scramble zone detection avoiding ship-adjacent junctions works!
+  - Junctions in safe zones persist throughout the game
+  - Score increased from ~1.5 to ~5.0 (3x improvement)
+- Changed to 6 aligners (was 4-5) + increased retreat margin to 30
+- Uploaded v37 with all improvements
