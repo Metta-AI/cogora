@@ -1,10 +1,11 @@
-"""Alpha's CogsVsClips policy v3.
+"""Alpha's CogsVsClips policy v4.
 
-Key improvements over v2:
-- Track estimated global position for dead-reckoning navigation back to hub
-- Only pick up assigned gear (don't walk on wrong gear stations)
-- Better exploration patterns that stay within territory (~18 tiles from hub)
-- Miners target balanced resources across all 4 elements
+Key improvements:
+- All non-miners are aligners (maximize scoring)
+- Wall-following when stuck instead of random unstick
+- Larger exploration range (territory extends 19 tiles)
+- Removed diagnostic code for performance
+- Better exploration: longer sweeps with wall-following
 """
 
 from __future__ import annotations
@@ -23,9 +24,11 @@ ELEMENTS = ("carbon", "oxygen", "germanium", "silicon")
 DIRECTIONS = ("north", "south", "east", "west")
 OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
 DIR_DELTA = {"north": (-1, 0), "south": (1, 0), "east": (0, 1), "west": (0, -1)}
+# For wall-following: turn right
+TURN_RIGHT = {"north": "east", "east": "south", "south": "west", "west": "north"}
+TURN_LEFT = {"north": "west", "west": "south", "south": "east", "east": "north"}
 
 # Gear station offsets from hub: (row_delta, col_delta)
-# Original semantic_cog uses (x,y) = (col,row), so we swap to (row,col)
 GEAR_STATION_OFFSETS = {
     "aligner": (4, -3),
     "scrambler": (4, -1),
@@ -33,7 +36,7 @@ GEAR_STATION_OFFSETS = {
     "scout": (4, 3),
 }
 
-# 2 miners, 5 aligners, 1 scrambler
+# 2 miners, 6 aligners - maximize scoring agents
 ROLE_MAP = {
     0: "miner",
     1: "miner",
@@ -42,12 +45,12 @@ ROLE_MAP = {
     4: "aligner",
     5: "aligner",
     6: "aligner",
-    7: "scrambler",
+    7: "aligner",
 }
 
 MINER_DEPOSIT_THRESHOLD = 4
 HP_DANGER = 40
-MAX_RANGE = 15  # Max tiles from hub before turning back
+MAX_RANGE = 18  # Territory extends ~19 tiles
 
 
 @dataclass
@@ -62,14 +65,16 @@ class AlphaState:
     unstick_dir: int = 0
     hub_wait_steps: int = 0
     explore_step: int = 0
-    # Dead-reckoning position tracking (relative to start/hub)
-    est_row: int = 0  # estimated row offset from hub
-    est_col: int = 0  # estimated col offset from hub
+    est_row: int = 0
+    est_col: int = 0
     last_move_dir: str = ""
-    # Hub absolute position in observation coords (when last seen)
-    hub_row: int = 0
-    hub_col: int = 0
     hub_seen: bool = False
+    # Wall-following state
+    following_wall: bool = False
+    wall_follow_dir: str = "east"
+    wall_follow_steps: int = 0
+    # Track aligned count for logging
+    aligned_count: int = 0
 
 
 class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
@@ -80,6 +85,7 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
         shared_claims: dict[tuple[int, int], int],
     ):
         self._agent_id = agent_id
+        self._policy_env_info = policy_env_info
         self._shared_claims = shared_claims
 
         self._action_names = policy_env_info.action_names
@@ -193,7 +199,7 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
     def _walls_around(self, obs: AgentObservation) -> set[str]:
         walls: set[str] = set()
         cr, cc = self._center
-        adj = {"north": (cr-1, cc), "south": (cr+1, cc), "east": (cr, cc+1), "west": (cr, cc-1)}
+        adj = {"north": (cr - 1, cc), "south": (cr + 1, cc), "east": (cr, cc + 1), "west": (cr, cc - 1)}
         for token in obs.tokens:
             if token.feature.name != "tag" or token.value not in self._wall_tags:
                 continue
@@ -209,9 +215,19 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
         return Action(name=name) if name in self._action_name_set else Action(name=self._fallback)
 
     def _move_dir(self, d: str, state: AlphaState) -> Action:
-        """Move in a direction and track position."""
         state.last_move_dir = d
         return self._act(f"move_{d}")
+
+    def _pick_dir(self, preferred: list[str], walls: set[str], state: AlphaState) -> Action:
+        """Move in the first non-wall direction from preference list."""
+        for d in preferred:
+            if d not in walls:
+                return self._move_dir(d, state)
+        # All blocked - try anything
+        for d in DIRECTIONS:
+            if d not in walls:
+                return self._move_dir(d, state)
+        return self._move_dir(preferred[0], state)
 
     def _move_toward(self, target: tuple[int, int], obs: AgentObservation, state: AlphaState) -> Action:
         cr, cc = self._center
@@ -222,68 +238,73 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
 
         walls = self._walls_around(obs)
         if abs(dr) >= abs(dc):
-            dirs = ["south" if dr > 0 else "north",
+            pref = ["south" if dr > 0 else "north",
                     "east" if dc > 0 else ("west" if dc < 0 else "east")]
         else:
-            dirs = ["east" if dc > 0 else "west",
+            pref = ["east" if dc > 0 else "west",
                     "south" if dr > 0 else ("north" if dr < 0 else "south")]
+        # Add perpendicular options (not opposite of primary)
         for d in DIRECTIONS:
-            if d not in dirs and d != OPPOSITE.get(dirs[0], ""):
-                dirs.append(d)
-
-        for d in dirs:
-            if d not in walls:
-                return self._move_dir(d, state)
-        return self._move_dir(dirs[0], state)
+            if d not in pref and d != OPPOSITE.get(pref[0], ""):
+                pref.append(d)
+        return self._pick_dir(pref, walls, state)
 
     def _move_toward_global(self, target_row: int, target_col: int, obs: AgentObservation, state: AlphaState) -> Action:
-        """Move toward a global position using dead-reckoning estimate."""
         dr = target_row - state.est_row
         dc = target_col - state.est_col
-        if dr == 0 and dc == 0:
+        if abs(dr) <= 1 and abs(dc) <= 1:
             return self._act(self._fallback)
 
         walls = self._walls_around(obs)
         if abs(dr) >= abs(dc):
-            dirs = ["south" if dr > 0 else "north",
+            pref = ["south" if dr > 0 else "north",
                     "east" if dc > 0 else ("west" if dc < 0 else "east")]
         else:
-            dirs = ["east" if dc > 0 else "west",
+            pref = ["east" if dc > 0 else "west",
                     "south" if dr > 0 else ("north" if dr < 0 else "south")]
         for d in DIRECTIONS:
-            if d not in dirs and d != OPPOSITE.get(dirs[0], ""):
-                dirs.append(d)
-
-        for d in dirs:
-            if d not in walls:
-                return self._move_dir(d, state)
-        return self._move_dir(dirs[0], state)
-
-    def _wander(self, state: AlphaState, obs: AgentObservation) -> Action:
-        walls = self._walls_around(obs)
-        if state.wander_steps <= 0:
-            state.wander_dir = (state.wander_dir + 1) % 4
-            state.wander_steps = 6 + (self._agent_id * 3) % 7
-        state.wander_steps -= 1
-        d = DIRECTIONS[state.wander_dir]
-        if d in walls:
-            for offset in [1, 3, 2]:
-                alt = DIRECTIONS[(state.wander_dir + offset) % 4]
-                if alt not in walls:
-                    d = alt
-                    break
-        return self._move_dir(d, state)
+            if d not in pref and d != OPPOSITE.get(pref[0], ""):
+                pref.append(d)
+        return self._pick_dir(pref, walls, state)
 
     def _explore(self, state: AlphaState, obs: AgentObservation) -> Action:
-        """Explore within territory range. Each agent explores a different direction."""
+        """Explore with wall-following behavior for better coverage."""
         dist = abs(state.est_row) + abs(state.est_col)
         if dist >= MAX_RANGE:
+            state.following_wall = False
             return self._move_toward_global(0, 0, obs, state)
 
+        walls = self._walls_around(obs)
         state.explore_step += 1
 
-        # Simple but effective: each agent goes in a different direction
-        # Cycle through directions with agent-specific offsets
+        # If currently following a wall, continue wall-following
+        if state.following_wall:
+            state.wall_follow_steps += 1
+            if state.wall_follow_steps > 30:
+                # Stop following after a while to avoid infinite loops
+                state.following_wall = False
+            else:
+                # Wall-following: try to move in wall_follow_dir
+                # If blocked, turn right. If unblocked on left, turn left.
+                d = state.wall_follow_dir
+                left = TURN_LEFT[d]
+                if left not in walls:
+                    # Opening on left - turn left to follow wall
+                    state.wall_follow_dir = left
+                    return self._move_dir(left, state)
+                elif d not in walls:
+                    return self._move_dir(d, state)
+                else:
+                    # Blocked ahead - turn right
+                    state.wall_follow_dir = TURN_RIGHT[d]
+                    right = TURN_RIGHT[d]
+                    if right not in walls:
+                        return self._move_dir(right, state)
+                    # Completely blocked - stop following
+                    state.following_wall = False
+
+        # Normal exploration: each agent explores different direction pattern
+        # Use longer sweep periods (20 steps) for better coverage
         dirs_order = [
             ["east", "south", "west", "north"],
             ["south", "west", "north", "east"],
@@ -295,32 +316,24 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
             ["north", "west", "south", "east"],
         ]
         pattern = dirs_order[self._agent_id % len(dirs_order)]
-        # Switch direction every 12 steps (covers ~2 observation widths)
-        idx = (state.explore_step // 12) % len(pattern)
+        idx = (state.explore_step // 20) % len(pattern)
         d = pattern[idx]
 
-        walls = self._walls_around(obs)
         if d in walls:
-            d = pattern[(idx + 1) % len(pattern)]
-        if d in walls:
-            d = pattern[(idx + 2) % len(pattern)]
-        if d in walls:
-            return self._wander(state, obs)
-        return self._move_dir(d, state)
+            # Start wall-following
+            state.following_wall = True
+            state.wall_follow_dir = TURN_RIGHT[d]
+            state.wall_follow_steps = 0
+            right = TURN_RIGHT[d]
+            if right not in walls:
+                return self._move_dir(right, state)
+            # Try other directions
+            for alt_d in [TURN_LEFT[d], OPPOSITE[d]]:
+                if alt_d not in walls:
+                    state.wall_follow_dir = alt_d
+                    return self._move_dir(alt_d, state)
+            return self._act(self._fallback)
 
-    def _unstick(self, state: AlphaState, obs: AgentObservation) -> Action:
-        walls = self._walls_around(obs)
-        if state.unstick_remaining <= 0:
-            state.unstick_dir = (state.unstick_dir + 1) % 4
-            state.unstick_remaining = 6
-        state.unstick_remaining -= 1
-        d = DIRECTIONS[state.unstick_dir]
-        if d in walls:
-            for offset in [1, 3, 2]:
-                alt = DIRECTIONS[(state.unstick_dir + offset) % 4]
-                if alt not in walls:
-                    d = alt
-                    break
         return self._move_dir(d, state)
 
     def _go_to_hub(self, obs: AgentObservation, state: AlphaState) -> Action:
@@ -329,7 +342,6 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
             if hub == self._center:
                 return self._act(self._fallback)
             return self._move_toward(hub, obs, state)
-        # Hub not visible - use dead reckoning to navigate back
         return self._move_toward_global(0, 0, obs, state)
 
     def step_with_state(
@@ -339,7 +351,7 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
         items = self._inventory(obs)
         hp = items.get("hp", 0)
 
-        # Update position estimate based on last move
+        # Update position estimate
         last_move_ok = True
         for token in obs.tokens:
             if token.feature.name == "last_action_move" and token.location is None:
@@ -351,49 +363,49 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
             state.est_row += dr
             state.est_col += dc
 
-        # Calibrate position when hub is visible
+        # Calibrate from hub
         hub_pos = self._closest(obs, self._hub_tags)
         if hub_pos:
             cr, cc = self._center
-            # Hub is at (hub_pos[0], hub_pos[1]) in obs coords
-            # Our center is (cr, cc). Hub is offset (hub_pos[0]-cr, hub_pos[1]-cc) from us.
-            # So our position relative to hub is the negative of that.
             state.est_row = -(hub_pos[0] - cr)
             state.est_col = -(hub_pos[1] - cc)
             state.hub_seen = True
 
-        # Move failure tracking
+        # Stuck detection
         if state.step_count > 1:
             if not last_move_ok:
                 state.fail_count += 1
             else:
                 state.fail_count = 0
+                state.following_wall = False  # Reset wall following on successful move
 
-        if state.fail_count >= 3:
+        if state.fail_count >= 4:
             state.fail_count = 0
-            state.unstick_remaining = 8
+            # Start wall-following in a new direction
+            state.following_wall = True
+            state.wall_follow_dir = DIRECTIONS[(state.unstick_dir + 1) % 4]
             state.unstick_dir = (state.unstick_dir + 1) % 4
+            state.wall_follow_steps = 0
 
-        if state.unstick_remaining > 0:
-            return self._unstick(state, obs), state
-
-        # HP safety - return to hub if HP drops
+        # HP safety
         if hp > 0 and hp < HP_DANGER:
+            state.following_wall = False
             return self._go_to_hub(obs, state), state
 
-        # Range safety - don't go too far from hub
+        # Range safety
         dist = abs(state.est_row) + abs(state.est_col)
         if dist > MAX_RANGE:
+            state.following_wall = False
             return self._move_toward_global(0, 0, obs, state), state
 
-        # Phase determination
+        # Phase logic
         role_gear = state.role
         has_gear = items.get(role_gear, 0) > 0
         has_heart = items.get("heart", 0) > 0
 
         if not has_gear:
             state.phase = "get_gear"
-        elif state.role in ("aligner", "scrambler") and not has_heart:
+        elif state.role == "aligner" and not has_heart:
             state.phase = "get_heart"
         elif state.role == "miner":
             total_res = sum(items.get(e, 0) for e in ELEMENTS)
@@ -406,30 +418,14 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
         else:
             state.phase = "do_job"
 
-        # Step 1 diagnostic: dump ALL tags
-        if state.step_count == 1 and self._agent_id == 0:
-            cr, cc = self._center
-            tag_counts: dict[int, int] = {}
-            for token in obs.tokens:
-                if token.feature.name != "tag":
-                    continue
-                loc = token.location
-                tag_counts[token.value] = tag_counts.get(token.value, 0) + 1
-                if loc is None:
-                    continue
-                if token.value in self._wall_tags:
-                    continue
-                print(f"[DIAG] tag={token.value} at obs({loc[0]},{loc[1]}) offset=({loc[0]-cr},{loc[1]-cc})", file=sys.stderr)
-            print(f"[DIAG] tag_counts={tag_counts}", file=sys.stderr)
-            print(f"[DIAG] gear_tags={self._gear_tags}", file=sys.stderr)
-
-        if state.step_count % 1000 == 0:
+        # Periodic logging
+        if state.step_count % 2000 == 0:
             print(
                 f"[COG] a={self._agent_id} s={state.step_count} "
                 f"role={state.role} phase={state.phase} hp={hp} "
                 f"pos=({state.est_row},{state.est_col}) "
                 f"gear={has_gear} heart={has_heart} "
-                f"items={dict((k,v) for k,v in items.items() if v > 0 and k not in ('hp','energy','solar'))}",
+                f"aligned={state.aligned_count}",
                 file=sys.stderr,
             )
 
@@ -444,12 +440,11 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
 
     def _phase_get_gear(self, obs: AgentObservation, state: AlphaState) -> Action:
         gear_name = state.role
-        # Can we see the gear station?
         target = self._closest(obs, self._gear_tags[gear_name])
         if target:
             return self._move_toward(target, obs, state)
-        # Navigate to gear station using known offset from hub
-        dr, dc = GEAR_STATION_OFFSETS.get(gear_name, (0, 4))
+        # Navigate to gear station using dead-reckoning
+        dr, dc = GEAR_STATION_OFFSETS.get(gear_name, (4, 1))
         return self._move_toward_global(dr, dc, obs, state)
 
     def _phase_get_heart(self, obs: AgentObservation, state: AlphaState, items: dict[str, int]) -> Action:
@@ -457,16 +452,15 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
         if hub:
             if hub == self._center:
                 state.hub_wait_steps += 1
-                if state.hub_wait_steps > 30:
-                    # Hub doesn't have resources - help mine
+                if state.hub_wait_steps > 20:
                     state.hub_wait_steps = 0
+                    # Hub lacks resources - mine a bit
                     target = self._closest(obs, self._extractor_tags)
-                    if target:
+                    if target and target != self._center:
                         return self._move_toward(target, obs, state)
                 return self._act(self._fallback)
             state.hub_wait_steps = 0
             return self._move_toward(hub, obs, state)
-        # Navigate to hub using dead reckoning
         return self._move_toward_global(0, 0, obs, state)
 
     def _phase_return_hub(self, obs: AgentObservation, state: AlphaState) -> Action:
@@ -482,26 +476,32 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
         if state.role == "miner":
             return self._job_mine(obs, state, items)
         elif state.role == "aligner":
-            return self._job_align(obs, state)
-        elif state.role == "scrambler":
-            return self._job_scramble(obs, state)
-        return self._wander(state, obs)
+            return self._job_align(obs, state, items)
+        return self._explore(state, obs)
 
     def _job_mine(self, obs: AgentObservation, state: AlphaState, items: dict[str, int]) -> Action:
         hub_res = self._hub_resources(obs)
-        # Target element with lowest combined supply
         min_e = min(ELEMENTS, key=lambda e: hub_res.get(e, 0) + items.get(e, 0))
         target = self._closest(obs, self._element_extractor_tags.get(min_e, set()))
         if target and target != self._center:
             return self._move_toward(target, obs, state)
-        # Any extractor
         target = self._closest(obs, self._extractor_tags)
         if target and target != self._center:
             return self._move_toward(target, obs, state)
         return self._explore(state, obs)
 
-    def _job_align(self, obs: AgentObservation, state: AlphaState) -> Action:
+    def _job_align(self, obs: AgentObservation, state: AlphaState, items: dict[str, int]) -> Action:
         neutral, _friendly, _enemy = self._junctions_by_team(obs)
+
+        # Check if we just aligned (heart count decreased from last check)
+        has_heart = items.get("heart", 0) > 0
+        if not has_heart:
+            # Used our heart - go get another one!
+            state.phase = "get_heart"
+            state.aligned_count += 1
+            return self._go_to_hub(obs, state)
+
+        # Find unclaimed neutral junction
         for r, c, d in neutral:
             pos = (r, c)
             if pos in self._shared_claims and self._shared_claims[pos] != self._agent_id:
@@ -509,24 +509,16 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
             self._shared_claims[pos] = self._agent_id
             if pos == self._center:
                 continue
+            state.following_wall = False  # Found target, stop wall following
             return self._move_toward(pos, obs, state)
+
+        # Try any neutral
         for r, c, d in neutral:
             if (r, c) != self._center:
+                state.following_wall = False
                 return self._move_toward((r, c), obs, state)
-        return self._explore(state, obs)
 
-    def _job_scramble(self, obs: AgentObservation, state: AlphaState) -> Action:
-        _n, _f, enemy = self._junctions_by_team(obs)
-        if enemy:
-            t = (enemy[0][0], enemy[0][1])
-            if t != self._center:
-                return self._move_toward(t, obs, state)
-        # No enemy - align neutrals instead
-        neutral, _f, _e = self._junctions_by_team(obs)
-        if neutral:
-            t = (neutral[0][0], neutral[0][1])
-            if t != self._center:
-                return self._move_toward(t, obs, state)
+        # No junctions visible - explore
         return self._explore(state, obs)
 
     def initial_agent_state(self) -> AlphaState:
@@ -535,7 +527,7 @@ class AlphaPolicyImpl(StatefulPolicyImpl[AlphaState]):
             role=role,
             wander_dir=self._agent_id % 4,
             wander_steps=6 + (self._agent_id * 3) % 7,
-            unstick_dir=(self._agent_id + 1) % 4,
+            unstick_dir=self._agent_id % 4,
         )
 
 
