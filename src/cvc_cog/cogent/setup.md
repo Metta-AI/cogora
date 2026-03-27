@@ -2,46 +2,35 @@
 
 ## Environment Setup
 
-The system has Python 3.11 but `cogames` requires Python 3.12. Setup:
-
-```bash
-# Install Python 3.12 via uv
-uv python install 3.12
-
-# Create a venv with Python 3.12 for running cogames
-uv venv --python 3.12 .venv-cogames
-
-# Install cogames and the local package
-uv pip install cogames --python .venv-cogames/bin/python
-uv pip install -e . --python .venv-cogames/bin/python
-```
+Run `src/cvc/setup.sh` for one-time setup (installs Python 3.12 venv, cogames, auth).
 
 ## Running Games Locally
 
 ```bash
 # Run with your policy (8 cogs, full game)
-.venv-cogames/bin/cogames play -m machina_1 -c 8 -p class=cvc_cog.alpha_policy.AlphaPolicy -r log --autostart > /tmp/cogames/latest.log 2>&1
+cogames play -m machina_1 -c 8 -p class=cvc_cog.alpha_policy.AlphaPolicy -r log --autostart > /tmp/cogames/latest.log 2>&1
 
 # Shorter test (100 steps)
-.venv-cogames/bin/cogames play -m machina_1 -c 8 -p class=cvc_cog.alpha_policy.AlphaPolicy -r log --autostart --steps=100 > /tmp/cogames/latest.log 2>&1
+cogames play -m machina_1 -c 8 -p class=cvc_cog.alpha_policy.AlphaPolicy -r log --autostart --steps=100 > /tmp/cogames/latest.log 2>&1
 
 # Run with starter policy for comparison
-.venv-cogames/bin/cogames play -m machina_1 -c 8 -p starter -r log --autostart --steps=5000 > /tmp/cogames/starter.log 2>&1
+cogames play -m machina_1 -c 8 -p starter -r log --autostart --steps=5000 > /tmp/cogames/starter.log 2>&1
 ```
 
 ## Uploading to Tournament
 
 ```bash
-.venv-cogames/bin/cogames upload -p cvc-cog -n alpha.0 --skip-validation
+cogames upload -p cvc-cog -n alpha.0 --skip-validation
 ```
 
 ## Checking Results
 
 ```bash
-.venv-cogames/bin/cogames matches
-.venv-cogames/bin/cogames matches <match-id>
-.venv-cogames/bin/cogames matches <match-id> --logs
-.venv-cogames/bin/cogames match-artifacts <match-id>
+cogames status
+cogames matches
+cogames matches <match-id>
+cogames matches <match-id> --logs
+cogames match-artifacts <match-id>
 ```
 
 ## Key Issues Hit During Setup
