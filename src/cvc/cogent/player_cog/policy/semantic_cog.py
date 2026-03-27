@@ -28,7 +28,7 @@ _STATION_OFFSETS = {
 _TEMP_BLOCK_STEPS = 10
 _RETREAT_MARGIN = 28
 _DEFAULT_BOUND_MARGIN = 16
-_ALIGNER_GEAR_DELAY_STEPS = 20
+_ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
 _SHARED_JUNCTION_MEMORY_STEPS = 10000
 _OSCILLATION_HISTORY_STEPS = 6
@@ -1370,11 +1370,11 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 4
 
-        # Scramblers to disrupt ship chains
+        # Scramblers to disrupt ship chains (earlier start = better defense)
         if step >= 3000:
             scrambler_budget = 2  # Late game: 4 aligners + 2 scramblers
-        elif step >= 200:
-            scrambler_budget = 1
+        elif step >= 100:
+            scrambler_budget = 1  # Start disrupting early
         else:
             scrambler_budget = 0
         aligner_budget = pressure_budget - scrambler_budget
