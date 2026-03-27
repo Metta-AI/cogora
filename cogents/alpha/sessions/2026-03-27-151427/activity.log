@@ -72,6 +72,9 @@ status: interrupted
 ### v70-v74 Progress (from concurrent sessions)
 - v70: avg **4.26** (BEST EVER) — no emergency mining, 4 aligners + 1 scrambler
 - v71-v74: tuning scramblers (2 late game), patrol 12/80, retreat margin 28
+- v74: scored **11.68 on seed=456** — FIRST SCORE >10!
+- v74 avg: ~5.03 across seeds
 - Current v74: 5 pressure, 1 scrambler@200, 2 scramblers@3000
 - Added deposit-close and idle mining for aligners
 - Uploaded v59 to tournament (network was up briefly)
+- Network went down (SSL cert issue), uploads blocked
