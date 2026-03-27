@@ -60,16 +60,16 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             aligner_budget = 4 if min_res >= 5 else 3
             return aligner_budget, 0
 
-        # Emergency: drop to 2 if economy dying
+        # Emergency: drop to 3 if economy dying (not 2, to reduce gear churn)
         if min_res < 1 and not _h.team_can_refill_hearts(state):
-            return 2, 0
+            return 3, 0
 
         # Phase 3: 5 aligners + 1 scrambler, 2 miners (after step 400)
         aligner_budget = 5
         scrambler_budget = 0
 
         # Scale down aligners if economy struggling
-        if min_res < 8:
+        if min_res < 5:
             aligner_budget = 4
 
         # Add scrambler at step 400 to disrupt ship expansion
@@ -115,11 +115,11 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             aligner_budget = 4 if min_res >= 5 else 3
             return aligner_budget, 0
         if min_res < 1 and not _h.team_can_refill_hearts(state):
-            return 2, 0
+            return 3, 0
 
         aligner_budget = 5
         scrambler_budget = 0
-        if min_res < 8:
+        if min_res < 5:
             aligner_budget = 4
         if step >= 400 and min_res >= 5:
             scrambler_budget = 1
