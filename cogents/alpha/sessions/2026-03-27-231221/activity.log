@@ -11,3 +11,17 @@ status: in-progress
 - Uploaded v95/v101 to tournament (still running/qualifying)
 - Additional 5-game validation: 0.00, 1.90, 2.76, 2.14, 2.84 (avg 2.41 non-wipeout)
 - v113-v115 experiments all worse than v112, reverted
+- Uploaded v103 to tournament (v112 policy)
+- Another session started (231221) while 220812 was running
+- Tournament matches still running, no completed results yet
+
+## Current Best Config Summary (v112)
+- AlphaCyborgPolicy (no LLM, pure heuristic)
+- 5 aligners + 1 scrambler (step 400), 2 miners after scrambler, 3 before
+- Hub camp 20 steps, retreat margin 15, deposit threshold 12
+- Heart batch: 2 → 3 (step 500) → 5 (step 2000)
+- Emergency: min_res < 1 triggers budget 3 (not 2), emergency mining < 1 (not 3)
+- Hub proximity: steep penalty > 15 tiles
+- Expansion bonus: 5.0 per reachable junction (chain building)
+- Defensive scrambler: threat_bonus * 10 for friendly junctions
+- 10-game avg: 2.38 (non-wipeout 2.41), best single: 3.46
