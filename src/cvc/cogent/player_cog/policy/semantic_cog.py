@@ -582,8 +582,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if self._is_in_ship_danger_zone(pos):
                 continue
             staleness = step - last_seen_step
-            # Check junctions more frequently — ships scramble every 70 ticks
-            if staleness < 50:
+            # Check junctions frequently — ships scramble every 70 ticks
+            if staleness < 35:
                 continue
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
