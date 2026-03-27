@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-27-141327**: Interrupted. Fixed num_agents bug, staggered start, v51 best at ~2.06 avg. [sessions/2026-03-27-141327/](sessions/2026-03-27-141327/)
 - **2026-03-27-130646**: Interrupted. Hub proximity bias + fast scramble detection, avg score ~2.3, uploaded v39-v43. [sessions/2026-03-27-130646/](sessions/2026-03-27-130646/)
 - **2026-03-27-121228**: Interrupted. Breakthrough: scramble-zone detection, v8 scored 4.92, v37 uploaded. [sessions/2026-03-27-121228/](sessions/2026-03-27-121228/)
 - **2026-03-27-111149**: Interrupted. Tested shared extractors (regressed), reverted, uploaded v19. [sessions/2026-03-27-111149/](sessions/2026-03-27-111149/)
