@@ -60,3 +60,11 @@ status: in-progress
 - Hub camp (20 steps) is important for territory healing
 - Scrambler is effective: 69-106 enemy scrambles per game
 - 5 aligners + 1 scrambler (at step 400) is current best config
+
+## v108 Changes (hub proximity + heart batch)
+- Steeper hub proximity penalty: distance > 25 very expensive, > 15 moderate
+- Lower heart batch: aligner starts at 2 (was 3), scales to 3 at step 500, 5 at step 2000
+- Scores: 3.02, 2.11, 3.05, 2.40, 2.11 → avg 2.54 (NO WIPEOUTS!)
+- Best game: 204 alignments, 103 scrambles, agent 5 had 61 alignments
+- Hub proximity working: similar alignment count but higher score (junctions last longer)
+- Uploaded as v90 to tournament
