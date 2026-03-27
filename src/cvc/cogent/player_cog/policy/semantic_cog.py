@@ -389,9 +389,16 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         # EARLY-GAME SURVIVAL: HP starts at 50, drains 1/tick, territory heals +100/tick.
         # Territory radius is 10 tiles from hub/network junctions.
-        # If far from territory in early game, rush back before dying.
         hp = int(state.self_state.inventory.get("hp", 0))
         step = state.step or self._step_index
+
+        # Stay at hub for first 3 steps to let territory establish and heal to 100 HP.
+        # This prevents the non-deterministic wipeout where agents die before territory activates.
+        if step <= 3 and safe_target is not None and safe_distance <= 2:
+            if hp < 100:
+                return self._hold(summary="hub_camp_heal", vibe="change_vibe_default")
+
+        # If far from territory in early game, rush back before dying.
         if step < 150 and safe_target is not None and safe_distance > 8:
             # At distance 8+, likely outside territory. Rush back if HP draining.
             if hp < 40 or (hp < 50 and safe_distance > 15):
