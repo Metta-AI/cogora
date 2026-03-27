@@ -126,16 +126,12 @@ def heart_batch_target(state: MettagridState, role: str) -> int:
         return 0
     target = _HEART_BATCH_TARGETS[role]
     step = state.step or 0
-    if role == "aligner":
-        # Larger batches = more alignments per trip, less travel time.
-        # Only batch big if economy can sustain it.
-        supply = heart_supply_capacity(state)
-        if step >= 1_000 and supply >= 8:
-            target = max(target, 7)
-        elif step >= 500 and supply >= 5:
-            target = max(target, 6)
-        elif step >= 200:
-            target = max(target, 5)
+    if role == "aligner" and step >= 2_000:
+        target = max(target, 5)
+    if role == "aligner" and step >= 5_000:
+        target = max(target, 6)
+    if role == "aligner" and step >= 8_000:
+        target = max(target, 7)
     return target
 
 

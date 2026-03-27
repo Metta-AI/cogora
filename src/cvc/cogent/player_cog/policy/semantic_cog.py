@@ -1359,23 +1359,17 @@ class SemanticCogAgentPolicy(AgentPolicy):
         else:
             # 2 aligners first 30 steps to avoid gear station contention,
             # then scale up pressure while keeping enough miners.
-            heart_supply = _h.heart_supply_capacity(state)
             if step < 30:
                 pressure_budget = 2
             elif step < 3000:
                 pressure_budget = 5  # 3 miners
-                # Dynamic economy scaling: adjust pressure based on heart supply
-                if min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 2  # Critical: 6 miners
-                elif min_res < 3:
-                    pressure_budget = 4  # Low: 4 miners to rebuild
-                elif heart_supply < 3 and step > 500:
-                    pressure_budget = 4  # Hearts running low, boost mining
+                if step > 200 and min_res < 1 and not _h.team_can_refill_hearts(state):
+                    pressure_budget = 3
             else:
                 # Late game: keep 3 miners to sustain heart economy.
                 pressure_budget = 6  # Late game: 2 miners, economy established
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 3
+                    pressure_budget = 4
 
         # Scramblers to disrupt ship chains — 2nd scrambler at step 1500
         # to counter ship expansion while economy is still strong.
