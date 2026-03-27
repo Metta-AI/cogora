@@ -16,4 +16,9 @@ status: in-progress
 - Added expanded aligner explore offsets (radius 30 ring) for better junction finding
 - Tested shared WorldModel directly → score 0 (pathfinding broken as expected)
 - Tested shared_extractors approach → score 0.30/500 steps (baseline 0.41/500)
-- Running 5000-step comparison test
+- Baseline 5k score: 2.13 (149 alignments, 186 hearts, good economy)
+- Merged upstream changes: adaptive pressure budgets, new aligner/scrambler priorities
+- Added [COG] logging for per-agent step visibility
+- 2k logged test: score 0.90 (working, but miners clustering on same germanium extractor)
+- Key finding from logs: multiple miners at same position (-8,5/-8,6), all mining germanium
+- Running clean 5k test to confirm merged code performance

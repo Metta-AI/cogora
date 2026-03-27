@@ -294,6 +294,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
             "directive_target_region": directive.target_region or "",
             **macro_snapshot,
         }
+        step = state.step or self._step_index
+        if step % 100 == 0 or summary.startswith("align_") or summary.startswith("scramble_"):
+            hp = int(state.self_state.inventory.get("hp", 0))
+            hearts = int(state.self_state.inventory.get("heart", 0))
+            inv = _h.resource_total(state)
+            tgt = _h.format_position(self._current_target_position) if self._current_target_position else "none"
+            print(f"[COG] s={step} a={self._agent_id} pos={_h.format_position(current_pos)} role={role} "
+                  f"act={summary} hp={hp} hearts={hearts} inv={inv} tgt={tgt}")
         self._previous_state = state
         self._last_global_pos = current_pos
         self._last_inventory_signature = _h.inventory_signature(state)
