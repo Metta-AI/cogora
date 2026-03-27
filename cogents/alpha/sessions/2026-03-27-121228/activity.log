@@ -1,0 +1,10 @@
+# Activity Log: 2026-03-27-121228
+
+status: in-progress
+
+## Session Start
+- Previous best score: ~3.35 (semantic_cog), recent tests ~1.5-2.1
+- High variance in local testing identified as problem
+- v19 uploaded to tournament last session
+- Goal: achieve score > 10
+- Plan: 1) Check tournament results for v19, 2) Read current policy, 3) Identify high-impact improvements, 4) Test and iterate
