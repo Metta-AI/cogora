@@ -46,6 +46,28 @@ Changes: pressure drops to 2/4 when min_res < 1/3, but keeps v78 timing otherwis
 - **Avg: 5.90** — NO WIPEOUTS, best average yet!
 - Key insight: minimal economy protection is enough, don't slow down good seeds
 
-## v84 Changes (in progress)
-- Skip retreat when near hub with dead economy (prevents retreat oscillation)
-- Keep v83 economy protection
+## v84 Results (retreat fix + economy protection)
+- seed=42: 2.33, seed=123: 2.51, seed=456: 3.48, seed=1337: 0.00, seed=999: 2.78, seed=7777: 2.38
+- Avg: 2.25 — worse, retreat fix hurt or just variance
+- Reverted retreat changes
+
+## v85 (economy protection + dynamic heart batching, no retreat changes)
+Full 9-seed results:
+| Seed | Score |
+|------|-------|
+| 42   | 3.81  |
+| 123  | 3.57  |
+| 456  | 13.01 |
+| 1337 | 6.95  |
+| 999  | 11.02 |
+| 7777 | 2.20  |
+| 100  | 15.73 |
+| 200  | 1.13  |
+| 300  | 0.00  |
+**Avg: 6.38** — 3 seeds > 10, 1 wipeout, high variance
+
+## Key Insights
+- Game has massive internal randomness: same code, same seed → 0.00 or 19.19
+- Economy protection helps but can't fully prevent wipeouts
+- Heart supply-gated batching seems to help (more hearts per trip)
+- Focus should be on maximizing upside (more >10 games) rather than preventing all wipeouts
