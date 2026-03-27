@@ -206,14 +206,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
         world_model: SharedWorldModel,
         shared_claims: dict[tuple[int, int], tuple[int, int]],
         shared_junctions: dict[tuple[int, int], tuple[str | None, int]],
-        shared_ship_positions: set[tuple[int, int]] | None = None,
+        shared_ship_positions: dict[tuple[int, int], int] | None = None,
     ) -> None:
         super().__init__(policy_env_info)
         self._agent_id = agent_id
         self._world_model = world_model
         self._shared_claims = shared_claims
         self._shared_junctions = shared_junctions
-        self._shared_ship_positions = shared_ship_positions if shared_ship_positions is not None else set()
+        self._shared_ship_positions = shared_ship_positions if shared_ship_positions is not None else {}
         self._memory = MemoryStore()
         self._previous_state: MettagridState | None = None
         self._last_global_pos: tuple[int, int] | None = None
@@ -764,25 +764,32 @@ class SemanticCogAgentPolicy(AgentPolicy):
             )
 
     def _detect_clips_ships(self, state: MettagridState) -> None:
-        """Detect clips ship positions from visible entities."""
+        """Detect scramble-prone junctions by tracking owner flips."""
+        hub = self._nearest_hub(state)
+        if hub is None:
+            return
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
         for entity in state.visible_entities:
-            if "ship" in entity.entity_type:
-                gx = _h.attr_int(entity, "global_x", entity.position.x)
-                gy = _h.attr_int(entity, "global_y", entity.position.y)
-                pos = (gx, gy)
-                if pos not in self._shared_ship_positions:
-                    self._shared_ship_positions.add(pos)
-                    step = state.step or self._step_index
-                    print(f"[COG] s={step} a={self._agent_id} SHIP DETECTED at {gx},{gy} "
-                          f"(total: {len(self._shared_ship_positions)})")
+            if entity.entity_type != "junction":
+                continue
+            gx = _h.attr_int(entity, "global_x", entity.position.x)
+            gy = _h.attr_int(entity, "global_y", entity.position.y)
+            pos = (gx, gy)
+            owner = entity.attributes.get("owner")
+            current_owner = None if owner in {None, "neutral"} else str(owner)
+            # Check if junction flipped from friendly to neutral (scrambled)
+            rel_pos = (gx - hub.global_x, gy - hub.global_y)
+            if rel_pos in self._shared_junctions:
+                prev_owner, _ = self._shared_junctions[rel_pos]
+                if prev_owner == team_id and current_owner is None:
+                    # Junction was scrambled — increment counter
+                    count = self._shared_ship_positions.get(pos, 0)
+                    self._shared_ship_positions[pos] = count + 1
 
     def _is_in_ship_danger_zone(self, position: tuple[int, int]) -> bool:
-        """Check if position is within clips ship scramble radius."""
-        danger_radius = _CLIPS_SCRAMBLE_RADIUS + _CLIPS_SHIP_SAFE_MARGIN
-        for ship_pos in self._shared_ship_positions:
-            if _h.manhattan(position, ship_pos) <= danger_radius:
-                return True
-        return False
+        """Check if junction has been scrambled multiple times (likely near a ship)."""
+        return self._shared_ship_positions.get(position, 0) >= 2
 
     def _shared_junction_entities(
         self,
@@ -1353,7 +1360,7 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
         self._agent_policies: dict[int, SemanticCogAgentPolicy] = {}
         self._shared_claims: dict[tuple[int, int], tuple[int, int]] = {}
         self._shared_junctions: dict[tuple[int, int], tuple[str | None, int]] = {}
-        self._shared_ship_positions: set[tuple[int, int]] = set()
+        self._shared_ship_positions: dict[tuple[int, int], int] = {}
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
