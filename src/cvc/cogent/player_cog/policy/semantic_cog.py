@@ -1236,13 +1236,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # Staggered ramp: 2 aligners first 30 steps to avoid gear contention,
-            # then 5 aligners + 3 miners.
-            if step < 30:
-                pressure_budget = 2
+            # Staggered ramp: start with 1 aligner to grab early junctions,
+            # ramp to 5. Prevents gear station contention while scoring early.
+            if step < 10:
+                pressure_budget = 1  # 1 aligner grabs closest junction fast
+            elif step < 40:
+                pressure_budget = 3  # Ramp up while miners build economy
             else:
-                pressure_budget = 5
-                # Scale back if economy collapses
+                pressure_budget = 5  # Full pressure
                 if min_res < 3 and step > 200 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 3
 
