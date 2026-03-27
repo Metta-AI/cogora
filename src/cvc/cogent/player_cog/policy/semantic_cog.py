@@ -385,6 +385,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
             self._clear_sticky_target()
         safe_target = self._nearest_hub(state)
         safe_distance = 0 if safe_target is None else _h.manhattan(_h.absolute_position(state), safe_target.position)
+
+        # EARLY-GAME SURVIVAL: HP starts at 50, drains 1/tick, territory heals.
+        # If outside territory (>10 from hub/network) early, rush back to avoid death.
+        hp = int(state.self_state.inventory.get("hp", 0))
+        step = state.step or self._step_index
+        if step < 100 and hp < 30 and safe_target is not None and safe_distance > 10:
+            return self._move_to_known(state, safe_target, summary="survival_retreat")
+
         if self._should_retreat(state, role, safe_target):
             self._clear_target_claim()
             self._clear_sticky_target()
