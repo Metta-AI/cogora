@@ -505,6 +505,12 @@ class SemanticCogAgentPolicy(AgentPolicy):
         self._clear_target_claim()
         self._clear_sticky_target()
 
+        # Deposit only if very close — don't waste time traveling to depot
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None and _h.manhattan(_h.absolute_position(state), depot.position) <= 5:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
         # Patrol stale junctions to detect scrambles and re-align.
         patrol_target = self._patrol_stale_junction(state)
         if patrol_target is not None:
@@ -515,7 +521,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
         if frontier_target is not None:
             return self._move_to_position(state, frontier_target, summary="frontier_explore", vibe="change_vibe_aligner")
 
-        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        # When truly idle (no junctions, no patrol, no frontier), mine to boost economy
+        return self._miner_action(state, summary_prefix="idle_")
 
     def _scrambler_action(self, state: MettagridState) -> tuple[Action, str]:
         hearts = int(state.self_state.inventory.get("heart", 0))
