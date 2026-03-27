@@ -1372,11 +1372,11 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 elif heart_supply < 3 and step > 500:
                     pressure_budget = 4  # Hearts running low, boost mining
             else:
-                pressure_budget = 6  # Late game: 2 miners, economy established
+                # Late game: keep 3 miners to sustain heart economy.
+                # 2 miners can't keep up with 4 aligners + 2 scramblers.
+                pressure_budget = 5  # 3 aligners + 2 scramblers
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 3
-                elif heart_supply < 3:
-                    pressure_budget = 5  # Keep mining to sustain hearts
 
         # Scramblers to disrupt ship chains (earlier start = better defense)
         if step >= 3000:
