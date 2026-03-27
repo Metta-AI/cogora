@@ -37,6 +37,20 @@ status: in-progress
 - Wider patrol, earlier check: also worse
 - Reverted ship/patrol changes
 
-## v93 Changes (testing)
-- All v91 changes + deposit threshold 16 (was 20) + 3 aligners from step 0 (was 2)
-- Testing on seeds 42 and 456
+## v93 Changes (reverted - worse)
+- Deposit threshold 16 (was 20) + 3 aligners from step 0 → both WORSE
+- Seed 42: ~2.18, seed 456: ~4.08 (both worse than v78 baseline!)
+- Reverted to v91 config
+
+## v94 Changes (reverted - worse)
+- Tighter hub penalty (15-25 tiles instead of 20-30) → too restrictive
+- Not enough junctions near hub, aligners go idle mining
+- Reverted to original hub penalty
+
+## v78 Baseline (complete, 5K steps)
+- 42=2.39, 123=4.05, 456=6.30, 789=2.82, 1024=6.21, 4011=5.12, 7777=2.57, 9999=3.56
+- Average: 4.13
+
+## Current: v91 config uploaded as v75
+- Uploaded to tournament as alpha.0:v75
+- Running clean 4-seed benchmark
