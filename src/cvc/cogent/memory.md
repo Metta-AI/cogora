@@ -29,6 +29,12 @@ Persistent memory stored in git under `cogents/alpha/`.
   doing anything else. This ensures learnings are never more than
   5 minutes stale if the container dies.
 
+## Suggestions
+- Maintain `data/suggestions.md` — a log of ideas and requests that only the
+  user can action (e.g., changes to the cogent's source code, environment
+  config, permissions, new tools). Add entries as they arise during the session.
+  The user will review and act on these between sessions.
+
 ## Session End (MANDATORY)
 1. Write `learnings.md` and `summary.md`
 2. Set status to `completed` in `activity.log`
