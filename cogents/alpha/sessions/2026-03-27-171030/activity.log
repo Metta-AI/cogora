@@ -1,0 +1,15 @@
+# Activity Log: 2026-03-27-171030
+
+status: in-progress
+
+## Session Start
+- Previous sessions: v57-v67, patrol 60%+ bottleneck, best seed 5.73, avg ~2.63
+- Tournament best: v38 at #4 (1.76)
+- Goal: achieve score > 10
+- Key insights:
+  - Ships static at corners, expand via junction chaining
+  - Score degrades in 2nd half (ships dominate by step 5000+)
+  - Patrol eats 60%+ aligner time
+  - Emergency mining wastes ~50% aligner time
+  - v67 added adaptive scrambler
+- Strategy: read current code state, understand v67 changes, test and iterate
