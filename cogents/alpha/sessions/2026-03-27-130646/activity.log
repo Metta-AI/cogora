@@ -17,4 +17,8 @@ status: in-progress
 - 3x average 10k test: 1.56, 0.59, 1.43 = avg 1.19
 - Map-dependent variance remains the #1 challenge
 - Ships at map corners → junctions >30 from hub likely in ship zone
-- Leaderboard: #1 v11 at 1.88, our v34 at #4 (1.77)
+- Leaderboard: #1 v11 at 1.87, v38 at #4 (1.76)
+- v40 (stronger hub proximity): single test 1.97
+- v41 uploaded
+- 3x 10k average with hub proximity: 1.68, 2.38, 1.43 = avg 1.83 (up from 1.19!)
+- Hub proximity bias is helping consistently
