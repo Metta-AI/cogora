@@ -123,9 +123,18 @@ Key changes:
 - Stronger hub penalty (30+ at distance 25) — WORSE avg 2.85
 - Reverted back to v78 config
 
+## v80: scrambler at step 100, no aligner gear delay
+5k Results (5 seeds): 42→0.00, 123→4.04, 456→3.26, 1337→7.67, 999→0.00
+Avg: 2.99 (excl wipeout: **4.99**)
+- Non-wipeout avg improved to 4.99 (from 3.97)
+- Wipeouts are non-deterministic (same seed can score 0 or >2)
+- Uploaded as alpha.0:v66
+
 ## Strategy Assessment
 - Best single game: 11.68 (v74 seed=456 10k)
-- Best avg (5k): 3.58 across 10 seeds
-- Wipeout rate: ~10-20% of runs
-- High-score games (>7): ~20% of runs
-- Goal of >10 avg not yet achieved but individual games can exceed it
+- Best non-wipeout avg: 4.99 (v80, 5k)
+- Wipeout rate: ~30% (non-deterministic, game randomness)
+- High-score games (>7): ~30% of non-wipeout runs
+- Goal of >10 avg not yet achieved
+- Key bottleneck: economy collapse causes wipeouts on some maps/runs
+- Key improvement area: prevent mid-game economy death spiral
