@@ -47,7 +47,11 @@ _MINER_EXPLORE_OFFSETS = (
     (-18, -18), (18, -18), (-18, 18), (18, 18),
     (0, -22), (22, 0), (0, 22), (-22, 0),
 )
-_SCRAMBLER_EXPLORE_OFFSETS = ((36, -36), (36, 36), (-36, 36), (-36, -36))
+_SCRAMBLER_EXPLORE_OFFSETS = (
+    # Target ship frontier zone (~25-30 tiles from hub, between hub and corners)
+    (25, -25), (25, 25), (-25, 25), (-25, -25),
+    (0, -30), (30, 0), (0, 30), (-30, 0),
+)
 
 _ELEMENTS = ("carbon", "oxygen", "germanium", "silicon")
 _HP_THRESHOLDS = COGSGUARD_ROLE_HP_THRESHOLDS

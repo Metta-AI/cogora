@@ -1342,8 +1342,10 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     elif min_res < 7:
                         pressure_budget = 4
 
-        # 1 scrambler to disrupt ship chains — breaks ship frontier expansion
-        scrambler_budget = 1 if step >= 200 else 0
+        # Adaptive scrambler: activate when ships are scrambling our junctions.
+        # Count danger zones as a proxy for ship pressure.
+        ship_pressure = len(self._shared_ship_positions)
+        scrambler_budget = 1 if (step >= 500 and ship_pressure >= 5) else 0
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
             return 0, 0
