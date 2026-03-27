@@ -26,7 +26,7 @@ _STATION_OFFSETS = {
     "scout": (3, 4),
 }
 _TEMP_BLOCK_STEPS = 10
-_RETREAT_MARGIN = 22
+_RETREAT_MARGIN = 18
 _DEFAULT_BOUND_MARGIN = 16
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
@@ -64,7 +64,7 @@ class NavigationObservation:
 
 _CLIPS_SCRAMBLE_RADIUS = 15
 _CLIPS_SHIP_SAFE_MARGIN = 2
-_SHIP_DANGER_DECAY_STEPS = 150
+_SHIP_DANGER_DECAY_STEPS = 100
 
 
 class SharedWorldModel:
@@ -1365,36 +1365,49 @@ class SemanticCogAgentPolicy(AgentPolicy):
         step = state.step or self._step_index
         num_agents = max(len(state.team_summary.members), 8) if state.team_summary else 8
         min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
 
         if num_agents <= 4:
             pressure_budget = 2
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # Aggressive alignment: maximize aligners, economy permitting.
-            # 2 aligners first 30 steps to avoid gear station contention,
-            # then 6 pressure agents (2 miners) for maximum alignment throughput.
-            if step < 30:
+            # Economy-responsive pressure: scale aligners based on resource health.
+            # Phase 1 (0-10): hub camping + initial mining, 2 aligners
+            # Phase 2 (10-100): ramp up as economy allows
+            # Phase 3 (100+): full pressure, dynamically adjusted
+            if step < 10:
                 pressure_budget = 2
-            elif step < 3000:
-                pressure_budget = 5  # 3 miners
-                if min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 2  # Critical: 6 miners
-                elif min_res < 3:
-                    pressure_budget = 4  # Low: 4 miners to rebuild
+            elif step < 100:
+                # Early ramp: 3 pressure (5 miners) to build economy fast
+                pressure_budget = 3
+                if min_res >= 10:
+                    pressure_budget = 4  # Economy healthy, add another aligner
             else:
-                pressure_budget = 6  # Late game: 2 miners
-                if min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 3
+                # Base pressure scales with game phase
+                if step < 2000:
+                    base_pressure = 5  # 3 miners
+                else:
+                    base_pressure = 6  # 2 miners late game
 
-        # Scramblers to disrupt ship chains — 2nd scrambler at step 1000
-        if step >= 1000:
-            scrambler_budget = 2
-        elif step >= 100:
-            scrambler_budget = 1
-        else:
+                # Dynamic economy adjustment — scale DOWN based on resource health
+                if min_res < 1 and not can_hearts:
+                    pressure_budget = 2  # Critical: 6 miners emergency
+                elif min_res < 5:
+                    pressure_budget = max(base_pressure - 2, 2)  # Low: more miners
+                elif min_res < 15:
+                    pressure_budget = max(base_pressure - 1, 3)  # Moderate: slightly fewer aligners
+                else:
+                    pressure_budget = base_pressure  # Healthy economy
+
+        # Scramblers — 1 early, 2 mid-game, but only if economy supports it
+        if step < 80:
             scrambler_budget = 0
-        aligner_budget = pressure_budget - scrambler_budget
+        elif step < 800:
+            scrambler_budget = 1 if min_res >= 3 else 0
+        else:
+            scrambler_budget = 2 if min_res >= 5 else (1 if min_res >= 1 else 0)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":

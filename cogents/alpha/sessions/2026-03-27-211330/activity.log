@@ -10,3 +10,23 @@ status: in-progress
 - Uploaded v76/v78/v80 to tournament
 - Goal: achieve consistent score > 10
 - Key focus: need ~3x improvement from 3.45 avg to 10+
+
+## v98 Changes & Testing
+- Faster early ramp (step 10 → 3 pressure instead of step 30 → 2)
+- Economy-responsive pressure budgets (scale down with tres < 5/15)
+- Lower heart batch (3 initial, scale to 4/5 vs 5/6/7/8)
+- Reduced ship danger penalty (40 vs 100)
+- Reduced retreat margin (18 vs 22)
+- Faster ship danger decay (100 vs 150 steps)
+
+## v98 Results (4 games, 5K steps each)
+- Scores: 2.12, 2.30, 3.14, 3.34 → avg 2.73
+- Baseline comparison (same session): 2.55, 2.88, 2.00, 0.00 → avg 1.86
+- v98 eliminates wipeouts, more stable economy
+- But still far from target of 10
+
+## Key Insight: Economy Bottleneck
+- Best game: 174 alignments gained, 113 lost to ships (65% loss rate!)
+- 2 miners produce ~0.071 hearts/step; 4 aligners need ~0.27/step
+- Economy can barely support 1 aligner's heart needs
+- Hub-proximal junctions are much more efficient (less travel, safer from ships)

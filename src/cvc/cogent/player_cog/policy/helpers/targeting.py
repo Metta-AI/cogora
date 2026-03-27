@@ -58,8 +58,8 @@ def aligner_target_score(
             hub_penalty = (hub_dist - 20) * 1.5 + 5.0
         else:
             hub_penalty = hub_dist * 0.3
-    # Heavy penalty for ship danger zones — junctions get auto-scrambled every 70 ticks
-    ship_penalty = 100.0 if in_ship_danger_zone else 0.0
+    # Penalty for ship danger zones — prefer safe junctions but don't totally block
+    ship_penalty = 40.0 if in_ship_danger_zone else 0.0
     return (
         distance
         - min(expansion * 3.0, 24.0)
