@@ -163,3 +163,9 @@ Uploaded as alpha.0:v79, v81
 - Uploaded versions: v79, v81, v87 to tournament (alpha.0)
 - Tournament matches still running/scheduled, no results available yet
 - Key parameters confirmed: staleness=35, retreat=28, patrol=15, deposit=20, 2 miners late game
+
+## v96 (v93-style pressure restored): BEST CONSISTENT
+- 10 seeds, NO wipeouts: 2.56, 2.27, 5.84, 7.03, 4.93, 7.58, 1.19, 4.43, 5.36, 2.16
+- **Avg: 4.34** — most consistent yet, no wipeouts
+- Uploaded as alpha.0:v88
+- Config: 5 pressure (step 30-3k), 6 pressure (3k+), economy-gated, 2 scramblers at step 3000
