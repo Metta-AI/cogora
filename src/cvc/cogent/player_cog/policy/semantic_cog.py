@@ -1329,10 +1329,10 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # Ramp aligners quickly: 4 from step 0, 5 from step 20.
-            # Station targets are per-agent so contention is minimal.
-            if step < 20:
-                pressure_budget = 4
+            # 2 aligners first 30 steps to avoid gear station contention,
+            # then full 5 aligners. Smooth economy-based scaling prevents crash.
+            if step < 30:
+                pressure_budget = 2
             else:
                 pressure_budget = 5  # Full pressure
                 # Smooth economy scaling: reduce aligners as economy drops
