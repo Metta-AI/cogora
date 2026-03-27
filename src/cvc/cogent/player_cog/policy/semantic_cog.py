@@ -1366,20 +1366,16 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # Aggressive alignment: maximize aligners, economy permitting.
-            # 2 aligners first 30 steps to avoid gear station contention,
-            # then 6 pressure agents (2 miners) for maximum alignment throughput.
-            heart_supply = _h.heart_supply_capacity(state)
+            # 2 aligners first 30 steps to avoid early economy drain,
+            # then 5 pressure (3 miners) until late game.
             if step < 30:
                 pressure_budget = 2
-            elif step < 200:
-                pressure_budget = 5  # 3 miners while economy bootstraps
-                if min_res < 1 and not _h.team_can_refill_hearts(state):
-                    pressure_budget = 2  # Critical: 6 miners
-                elif min_res < 3:
-                    pressure_budget = 4  # Low: 4 miners
+            elif step < 3000:
+                pressure_budget = 5  # 3 miners
+                if step > 200 and min_res < 1 and not _h.team_can_refill_hearts(state):
+                    pressure_budget = 3
             else:
-                pressure_budget = 6  # 2 miners - economy should be established
+                pressure_budget = 6  # Late game: 2 miners, economy established
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 3
                 elif min_res < 3:
