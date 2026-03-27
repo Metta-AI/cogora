@@ -502,18 +502,19 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         self._clear_target_claim()
         self._clear_sticky_target()
-        if _h.resource_total(state) > 0:
-            depot = self._nearest_friendly_depot(state)
-            if depot is not None:
-                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
         # Patrol stale junctions to detect scrambles and re-align.
         patrol_target = self._patrol_stale_junction(state)
         if patrol_target is not None:
             return self._move_to_position(state, patrol_target, summary="patrol_junction", vibe="change_vibe_aligner")
 
-        # No alignment targets and patrol done — mine to boost economy.
-        # This converts idle aligner time into heart production capacity.
+        # Deposit only if very close — don't waste time traveling to depot
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None and _h.manhattan(_h.absolute_position(state), depot.position) <= 5:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # When no junctions to align, mine to help economy (hearts are bottleneck)
         return self._miner_action(state, summary_prefix="idle_")
 
     def _scrambler_action(self, state: MettagridState) -> tuple[Action, str]:
@@ -560,8 +561,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if self._is_in_ship_danger_zone(pos):
                 continue
             staleness = step - last_seen_step
-            # Ships scramble every 70 ticks — check anything older than 50
-            if staleness < 50:
+            # Ships scramble every 70 ticks — check anything older than 100
+            if staleness < 100:
                 continue
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
