@@ -7,3 +7,49 @@ status: interrupted
 - Average still ~5.03 across seeds, seed=123 wipeout in v74
 - Key todos: fix wipeout consistency, raise average above 10
 - Strategy: investigate v74 seed=123 wipeout, fix it, then optimize further
+
+## v75 Analysis
+- v75 "survival mining" caused 0-score regression on 2/3 seeds
+- Reverted to v74 code (now called v76)
+- v76 baseline: seed=42:2.27, 123:2.38, 456:3.95, 1337:8.86 → avg 4.37
+
+## v77: Patrol Optimization (KEY BREAKTHROUGH)
+- Reduced patrol staleness from 80 to 50: avg jumped from 4.37 to 5.69
+- seed=123: 2.38 → 8.04, seed=1337: 8.86 → 9.45
+- Patrol staleness 35 even better: **seed=456: 17.24, seed=1337: 10.41**
+- Avg 5.70 across 8 seeds (v78)
+- Uploaded as alpha.0:v63 and v67
+
+## Experiments That Failed
+- Shared world model: deadlocked all agents at gear stations (0.00)
+- 6 pressure agents (2 miners): mixed, not consistently better
+- Earlier 2nd scrambler (step 2000): hurt 456 and 1337
+- Hub-proximity penalty increase: hurt alignment opportunities
+- Broader patrol (include neutral junctions): caused wipeouts
+- Reduced ship danger penalty (100→25): wasted hearts
+- Adaptive scrambler budget: too volatile, caused wipeouts
+- Retreat margin 20: agents die more often
+- No early delay: wipeout on seed=42
+- Patrol staleness 20: too frequent patrol, worse than 35
+- A* bound margin 24: slower pathfinding, wipeout
+
+## Key Insights
+- Patrol staleness is the most impactful parameter (80→35 = +30% avg score)
+- Ship danger zone penalty must stay at 100 (critical for high scores)
+- Retreat margin 28 is optimal (lower = deaths, higher = idle)
+- Early pressure delay (30 steps) is necessary to avoid wipeouts
+- Seed variance is map-dependent (extractors/junctions layout)
+- Scrambler effectiveness strongly correlates with score
+
+## v78 Results (BEST, staleness=35, patrol=15)
+| Seed | Score |
+|------|-------|
+| 42   | 2.95  |
+| 123  | 4.22  |
+| 456  | 17.24 |
+| 1337 | 10.41 |
+| 999  | 3.12  |
+| 4011 | 1.65  |
+| 7777 | 3.69  |
+| 2024 | 2.29  |
+**Avg: 5.70** (2 seeds > 10!)
