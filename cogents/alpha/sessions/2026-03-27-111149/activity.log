@@ -34,4 +34,7 @@ status: in-progress
 - v29, v30, v31, v34 all in competition, matched against slanky:v112, Paz-Bot-9005
 - Bootstrap=3 aligner budget being tested
 - Local 8-agent average ~1.93 across 14 runs. Best single run: 9.31 (seed 456)
+- v35 uploaded with latest code
+- Local 5k test: 1.15 per cog (some agents died 7 total deaths)
+- Agent death remains the #1 issue for score consistency
 - Waiting for competition match results
