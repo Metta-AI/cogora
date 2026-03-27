@@ -1,0 +1,9 @@
+# Activity Log: 2026-03-27-111149
+
+status: in-progress
+
+## Session Start
+- Previous best score: ~3.35 (semantic_cog), baseline confirmed ~3.32
+- Prior session tried shared world model (regressed), 6-aligner (regressed)
+- Goal: achieve score > 10
+- Plan: 1) Read current policy code thoroughly, 2) Identify biggest bottlenecks, 3) Implement improvements, 4) Test and iterate

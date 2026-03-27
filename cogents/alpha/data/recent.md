@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-27-100443**: Interrupted. Fixed import bug, tested shared model (regressed), baseline ~3.32. [sessions/2026-03-27-100443/](sessions/2026-03-27-100443/)
 - **2026-03-27-091616**: Interrupted. Found SharedWorldModel not actually shared. [sessions/2026-03-27-091616/](sessions/2026-03-27-091616/)
 - **2026-03-27-081619**: Interrupted before any work. [sessions/2026-03-27-081619/](sessions/2026-03-27-081619/)
 - **2026-03-27-063937**: Interrupted before any work. [sessions/2026-03-27-063937/](sessions/2026-03-27-063937/)
