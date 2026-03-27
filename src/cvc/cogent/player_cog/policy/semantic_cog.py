@@ -391,21 +391,18 @@ class SemanticCogAgentPolicy(AgentPolicy):
         # If far from territory in early game, rush back before dying.
         hp = int(state.self_state.inventory.get("hp", 0))
         step = state.step or self._step_index
-        if step < 200 and safe_target is not None and safe_distance > 5:
-            # Rush to territory if HP is dropping — must arrive before hp=0
-            if hp < safe_distance + 10 or (hp < 40 and safe_distance > 8):
+        if step < 150 and safe_target is not None and safe_distance > 8:
+            # At distance 8+, likely outside territory. Rush back if HP draining.
+            if hp < 40 or (hp < 50 and safe_distance > 15):
                 return self._move_to_known(state, safe_target, summary="survival_retreat")
 
         if self._should_retreat(state, role, safe_target):
-            # Skip retreat if already near hub and economy is dead — retreating
-            # just wastes steps oscillating. Better to keep trying to get gear/mine.
-            if not (safe_distance <= 3 and hp <= 5 and _h.needs_emergency_mining(state)):
-                self._clear_target_claim()
-                self._clear_sticky_target()
-                if safe_target is not None and safe_distance > 2:
-                    return self._move_to_known(state, safe_target, summary="retreat_to_hub")
-                if _h.has_role_gear(state, role):
-                    return self._hold(summary="retreat_hold", vibe="change_vibe_default")
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if safe_target is not None and safe_distance > 2:
+                return self._move_to_known(state, safe_target, summary="retreat_to_hub")
+            if _h.has_role_gear(state, role):
+                return self._hold(summary="retreat_hold", vibe="change_vibe_default")
 
         if self._oscillation_steps >= _OSCILLATION_UNSTICK_STEPS:
             return self._unstick_action(state, role)
@@ -1362,21 +1359,24 @@ class SemanticCogAgentPolicy(AgentPolicy):
         else:
             # 2 aligners first 30 steps to avoid gear station contention,
             # then scale up pressure while keeping enough miners.
+            heart_supply = _h.heart_supply_capacity(state)
             if step < 30:
                 pressure_budget = 2
             elif step < 3000:
                 pressure_budget = 5  # 3 miners
-                # Emergency economy protection: if resources critically low,
-                # scale down pressure to boost mining. This prevents the
-                # death spiral where hub runs dry and nobody can get gear.
+                # Dynamic economy scaling: adjust pressure based on heart supply
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 2  # Critical: 6 miners
                 elif min_res < 3:
                     pressure_budget = 4  # Low: 4 miners to rebuild
+                elif heart_supply < 3 and step > 500:
+                    pressure_budget = 4  # Hearts running low, boost mining
             else:
                 pressure_budget = 6  # Late game: 2 miners, economy established
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 3
+                elif heart_supply < 3:
+                    pressure_budget = 5  # Keep mining to sustain hearts
 
         # Scramblers to disrupt ship chains (earlier start = better defense)
         if step >= 3000:
