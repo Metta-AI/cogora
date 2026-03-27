@@ -508,36 +508,36 @@ class SemanticCogAgentPolicy(AgentPolicy):
         return self._explore_action(state, role="scrambler", summary="find_enemy_junction")
 
     def _patrol_stale_junction(self, state: MettagridState) -> tuple[int, int] | None:
-        """Find a known junction position to patrol — the stalest one we haven't checked recently."""
+        """Find a known junction position to patrol — prioritize nearby stale junctions."""
         hub = self._nearest_hub(state)
         if hub is None:
             return None
         step = state.step or self._step_index
         current_pos = _h.absolute_position(state)
-        team_id = _h.team_id(state)
 
         # Collect all known junction positions with staleness
-        candidates: list[tuple[int, int, int]] = []  # (staleness, distance, position)
+        candidates: list[tuple[float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
             staleness = step - last_seen_step
-            # Skip junctions seen very recently (within 50 steps)
-            if staleness < 50:
+            # Skip junctions seen very recently (within 30 steps)
+            if staleness < 30:
                 continue
             distance = _h.manhattan(current_pos, pos)
-            # Prefer stale junctions, break ties by distance
-            # Weight staleness heavily but cap it to avoid pathological cases
-            score = min(staleness, 500) - distance * 2
+            hub_distance = abs(dx) + abs(dy)
+            # Prefer: close to agent, close to hub, stale
+            # Hub-proximal junctions are easier to defend and re-align
+            score = distance + hub_distance * 0.5 - min(staleness, 300) * 0.3
             candidates.append((score, distance, pos))
 
         if not candidates:
             return None
 
-        # Pick the best patrol target (highest score = stalest + closest)
-        candidates.sort(key=lambda c: (-c[0], c[1]))
+        # Sort by score (lower = better)
+        candidates.sort()
 
-        # Stagger among agents to avoid all patrolling the same junction
-        index = self._agent_id % min(len(candidates), 4)
+        # Stagger among agents to spread patrol coverage
+        index = self._agent_id % min(len(candidates), 5)
         return candidates[index][2]
 
     def _explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
@@ -793,6 +793,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
     def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
         team_id = _h.team_id(state)
         current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
         hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
         friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
         network_sources = [*hubs, *friendly_junctions]
@@ -829,6 +831,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                         agent_id=self._agent_id,
                         step=self._step_index,
                     ),
+                    hub_position=hub_pos,
                 ),
                 entity.position,
             ),
@@ -844,6 +847,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         current_pos = _h.absolute_position(state)
         team_id = _h.team_id(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
         neutral_junctions = self._world_model.entities(
             entity_type="junction",
             predicate=lambda junction: junction.owner in {None, "neutral"},
@@ -858,6 +863,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             unreachable=[entity for entity in neutral_junctions if entity.position != sticky.position],
             enemy_junctions=enemy_junctions,
             claimed_by_other=False,
+            hub_position=hub_pos,
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -870,6 +876,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 agent_id=self._agent_id,
                 step=self._step_index,
             ),
+            hub_position=hub_pos,
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate

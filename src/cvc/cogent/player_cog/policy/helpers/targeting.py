@@ -33,6 +33,7 @@ def aligner_target_score(
     unreachable: list[KnownEntity],
     enemy_junctions: list[KnownEntity],
     claimed_by_other: bool,
+    hub_position: tuple[int, int] | None = None,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     expansion = sum(
@@ -43,11 +44,17 @@ def aligner_target_score(
         if any(manhattan(candidate.position, enemy.position) <= _JUNCTION_AOE_RANGE for enemy in enemy_junctions)
         else 0.0
     )
+    # Prefer junctions closer to hub — they're easier to defend and re-align
+    hub_penalty = 0.0
+    if hub_position is not None:
+        hub_dist = float(manhattan(hub_position, candidate.position))
+        hub_penalty = hub_dist * 0.3
     return (
         distance
         - min(expansion * 3.0, 24.0)
         + enemy_aoe * 8.0
-        + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0),
+        + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
+        + hub_penalty,
         -float(expansion),
     )
 
