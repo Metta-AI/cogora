@@ -37,7 +37,10 @@ _ALIGNER_EXPLORE_OFFSETS = (
     (-20, 0),
     (-14, -14),
 )
-_MINER_EXPLORE_OFFSETS = ((-28, -28), (28, -28), (-28, 28), (28, 28))
+_MINER_EXPLORE_OFFSETS = (
+    (-28, -28), (28, -28), (-28, 28), (28, 28),
+    (0, -35), (35, 0), (0, 35), (-35, 0),
+)
 _SCRAMBLER_EXPLORE_OFFSETS = ((36, -36), (36, 36), (-36, 36), (-36, -36))
 
 _ELEMENTS = ("carbon", "oxygen", "germanium", "silicon")
