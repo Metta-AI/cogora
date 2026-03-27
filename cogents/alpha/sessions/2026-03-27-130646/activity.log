@@ -27,3 +27,6 @@ status: in-progress
 - 3x 10k average: 2.73, 2.32, 2.59 = avg 2.55! (up from 1.83)
 - Huge improvement from scramble zone detection + hub proximity + fast detection
 - Still getting occasional 0.00 wipeouts on bad maps (seed-dependent)
+- v43 uploaded (merged upstream tighter hub proximity: 25 threshold, 1.5x penalty)
+- Confirmation 3x 10k: 2.79, 1.19, 2.25 = avg 2.08
+- Overall improvement: ~1.5 → ~2.3 average (50% improvement this session)
