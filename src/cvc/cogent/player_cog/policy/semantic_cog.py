@@ -1250,19 +1250,15 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # Stagger gear acquisition: start mining, ramp up aligners as economy grows
-            if step < 30:
-                # First 30 steps: only 2 aligners (use initial hub resources)
-                pressure_budget = 2
-            elif step < 100:
-                # Steps 30-100: 3 aligners if economy allows
-                pressure_budget = 3 if min_res >= 10 else 2
-            elif step < 300:
-                # Steps 100-300: 4 aligners if economy strong
-                pressure_budget = 4 if min_res >= _MINING_ALIGNER_MIN_RESOURCE else 3
+            # Start aggressive with 5 aligners. Station retry fix prevents
+            # permanent blocking. Economy-gated ramp if resources are scarce.
+            if step < 20:
+                pressure_budget = 3  # Brief mining burst to seed economy
+            elif min_res >= 8 or step < 100:
+                pressure_budget = 5
             else:
-                # After 300: full 5 aligners if economy sustains
-                pressure_budget = 5 if min_res >= _MINING_ALIGNER_MIN_RESOURCE else 4
+                # Resources depleted — scale back until economy recovers
+                pressure_budget = max(3, 5 - ((_MINING_ALIGNER_MIN_RESOURCE - min_res) // 5))
 
         scrambler_budget = 0
         if num_agents > 4 and step >= 2_000 and _h.team_can_refill_hearts(state):
