@@ -26,7 +26,7 @@ _STATION_OFFSETS = {
     "scout": (3, 4),
 }
 _TEMP_BLOCK_STEPS = 10
-_RETREAT_MARGIN = 28
+_RETREAT_MARGIN = 32
 _DEFAULT_BOUND_MARGIN = 16
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
@@ -506,7 +506,9 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if depot is not None:
                 return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
-        # Patrol: visit stale junction positions to detect scrambled junctions
+        # Re-check patrol: visit known friendly junctions (may have been scrambled)
+        # This is the #1 priority when no neutral junctions are visible —
+        # our junctions likely got scrambled and need re-alignment.
         patrol_target = self._patrol_stale_junction(state)
         if patrol_target is not None:
             return self._move_to_position(state, patrol_target, summary="patrol_junction", vibe="change_vibe_aligner")
@@ -537,38 +539,101 @@ class SemanticCogAgentPolicy(AgentPolicy):
         return self._explore_action(state, role="scrambler", summary="find_enemy_junction")
 
     def _patrol_stale_junction(self, state: MettagridState) -> tuple[int, int] | None:
-        """Patrol very stale nearby junctions to check for scrambles. Keep this rare —
-        exploration and alignment should dominate aligner time."""
+        """Patrol stale junctions to detect scrambles and re-align them.
+
+        Priority: previously-friendly junctions (most likely scrambled),
+        then neutral junctions that might now be alignable.
+        """
         hub = self._nearest_hub(state)
         if hub is None:
             return None
         step = state.step or self._step_index
         current_pos = _h.absolute_position(state)
+        team_id = _h.team_id(state)
 
-        max_patrol_distance = 10  # Very tight — only patrol immediately nearby
-        candidates: list[tuple[float, int, tuple[int, int]]] = []
+        max_patrol_distance = 25  # Cover full hub alignment zone
+        candidates: list[tuple[int, float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
             # Skip junctions in ship danger zones — they'll just get scrambled again
             if self._is_in_ship_danger_zone(pos):
                 continue
             staleness = step - last_seen_step
-            # Only patrol very stale junctions (>200 ticks since last seen)
-            if staleness < 200:
+            # Ships scramble every 70 ticks — check anything older than 50
+            if staleness < 50:
                 continue
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
                 continue
-            candidates.append((float(distance), staleness, pos))
+            # Priority: 0 = was friendly (likely scrambled), 1 = was neutral
+            priority = 0 if owner == team_id else 1
+            candidates.append((priority, float(distance), staleness, pos))
 
         if not candidates:
             return None
 
-        candidates.sort(key=lambda c: (c[0], -c[1]))
+        candidates.sort(key=lambda c: (c[0], c[1], -c[2]))
 
-        # Stagger among agents
-        index = self._agent_id % min(len(candidates), 3)
-        return candidates[index][2]
+        # Stagger among agents — spread patrol across different directions
+        index = self._agent_id % min(len(candidates), 5)
+        return candidates[index][3]
+
+    def _frontier_explore_target(self, state: MettagridState) -> tuple[int, int] | None:
+        """Find the best position to explore for new junctions.
+
+        Strategy: identify the outermost friendly junctions and explore
+        ~12 tiles beyond them (junction align distance is 15), where new
+        neutral junctions would be within alignment range of our network.
+        """
+        team_id = _h.team_id(state)
+        hub = self._nearest_hub(state)
+        if hub is None:
+            return None
+        current_pos = _h.absolute_position(state)
+        hub_pos = hub.position
+
+        # Get all known friendly junctions
+        friendly = self._known_junctions(state, predicate=lambda e: e.owner == team_id)
+        if not friendly:
+            return None
+
+        # Find the furthest friendly junction in each cardinal direction from hub
+        # and explore ~12 tiles beyond it
+        directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        candidates: list[tuple[float, tuple[int, int]]] = []
+        for dx, dy in directions:
+            # Find friendly junction most aligned with this direction
+            best = None
+            best_proj = -999
+            for j in friendly:
+                rel_x = j.global_x - hub_pos[0]
+                rel_y = j.global_y - hub_pos[1]
+                proj = rel_x * dx + rel_y * dy
+                if proj > best_proj:
+                    best_proj = proj
+                    best = j
+            if best is None:
+                continue
+            # Explore 12 tiles further in that direction
+            explore_x = best.global_x + dx * 12
+            explore_y = best.global_y + dy * 12
+            explore_pos = (explore_x, explore_y)
+            # Skip if in ship danger zone
+            if self._is_in_ship_danger_zone(explore_pos):
+                continue
+            distance = _h.manhattan(current_pos, explore_pos)
+            # Skip if very far (not efficient)
+            if distance > 35:
+                continue
+            candidates.append((distance, explore_pos))
+
+        if not candidates:
+            return None
+
+        # Stagger among agents to avoid all going to the same frontier
+        candidates.sort()
+        index = self._agent_id % min(len(candidates), 4)
+        return candidates[index][1]
 
     def _explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
         current_pos = _h.absolute_position(state)
@@ -1268,7 +1333,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
         if safe_target is None:
             return hp <= _h.retreat_threshold(state, role)
 
-        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+        distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
+        safe_steps = max(0, distance - _h._JUNCTION_AOE_RANGE)
         margin = _RETREAT_MARGIN
         if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
             margin += 10
