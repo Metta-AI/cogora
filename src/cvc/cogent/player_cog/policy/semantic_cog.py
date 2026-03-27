@@ -516,36 +516,36 @@ class SemanticCogAgentPolicy(AgentPolicy):
         return self._explore_action(state, role="scrambler", summary="find_enemy_junction")
 
     def _patrol_stale_junction(self, state: MettagridState) -> tuple[int, int] | None:
-        """Find a known junction position to patrol — prioritize nearby stale junctions."""
+        """Find a nearby known junction to patrol — only if close enough to be efficient."""
         hub = self._nearest_hub(state)
         if hub is None:
             return None
         step = state.step or self._step_index
         current_pos = _h.absolute_position(state)
 
-        # Collect all known junction positions with staleness
-        candidates: list[tuple[float, int, tuple[int, int]]] = []
+        # Only patrol junctions that are nearby and stale
+        max_patrol_distance = 20
+        candidates: list[tuple[int, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
             staleness = step - last_seen_step
-            # Skip junctions seen very recently (within 30 steps)
-            if staleness < 30:
+            # Skip fresh junctions
+            if staleness < 40:
                 continue
             distance = _h.manhattan(current_pos, pos)
-            hub_distance = abs(dx) + abs(dy)
-            # Prefer: close to agent, close to hub, stale
-            # Hub-proximal junctions are easier to defend and re-align
-            score = distance + hub_distance * 0.5 - min(staleness, 300) * 0.3
-            candidates.append((score, distance, pos))
+            # Only patrol if within reasonable distance
+            if distance > max_patrol_distance:
+                continue
+            candidates.append((distance, staleness, pos))
 
         if not candidates:
             return None
 
-        # Sort by score (lower = better)
-        candidates.sort()
+        # Sort by distance (nearest first), then by staleness (oldest first)
+        candidates.sort(key=lambda c: (c[0], -c[1]))
 
-        # Stagger among agents to spread patrol coverage
-        index = self._agent_id % min(len(candidates), 5)
+        # Stagger among agents
+        index = self._agent_id % min(len(candidates), 3)
         return candidates[index][2]
 
     def _explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
