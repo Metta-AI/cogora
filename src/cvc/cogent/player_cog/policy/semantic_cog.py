@@ -1366,8 +1366,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 if step > 200 and min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 3
             else:
-                # Late game: keep 3 miners to sustain heart economy.
-                pressure_budget = 6  # Late game: 2 miners, economy established
+                # Late game: 2 miners, economy established
+                pressure_budget = 6
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 4
 
