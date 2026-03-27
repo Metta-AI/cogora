@@ -13,10 +13,10 @@ cogames auth set-token $COGAMES_TOKEN
 
 ```bash
 # Run with your policy (8 cogs, full game)
-cogames play -m machina_1 -c 8 -p class=cvc_cog.alpha_policy.AlphaPolicy -r log --autostart > /tmp/cogames/latest.log 2>&1
+cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog -r log --autostart > /tmp/cogames/latest.log 2>&1
 
 # Shorter test (100 steps)
-cogames play -m machina_1 -c 8 -p class=cvc_cog.alpha_policy.AlphaPolicy -r log --autostart --steps=100 > /tmp/cogames/latest.log 2>&1
+cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog -r log --autostart --steps=100 > /tmp/cogames/latest.log 2>&1
 
 # Run with starter policy for comparison
 cogames play -m machina_1 -c 8 -p starter -r log --autostart --steps=5000 > /tmp/cogames/starter.log 2>&1
@@ -41,8 +41,8 @@ cogames match-artifacts <match-id>
 ## Key Issues Hit During Setup
 
 1. **Python version mismatch**: cogames requires `>=3.12,<3.13`. System has 3.11. Solution: `uv python install 3.12`.
-2. **mettagrid_sdk not available**: The `mettagrid_sdk` package used in `cvc_cog/policy/semantic_cog.py` is not on PyPI. The policy must use the raw token-based observation API from `mettagrid.simulator.interface.AgentObservation`.
-3. **Policy class path**: Use `class=cvc_cog.alpha_policy.AlphaPolicy` format. Short names like `starter` only work for built-in policies.
+2. **mettagrid_sdk not available**: The `mettagrid_sdk` package used in `cvc/cogent/player_cog/policy/semantic_cog.py` is not on PyPI. The policy must use the raw token-based observation API from `mettagrid.simulator.interface.AgentObservation`.
+3. **Policy class path**: Use `class=cvc.cogent.player_cog` format. Short names like `starter` only work for built-in policies.
 
 ## Game Mechanics Quick Reference
 
@@ -59,7 +59,7 @@ cogames match-artifacts <match-id>
 
 ## Architecture
 
-- `src/cvc_cog/alpha_policy.py` - Main policy file
+- `src/cvc/cogent/player_cog/` - Main policy package
 - Policy extends `MultiAgentPolicy` -> `agent_policy(agent_id)` -> `AgentPolicy.step(obs)`
 - Observations are token-based: each token has `feature.name`, `value`, and `location`
 - Tags identify entity types: `type:junction`, `type:hub`, `team:cogs`, `net:cogs`, etc.
