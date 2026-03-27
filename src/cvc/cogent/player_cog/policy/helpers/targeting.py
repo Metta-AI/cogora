@@ -49,11 +49,13 @@ def aligner_target_score(
     if hub_position is not None:
         hub_dist = float(manhattan(hub_position, candidate.position))
         if hub_dist > 25:
-            hub_penalty = (hub_dist - 25) * 5.0 + 30.0  # Very expensive beyond alignment range
+            hub_penalty = (hub_dist - 25) * 8.0 + 50.0  # Extremely expensive beyond alignment range
         elif hub_dist > 15:
-            hub_penalty = (hub_dist - 15) * 2.0 + 5.0  # Moderate cost in outer ring
+            hub_penalty = (hub_dist - 15) * 3.0 + 10.0  # Strong cost in outer ring
+        elif hub_dist > 10:
+            hub_penalty = (hub_dist - 10) * 1.5 + 2.0  # Moderate cost mid-ring
         else:
-            hub_penalty = hub_dist * 0.5  # Mild preference for closer junctions
+            hub_penalty = hub_dist * 0.3  # Mild preference for closer junctions
     return (
         distance
         - min(expansion * 5.0, 30.0)

@@ -47,7 +47,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Aggressive alignment with scrambler defense."""
+        """Aggressive alignment with scrambler defense — v115."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
 
@@ -57,23 +57,23 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
 
         # Phase 2: Early ramp (steps 10-50) — start aligning fast
         if step < 50:
-            aligner_budget = 4 if min_res >= 5 else 3
+            aligner_budget = 4 if min_res >= 3 else 3
             return aligner_budget, 0
 
-        # Emergency: drop to 3 if economy dying (not 2, to reduce gear churn)
+        # Emergency: drop to 3 if economy dying
         if min_res < 1 and not _h.team_can_refill_hearts(state):
             return 3, 0
 
-        # Phase 3: 5 aligners + 1 scrambler, 2 miners (after step 400)
+        # Phase 3: 5 aligners + 1 scrambler, 2 miners
         aligner_budget = 5
         scrambler_budget = 0
 
-        # Scale down aligners if economy struggling
-        if min_res < 5:
+        # Only scale down if economy is really struggling (was < 5, now < 3)
+        if min_res < 3:
             aligner_budget = 4
 
-        # Add scrambler at step 400 to disrupt ship expansion
-        if step >= 400 and min_res >= 5:
+        # Add scrambler earlier (step 300, was 400) with lower threshold
+        if step >= 300 and min_res >= 3:
             scrambler_budget = 1
             aligner_budget = min(aligner_budget, 4)
 
