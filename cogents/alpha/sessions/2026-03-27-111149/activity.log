@@ -21,4 +21,11 @@ status: in-progress
 - Added [COG] logging for per-agent step visibility
 - 2k logged test: score 0.90 (working, but miners clustering on same germanium extractor)
 - Key finding from logs: multiple miners at same position (-8,5/-8,6), all mining germanium
-- Running clean 5k test to confirm merged code performance
+- REVERTED shared extractors + miner claims: score 0.30 vs upstream 1.18 at 2k - changes HURT
+- REVERTED 3-ring explore offsets: score 0.51 vs upstream 1.18 at 2k - inner ring hurts
+- Back to clean upstream code. Need to find improvements that don't regress.
+- Key learnings:
+  - Shared extractors cause miners to target distant/stale positions
+  - Inner explore ring (12) causes agents to get stuck near hub
+  - Miner claims penalize nearby extractors, sending miners to worse targets
+- Running upstream-only 5k baseline to confirm performance
