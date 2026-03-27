@@ -13,22 +13,21 @@ status: in-progress
 ## Progress
 - Attempted to share WorldModel across agents — REVERTED
   - Each agent uses agent-relative coordinates (not true global)
-  - Sharing causes agents to navigate to wrong positions
   - Previous sessions noted this as a bug but it's actually by design
 - Deep analysis of 0-score wipeouts found ROOT CAUSE:
-  - Gear station contention: all agents rush to gear stations at step 1
-  - Agents that arrive but can't get gear (hub depleted) wait forever
+  - Gear station contention: agents wait forever at depleted stations
   - FIX: step away and retry, or mine if team can't afford gear
-- Implemented staggered pressure budget: 3 aligners at start, 5 after step 20
-- Station retry fix: when at station without gear, step off and back on
-- Stronger hub proximity bias for junction targeting (closer = better)
-- Heart batch 3 default, 4 after step 3000 (was 2/3)
-- 3x 10k test: 1.87, 0.57, 1.37 = avg 1.27
-  - Lower than previous best (2.55 avg) but zero 0-score wipeouts
-  - Variance from bad maps (ships close to hub) remains the #1 issue
-- v48 uploaded to tournament
-- Key learnings:
-  - agent-relative coordinates mean WorldModel can't be shared
-  - Gear stations are shared resources — contention is a real issue
-  - Hub proximity is key — close junctions score more reliably
-  - Economy needs 3+ miners to sustain 5 aligners long-term
+- CRITICAL BUG: num_agents was 0-2 (only visible members counted)
+  - This made the policy ALWAYS use the small-team budget (max 3 aligners)
+  - FIX: default to 8 agents with max(visible, 8)
+  - All previous tournament versions (v1-v48) had this bug!
+- Implemented step-based pressure ramp: 0/2/4/6 aligners
+  - Step 0-40: all mine (8 miners)
+  - Step 40-80: 2 aligners + 6 miners
+  - Step 80-200: 4 aligners + 4 miners
+  - Step 200+: 6 aligners + 2 miners
+- Removed scramblers to maximize alignment throughput
+- Stronger hub proximity bias + heart batch 3/4
+- v48 uploaded (still had num_agents bug)
+- v49 uploaded with all fixes
+- Running 3x 10k tests with different seeds to measure improvement
