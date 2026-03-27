@@ -10,3 +10,11 @@ status: in-progress
 - Plan: 1) Check tournament results, 2) Analyze why variance is high, 3) Push score higher
 
 ## Progress
+- Continued from previous session (interrupted but work continues)
+- v39 uploaded (scramble detection + 4-5 aligners + retreat margin 30)
+- v40 uploaded (stronger hub proximity bias for junctions >30 from hub)
+- Testing 6 aligner budget regressed (reverted to 4-5)
+- 3x average 10k test: 1.56, 0.59, 1.43 = avg 1.19
+- Map-dependent variance remains the #1 challenge
+- Ships at map corners → junctions >30 from hub likely in ship zone
+- Leaderboard: #1 v11 at 1.88, our v34 at #4 (1.77)
