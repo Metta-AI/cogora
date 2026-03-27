@@ -1,4 +1,4 @@
-status: in-progress
+status: completed
 started: 2026-03-27T03:55:31Z
 
 ## Activity Log
@@ -24,4 +24,4 @@ started: 2026-03-27T03:55:31Z
 - Ported mettagrid_sdk from metta-ai/metta repo (git clone with GITHUB_TOKEN).
 - MettagridSemanticPolicy now loads and runs! Score 2.0-3.35 locally (203 alignments best).
 - Uploaded as alpha.0:v17 with SDK bundled.
-- Next: analyze semantic_cog to understand strategy, iterate on improvements to beat score 10.
+- Session ended. Merged all work to main.
