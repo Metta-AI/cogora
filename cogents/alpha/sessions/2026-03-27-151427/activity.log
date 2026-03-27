@@ -78,3 +78,18 @@ status: interrupted
 - Added deposit-close and idle mining for aligners
 - Uploaded v59 to tournament (network was up briefly)
 - Network went down (SSL cert issue), uploads blocked
+
+### 10-Seed Batch Test (5000 steps, current code)
+| Seed | Score |
+|------|-------|
+| 42 | 2.83 |
+| 123 | 0.00 (wipeout) |
+| 456 | 2.92 |
+| 789 | 2.92 |
+| 1337 | 1.76 |
+| 2000 | 2.82 |
+| 3000 | 1.10 |
+| 4000 | **4.18** |
+| 5000 | 2.92 |
+| 6000 | 2.28 |
+**Average: 2.37 (all), 2.64 (non-zero)**
