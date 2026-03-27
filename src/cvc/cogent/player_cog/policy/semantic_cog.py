@@ -399,8 +399,10 @@ class SemanticCogAgentPolicy(AgentPolicy):
         if self._stalled_steps >= 12:
             return self._unstick_action(state, role)
 
-        if role == "scrambler" and _h.needs_emergency_mining(state):
-            return self._miner_action(state, summary_prefix="emergency_")
+        if role != "miner" and _h.needs_emergency_mining(state):
+            # Aligners only emergency mine if economy is completely dead (can't afford hearts)
+            if role != "aligner" or not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="emergency_")
 
         if role == "aligner" and not _h.has_role_gear(state, role):
             if (state.step or self._step_index) < _ALIGNER_GEAR_DELAY_STEPS:
