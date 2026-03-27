@@ -52,12 +52,12 @@ def aligner_target_score(
     hub_penalty = 0.0
     if hub_position is not None:
         hub_dist = float(manhattan(hub_position, candidate.position))
-        if hub_dist > 25:
-            hub_penalty = (hub_dist - 25) * 5.0 + 30.0  # Strongly avoid far junctions
-        elif hub_dist > 15:
-            hub_penalty = (hub_dist - 15) * 2.0 + 5.0
+        if hub_dist > 30:
+            hub_penalty = (hub_dist - 30) * 3.0 + 20.0
+        elif hub_dist > 20:
+            hub_penalty = (hub_dist - 20) * 1.5 + 5.0
         else:
-            hub_penalty = hub_dist * 0.5  # Mild preference for closer within safe zone
+            hub_penalty = hub_dist * 0.3
     # Very heavy penalty for junctions in ship scramble range — they'll be auto-scrambled every 70 ticks
     ship_penalty = 100.0 if in_ship_danger_zone else 0.0
     return (

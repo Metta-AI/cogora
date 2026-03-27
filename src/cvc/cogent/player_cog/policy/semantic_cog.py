@@ -647,9 +647,9 @@ class SemanticCogAgentPolicy(AgentPolicy):
             # Skip if very far from agent (not efficient)
             if distance > 30:
                 continue
-            # Skip if too far from hub (outside safe zone)
+            # Skip if too far from hub (outside territory)
             hub_distance = _h.manhattan(hub_pos, explore_pos)
-            if hub_distance > 25:
+            if hub_distance > 30:
                 continue
             candidates.append((distance, explore_pos))
 
