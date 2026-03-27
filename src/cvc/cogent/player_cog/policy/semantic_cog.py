@@ -403,12 +403,13 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if hp < 40 or (hp < 50 and safe_distance > 15):
                 return self._move_to_known(state, safe_target, summary="survival_retreat")
 
-        # WIPEOUT RECOVERY: If hp=0, stay near hub and wait for territory heal.
-        # Don't try to mine far away — just hold position near hub.
+        # WIPEOUT RECOVERY: If hp=0, move around near hub to try to trigger healing.
+        # Territory healing may require movement or specific positions.
         if hp == 0 and safe_target is not None:
-            if safe_distance > 3:
+            if safe_distance > 5:
                 return self._move_to_known(state, safe_target, summary="wipeout_return_hub")
-            return self._hold(summary="wipeout_hub_wait", vibe="change_vibe_default")
+            # Walk around near hub — explore nearby extractors to contribute
+            return self._miner_action(state, summary_prefix="wipeout_mine_")
 
         if self._should_retreat(state, role, safe_target):
             self._clear_target_claim()
