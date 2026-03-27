@@ -523,35 +523,37 @@ class SemanticCogAgentPolicy(AgentPolicy):
         return self._explore_action(state, role="scrambler", summary="find_enemy_junction")
 
     def _patrol_stale_junction(self, state: MettagridState) -> tuple[int, int] | None:
-        """Find a nearby known junction to patrol — only if close enough to be efficient."""
+        """Find a nearby known junction to patrol — prioritize previously-owned junctions."""
         hub = self._nearest_hub(state)
         if hub is None:
             return None
         step = state.step or self._step_index
         current_pos = _h.absolute_position(state)
+        team_id = _h.team_id(state)
 
-        # Only patrol junctions that are nearby, stale, and not in ship danger zones
-        max_patrol_distance = 20
-        candidates: list[tuple[int, int, tuple[int, int]]] = []
+        max_patrol_distance = 25
+        candidates: list[tuple[float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
             # Skip junctions in ship danger zones — they'll just get scrambled again
             if self._is_in_ship_danger_zone(pos):
                 continue
             staleness = step - last_seen_step
-            # Skip fresh junctions
-            if staleness < 40:
+            # Skip very fresh junctions
+            if staleness < 30:
                 continue
             distance = _h.manhattan(current_pos, pos)
-            # Only patrol if within reasonable distance
             if distance > max_patrol_distance:
                 continue
-            candidates.append((distance, staleness, pos))
+            # Prioritize previously-owned junctions (likely scrambled, needs re-align)
+            priority = float(distance)
+            if owner == team_id:
+                priority -= 10.0  # Strong preference for re-checking our junctions
+            candidates.append((priority, staleness, pos))
 
         if not candidates:
             return None
 
-        # Sort by distance (nearest first), then by staleness (oldest first)
         candidates.sort(key=lambda c: (c[0], -c[1]))
 
         # Stagger among agents
@@ -786,9 +788,16 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if rel_pos in self._shared_junctions:
                 prev_owner, _ = self._shared_junctions[rel_pos]
                 if prev_owner == team_id and current_owner is None:
-                    # Junction was scrambled — increment counter
+                    # Junction was scrambled — mark this and nearby junctions as ship zone
                     count = self._shared_ship_positions.get(pos, 0)
                     self._shared_ship_positions[pos] = count + 1
+                    # Propagate: any known junction within ship scramble radius is also in danger
+                    ship_range = _CLIPS_SCRAMBLE_RADIUS + _CLIPS_SHIP_SAFE_MARGIN
+                    for (jdx, jdy) in self._shared_junctions:
+                        jpos = (hub.global_x + jdx, hub.global_y + jdy)
+                        if _h.manhattan(pos, jpos) <= ship_range:
+                            if self._shared_ship_positions.get(jpos, 0) < 1:
+                                self._shared_ship_positions[jpos] = 1
 
     def _is_in_ship_danger_zone(self, position: tuple[int, int]) -> bool:
         """Check if junction has been scrambled (likely near a ship)."""

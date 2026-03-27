@@ -54,8 +54,8 @@ def aligner_target_score(
             hub_penalty = (hub_dist - 25) * 1.5 + 8.0
         else:
             hub_penalty = hub_dist * 0.25
-    # Heavy penalty for junctions in clips ship scramble range — they'll be auto-scrambled every 70 ticks
-    ship_penalty = 50.0 if in_ship_danger_zone else 0.0
+    # Very heavy penalty for junctions in ship scramble range — they'll be auto-scrambled every 70 ticks
+    ship_penalty = 100.0 if in_ship_danger_zone else 0.0
     return (
         distance
         - min(expansion * 3.0, 24.0)
