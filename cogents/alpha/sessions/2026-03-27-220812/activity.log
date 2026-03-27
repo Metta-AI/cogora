@@ -9,3 +9,15 @@ status: in-progress
 - Key bottleneck: economy (miners can't keep up with aligner heart needs)
 - Ship scrambles cause ~65% alignment loss
 - Goal: score > 10, currently ~3x away
+
+## Environment Setup
+- Fixed cogames venv: installed anthropic + openai packages
+- Running baseline tests with AlphaCyborgPolicy (5K steps)
+
+## Strategy Analysis
+- AlphaCogAgentPolicy uses 4-5 aligners, 0 scramblers
+- Heart batch starts at 3, scales to 6/7/8 — each refill costs 84+ resources
+- Hub align distance=25, junction align=15, AOE=10
+- Previous sessions found patrol time (60%+) is main bottleneck
+- Ships are static at corners, expand via junction chaining
+- Adaptive scrambler needed: helps ship-dominated maps, hurts favorable ones
