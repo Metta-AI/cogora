@@ -91,3 +91,15 @@ status: in-progress
 - Key: agent 3 had 62 alignments with only 3 gear switches (was 8)
 - 219 total alignments, 106 scrambles, 0 deaths in best game
 - Uploaded as v95
+- 10-game validation: 2.14, 2.61, 1.98, 1.90, 1.98, 0.00, 2.52, 2.84, 2.35, 3.12
+- True average: 2.14 (all 10) or 2.38 (9 non-wipeout)
+- v113 (lower miner hub distance 15) worse: avg 2.60, reverted
+
+## Current Best Config (v112)
+- 5 aligners + 1 scrambler at step 400 (4+1 = 5 pressure, 3 miners)
+- Hub camp 20 steps, retreat margin 15, deposit threshold 12
+- Heart batch: 2 base → 3 at step 500 → 5 at step 2000
+- Emergency threshold: min_res < 1 (was 3), emergency budget 3 (was 2)
+- Hub proximity bias: strong penalty > 15 tiles from hub
+- Expansion bonus: 5.0 per reachable junction (cap 30)
+- Defensive scrambler targeting: threat_bonus * 10
