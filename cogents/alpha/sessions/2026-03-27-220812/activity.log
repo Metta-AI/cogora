@@ -45,8 +45,18 @@ status: in-progress
 - Hub camp was 20 steps of noop — wasting precious HP time
 - Agents spawn within 3 tiles of hub but territory doesn't activate on some maps
 
-## v106 Changes
-- Reduced hub camp from 20 steps to 5 (don't waste HP waiting)
-- Kept v104 pressure: 5 aligners, 1 scrambler at step 400
-- Cap aligners at 4 when scrambler active (keeps 3 miners)
-- Running 5-game suite for validation
+## v106 Results (hub camp 5 steps)
+- Scores: 1.93, 1.83, 2.04, 1.93, 0.00 → avg 1.55 (1.93 without wipeout)
+- WORSE than v104 — shorter hub camp hurts on maps with territory
+
+## v107 Changes (restored hub camp 20 steps + v104 pressure)
+- Scores: 0.00, 2.58, 2.42, 2.44, 2.64 → avg 2.02 (2.52 without wipeout)
+- Better than baseline on non-wipeout maps
+- Starter policy also wipes out → wipeout is map-inherent, not a bug
+- Uploaded as v89 to tournament
+
+## Key Learnings
+- Wipeouts are ~20% of games, map-dependent, affect all policies
+- Hub camp (20 steps) is important for territory healing
+- Scrambler is effective: 69-106 enemy scrambles per game
+- 5 aligners + 1 scrambler (at step 400) is current best config
