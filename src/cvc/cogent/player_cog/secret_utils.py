@@ -9,9 +9,7 @@ def resolve_api_key(
     direct_value: str | None,
     file_path: str | Path | None,
     env_var: str,
-    fallback_env_var: str | None = None,
-    required: bool = True,
-) -> str | None:
+) -> str:
     if direct_value:
         stripped = direct_value.strip()
         if stripped:
@@ -27,17 +25,4 @@ def resolve_api_key(
     if value:
         return value.strip()
 
-    if fallback_env_var:
-        value = os.getenv(fallback_env_var)
-        if value:
-            return value.strip()
-
-    if required:
-        sources = [env_var]
-        if fallback_env_var:
-            sources.append(fallback_env_var)
-        raise RuntimeError(
-            f"API key not found. Set one of: {', '.join(sources)}"
-        )
-
-    return None
+    raise RuntimeError(f"API key not found. Set {env_var}")

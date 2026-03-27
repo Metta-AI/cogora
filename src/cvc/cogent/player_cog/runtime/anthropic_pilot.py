@@ -62,8 +62,7 @@ class AnthropicPilotSession(PilotSession):
         resolved_api_key = resolve_api_key(
             direct_value=anthropic_api_key or api_key,
             file_path=anthropic_api_key_file or api_key_file,
-            env_var="ANTHROPIC_API_KEY",
-            fallback_env_var="COGORA_ANTHROPIC_KEY",
+            env_var="COGORA_ANTHROPIC_KEY",
         )
         resolved_client = client if client is not None else build_anthropic_client(api_key=resolved_api_key)
         backend = _AnthropicCodeModeBackend(

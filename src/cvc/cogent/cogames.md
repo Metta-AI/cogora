@@ -33,7 +33,7 @@ cogames upload \
   -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" \
   -n alpha.0 \
   -f src/cvc -f src/mettagrid_sdk \
-  --secret-env ANTHROPIC_API_KEY=$COGORA_ANTHROPIC_KEY \
+  --secret-env COGORA_ANTHROPIC_KEY=$COGORA_ANTHROPIC_KEY \
   --skip-validation
 ```
 
@@ -57,7 +57,7 @@ After validating changes in free-play, enter the tournament:
      -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" \
      -n alpha.N \
      -f src/cvc -f src/mettagrid_sdk \
-     --secret-env ANTHROPIC_API_KEY=$COGORA_ANTHROPIC_KEY \
+     --secret-env COGORA_ANTHROPIC_KEY=$COGORA_ANTHROPIC_KEY \
      --skip-validation
    ```
 2. **Wait for matches**: Tournament runs matches automatically. Check status:
