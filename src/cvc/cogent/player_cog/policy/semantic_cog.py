@@ -153,7 +153,9 @@ class SharedWorldModel:
         return {
             entity.position
             for entity in self._entities.values()
-            if entity.position not in excluded and entity.entity_type != "agent"
+            if entity.position not in excluded
+            and entity.entity_type != "agent"
+            and not entity.entity_type.endswith("_extractor")
         }
 
     def is_occupied(self, position: tuple[int, int]) -> bool:
