@@ -95,9 +95,11 @@ status: interrupted
 - Wipeout 5% of games (down from 20%) — territory may not activate for some instances
 - Tournament versions: v75-v86 uploaded
 
-## First Tournament Results (v85)
-- v85 vs v17 (ours): 1.80
-- v85 vs v14 (ours): 3.41
-- v85 vs Paz-Bot-9005:v1: 0.85
-- Scores are per-team average (both teams see same score)
+## Tournament Results (10 completed matches)
+- v85 scores: 1.80, 3.41, 0.85, 1.13, 1.50, 1.29, 0.00 → avg 1.43
+- v85 vs gtlm-reactive: 0.00 (wipeout in tournament!)
+- v83 scored 5.30 in one match (best tournament result)
+- v84 vs v57: 1.45
+- Average across all: ~1.9
+- Wipeouts still happen in tournament (0.00 score)
 - Still far from >10 target
