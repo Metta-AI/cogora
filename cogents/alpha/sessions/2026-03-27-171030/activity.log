@@ -101,4 +101,31 @@ Key changes:
 - Emergency resource threshold: 1 (was 3)
 - Heart batch: 5 base, scales to 7 at step 8000
 - Retreat margin: 28 (was 32)
-- Uploaded as alpha.0:v62
+- Aligner gear delay: 20 steps (mine before getting gear)
+- Uploaded as alpha.0:v62, v65
+
+## v78 10-seed 5k Results
+| Seed | Score |
+|------|-------|
+| 42   | 2.53  |
+| 123  | 2.26  |
+| 456  | 2.98  |
+| 1337 | **7.28** |
+| 999  | 0.00  |
+| 7777 | 4.11  |
+| 100  | 2.11  |
+| 200  | 4.07  |
+| 300  | 2.10  |
+| 400  | **8.32** |
+**Avg: 3.58** (excl wipeout: 3.97)
+
+## v79: tighter hub focus (REVERTED)
+- Stronger hub penalty (30+ at distance 25) — WORSE avg 2.85
+- Reverted back to v78 config
+
+## Strategy Assessment
+- Best single game: 11.68 (v74 seed=456 10k)
+- Best avg (5k): 3.58 across 10 seeds
+- Wipeout rate: ~10-20% of runs
+- High-score games (>7): ~20% of runs
+- Goal of >10 avg not yet achieved but individual games can exceed it
