@@ -37,4 +37,10 @@ status: in-progress
   - Score counts CONNECTED junctions in network (connectivity matters)
 - Tournament results: v29=1.90, v30=0.96, v31=1.76 — #1 on leaderboard at 1.87
 - Strategy shift: avoid ship zones, focus on safe junctions
-- Implementing ship detection + danger zone avoidance in aligner targeting
+- Ships are INVISIBLE to agents (no entity_type visible)
+- Implemented scramble-zone inference: track junctions that flip from friendly to neutral
+- Junctions scrambled 2+ times get deprioritized (50-point penalty in aligner scoring)
+- Tournament v34 in competition matches (vs other policies!)
+- v30 is #1 on leaderboard at 1.92, we hold top 5 spots
+- v6 10k test: 1.66, v7 10k test: 1.21 (high variance persists)
+- Upload failures due to S3 503 errors
