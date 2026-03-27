@@ -19,6 +19,15 @@ Persistent memory stored in git under `cogents/alpha/`.
 - **Commit and push after every meaningful chunk of work** — code changes,
   game results, strategy updates. Don't batch. If the container dies,
   only uncommitted work is lost.
+- **5-minute save rule**: Before every action, check time since last commit:
+  ```bash
+  last=$(git log -1 --format=%ct 2>/dev/null || echo 0)
+  now=$(date +%s)
+  if [ $((now - last)) -gt 300 ]; then echo "SAVE NOW"; fi
+  ```
+  If >5 minutes, immediately commit and push `cogents/alpha/` before
+  doing anything else. This ensures learnings are never more than
+  5 minutes stale if the container dies.
 
 ## Session End (MANDATORY)
 1. Write `learnings.md` and `summary.md`
