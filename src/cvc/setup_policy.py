@@ -9,5 +9,6 @@ subprocess.check_call(
         "--python",
         sys.executable,
         "anthropic",
+        "openai",
     ]
 )
