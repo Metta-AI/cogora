@@ -9,3 +9,23 @@ status: in-progress
 - Goal: achieve score > 10
 - Key challenges: map-dependent variance, 0-score wipeouts, need 4x improvement
 - Plan: 1) Check tournament results 2) Analyze wipeout cause 3) Major strategy improvements
+
+## Progress
+- Attempted to share WorldModel across agents — REVERTED
+  - Each agent uses agent-relative coordinates (not true global)
+  - Sharing causes agents to navigate to wrong positions
+  - Previous sessions noted this as a bug but it's actually by design
+- Deep analysis of 0-score wipeouts found ROOT CAUSE:
+  - Gear station contention: all 5 aligners + 2 miners rush to stations at step 1
+  - Hub only has 24 of each element. Gear costs: aligner=6, miner=6
+  - 5 aligners + 3 miners = 8 gears × 6 avg = 48 resources needed, but hub only has 24 each
+  - Many agents arrive at station but can't get gear (hub depleted)
+  - Stuck agents burn HP waiting, never recover
+  - On bad maps, starter policy also scores 0 (map-dependent)
+- Coordinate system: agents start at different spawn points with different (0,0) origins
+  - Bootstrap hub offsets are per-agent: {0: (0,3), 1: (0,2), 2: (3,0), ...}
+  - Entity global_x/y are relative to each agent's spawn
+- Key insight for improvement:
+  - Don't rush all gear at once — stagger gear acquisition
+  - More miners initially to build economy before aligners gear up
+  - Align only in safe zones (away from ship scramble radius)
