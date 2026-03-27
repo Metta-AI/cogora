@@ -33,7 +33,7 @@ _TARGET_SWITCH_THRESHOLD = 3.0
 _SHARED_JUNCTION_MEMORY_STEPS = 10000
 _OSCILLATION_HISTORY_STEPS = 6
 _OSCILLATION_UNSTICK_STEPS = 4
-_MINING_ALIGNER_MIN_RESOURCE = 20
+_MINING_ALIGNER_MIN_RESOURCE = 14
 _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 3
 _ALIGNER_PRIORITY = (3, 2, 4, 5, 6, 7)
 _SCRAMBLER_PRIORITY = (7, 6)
@@ -1210,10 +1210,10 @@ class SemanticCogAgentPolicy(AgentPolicy):
         else:
             pressure_budget = 4
             if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
-                pressure_budget = 5
+                pressure_budget = 6
 
         scrambler_budget = 0
-        if num_agents > 4 and step >= 1_000 and _h.team_can_refill_hearts(state):
+        if num_agents > 4 and step >= 1_500 and _h.team_can_refill_hearts(state):
             scrambler_budget = 1
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
