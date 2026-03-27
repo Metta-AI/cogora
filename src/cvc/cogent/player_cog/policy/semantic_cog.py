@@ -26,7 +26,7 @@ _STATION_OFFSETS = {
     "scout": (3, 4),
 }
 _TEMP_BLOCK_STEPS = 10
-_RETREAT_MARGIN = 30
+_RETREAT_MARGIN = 22
 _DEFAULT_BOUND_MARGIN = 12
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
@@ -530,11 +530,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
         step = state.step or self._step_index
         current_pos = _h.absolute_position(state)
 
-        # Only patrol junctions that are nearby and stale
+        # Only patrol junctions that are nearby, stale, and not in ship danger zones
         max_patrol_distance = 20
         candidates: list[tuple[int, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
+            # Skip junctions in ship danger zones — they'll just get scrambled again
+            if self._is_in_ship_danger_zone(pos):
+                continue
             staleness = step - last_seen_step
             # Skip fresh junctions
             if staleness < 40:
@@ -1208,12 +1211,13 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            pressure_budget = 4
+            # Aggressive start: 5 aligners immediately to burn initial hearts
+            pressure_budget = 5
             if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
-                pressure_budget = 6
+                pressure_budget = 5
 
         scrambler_budget = 0
-        if num_agents > 4 and step >= 1_500 and _h.team_can_refill_hearts(state):
+        if num_agents > 4 and step >= 2_000 and _h.team_can_refill_hearts(state):
             scrambler_budget = 1
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
@@ -1241,12 +1245,12 @@ class SemanticCogAgentPolicy(AgentPolicy):
         margin = _RETREAT_MARGIN
         if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
             margin += 10
-        margin += int(state.self_state.inventory.get("heart", 0)) * 5
-        margin += min(_h.resource_total(state), 12) // 2
+        margin += min(int(state.self_state.inventory.get("heart", 0)), 3) * 3
+        margin += min(_h.resource_total(state), 12) // 3
         if not _h.has_role_gear(state, role):
             margin += 10
         if (state.step or 0) >= 2_500:
-            margin += 10 if role in {"aligner", "scrambler"} else 5
+            margin += 5
         return hp <= safe_steps + margin
 
     def _should_deposit_resources(self, state: MettagridState) -> bool:
