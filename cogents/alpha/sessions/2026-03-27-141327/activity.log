@@ -4,30 +4,41 @@ status: in-progress
 
 ## Session Start
 - Previous session avg: ~2.3 (v42 best at 2.55)
-- Tournament: v38 at #4 (1.76), v11 at #1 (1.87)
-- Best local single run: 4.92
+- Tournament best: v38 at #4 (1.76)
 - Goal: achieve score > 10
-- Key challenges: map-dependent variance, 0-score wipeouts, need 4x improvement
-- Plan: 1) Check tournament results 2) Analyze wipeout cause 3) Major strategy improvements
 
 ## Progress
-- Attempted to share WorldModel across agents — REVERTED
-  - Each agent uses agent-relative coordinates (not true global)
-  - Previous sessions noted this as a bug but it's actually by design
-- Deep analysis of 0-score wipeouts found ROOT CAUSE:
-  - Gear station contention: agents wait forever at depleted stations
-  - FIX: step away and retry, or mine if team can't afford gear
-- CRITICAL BUG: num_agents was 0-2 (only visible members counted)
-  - This made the policy ALWAYS use the small-team budget (max 3 aligners)
-  - FIX: default to 8 agents with max(visible, 8)
-  - All previous tournament versions (v1-v48) had this bug!
-- Implemented step-based pressure ramp: 0/2/4/6 aligners
-  - Step 0-40: all mine (8 miners)
-  - Step 40-80: 2 aligners + 6 miners
-  - Step 80-200: 4 aligners + 4 miners
-  - Step 200+: 6 aligners + 2 miners
-- Removed scramblers to maximize alignment throughput
-- Stronger hub proximity bias + heart batch 3/4
-- v48 uploaded (still had num_agents bug)
-- v49 uploaded with all fixes
-- Running 3x 10k tests with different seeds to measure improvement
+
+### Bug Fixes
+1. **Shared WorldModel** — REVERTED. Agent coordinates are relative to spawn, not global.
+2. **CRITICAL: num_agents was 0-2** — `team_summary.members` only counts visible team members. Fixed with `max(visible, 8)`. ALL previous versions had this bug and used 3-aligner budget.
+3. **Gear station contention** — Multiple agents rushing stations causes deadlock. Fixed with step-off-retry and staggered start (2 aligners first 30 steps, then 5).
+
+### Strategy Changes
+- 5 aligners + 3 miners (previously always 3+5 due to bug)
+- Staggered start: 2 aligners first 30 steps to prevent gear station contention
+- Stronger hub proximity bias (3x penalty >30 from hub)
+- Heart batch 3 default, 4 after step 3000
+- Removed scramblers to maximize alignment
+
+### Test Results
+| Version | Seeds | Scores | Average |
+|---------|-------|--------|---------|
+| Old (3 aligners, bug) | 3x default | 1.87, 0.57, 1.37 | 1.27 |
+| 6 aligners, step ramp | 42/123/456 | 0.66, 1.33, 1.38 | 1.12 |
+| 5 aligners, immediate | 42/123/456 | 1.86, 0.00, 2.71 | 1.52 |
+| **5 aligners, stagger** | **42/123/456** | **2.00, 1.98, 2.20** | **2.06** |
+
+### Uploads
+- v48: station fix + hub proximity (still had num_agents bug)
+- v49: num_agents fix + 6 aligners + step ramp
+- v50: 5 aligners immediate (had 0-score on seed 123)
+- v51: 5 aligners staggered start — **best version**
+
+### Key Learnings
+- agent coordinates are per-agent relative (can't share WorldModel)
+- team_summary.members only counts visible teammates (must default to 8)
+- Gear station contention causes 0-score wipeouts if not staggered
+- 6 aligners with 2 miners is too thin economically — 5+3 is better
+- Score ~2.0 avg with 5 aligners; to get >10 needs fundamental changes
+- Hub proximity bias reduces ship damage but doesn't eliminate it
