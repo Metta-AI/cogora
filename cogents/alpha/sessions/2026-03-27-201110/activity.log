@@ -22,8 +22,21 @@ status: in-progress
 - Seed 42: 2.39 (135 alignments, 102 lost to ships, 102 scrambles)
 - Seed 123: 4.05
 
-## v91 Changes (testing)
-- Pressure budgets: 6 pressure (2 miners) from step 200 (was 3000)
-- Heart batching: 6 at step 500 (was 5 at step 2000), 7 at step 2000, 8 at step 5000
-- Retreat margin: 22 (was 28) — keep agents productive longer
-- 2nd scrambler at step 1000 (was 1500)
+## v78 Baseline (5K steps, 8 seeds partial)
+- 42=2.39, 123=4.05, 456=6.30, 789=2.82, 1024=6.21, 4011=5.12, 7777=2.57
+- Avg (7 seeds): 4.21
+
+## v91 Changes
+- Pressure: 6 pressure (2 miners) from step 200 → seed 42: 2.67 (+12%)
+- Heart batching: 6 at step 500, 7 at step 2000, 8 at step 5000
+- Retreat margin: 22 (was 28)
+- 2nd scrambler at step 1000
+
+## v92 Changes (reverted)
+- Reduced ship penalty 100→25: WORSE (2.50), agents waste time on ship-zone junctions
+- Wider patrol, earlier check: also worse
+- Reverted ship/patrol changes
+
+## v93 Changes (testing)
+- All v91 changes + deposit threshold 16 (was 20) + 3 aligners from step 0 (was 2)
+- Testing on seeds 42 and 456

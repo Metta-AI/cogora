@@ -572,7 +572,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
         current_pos = _h.absolute_position(state)
         team_id = _h.team_id(state)
 
-        max_patrol_distance = 15  # Slightly wider patrol radius
+        max_patrol_distance = 15  # Patrol radius
         candidates: list[tuple[int, float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             # Only patrol previously-friendly junctions — these affect score
@@ -1359,11 +1359,10 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 3
         else:
             # Aggressive alignment: maximize aligners, economy permitting.
-            # 2 aligners first 30 steps to avoid gear station contention,
-            # then 6 pressure agents (2 miners) for maximum alignment throughput.
-            if step < 30:
-                pressure_budget = 2
-            elif step < 200:
+            # 3 aligners from step 1 (each has unique station target), ramp to 6 fast.
+            if step < 20:
+                pressure_budget = 3  # 3 aligners + 5 miners
+            elif step < 150:
                 pressure_budget = 5  # 3 miners while economy bootstraps
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 3
