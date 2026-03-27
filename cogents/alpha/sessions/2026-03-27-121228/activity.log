@@ -50,3 +50,10 @@ status: interrupted
   - Score increased from ~1.5 to ~5.0 (3x improvement)
 - Changed to 6 aligners (was 4-5) + increased retreat margin to 30
 - Uploaded v37 with all improvements
+- v9 test (6 aligners): 1.50 — 6 aligner budget regressed, reverted to 4-5
+- 3x average test: 1.56, 0.59, 1.43 = avg 1.19
+- HUGE VARIANCE: v8 scored 4.92, v10 runs scored 0.59-1.56
+  - v8 map had only 47 junctions (vs 65) — different map RNG
+  - Score is heavily map-dependent: junctions near/far from ships
+- Uploaded v39 (scramble detection + 4-5 aligners + retreat margin 30)
+- Leaderboard: #1 at 1.91 (v11), our new versions v34-v39 accumulating matches
