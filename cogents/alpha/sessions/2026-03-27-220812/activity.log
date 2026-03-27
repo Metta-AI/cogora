@@ -33,4 +33,20 @@ status: in-progress
 - Economy-responsive: scale to 5 aligners when min_res >= 8
 - Emergency fallback to 2 if min_res < 1
 - Fixed scrambler targeting to consider friendly junctions (threat_bonus)
-- v104 testing: ~2.19 and ~2.78 (both still running)
+- v104 results: 2.19 (129 alignments, 69 scrambles), 2.82 (208 alignments, 106 scrambles)
+- v104 scrambler is effective: 69-106 enemy junctions disrupted
+- v105 (2 scramblers, earlier): 0.00, 0.00, 2.00 — too many wipeouts, too little economy
+- Reverted to 1 scrambler, identified wipeout as critical issue
+
+## Wipeout Analysis
+- ~30-40% of games result in total wipeout (score 0.00)
+- All 8 agents die at step ~50 (hp starts at 50, drains 1/tick)
+- hp.gained = 0 in wipeout games: territory never healed agents
+- Hub camp was 20 steps of noop — wasting precious HP time
+- Agents spawn within 3 tiles of hub but territory doesn't activate on some maps
+
+## v106 Changes
+- Reduced hub camp from 20 steps to 5 (don't waste HP waiting)
+- Kept v104 pressure: 5 aligners, 1 scrambler at step 400
+- Cap aligners at 4 when scrambler active (keeps 3 miners)
+- Running 5-game suite for validation

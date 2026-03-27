@@ -373,9 +373,9 @@ class SemanticCogAgentPolicy(AgentPolicy):
         hp = int(state.self_state.inventory.get("hp", 0))
         step = state.step or self._step_index
 
-        # Stay at hub until HP reaches 100. Territory heals +100/tick when in range.
-        # Timeout after 20 steps to avoid infinite waiting if territory never activates.
-        if hp < 100 and safe_target is not None and safe_distance <= 3 and step <= 20:
+        # Brief hub camp: wait a few ticks for territory healing to kick in.
+        # Don't wait too long — if territory doesn't activate, we need to work.
+        if hp < 100 and hp > 0 and safe_target is not None and safe_distance <= 3 and step <= 5:
             return self._hold(summary="hub_camp_heal", vibe="change_vibe_default")
 
         # If far from territory in early game, rush back before dying.

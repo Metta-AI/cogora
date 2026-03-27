@@ -51,7 +51,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
 
-        # Phase 1: Hub camp (steps 0-10)
+        # Phase 1: First few steps — all mine to build economy
         if step < 10:
             return 2, 0
 
@@ -60,21 +60,23 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             aligner_budget = 4 if min_res >= 5 else 3
             return aligner_budget, 0
 
-        # Phase 3: Full pressure with scrambler defense
         # Emergency: drop to 2 if economy dying
         if min_res < 1 and not _h.team_can_refill_hearts(state):
             return 2, 0
 
+        # Phase 3: Full pressure — 5 aligners + 1 scrambler, 2 miners
         aligner_budget = 5
         scrambler_budget = 0
 
-        # Scale down aligners if economy is struggling
+        # Scale down aligners if economy struggling
         if min_res < 8:
             aligner_budget = 4
 
-        # Add scrambler at step 500 to defend network from ships
-        if step >= 500 and min_res >= 5:
+        # Add scrambler at step 400 to disrupt ship expansion
+        if step >= 400 and min_res >= 5:
             scrambler_budget = 1
+            # With scrambler, cap aligners at 4 to keep 3 miners
+            aligner_budget = min(aligner_budget, 4)
 
         if objective == "resource_coverage":
             return 0, 0
@@ -120,8 +122,9 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         scrambler_budget = 0
         if min_res < 8:
             aligner_budget = 4
-        if step >= 500 and min_res >= 5:
+        if step >= 400 and min_res >= 5:
             scrambler_budget = 1
+            aligner_budget = min(aligner_budget, 4)
 
         if objective == "resource_coverage":
             return 0, 0
