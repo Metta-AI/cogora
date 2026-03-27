@@ -21,6 +21,9 @@ status: in-progress
   - Wider A* margin (16): mixed results
   - Longer temp blocks (25): mixed results
 - Same seed gives different scores each run — high variance makes single-run testing unreliable
-- CRITICAL BUG: "cvc-cog" may not be a valid import path, tournament uploads may fail
+- CRITICAL BUG CONFIRMED: v18-v26 ALL FAILED in tournament
+  - "cvc-cog" treated as Python symbol name → ModuleNotFoundError: Invalid symbol name: cvc-cog
+  - Fix: use class=cvc.cogent.player_cog.policy.semantic_cog.MettagridSemanticPolicy
+  - Must include -f src/cvc to bundle source files for tournament server
 - Restored original baseline + minimal adaptive changes
-- Uploading cleaned version as v20
+- Uploaded v27 (full class path) and v28 (with source files included)
