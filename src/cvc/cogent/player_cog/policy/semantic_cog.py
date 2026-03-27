@@ -392,11 +392,11 @@ class SemanticCogAgentPolicy(AgentPolicy):
         hp = int(state.self_state.inventory.get("hp", 0))
         step = state.step or self._step_index
 
-        # Stay at hub for first 3 steps to let territory establish and heal to 100 HP.
+        # Stay at hub until HP reaches 100. Territory heals +100/tick when in range.
         # This prevents the non-deterministic wipeout where agents die before territory activates.
-        if step <= 3 and safe_target is not None and safe_distance <= 2:
-            if hp < 100:
-                return self._hold(summary="hub_camp_heal", vibe="change_vibe_default")
+        # Keep camping until we're healed, regardless of step count.
+        if step <= 10 and hp < 100 and hp > 0 and safe_target is not None and safe_distance <= 3:
+            return self._hold(summary="hub_camp_heal", vibe="change_vibe_default")
 
         # If far from territory in early game, rush back before dying.
         if step < 150 and safe_target is not None and safe_distance > 8:
@@ -404,13 +404,12 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if hp < 40 or (hp < 50 and safe_distance > 15):
                 return self._move_to_known(state, safe_target, summary="survival_retreat")
 
-        # WIPEOUT RECOVERY: If hp=0 and near hub, don't retreat/gear loop.
-        # Instead, mine nearby extractors to rebuild economy. Territory will
-        # eventually heal us, or at least we contribute resources.
-        if hp == 0 and safe_target is not None and safe_distance <= 6:
-            # Don't waste time retreating when already near hub with 0 HP.
-            # Mine to build economy — extractors are near hub.
-            return self._miner_action(state, summary_prefix="wipeout_recovery_")
+        # WIPEOUT RECOVERY: If hp=0, stay near hub and wait for territory heal.
+        # Don't try to mine far away — just hold position near hub.
+        if hp == 0 and safe_target is not None:
+            if safe_distance > 3:
+                return self._move_to_known(state, safe_target, summary="wipeout_return_hub")
+            return self._hold(summary="wipeout_hub_wait", vibe="change_vibe_default")
 
         if self._should_retreat(state, role, safe_target):
             self._clear_target_claim()
