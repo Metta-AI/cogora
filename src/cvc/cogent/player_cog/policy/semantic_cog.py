@@ -399,7 +399,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
         if self._stalled_steps >= 12:
             return self._unstick_action(state, role)
 
-        if role != "miner" and _h.needs_emergency_mining(state):
+        if role == "scrambler" and _h.needs_emergency_mining(state):
             return self._miner_action(state, summary_prefix="emergency_")
 
         if role == "aligner" and not _h.has_role_gear(state, role):
@@ -551,22 +551,24 @@ class SemanticCogAgentPolicy(AgentPolicy):
         current_pos = _h.absolute_position(state)
         team_id = _h.team_id(state)
 
-        max_patrol_distance = 25  # Cover full hub alignment zone
+        max_patrol_distance = 20  # Stay close to hub for efficiency
         candidates: list[tuple[int, float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
+            # Only patrol previously-friendly junctions — these affect score
+            if owner != team_id:
+                continue
             pos = (hub.global_x + dx, hub.global_y + dy)
             # Skip junctions in ship danger zones — they'll just get scrambled again
             if self._is_in_ship_danger_zone(pos):
                 continue
             staleness = step - last_seen_step
-            # Ships scramble every 70 ticks — check anything older than 50
-            if staleness < 50:
+            # Ships scramble every 70 ticks — check after 60 to catch scrambles
+            if staleness < 60:
                 continue
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
                 continue
-            # Priority: 0 = was friendly (likely scrambled), 1 = was neutral
-            priority = 0 if owner == team_id else 1
+            priority = 0  # All are formerly-friendly
             candidates.append((priority, float(distance), staleness, pos))
 
         if not candidates:
@@ -1330,21 +1332,20 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 3
         else:
             # 2 aligners first 30 steps to avoid gear station contention,
-            # then full 5 aligners. Smooth economy-based scaling prevents crash.
+            # then ramp to 6 aligners (2 miners sustain economy).
             if step < 30:
                 pressure_budget = 2
+            elif step < 100:
+                pressure_budget = 4  # Ramp up
             else:
-                pressure_budget = 5  # Full pressure
-                # Smooth economy scaling: reduce aligners as economy drops
-                if step > 200:
-                    if min_res < 3 and not _h.team_can_refill_hearts(state):
-                        pressure_budget = 3
-                    elif min_res < 7:
-                        pressure_budget = 4
+                pressure_budget = 6  # Maximum alignment pressure
+                # Only reduce if economy is completely exhausted
+                if step > 200 and min_res < 1 and not _h.team_can_refill_hearts(state):
+                    pressure_budget = 4
 
-        # 1 scrambler to disrupt ship chains — breaks ship frontier expansion
-        scrambler_budget = 1 if step >= 200 else 0
-        aligner_budget = pressure_budget - scrambler_budget
+        # No scrambler — all pressure agents are aligners for maximum score
+        scrambler_budget = 0
+        aligner_budget = pressure_budget
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":
