@@ -9,7 +9,15 @@ status: in-progress
 - Strategy: need fundamental changes, not just parameter tuning
 
 ## Progress
-- Continued from previous session with 5x batch test results
-- 5x 10k batch: 3.74, 2.45, 0.59, 3.02, 3.33 = avg 2.63 (best avg ever)
-- Map variance: ships near hub → 0.59, ships far → 3.74
-- Next steps: reduce variance, increase best-case score
+- 5x batch (v51): 3.74, 2.45, 0.59, 3.02, 3.33 = avg 2.63
+- Tightened aligner explore to max ring 2 (22 from hub, removed ring 3 at 35)
+- 5x batch (v54): 1.30, 1.43, 2.10, **6.00**, 0.74 = avg 2.31
+  - **NEW BEST: 6.00 on seed 1337!**
+  - Tighter explore helps best-case dramatically but hurts avg slightly
+  - Map variance still dominates
+- v54 uploaded to tournament
+- Key insight: staying close to hub can yield 6.0 score on favorable maps
+- To reach >10 consistently, need to:
+  1. Align ALL hub-proximal junctions fast (within first 500 steps)
+  2. Keep them aligned (detect and quickly re-align scrambled ones)
+  3. Build chains only into proven safe zones
