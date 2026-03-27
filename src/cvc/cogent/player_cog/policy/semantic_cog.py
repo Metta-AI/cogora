@@ -35,8 +35,8 @@ _OSCILLATION_HISTORY_STEPS = 6
 _OSCILLATION_UNSTICK_STEPS = 4
 _MINING_ALIGNER_MIN_RESOURCE = 12
 _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 3
-_ALIGNER_PRIORITY = (4, 5, 6, 7, 3)
-_SCRAMBLER_PRIORITY = (7,)
+_ALIGNER_PRIORITY = (3, 2, 4, 5, 6, 7)
+_SCRAMBLER_PRIORITY = (7, 3)
 _HUB_OFFSETS = COGSGUARD_BOOTSTRAP_HUB_OFFSETS
 _COGSGUARD_SURFACE = CogsguardSemanticSurface()
 
@@ -1108,19 +1108,28 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index
+        num_agents = len(state.team_summary.members) if state.team_summary else 8
 
-        pressure_budget = 4
-        if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
-            pressure_budget = 5
+        if num_agents <= 4:
+            pressure_budget = 2
+            if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
+                pressure_budget = 3
+        else:
+            pressure_budget = 4
+            if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
+                pressure_budget = 5
 
         scrambler_budget = 0
-        if step >= 2_000 and _h.team_can_refill_hearts(state):
+        if num_agents > 4 and step >= 1_500:
             scrambler_budget = 1
+        if num_agents > 4 and step >= 5_000 and _h.team_can_refill_hearts(state):
+            scrambler_budget = 2
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":
-            return min(aligner_budget, _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET), 0
+            bootstrap_budget = min(num_agents // 4, _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET)
+            return min(aligner_budget, max(bootstrap_budget, 1)), 0
         return aligner_budget, scrambler_budget
 
     def _in_enemy_aoe(self, state: MettagridState, position: tuple[int, int], *, team_id: str) -> bool:
