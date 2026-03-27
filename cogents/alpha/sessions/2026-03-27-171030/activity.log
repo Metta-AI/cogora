@@ -130,11 +130,21 @@ Avg: 2.99 (excl wipeout: **4.99**)
 - Wipeouts are non-deterministic (same seed can score 0 or >2)
 - Uploaded as alpha.0:v66
 
+## v81-v82 Economy Scaling Tests
+- v81 (6 miners critical, 4 at min_res<3): 5-seed avg 3.76 NO WIPEOUTS, 10-seed 2.82
+- v82 (5 miners critical, 4 at min_res<2): 10-seed avg 2.16, 3 wipeouts (30%)
+- v81 non-wipeout avg better but lower peak scores
+
+## Merged with parallel session (190717)
+- v83 from parallel session: avg 5.90 on 6 seeds (best avg!)
+- Added economy-gated bootstrapping and survival retreat
+- v84 10-seed 5k avg: 3.07 (1 wipeout)
+- Uploaded as alpha.0:v70
+
 ## Strategy Assessment
-- Best single game: 11.68 (v74 seed=456 10k)
-- Best non-wipeout avg: 4.99 (v80, 5k)
-- Wipeout rate: ~30% (non-deterministic, game randomness)
-- High-score games (>7): ~30% of non-wipeout runs
-- Goal of >10 avg not yet achieved
-- Key bottleneck: economy collapse causes wipeouts on some maps/runs
-- Key improvement area: prevent mid-game economy death spiral
+- Best single game: 19.19 (v83 seed=456 per parallel session)
+- Best avg: 5.90 (v83, 6 seeds per parallel session)
+- Our best non-wipeout avg: 4.99 (v80, 5k)
+- Wipeout rate: 10-30% depending on version (non-deterministic)
+- Goal of >10 avg not yet achieved, individual games can exceed it
+- Tournament uploads: v60, v62, v65, v66, v68, v70 (latest)
