@@ -8,3 +8,19 @@ status: in-progress
 - v19 uploaded to tournament last session
 - Goal: achieve score > 10
 - Plan: 1) Check tournament results for v19, 2) Read current policy, 3) Identify high-impact improvements, 4) Test and iterate
+
+## Progress
+- All tournament matches (v19-v23) failed with "1011 internal error" - server-side issue
+- Ran 5k baseline: score 0.59, 64 alignments but all scrambled by clips ships
+- KEY INSIGHT: problem is NOT finding junctions, it's HOLDING them
+  - 4 clips ships actively scramble our junctions
+  - 64/65 junctions aligned but score only 0.59 (avg <1 held at any time)
+  - Aligners waste time exploring after initial alignment instead of patrolling
+- Implemented changes:
+  1. Patrol-based exploration: aligners visit stale junction positions to detect/re-align scrambled junctions
+  2. Increased shared junction memory from 400 to 10000 (never forget junction positions)
+  3. Added 3rd explore ring at distance 32 for deeper chaining
+  4. Reduced heart batch target 4→2 (faster aligner deployment)
+  5. Reduced deposit threshold 40→20 (faster resource flow)
+  6. Earlier scrambler (step 500 vs 2000) to disrupt enemy
+- Testing v1 changes...

@@ -30,7 +30,7 @@ _RETREAT_MARGIN = 20
 _DEFAULT_BOUND_MARGIN = 12
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
-_SHARED_JUNCTION_MEMORY_STEPS = 400
+_SHARED_JUNCTION_MEMORY_STEPS = 10000
 _OSCILLATION_HISTORY_STEPS = 6
 _OSCILLATION_UNSTICK_STEPS = 4
 _MINING_ALIGNER_MIN_RESOURCE = 20
@@ -477,6 +477,11 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if depot is not None:
                 return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
+        # Patrol: visit stale junction positions to detect scrambled junctions
+        patrol_target = self._patrol_stale_junction(state)
+        if patrol_target is not None:
+            return self._move_to_position(state, patrol_target, summary="patrol_junction", vibe="change_vibe_aligner")
+
         return self._explore_action(state, role="aligner", summary="find_neutral_junction")
 
     def _scrambler_action(self, state: MettagridState) -> tuple[Action, str]:
@@ -501,6 +506,39 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
         self._clear_sticky_target()
         return self._explore_action(state, role="scrambler", summary="find_enemy_junction")
+
+    def _patrol_stale_junction(self, state: MettagridState) -> tuple[int, int] | None:
+        """Find a known junction position to patrol — the stalest one we haven't checked recently."""
+        hub = self._nearest_hub(state)
+        if hub is None:
+            return None
+        step = state.step or self._step_index
+        current_pos = _h.absolute_position(state)
+        team_id = _h.team_id(state)
+
+        # Collect all known junction positions with staleness
+        candidates: list[tuple[int, int, int]] = []  # (staleness, distance, position)
+        for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
+            pos = (hub.global_x + dx, hub.global_y + dy)
+            staleness = step - last_seen_step
+            # Skip junctions seen very recently (within 50 steps)
+            if staleness < 50:
+                continue
+            distance = _h.manhattan(current_pos, pos)
+            # Prefer stale junctions, break ties by distance
+            # Weight staleness heavily but cap it to avoid pathological cases
+            score = min(staleness, 500) - distance * 2
+            candidates.append((score, distance, pos))
+
+        if not candidates:
+            return None
+
+        # Pick the best patrol target (highest score = stalest + closest)
+        candidates.sort(key=lambda c: (-c[0], c[1]))
+
+        # Stagger among agents to avoid all patrolling the same junction
+        index = self._agent_id % min(len(candidates), 4)
+        return candidates[index][2]
 
     def _explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
         current_pos = _h.absolute_position(state)
@@ -1122,9 +1160,9 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 5
 
         scrambler_budget = 0
-        if num_agents > 4 and step >= 1_500:
+        if num_agents > 4 and step >= 500 and _h.team_can_refill_hearts(state):
             scrambler_budget = 1
-        if num_agents > 4 and step >= 5_000 and _h.team_can_refill_hearts(state):
+        if num_agents > 4 and step >= 3_000 and _h.team_can_refill_hearts(state):
             scrambler_budget = 2
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":

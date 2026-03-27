@@ -28,6 +28,15 @@ _ALIGNER_EXPLORE_OFFSETS = (
     (-16, 16),
     (-22, 0),
     (-16, -16),
+    # Ring 2: deeper reach for junction chaining
+    (0, -32),
+    (22, -22),
+    (32, 0),
+    (22, 22),
+    (0, 32),
+    (-22, 22),
+    (-32, 0),
+    (-22, -22),
 )
 _MINER_EXPLORE_OFFSETS = (
     (-28, -28), (28, -28), (-28, 28), (28, 28),
@@ -39,7 +48,7 @@ _ELEMENTS = ("carbon", "oxygen", "germanium", "silicon")
 _HP_THRESHOLDS = COGSGUARD_ROLE_HP_THRESHOLDS
 _GEAR_COSTS = COGSGUARD_GEAR_COSTS
 _EMERGENCY_RESOURCE_LOW = 3
-_HEART_BATCH_TARGETS = {"aligner": 4, "scrambler": 2}
+_HEART_BATCH_TARGETS = {"aligner": 2, "scrambler": 2}
 _HUB_ALIGN_DISTANCE = COGSGUARD_HUB_ALIGN_DISTANCE
 _JUNCTION_ALIGN_DISTANCE = COGSGUARD_JUNCTION_ALIGN_DISTANCE
 _JUNCTION_AOE_RANGE = COGSGUARD_JUNCTION_AOE_RANGE
