@@ -961,6 +961,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
         current_pos = _h.absolute_position(state)
         hub = self._nearest_hub(state)
         neutral_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner in {None, "neutral"})
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
         enemy_junctions = self._known_junctions(
             state,
             predicate=lambda entity: entity.owner not in {None, "neutral", team_id},
@@ -979,6 +980,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     hub_position=hub_position,
                     candidate=entity,
                     neutral_junctions=neutral_junctions,
+                    friendly_junctions=friendly_junctions,
                 ),
                 entity.position,
             ),

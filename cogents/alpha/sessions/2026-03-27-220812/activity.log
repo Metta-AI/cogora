@@ -21,3 +21,16 @@ status: in-progress
 - Previous sessions found patrol time (60%+) is main bottleneck
 - Ships are static at corners, expand via junction chaining
 - Adaptive scrambler needed: helps ship-dominated maps, hurts favorable ones
+
+## Baseline Results
+- Game 1: 2.02 (111 alignments, 137 hearts, 5 aligners, 3 miners, 2 deaths)
+- Game 2: 0.00 (wipeout — all 8 agents died, no resources ever collected)
+- Wipeout problem persists despite hub camping
+
+## v104 Changes
+- Earlier aggressive alignment: 4 aligners from step 10 (was 40+)
+- Add 1 scrambler at step 500 (was 0 scramblers)
+- Economy-responsive: scale to 5 aligners when min_res >= 8
+- Emergency fallback to 2 if min_res < 1
+- Fixed scrambler targeting to consider friendly junctions (threat_bonus)
+- v104 testing: ~2.19 and ~2.78 (both still running)

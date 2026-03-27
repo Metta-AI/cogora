@@ -39,7 +39,7 @@ def _least_resource(resources: dict[str, int]) -> str:
 
 
 class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
-    """Optimized agent policy: balanced mining, no scramblers, safe miners."""
+    """Optimized agent policy: aggressive alignment with scrambler defense."""
 
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         resources = _shared_resources(state)
@@ -47,12 +47,40 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """No scramblers, consistent aligner count."""
+        """Aggressive alignment with scrambler defense."""
         step = state.step or self._step_index
-        aligner_budget = 4
-        if step >= 40 and _h.team_min_resource(state) >= 20:
-            aligner_budget = 5
-        return aligner_budget, 0
+        min_res = _h.team_min_resource(state)
+
+        # Phase 1: Hub camp (steps 0-10)
+        if step < 10:
+            return 2, 0
+
+        # Phase 2: Early ramp (steps 10-50) — start aligning fast
+        if step < 50:
+            aligner_budget = 4 if min_res >= 5 else 3
+            return aligner_budget, 0
+
+        # Phase 3: Full pressure with scrambler defense
+        # Emergency: drop to 2 if economy dying
+        if min_res < 1 and not _h.team_can_refill_hearts(state):
+            return 2, 0
+
+        aligner_budget = 5
+        scrambler_budget = 0
+
+        # Scale down aligners if economy is struggling
+        if min_res < 8:
+            aligner_budget = 4
+
+        # Add scrambler at step 500 to defend network from ships
+        if step >= 500 and min_res >= 5:
+            scrambler_budget = 1
+
+        if objective == "resource_coverage":
+            return 0, 0
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
         """Miners: retreat if too far from hub (prevent deaths in dangerous territory)."""
@@ -78,10 +106,28 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index
-        aligner_budget = 4
-        if step >= 40 and _h.team_min_resource(state) >= 20:
-            aligner_budget = 5
-        return aligner_budget, 0
+        min_res = _h.team_min_resource(state)
+
+        if step < 10:
+            return 2, 0
+        if step < 50:
+            aligner_budget = 4 if min_res >= 5 else 3
+            return aligner_budget, 0
+        if min_res < 1 and not _h.team_can_refill_hearts(state):
+            return 2, 0
+
+        aligner_budget = 5
+        scrambler_budget = 0
+        if min_res < 8:
+            aligner_budget = 4
+        if step >= 500 and min_res >= 5:
+            scrambler_budget = 1
+
+        if objective == "resource_coverage":
+            return 0, 0
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
 
 
 class AnthropicCyborgPolicy(PilotCyborgPolicy):
