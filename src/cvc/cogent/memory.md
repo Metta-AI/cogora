@@ -25,9 +25,12 @@ Persistent memory stored in git under `cogents/alpha/`.
   now=$(date +%s)
   if [ $((now - last)) -gt 300 ]; then echo "SAVE NOW"; fi
   ```
-  If >5 minutes, immediately commit and push `cogents/alpha/` before
-  doing anything else. This ensures learnings are never more than
-  5 minutes stale if the container dies.
+  If >5 minutes, immediately:
+  1. Commit and push `cogents/alpha/`
+  2. `git pull --rebase origin main` to pick up any user changes
+
+  This ensures learnings are never more than 5 minutes stale and
+  user changes (e.g., source edits from suggestions) are picked up promptly.
 
 ## Suggestions
 - Maintain `data/suggestions.md` — a log of ideas and requests that only the
