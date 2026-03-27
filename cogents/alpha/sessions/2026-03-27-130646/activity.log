@@ -22,3 +22,8 @@ status: in-progress
 - v41 uploaded
 - 3x 10k average with hub proximity: 1.68, 2.38, 1.43 = avg 1.83 (up from 1.19!)
 - Hub proximity bias is helping consistently
+- Lowered scramble detection threshold to 1 (was 2)
+- v42 uploaded with faster detection
+- 3x 10k average: 2.73, 2.32, 2.59 = avg 2.55! (up from 1.83)
+- Huge improvement from scramble zone detection + hub proximity + fast detection
+- Still getting occasional 0.00 wipeouts on bad maps (seed-dependent)
