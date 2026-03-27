@@ -301,26 +301,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             **macro_snapshot,
         }
         step = state.step or self._step_index
-        if step <= 10 and self._agent_id in (0, 2):
-            # Diagnostic: log all visible entities and inventory at start
-            ents = [(e.entity_type, _h.attr_int(e, "global_x", e.position.x), _h.attr_int(e, "global_y", e.position.y))
-                    for e in state.visible_entities[:30]]
-            inv_all = dict(state.self_state.inventory)
-            team_inv = dict(state.team_summary.shared_inventory) if state.team_summary else {}
-            attrs = dict(state.self_state.attributes)
-            station = self._world_model.nearest(position=current_pos, entity_type="aligner_station") if self._agent_id == 2 else None
-            station_info = f"station={station.position if station else 'None'}" if self._agent_id == 2 else ""
-            print(f"[COG-DIAG] s={step} a={self._agent_id} pos={_h.format_position(current_pos)} "
-                  f"inv={inv_all} team_inv={team_inv} attrs={attrs} {station_info} entities={ents}")
-        if step <= 20:
-            hp = int(state.self_state.inventory.get("hp", 0))
-            hearts = int(state.self_state.inventory.get("heart", 0))
-            inv = _h.resource_total(state)
-            gear = {g: int(state.self_state.inventory.get(g, 0)) for g in ("aligner", "miner", "scrambler")}
-            tgt = _h.format_position(self._current_target_position) if self._current_target_position else "none"
-            print(f"[COG] s={step} a={self._agent_id} pos={_h.format_position(current_pos)} role={role} "
-                  f"act={summary} hp={hp} hearts={hearts} inv={inv} gear={gear} tgt={tgt}")
-        elif step % 100 == 0 or summary.startswith("align_") or summary.startswith("scramble_") or summary.startswith("patrol_"):
+        if step % 100 == 0 or summary.startswith("align_") or summary.startswith("scramble_") or summary.startswith("patrol_"):
             hp = int(state.self_state.inventory.get("hp", 0))
             hearts = int(state.self_state.inventory.get("heart", 0))
             inv = _h.resource_total(state)
