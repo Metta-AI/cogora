@@ -25,7 +25,7 @@ __all__ = [
 
 _ELEMENTS = ("carbon", "oxygen", "germanium", "silicon")
 # Max distance from hub for miners (stay safe, reduce deaths)
-_MINER_MAX_HUB_DISTANCE = 18
+_MINER_MAX_HUB_DISTANCE = 15
 
 
 def _shared_resources(state: MettagridState) -> dict[str, int]:
@@ -47,41 +47,25 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Aggressive alignment with scrambler defense — v117."""
+        """Fixed pressure budgets — no oscillation, v118."""
         step = state.step or self._step_index
-        min_res = _h.team_min_resource(state)
 
-        # Phase 1: First few steps — all mine to build economy
+        # Phase 1: First 10 steps — all mine to build economy
         if step < 10:
             return 2, 0
 
-        # Phase 2: Early ramp (steps 10-50) — start aligning fast
-        if step < 50:
-            aligner_budget = 4 if min_res >= 3 else 3
-            return aligner_budget, 0
+        # Phase 2: Steps 10-300 — 5 aligners, 0 scramblers, 3 miners
+        # No economy-based scaling to prevent gear churn
+        if step < 300:
+            return 5, 0
 
-        # Emergency: drop to 3 if economy dying
-        if min_res < 1 and not _h.team_can_refill_hearts(state):
-            return 3, 0
-
-        # Phase 3: 5 aligners + 1 scrambler (v115 base)
-        aligner_budget = 5
-        scrambler_budget = 0
-
-        # Only scale down if economy is really struggling
-        if min_res < 3:
-            aligner_budget = 4
-
-        # Add scrambler at step 300
-        if step >= 300 and min_res >= 3:
-            scrambler_budget = 1
-            aligner_budget = min(aligner_budget, 4)
-
+        # Phase 3: Steps 300+ — 4 aligners, 1 scrambler, 3 miners
+        # Fixed budgets: aligners mine in emergency without gear switching
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":
-            return min(aligner_budget, 2), 0
-        return aligner_budget, scrambler_budget
+            return 2, 0
+        return 4, 1
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
         """Miners: retreat if too far from hub (prevent deaths in dangerous territory)."""

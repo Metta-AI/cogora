@@ -46,8 +46,12 @@ status: in-progress
 - Scores: 2.56, 1.26, 1.15, 2.60, 1.40 → avg 1.79
 - 2 scramblers steal too much from alignment output
 
-## v117 Changes (testing)
-- Back to v115 pressure budgets (4 aligners + 1 scrambler)
-- Increased expansion bonus: 8.0 per junction, cap 50 (was 5.0, cap 30)
-- Faster heart batch ramp: 4 at 300, 5 at 1000, 6 at 3000
-- Tighter aligner explore offsets: radius 14 (was 22) to match hub proximity bias
+## v117 Results — MIXED (avg 3.34, reverted)
+- Expansion bonus 8.0/cap 50, faster heart ramp, tighter explore
+- Scores: 5.17, 2.20, 1.74, 3.48, 4.09
+
+## v118 Changes (testing)
+- FIXED budgets: no economy-based oscillation
+- Steps 0-10: 2A, 0S; Steps 10-300: 5A, 0S; Steps 300+: 4A, 1S
+- Reduced miner hub distance: 15 (was 18)
+- Seed 3 root cause: 17 deaths, agent 3 had 18 gear switches from oscillation
