@@ -1,0 +1,10 @@
+# Activity Log: 2026-03-27-161020
+
+status: in-progress
+
+## Session Start
+- Previous session: v51/v54, best single 6.00, avg ~2.63
+- Tournament best: v38 at #4 (1.76)
+- Goal: achieve score > 10
+- Key insight from last session: emergency mining wastes ~50% of aligner time
+- Todos: fix 0-score wipeouts, try zone assignment, test more miners early
