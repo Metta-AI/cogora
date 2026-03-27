@@ -84,10 +84,34 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
 
 # Keep these for backwards compatibility with tournament uploads
 class AnthropicPilotAgentPolicy(PilotAgentPolicy):
+    _LLM_ANALYSIS_INTERVAL = 500  # Run LLM analysis every N steps
+
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         resources = _shared_resources(state)
         least = _least_resource(resources)
-        return MacroDirective(resource_bias=least)
+        directive = MacroDirective(resource_bias=least)
+
+        # Periodic LLM analysis — logs opinions without overriding strategy
+        step = state.step or self._step_index
+        if step > 0 and step % self._LLM_ANALYSIS_INTERVAL == 0:
+            self._run_llm_analysis(state, directive)
+
+        return directive
+
+    def _run_llm_analysis(self, state: MettagridState, current_directive: MacroDirective) -> None:
+        """Ask the LLM to analyze game state and log insights."""
+        try:
+            llm_directive = self._pilot_session.directive_for_state(state, memory=self._memory)
+            print(
+                f"[LLM] step={state.step} agent={self._agent_id} "
+                f"llm_objective={llm_directive.objective} "
+                f"llm_bias={llm_directive.resource_bias} "
+                f"llm_note={llm_directive.note} "
+                f"heuristic_bias={current_directive.resource_bias}",
+                flush=True,
+            )
+        except Exception as e:
+            print(f"[LLM] step={state.step} agent={self._agent_id} error={e}", flush=True)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index
