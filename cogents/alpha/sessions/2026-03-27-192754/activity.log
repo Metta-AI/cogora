@@ -7,3 +7,23 @@ status: in-progress
 - v78 avg 5.70 across 8 seeds, peak 17.24 (seed=456)
 - Uploaded as alpha.0:v63, v67
 - Goal: get consistent score > 10
+
+## Economy-Gated Code (from parallel session v81)
+- Previous session added economy-gated role assignment
+- Current avg across 10 seeds: 4.54 (1.80, 8.12, 14.43, 7.25, 2.81, 2.24, 2.27, 0.94, 4.38, 1.11)
+- Helps low seeds (4011: 1.65→2.81) but hurts some (7777: 3.69→0.94)
+- seed=7777 has station gridlock issue (agent stuck 1000+ steps)
+
+## Experiments v86-v90
+- v86 ship decay 100: worse (v78 decay 150 is optimal)
+- v87 heart batch 6: 4 wipeouts (too greedy at hub)
+- v88 wider scrambler explore: worse (less focused scrambling)
+- v89 faster ramp-up: seed=456 wipeout
+- v90 station stall fix: worse (interfered with normal gameplay)
+- Uploaded v71 (economy-gated code)
+
+## Key Finding
+- The economy-gated code is a double-edged sword:
+  - Helps resource-poor maps by starting with mining
+  - Hurts resource-rich maps by delaying alignment
+- v78 (simple code) had higher peak (17.24) but lower floor
