@@ -127,9 +127,9 @@ def heart_batch_target(state: MettagridState, role: str) -> int:
     target = _HEART_BATCH_TARGETS[role]
     step = state.step or 0
     if role == "aligner" and step >= 2_000:
-        target = 5
+        target = max(target, 5)
     if role == "aligner" and step >= 5_000:
-        target = 6
+        target = max(target, 6)
     return target
 
 

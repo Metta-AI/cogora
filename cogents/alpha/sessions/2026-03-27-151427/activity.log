@@ -7,15 +7,14 @@ status: in-progress
 - Tournament best: v38 at #4 (1.76)
 - Goal: achieve score > 10
 
-## Progress
+## Earlier Progress (from interrupted session continuation)
 - 5x batch (v51): 3.74, 2.45, 0.59, 3.02, 3.33 = avg 2.63
 - Tightened aligner explore to ring 2 max (22 from hub, removed ring 3)
 - 5x batch (v54): 1.30, 1.43, 2.10, **6.00**, 0.74 = avg 2.31
   - **BEST SINGLE: 6.00 on seed 1337!**
-- Tested more aggressive patrol — REVERTED (hurt best case: 6.00→4.05)
 - v55 uploaded (same as v54 config)
 
-## Key Improvements This Session (v48→v55)
+## Key Improvements (v48→v55)
 - Fixed num_agents bug: was 0-2, now defaults to 8
 - Step-based pressure: 2 aligners first 30 steps, then 5
 - Station retry: step off and retry instead of waiting forever
@@ -24,17 +23,23 @@ status: in-progress
 - Heart batch 3/4 (was 2/3)
 - Removed scramblers to maximize alignment
 
-## Scores Across Tests
-| Config | Seeds | Scores | Avg |
-|--------|-------|--------|-----|
-| v51 (5 aligners stagger) | 5x batch | 3.74,2.45,0.59,3.02,3.33 | **2.63** |
-| v54 (tight explore) | 5 seeds | 1.30,1.43,2.10,**6.00**,0.74 | 2.31 |
+## Deep Analysis (this continuation)
 
-## What Would Get Us to >10
-- Need ~10 junctions permanently aligned
-- Hub alignment range 25 covers ~20 junctions
-- Ship scramble kills junctions every 70 ticks
-- Safe zone (>15 from all ships) has ~10-15 junctions on good maps
-- If ALL safe junctions aligned and maintained, score could reach 10-15
-- Key blocker: agents still waste time on distant/dangerous junctions
-- Need better ship detection (know ship locations earlier from limited data)
+### Game Mechanics
+- Score = (junctions_in_network - 1) per tick, normalized by max_steps
+- Need 11+ connected junctions for score >10
+- 65 junctions on 88x88 map, ~16 within hub alignment range (25 tiles)
+- Clips: 4 ships, scramble 1/70 steps each, also ALIGN neutral junctions
+- Junctions must form CONNECTED network to count (within 15 of friendly junction or 25 of hub)
+
+### Bottleneck Analysis
+- 27 alignments in 1000 steps = 111 steps/alignment cycle (should be ~40-60)
+- Aligners waste ~50% time on emergency mining, searching, patrol
+- 6-aligner config collapsed economy (reverted to 5+3)
+- Hub proximity scoring too aggressive causes worse results (reverted)
+
+### Strategy Direction
+- Hub has ~16 junctions within alignment range — enough for score >10 if all held
+- Clips scramble rate (0.057/step) is manageable with 5 aligners
+- Need: reduce non-alignment time, better ship avoidance, maybe 1-2 scramblers
+- Running 5000-step comparison tests

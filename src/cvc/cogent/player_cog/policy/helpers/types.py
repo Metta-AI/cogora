@@ -20,24 +20,33 @@ _MOVE_DELTAS = {
 }
 
 _ALIGNER_EXPLORE_OFFSETS = (
-    # Ring 1: close to hub, safe territory
-    (0, -16),
-    (11, -11),
-    (16, 0),
-    (11, 11),
-    (0, 16),
-    (-11, 11),
-    (-16, 0),
-    (-11, -11),
-    # Ring 2: moderate reach for junction chaining (stay within safe zone)
-    (0, -22),
-    (15, -15),
-    (22, 0),
-    (15, 15),
-    (0, 22),
-    (-15, 15),
-    (-22, 0),
-    (-15, -15),
+    # Ring 1: very close to hub — fastest round trips
+    (0, -10),
+    (7, -7),
+    (10, 0),
+    (7, 7),
+    (0, 10),
+    (-7, 7),
+    (-10, 0),
+    (-7, -7),
+    # Ring 2: moderate distance — still efficient
+    (0, -18),
+    (13, -13),
+    (18, 0),
+    (13, 13),
+    (0, 18),
+    (-13, 13),
+    (-18, 0),
+    (-13, -13),
+    # Ring 3: hub alignment boundary
+    (0, -25),
+    (18, -18),
+    (25, 0),
+    (18, 18),
+    (0, 25),
+    (-18, 18),
+    (-25, 0),
+    (-18, -18),
 )
 _MINER_EXPLORE_OFFSETS = (
     (-28, -28), (28, -28), (-28, 28), (28, 28),

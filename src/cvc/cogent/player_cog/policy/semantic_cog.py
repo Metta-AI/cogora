@@ -35,7 +35,7 @@ _OSCILLATION_HISTORY_STEPS = 6
 _OSCILLATION_UNSTICK_STEPS = 4
 _MINING_ALIGNER_MIN_RESOURCE = 14
 _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 3
-_ALIGNER_PRIORITY = (3, 2, 4, 5, 6, 7)
+_ALIGNER_PRIORITY = (3, 2, 4, 5, 6, 7, 0)
 _SCRAMBLER_PRIORITY = (7, 6)
 _HUB_OFFSETS = COGSGUARD_BOOTSTRAP_HUB_OFFSETS
 _COGSGUARD_SURFACE = CogsguardSemanticSurface()
@@ -545,7 +545,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
         step = state.step or self._step_index
         current_pos = _h.absolute_position(state)
 
-        max_patrol_distance = 15  # Tight radius — only patrol very close junctions
+        max_patrol_distance = 10  # Very tight — only patrol immediately nearby
         candidates: list[tuple[float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
@@ -553,8 +553,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if self._is_in_ship_danger_zone(pos):
                 continue
             staleness = step - last_seen_step
-            # Only patrol very stale junctions (>100 ticks since last seen)
-            if staleness < 100:
+            # Only patrol very stale junctions (>200 ticks since last seen)
+            if staleness < 200:
                 continue
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
@@ -1236,10 +1236,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # Economy-first: mine early, then ramp up aligners on a fixed schedule.
-            # Brief mining burst, then 5 aligners + 3 miners.
-            # First 30 steps: 2 aligners only so miners can build economy
-            # and not all agents contend at gear stations simultaneously.
+            # Staggered ramp: 2 aligners first 30 steps to avoid gear contention,
+            # then 5 aligners + 3 miners.
             if step < 30:
                 pressure_budget = 2
             else:
