@@ -33,10 +33,10 @@ _TARGET_SWITCH_THRESHOLD = 3.0
 _SHARED_JUNCTION_MEMORY_STEPS = 400
 _OSCILLATION_HISTORY_STEPS = 6
 _OSCILLATION_UNSTICK_STEPS = 4
-_MINING_ALIGNER_MIN_RESOURCE = 12
-_ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 3
-_ALIGNER_PRIORITY = (4, 5, 6, 7, 3)
-_SCRAMBLER_PRIORITY = (7,)
+_MINING_ALIGNER_MIN_RESOURCE = 20
+_ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 2
+_ALIGNER_PRIORITY = (3, 2, 4, 5, 6, 7)
+_SCRAMBLER_PRIORITY = (7, 6)
 _HUB_OFFSETS = COGSGUARD_BOOTSTRAP_HUB_OFFSETS
 _COGSGUARD_SURFACE = CogsguardSemanticSurface()
 
@@ -293,14 +293,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
             "directive_target_region": directive.target_region or "",
             **macro_snapshot,
         }
-        step = state.step or self._step_index
-        if step % 100 == 0 or summary.startswith("align_") or summary.startswith("scramble_"):
-            hp = int(state.self_state.inventory.get("hp", 0))
-            hearts = int(state.self_state.inventory.get("heart", 0))
-            inv = _h.resource_total(state)
-            tgt = _h.format_position(self._current_target_position) if self._current_target_position else "none"
-            print(f"[COG] s={step} a={self._agent_id} pos={_h.format_position(current_pos)} role={role} "
-                  f"act={summary} hp={hp} hearts={hearts} inv={inv} tgt={tgt}")
         self._previous_state = state
         self._last_global_pos = current_pos
         self._last_inventory_signature = _h.inventory_signature(state)
@@ -1130,14 +1122,15 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 pressure_budget = 5
 
         scrambler_budget = 0
-        if num_agents > 4 and step >= 2_000 and _h.team_can_refill_hearts(state):
+        if num_agents > 4 and step >= 1_500:
             scrambler_budget = 1
+        if num_agents > 4 and step >= 5_000 and _h.team_can_refill_hearts(state):
+            scrambler_budget = 2
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":
-            bootstrap_budget = min(num_agents // 4, _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET)
-            return min(aligner_budget, max(bootstrap_budget, 1)), 0
+            return min(aligner_budget, _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET), 0
         return aligner_budget, scrambler_budget
 
     def _in_enemy_aoe(self, state: MettagridState, position: tuple[int, int], *, team_id: str) -> bool:
