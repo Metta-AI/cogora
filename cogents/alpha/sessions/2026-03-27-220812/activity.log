@@ -103,3 +103,26 @@ status: in-progress
 - Hub proximity bias: strong penalty > 15 tiles from hub
 - Expansion bonus: 5.0 per reachable junction (cap 30)
 - Defensive scrambler targeting: threat_bonus * 10
+
+## Experiments Summary
+| Version | Config | Avg Score | Best | Notes |
+|---------|--------|-----------|------|-------|
+| baseline | 4-5 aligners, 0 scrambler | 2.02/0.00 | 2.02 | Wipeout prone |
+| v104 | +1 scrambler at 500 | 2.50 | 2.82 | Scrambler effective |
+| v105 | 2 scramblers early | 0.67 | 2.00 | Too few miners |
+| v106 | Hub camp 5 steps | 1.55 | 2.04 | Hub camp matters |
+| v107 | Hub camp 20 + scrambler 400 | 2.02 | 2.64 | |
+| v108 | +hub proximity + heart batch 2 | 2.54 | 3.05 | Hub proximity key |
+| v109 | +retreat 15 + deposit 12 | 1.71/2.86 | 3.10 | Best non-wipeout |
+| v110 | 6 aligners, 0 scramblers | 1.07 | 1.75 | Economy starved |
+| v111 | v109 + expansion bonus 5.0 | 2.62 | 2.87 | Most consistent |
+| v112 | v111 + reduce gear churn | 2.38 | 3.46 | **BEST** |
+| v113 | v112 + miner hub dist 15 | 2.60 | 3.12 | Slightly worse |
+| v114 | v112 + aggressive miner retreat | 0.50 | 0.75 | Way too restrictive |
+
+## Bottleneck Analysis
+- Heart production: ~335/game = 0.067/step
+- Can't brute-force to 10 — need alignments to LAST LONGER
+- Ship scrambling is the main threat, slowed by scramblers
+- 16 deaths in low-score game vs 0 in high-score game
+- Territory doesn't affect ship junction expansion (only via chaining)
