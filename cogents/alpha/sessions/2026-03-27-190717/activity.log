@@ -103,10 +103,27 @@ Full 9-seed results:
 **Avg: 8.64** — BEST EVER! 4 seeds > 10, 1 wipeout (0.00)
 Uploaded as alpha.0:v79, v81
 
+## Statistical Testing (15 runs across 5 seeds)
+- True average: ~3.30 (NOT 8.64, variance was inflating v93 result)
+- Wipeout rate: ~20-30% of runs
+- Good runs (>10): ~15-20% of runs
+- The game has massive internal randomness that dwarfs config differences
+
+## v94: emergency miner fallback → avg 2.72 (didn't help)
+
+## Tournament Uploads
+- alpha.0:v79 (v85 config)
+- alpha.0:v81 (v93 config)
+- v82-v84 also uploading (other session)
+
 ## Key Insights
 - Game has massive internal randomness: same code, same seed → 0.00 or 19.19
 - Economy protection helps but can't fully prevent wipeouts (stochastic)
-- Heart supply-gated batching seems to help (more hearts per trip)
 - 2 scramblers better than 1, but 3rd aligner better than 3rd scrambler
 - 2 miners is the sweet spot for late game
-- Focus should be on maximizing upside (more >10 games) rather than preventing all wipeouts
+- True average across many runs is ~3-5 (not >10 yet)
+- Biggest lever: patrol staleness (35 is optimal)
+- 2nd scrambler at step 1000-3000 range is good
+- Deposit threshold 20 is good, higher hurt
+- Dynamic pressure scaling based on economy is critical
+- Running many games in parallel causes CPU contention and worse results
