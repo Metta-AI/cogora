@@ -1,17 +1,19 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (current best: ~1.76 qualifying, best local 9.31)
-- [ ] Reduce agent death rate (key factor in score variance)
-- [ ] Test whether bootstrap hub offsets cause deaths on certain map seeds
-- [ ] Investigate 0-score runs: all agents die at step ~100
-- [ ] Try larger pathfinding margins for wall-heavy maps
-- [ ] Get competition match results and compare v29-v35 versions
+- [ ] Achieve score > 10 in CogsVsClips (best local: 6.00, avg ~2.3)
+- [ ] Fix 0-score wipeout maps (agents die before finding hub, ~20% of runs)
+- [ ] Investigate zone-assignment for aligners (maintain specific junction clusters)
+- [ ] Test more miners early game for economy boost
+- [ ] Check competition match results once available (v49-v56 running)
 - [x] Set up environment (cogames, auth, venv)
 - [x] Port mettagrid_sdk to enable semantic_cog policy
-- [x] Upload to tournament (v15-v17)
+- [x] Upload to tournament (v15-v56)
 - [x] Fix tournament upload (class= prefix, include src files with -f)
-- [x] Make extractors walkable in pathfinding
-- [x] Diversify miner explore offsets (8 directions)
-- [x] Add [COG] per-agent logging
-- [x] Test shared extractors (reverted - regressed)
-- [x] Add adaptive pressure budgets for 4-agent games
+- [x] Ship zone detection (enemy junctions + scramble propagation)
+- [x] Reduce patrol overhead (77% → ~10% of aligner time)
+- [x] Increase heart batching (2 → 4-6 per trip)
+- [x] Fix num_agents bug (was 0-2, should be 8)
+- [x] Fix gear station contention (step off and retry)
+- [x] Remove scrambler (all pressure agents are aligners)
+- [x] Stagger gear acquisition (2 aligners first 30 steps)
+- [x] Three-ring aligner explore (10, 18, 25 tile offsets)
