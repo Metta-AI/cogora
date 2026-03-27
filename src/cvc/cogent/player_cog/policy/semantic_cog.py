@@ -1234,7 +1234,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index
-        num_agents = len(state.team_summary.members) if state.team_summary else 8
+        num_agents = max(len(state.team_summary.members), 8) if state.team_summary else 8
         min_res = _h.team_min_resource(state)
 
         if num_agents <= 4:
