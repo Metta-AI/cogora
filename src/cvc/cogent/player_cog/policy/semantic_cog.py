@@ -302,7 +302,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             **macro_snapshot,
         }
         step = state.step or self._step_index
-        if step <= 5 or (step <= 500 and step % 25 == 0) or step % 100 == 0 or summary.startswith("align_") or summary.startswith("scramble_") or summary.startswith("patrol_"):
+        if step % 100 == 0 or summary.startswith("align_") or summary.startswith("scramble_") or summary.startswith("patrol_"):
             hp = int(state.self_state.inventory.get("hp", 0))
             hearts = int(state.self_state.inventory.get("heart", 0))
             inv = _h.resource_total(state)
