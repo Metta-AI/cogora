@@ -31,7 +31,7 @@ cogames upload -p cvc-cog -n alpha.0 --skip-validation
 ## Checking Results
 
 ```bash
-cogames status
+cogames auth status
 cogames matches
 cogames matches <match-id>
 cogames matches <match-id> --logs
