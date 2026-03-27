@@ -51,6 +51,15 @@ status: in-progress
 - 42=2.39, 123=4.05, 456=6.30, 789=2.82, 1024=6.21, 4011=5.12, 7777=2.57, 9999=3.56
 - Average: 4.13
 
-## Current: v91 config uploaded as v75
-- Uploaded to tournament as alpha.0:v75
-- Running clean 4-seed benchmark
+## Key Discovery: Game is NON-DETERMINISTIC
+- Same code + same seed gives different results!
+- v91 seed 42: ran 3 times → 2.67, 1.65, 2.29
+- Wipeouts (hp=0 forever) are probabilistic, not seed-specific
+- Need many trials for reliable comparison
+
+## v95 Changes (testing)
+- Wipeout recovery: if hp=0 and near hub, mine instead of retreat/gear loop
+- This prevents the death spiral where agents oscillate forever
+- v91 config + wipeout recovery
+- Running 8-seed benchmark
+- Uploaded v75 (v91 config) to tournament

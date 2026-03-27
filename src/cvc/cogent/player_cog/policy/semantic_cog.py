@@ -397,6 +397,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if hp < 40 or (hp < 50 and safe_distance > 15):
                 return self._move_to_known(state, safe_target, summary="survival_retreat")
 
+        # WIPEOUT RECOVERY: If hp=0 and near hub, don't retreat/gear loop.
+        # Instead, mine nearby extractors to rebuild economy. Territory will
+        # eventually heal us, or at least we contribute resources.
+        if hp == 0 and safe_target is not None and safe_distance <= 6:
+            # Don't waste time retreating when already near hub with 0 HP.
+            # Mine to build economy — extractors are near hub.
+            return self._miner_action(state, summary_prefix="wipeout_recovery_")
+
         if self._should_retreat(state, role, safe_target):
             self._clear_target_claim()
             self._clear_sticky_target()
