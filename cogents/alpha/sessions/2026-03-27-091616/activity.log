@@ -1,0 +1,9 @@
+# Activity Log: 2026-03-27-091616
+
+status: in-progress
+
+## Session Start
+- Previous best score: 3.35 with semantic_cog policy
+- Goal: improve to >10
+- Key insight found: SharedWorldModel is NOT shared between agents (each gets own instance)
+- Plan: fix shared world model bug, tune parameters, run games, iterate
