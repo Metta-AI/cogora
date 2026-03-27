@@ -26,7 +26,7 @@ _STATION_OFFSETS = {
     "scout": (3, 4),
 }
 _TEMP_BLOCK_STEPS = 10
-_RETREAT_MARGIN = 22
+_RETREAT_MARGIN = 28
 _DEFAULT_BOUND_MARGIN = 12
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
@@ -523,15 +523,15 @@ class SemanticCogAgentPolicy(AgentPolicy):
         return self._explore_action(state, role="scrambler", summary="find_enemy_junction")
 
     def _patrol_stale_junction(self, state: MettagridState) -> tuple[int, int] | None:
-        """Find a nearby known junction to patrol — prioritize previously-owned junctions."""
+        """Patrol very stale nearby junctions to check for scrambles. Keep this rare —
+        exploration and alignment should dominate aligner time."""
         hub = self._nearest_hub(state)
         if hub is None:
             return None
         step = state.step or self._step_index
         current_pos = _h.absolute_position(state)
-        team_id = _h.team_id(state)
 
-        max_patrol_distance = 25
+        max_patrol_distance = 15  # Tight radius — only patrol very close junctions
         candidates: list[tuple[float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
@@ -539,17 +539,13 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if self._is_in_ship_danger_zone(pos):
                 continue
             staleness = step - last_seen_step
-            # Skip very fresh junctions
-            if staleness < 30:
+            # Only patrol very stale junctions (>100 ticks since last seen)
+            if staleness < 100:
                 continue
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
                 continue
-            # Prioritize previously-owned junctions (likely scrambled, needs re-align)
-            priority = float(distance)
-            if owner == team_id:
-                priority -= 10.0  # Strong preference for re-checking our junctions
-            candidates.append((priority, staleness, pos))
+            candidates.append((float(distance), staleness, pos))
 
         if not candidates:
             return None
