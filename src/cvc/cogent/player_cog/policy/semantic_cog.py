@@ -1342,7 +1342,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     elif min_res < 7:
                         pressure_budget = 4
 
-        scrambler_budget = 0  # No scramblers — all pressure agents are aligners
+        # 1 scrambler to disrupt ship chains — breaks ship frontier expansion
+        scrambler_budget = 1 if step >= 200 else 0
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
             return 0, 0
