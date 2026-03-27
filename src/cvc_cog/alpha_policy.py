@@ -1,7 +1,10 @@
-"""Alpha policy - adaptive role approach.
+"""Alpha policy - hub-centric junction alignment strategy.
 
-Agents grab whatever gear they find and play that role.
-Focus on reliable resource gathering, depositing, and junction alignment.
+Key insights from debugging:
+1. Junctions must be within 25 cells of hub to align
+2. Agents get stuck against objects (on_use fires but agent doesn't move)
+3. Need robust wall/obstacle avoidance
+4. Most junctions near hub start neutral - grab them fast
 """
 
 from __future__ import annotations
@@ -17,14 +20,16 @@ from mettagrid.simulator.interface import AgentObservation
 GEAR = ("aligner", "scrambler", "miner", "scout")
 ELEMENTS = ("carbon", "oxygen", "germanium", "silicon")
 DIRECTIONS = ("north", "east", "south", "west")
+DELTAS = {"north": (-1, 0), "east": (0, 1), "south": (1, 0), "west": (0, -1)}
 
 
 @dataclass
 class CogState:
     wander_idx: int = 0
-    wander_remaining: int = 8
+    wander_rem: int = 8
     last_action: str = ""
-    consecutive_fails: int = 0
+    fails: int = 0
+    last_pos: tuple[int, int] = (0, 0)  # track center position hasn't changed
 
 
 class AlphaCogImpl(StatefulPolicyImpl[CogState]):
@@ -38,58 +43,36 @@ class AlphaCogImpl(StatefulPolicyImpl[CogState]):
         self._tags = {name: idx for idx, name in enumerate(policy_env_info.tags)}
         self._step = 0
 
-        # Pre-resolve all tag IDs
-        self._tid_cache: dict[str, int | None] = {}
-        for name in policy_env_info.tags:
-            self._tid_cache[name] = self._tags[name]
-
-        # Build tag sets for each entity type
-        self._hub_tags = self._resolve_tags(["hub"])
-        self._junction_tags = self._resolve_tags(["junction"])
-        self._cogs_tags = self._resolve_tags(["team:cogs"])
-        self._clips_tags = self._resolve_tags(["team:clips"])
-        self._extractor_tags = self._resolve_tags([f"{e}_extractor" for e in ELEMENTS])
+        self._hub_tags = self._res(["hub"])
+        self._junction_tags = self._res(["junction"])
+        self._cogs_tags = self._res(["team:cogs"])
+        self._clips_tags = self._res(["team:clips"])
+        self._extractor_tags = self._res([f"{e}_extractor" for e in ELEMENTS])
+        self._wall_tags = self._res(["wall"])
         self._station_tags: dict[str, set[int]] = {}
         self._all_station_tags: set[int] = set()
         for g in GEAR:
-            ids = self._resolve_tags([f"c:{g}"])
+            ids = self._res([f"c:{g}"])
             self._station_tags[g] = ids
             self._all_station_tags |= ids
-        self._heart_source_tags = self._resolve_tags(["hub", "chest"])
 
-    def _resolve_tags(self, names: list[str]) -> set[int]:
+    def _res(self, names: list[str]) -> set[int]:
         ids: set[int] = set()
-        for name in names:
-            if name in self._tags:
-                ids.add(self._tags[name])
-            t = f"type:{name}"
+        for n in names:
+            if n in self._tags:
+                ids.add(self._tags[n])
+            t = f"type:{n}"
             if t in self._tags:
                 ids.add(self._tags[t])
         return ids
 
-    def _closest_tag(self, obs, tag_ids: set[int]) -> Optional[tuple[int, int]]:
-        if not tag_ids:
-            return None
-        best, best_d = None, 999
-        for token in obs.tokens:
-            if token.feature.name != "tag" or int(token.value) not in tag_ids:
-                continue
-            loc = token.location
-            if loc is None:
-                continue
-            d = abs(loc.row - self._center[0]) + abs(loc.col - self._center[1])
-            if d < best_d:
-                best_d = d
-                best = (loc.row, loc.col)
-        return best
-
     def _inv(self, obs) -> dict[str, int]:
         items: dict[str, int] = {}
-        for token in obs.tokens:
-            loc = token.location
+        for tok in obs.tokens:
+            loc = tok.location
             if loc is None or (loc.row, loc.col) != self._center:
                 continue
-            fn = token.feature.name
+            fn = tok.feature.name
             if not fn.startswith("inv:"):
                 continue
             suffix = fn[4:]
@@ -98,32 +81,35 @@ class AlphaCogImpl(StatefulPolicyImpl[CogState]):
                 nm, power = suffix, 0
             else:
                 power = int(pstr)
-            val = int(token.value)
+            val = int(tok.value)
             if val > 0:
-                base = max(int(token.feature.normalization), 1)
+                base = max(int(tok.feature.normalization), 1)
                 items[nm] = items.get(nm, 0) + val * (base ** power)
         return items
 
-    def _cell_tag_sets(self, obs) -> dict[tuple[int, int], set[int]]:
-        ct: dict[tuple[int, int], set[int]] = {}
-        for token in obs.tokens:
-            if token.feature.name != "tag":
+    def _parse(self, obs):
+        """Parse observation into cell tag sets and wall set."""
+        cells: dict[tuple[int, int], set[int]] = {}
+        walls: set[tuple[int, int]] = set()
+        for tok in obs.tokens:
+            if tok.feature.name != "tag":
                 continue
-            loc = token.location
+            loc = tok.location
             if loc is None:
                 continue
-            ct.setdefault((loc.row, loc.col), set()).add(int(token.value))
-        return ct
+            pos = (loc.row, loc.col)
+            v = int(tok.value)
+            cells.setdefault(pos, set()).add(v)
+            if v in self._wall_tags:
+                walls.add(pos)
+        return cells, walls
 
-    def _find_neutral_junction(self, obs) -> Optional[tuple[int, int]]:
-        ct = self._cell_tag_sets(obs)
+    def _closest(self, cells, tag_ids, exclude_tags=None):
         best, best_d = None, 999
-        for pos, tags in ct.items():
-            if not (tags & self._junction_tags):
+        for pos, tags in cells.items():
+            if not (tags & tag_ids):
                 continue
-            if tags & self._cogs_tags:
-                continue
-            if tags & self._clips_tags:
+            if exclude_tags and (tags & exclude_tags):
                 continue
             d = abs(pos[0] - self._center[0]) + abs(pos[1] - self._center[1])
             if d < best_d:
@@ -131,10 +117,22 @@ class AlphaCogImpl(StatefulPolicyImpl[CogState]):
                 best = pos
         return best
 
-    def _find_enemy_junction(self, obs) -> Optional[tuple[int, int]]:
-        ct = self._cell_tag_sets(obs)
+    def _neutral_junction(self, cells):
         best, best_d = None, 999
-        for pos, tags in ct.items():
+        for pos, tags in cells.items():
+            if not (tags & self._junction_tags):
+                continue
+            if tags & self._cogs_tags or tags & self._clips_tags:
+                continue
+            d = abs(pos[0] - self._center[0]) + abs(pos[1] - self._center[1])
+            if d < best_d:
+                best_d = d
+                best = pos
+        return best
+
+    def _enemy_junction(self, cells):
+        best, best_d = None, 999
+        for pos, tags in cells.items():
             if (tags & self._junction_tags) and (tags & self._clips_tags):
                 d = abs(pos[0] - self._center[0]) + abs(pos[1] - self._center[1])
                 if d < best_d:
@@ -142,10 +140,9 @@ class AlphaCogImpl(StatefulPolicyImpl[CogState]):
                     best = pos
         return best
 
-    def _find_deposit(self, obs) -> Optional[tuple[int, int]]:
-        ct = self._cell_tag_sets(obs)
+    def _deposit(self, cells):
         best, best_d = None, 999
-        for pos, tags in ct.items():
+        for pos, tags in cells.items():
             ok = False
             if (tags & self._hub_tags) and (not self._cogs_tags or (tags & self._cogs_tags)):
                 ok = True
@@ -158,91 +155,100 @@ class AlphaCogImpl(StatefulPolicyImpl[CogState]):
                     best = pos
         return best
 
-    def _action(self, name: str, vibe: str | None = None) -> Action:
+    def _act(self, name, vibe=None):
         an = name if name in self._actions else self._noop
         vn = vibe if vibe and vibe in self._vibes else None
         return Action(name=an, vibe=vn)
 
-    def _move_toward(self, state, target, vibe=None):
+    def _move(self, state, target, walls, vibe=None):
         if target is None:
-            return self._wander(state, vibe)
+            return self._wander(state, walls, vibe)
         dr = target[0] - self._center[0]
         dc = target[1] - self._center[1]
         if dr == 0 and dc == 0:
             state.last_action = self._noop
-            return self._action(self._noop, vibe), state
+            return self._act(self._noop, vibe), state
 
-        # If we've been failing to move, try perpendicular direction
-        if state.consecutive_fails >= 2:
-            # Try perpendicular to get around obstacle
-            if abs(dr) >= abs(dc):
-                d = "east" if (self._id + self._step) % 2 == 0 else "west"
+        # Rank all 4 directions by distance reduction, skip walls
+        cands = []
+        for d, (ddr, ddc) in DELTAS.items():
+            npos = (self._center[0] + ddr, self._center[1] + ddc)
+            if npos in walls:
+                continue
+            nd = abs(target[0] - npos[0]) + abs(target[1] - npos[1])
+            cands.append((nd, d))
+        cands.sort()
+
+        if cands:
+            # If stuck, skip the direction that failed
+            if state.fails >= 2 and len(cands) > 1 and f"move_{cands[0][1]}" == state.last_action:
+                d = cands[1][1]
             else:
-                d = "south" if (self._id + self._step) % 2 == 0 else "north"
+                d = cands[0][1]
             state.last_action = f"move_{d}"
-            return self._action(f"move_{d}", vibe), state
+            return self._act(f"move_{d}", vibe), state
 
+        # All blocked by walls, try primary anyway
         if abs(dr) >= abs(dc):
             d = "south" if dr > 0 else "north"
         else:
             d = "east" if dc > 0 else "west"
         state.last_action = f"move_{d}"
-        return self._action(f"move_{d}", vibe), state
+        return self._act(f"move_{d}", vibe), state
 
-    def _wander(self, state, vibe=None):
-        if state.wander_remaining <= 0:
+    def _wander(self, state, walls, vibe=None):
+        if state.wander_rem <= 0:
             state.wander_idx = (state.wander_idx + 1) % 4
-            state.wander_remaining = 6 + self._id * 2
+            state.wander_rem = 6 + (self._id % 4) * 3
         d = DIRECTIONS[(state.wander_idx + self._id) % 4]
-        state.wander_remaining -= 1
+        # If wall ahead, try next direction
+        ddr, ddc = DELTAS[d]
+        npos = (self._center[0] + ddr, self._center[1] + ddc)
+        if npos in walls:
+            state.wander_idx = (state.wander_idx + 1) % 4
+            d = DIRECTIONS[(state.wander_idx + self._id) % 4]
+        state.wander_rem -= 1
         state.last_action = f"move_{d}"
-        return self._action(f"move_{d}", vibe), state
+        return self._act(f"move_{d}", vibe), state
 
     def initial_agent_state(self):
-        return CogState(wander_idx=self._id % 4, wander_remaining=8 + self._id)
+        return CogState(wander_idx=self._id % 4, wander_rem=8 + self._id, last_pos=self._center)
 
     def step_with_state(self, obs, state):
         self._step += 1
-
-        # Check move result
-        move_succeeded = None
-        for token in obs.tokens:
-            fn = token.feature.name
-            if fn == "last_action_move":
-                move_succeeded = int(token.value) > 0
-                break
-
-        if state.last_action.startswith("move_"):
-            if move_succeeded is False or move_succeeded is None:
-                state.consecutive_fails += 1
-            else:
-                state.consecutive_fails = 0
-
-        if state.consecutive_fails >= 3:
-            state.wander_idx = (state.wander_idx + 1) % 4
-            state.wander_remaining = max(3, state.wander_remaining)
-
         items = self._inv(obs)
+        cells, walls = self._parse(obs)
 
-        if self._step % 500 == 0:
-            gear = None
-            for g in GEAR:
-                if items.get(g, 0) > 0:
-                    gear = g
+        # Also treat other agents as soft obstacles for pathfinding
+        # (they block movement too)
+
+        # Stuck detection: if last action was a move and we're at same
+        # agent_id position (center always = center, so use last_action)
+        if state.last_action.startswith("move_"):
+            # Check last_action_move feature
+            moved = True
+            for tok in obs.tokens:
+                if tok.feature.name == "last_action_move":
+                    moved = int(tok.value) > 0
                     break
-            ct = self._cell_tag_sets(obs)
-            n_junc = 0
-            n_neutral = 0
-            for pos, tags in ct.items():
-                if tags & self._junction_tags:
-                    n_junc += 1
-                    if not (tags & self._cogs_tags) and not (tags & self._clips_tags):
-                        n_neutral += 1
-            with open("/tmp/cogames/debug.txt", "a") as f:
-                f.write(f"[A{self._id}] step={self._step} gear={gear} heart={items.get('heart',0)} fails={state.consecutive_fails} junc={n_junc} neutral={n_neutral}\n")
-        res = sum(items.get(e, 0) for e in ELEMENTS)
+            if not moved:
+                state.fails += 1
+                # Add the blocked cell as a wall
+                if state.last_action.startswith("move_"):
+                    d = state.last_action.split("_")[1]
+                    if d in DELTAS:
+                        ddr, ddc = DELTAS[d]
+                        walls.add((self._center[0] + ddr, self._center[1] + ddc))
+            else:
+                state.fails = 0
 
-        # What gear do we have?
+        # Force direction change when very stuck
+        if state.fails >= 4:
+            state.wander_idx = (state.wander_idx + 1 + (self._step % 3)) % 4
+            state.wander_rem = 3
+            state.fails = 0
+
+        # What gear?
         gear = None
         for g in GEAR:
             if items.get(g, 0) > 0:
@@ -250,62 +256,63 @@ class AlphaCogImpl(StatefulPolicyImpl[CogState]):
                 break
 
         has_heart = items.get("heart", 0) > 0
+        res = sum(items.get(e, 0) for e in ELEMENTS)
 
-        # No gear - go to nearest station
+        # No gear - find station
         if gear is None:
-            target = self._closest_tag(obs, self._all_station_tags)
+            target = self._closest(cells, self._all_station_tags)
             if target:
-                return self._move_toward(state, target, "change_vibe_gear")
-            return self._wander(state, "change_vibe_gear")
+                return self._move(state, target, walls, "change_vibe_gear")
+            return self._wander(state, walls, "change_vibe_gear")
 
         # MINER
         if gear == "miner":
             if res >= 4:
-                dep = self._find_deposit(obs)
+                dep = self._deposit(cells)
                 if dep:
-                    return self._move_toward(state, dep, "change_vibe_miner")
-            ext = self._closest_tag(obs, self._extractor_tags)
+                    return self._move(state, dep, walls, "change_vibe_miner")
+            ext = self._closest(cells, self._extractor_tags)
             if ext:
-                return self._move_toward(state, ext, "change_vibe_miner")
-            return self._wander(state, "change_vibe_miner")
+                return self._move(state, ext, walls, "change_vibe_miner")
+            return self._wander(state, walls, "change_vibe_miner")
 
         # ALIGNER
         if gear == "aligner":
             if not has_heart:
-                hub = self._closest_tag(obs, self._heart_source_tags)
+                hub = self._closest(cells, self._hub_tags)
                 if hub:
-                    return self._move_toward(state, hub, "change_vibe_heart")
-                return self._wander(state, "change_vibe_heart")
-            junc = self._find_neutral_junction(obs)
+                    return self._move(state, hub, walls, "change_vibe_heart")
+                return self._wander(state, walls, "change_vibe_heart")
+            junc = self._neutral_junction(cells)
             if junc:
-                return self._move_toward(state, junc, "change_vibe_aligner")
+                return self._move(state, junc, walls, "change_vibe_aligner")
             if res > 0:
-                dep = self._find_deposit(obs)
+                dep = self._deposit(cells)
                 if dep:
-                    return self._move_toward(state, dep, "change_vibe_aligner")
-            return self._wander(state, "change_vibe_aligner")
+                    return self._move(state, dep, walls, "change_vibe_aligner")
+            return self._wander(state, walls, "change_vibe_aligner")
 
         # SCRAMBLER
         if gear == "scrambler":
             if not has_heart:
-                hub = self._closest_tag(obs, self._heart_source_tags)
+                hub = self._closest(cells, self._hub_tags)
                 if hub:
-                    return self._move_toward(state, hub, "change_vibe_heart")
-                return self._wander(state, "change_vibe_heart")
-            enemy = self._find_enemy_junction(obs)
+                    return self._move(state, hub, walls, "change_vibe_heart")
+                return self._wander(state, walls, "change_vibe_heart")
+            enemy = self._enemy_junction(cells)
             if enemy:
-                return self._move_toward(state, enemy, "change_vibe_scrambler")
-            return self._wander(state, "change_vibe_scrambler")
+                return self._move(state, enemy, walls, "change_vibe_scrambler")
+            return self._wander(state, walls, "change_vibe_scrambler")
 
-        # SCOUT or unknown - mine/explore
+        # SCOUT or unknown
         if res >= 4:
-            dep = self._find_deposit(obs)
+            dep = self._deposit(cells)
             if dep:
-                return self._move_toward(state, dep)
-        ext = self._closest_tag(obs, self._extractor_tags)
+                return self._move(state, dep, walls)
+        ext = self._closest(cells, self._extractor_tags)
         if ext:
-            return self._move_toward(state, ext)
-        return self._wander(state)
+            return self._move(state, ext, walls)
+        return self._wander(state, walls)
 
 
 class AlphaPolicy(MultiAgentPolicy):
