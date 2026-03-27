@@ -26,7 +26,7 @@ _STATION_OFFSETS = {
     "scout": (3, 4),
 }
 _TEMP_BLOCK_STEPS = 10
-_RETREAT_MARGIN = 24
+_RETREAT_MARGIN = 28
 _DEFAULT_BOUND_MARGIN = 16
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
@@ -1350,8 +1350,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     pressure_budget = 3
 
         # Scramblers to disrupt ship chains
-        if step >= 5000:
-            scrambler_budget = 2  # Late game: ships fully expanded
+        if step >= 3000:
+            scrambler_budget = 2  # Late game: ships expanded, need more defense
         elif step >= 200:
             scrambler_budget = 1
         else:
