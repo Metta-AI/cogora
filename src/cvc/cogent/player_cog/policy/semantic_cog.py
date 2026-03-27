@@ -1208,9 +1208,9 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            pressure_budget = 5
+            pressure_budget = 4
             if step >= 40 and _h.team_min_resource(state) >= _MINING_ALIGNER_MIN_RESOURCE:
-                pressure_budget = 6
+                pressure_budget = 5
 
         scrambler_budget = 0
         if num_agents > 4 and step >= 1_000 and _h.team_can_refill_hearts(state):
