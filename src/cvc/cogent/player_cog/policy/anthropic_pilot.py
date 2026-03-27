@@ -64,7 +64,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         if min_res < 1 and not _h.team_can_refill_hearts(state):
             return 2, 0
 
-        # Phase 3: Full pressure — 5 aligners + 1 scrambler, 2 miners
+        # Phase 3: 5 aligners + 1 scrambler, 2 miners (after step 400)
         aligner_budget = 5
         scrambler_budget = 0
 
@@ -75,7 +75,6 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         # Add scrambler at step 400 to disrupt ship expansion
         if step >= 400 and min_res >= 5:
             scrambler_budget = 1
-            # With scrambler, cap aligners at 4 to keep 3 miners
             aligner_budget = min(aligner_budget, 4)
 
         if objective == "resource_coverage":

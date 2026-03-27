@@ -68,3 +68,17 @@ status: in-progress
 - Best game: 204 alignments, 103 scrambles, agent 5 had 61 alignments
 - Hub proximity working: similar alignment count but higher score (junctions last longer)
 - Uploaded as v90 to tournament
+
+## v109 Results (lower retreat + deposit)
+- Retreat margin 15 (was 20), deposit threshold 12 (was 20)
+- Scores: 0.00, 2.93, 0.00, 3.10, 2.54 → avg 2.86 non-wipeout (BEST)
+- Uploaded as v91
+
+## v110 (6 aligners, 0 scramblers, retreat 12) — FAILED
+- Scores: 0.71, 1.10, 1.10, 0.71, 1.75 → avg 1.07
+- Economy starved with only 2 miners — can't support 6 aligners
+- Reverted to v109 config
+
+## v111 (v109 + stronger expansion bonus)
+- Expansion bonus 5.0 (was 3.0), cap 30 (was 24)
+- Testing...
