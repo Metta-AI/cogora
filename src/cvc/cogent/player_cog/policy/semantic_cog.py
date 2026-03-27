@@ -766,11 +766,15 @@ class SemanticCogAgentPolicy(AgentPolicy):
     def _detect_clips_ships(self, state: MettagridState) -> None:
         """Detect clips ship positions from visible entities."""
         for entity in state.visible_entities:
-            # Ships have entity_type like "clips:ship" or contain "ship" in labels
-            if "ship" in entity.entity_type or any("ship" in label for label in entity.labels):
+            if "ship" in entity.entity_type:
                 gx = _h.attr_int(entity, "global_x", entity.position.x)
                 gy = _h.attr_int(entity, "global_y", entity.position.y)
-                self._shared_ship_positions.add((gx, gy))
+                pos = (gx, gy)
+                if pos not in self._shared_ship_positions:
+                    self._shared_ship_positions.add(pos)
+                    step = state.step or self._step_index
+                    print(f"[COG] s={step} a={self._agent_id} SHIP DETECTED at {gx},{gy} "
+                          f"(total: {len(self._shared_ship_positions)})")
 
     def _is_in_ship_danger_zone(self, position: tuple[int, int]) -> bool:
         """Check if position is within clips ship scramble radius."""
