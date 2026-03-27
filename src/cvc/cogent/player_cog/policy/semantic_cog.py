@@ -1372,10 +1372,9 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 if min_res < 1 and not _h.team_can_refill_hearts(state):
                     pressure_budget = 4
 
-        # Scramblers to disrupt ship chains — 2nd scrambler at step 1000
-        # to counter ship expansion early while we have strong alignment.
-        if step >= 1000:
-            scrambler_budget = 2
+        # Scramblers to disrupt ship chains — 2nd scrambler at step 2000
+        if step >= 2000:
+            scrambler_budget = 2  # 4 aligners + 2 scramblers
         elif step >= 100:
             scrambler_budget = 1
         else:

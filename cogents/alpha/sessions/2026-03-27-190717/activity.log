@@ -66,8 +66,21 @@ Full 9-seed results:
 | 300  | 0.00  |
 **Avg: 6.38** — 3 seeds > 10, 1 wipeout, high variance
 
+## v86: 3 miners late game (instead of 2)
+- Avg: 3.11 across 9 seeds — WORSE, extra miner doesn't offset losing an aligner
+
+## v87: 5 aligners + 1 scrambler late game (instead of 4+2)
+- Avg: 3.71 across 7 seeds — WORSE, 2nd scrambler is more valuable than 5th aligner
+
+## v88: 2nd scrambler at step 1500 (instead of 3000)
+- Avg: 4.52 across 7 seeds, no wipeouts but not as high as v85
+
+## v89: 2nd scrambler at step 2000 — testing
+
 ## Key Insights
 - Game has massive internal randomness: same code, same seed → 0.00 or 19.19
-- Economy protection helps but can't fully prevent wipeouts
+- Economy protection helps but can't fully prevent wipeouts (stochastic)
 - Heart supply-gated batching seems to help (more hearts per trip)
+- 2 scramblers better than 1, but 3rd aligner better than 3rd scrambler
+- 2 miners is the sweet spot for late game
 - Focus should be on maximizing upside (more >10 games) rather than preventing all wipeouts
