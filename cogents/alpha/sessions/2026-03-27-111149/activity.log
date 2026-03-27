@@ -30,3 +30,8 @@ status: in-progress
 - Removed shared extractor code that was accidentally left in
 - v31 qualifying score: 1.76! First successful match since v17
 - v32+ also uploaded with upstream tuning changes (deposit=20, heart_batch=2, explore ring 22+32)
+- v29 competition: score 1.90, promoted to competition pool
+- v29, v30, v31, v34 all in competition, matched against slanky:v112, Paz-Bot-9005
+- Bootstrap=3 aligner budget being tested
+- Local 8-agent average ~1.93 across 14 runs. Best single run: 9.31 (seed 456)
+- Waiting for competition match results
