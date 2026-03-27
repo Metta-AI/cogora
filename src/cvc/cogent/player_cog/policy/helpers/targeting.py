@@ -60,13 +60,23 @@ def aligner_target_score(
             hub_penalty = hub_dist * 0.3
     # Very heavy penalty for junctions in ship scramble range — they'll be auto-scrambled every 70 ticks
     ship_penalty = 100.0 if in_ship_danger_zone else 0.0
+    # Corner penalty: ships are static at map corners (~43 tiles from hub).
+    # Junctions far from hub are closer to corners and more exposed to ship frontiers.
+    corner_penalty = 0.0
+    if hub_position is not None:
+        hub_dist = float(manhattan(hub_position, candidate.position))
+        # Ship frontier approaches from ~43 tiles out, expanding ~15 per alignment.
+        # Junctions >25 from hub are increasingly in ship frontier danger.
+        if hub_dist > 25:
+            corner_penalty = (hub_dist - 25) * 2.0
     return (
         distance
         - min(expansion * 3.0, 24.0)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
         + hub_penalty
-        + ship_penalty,
+        + ship_penalty
+        + corner_penalty,
         -float(expansion),
     )
 

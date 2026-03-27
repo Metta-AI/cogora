@@ -8,3 +8,20 @@ status: in-progress
 - Goal: achieve score > 10
 - Key insight from last session: emergency mining wastes ~50% of aligner time
 - Todos: fix 0-score wipeouts, try zone assignment, test more miners early
+
+## Key Discovery: Ship Mechanics
+- Ships are STATIC at map corners (4 ships, ~43 tiles from hub)
+- Ships scramble 1 junction/70 ticks AND align 1 neutral/70 ticks
+- Ship frontier expands via junction chaining (15 tile range)
+- Ships CANNOT be destroyed, only their expansion can be slowed
+
+## v57 Changes: ship danger decay, frontier explore, miner offsets
+Test Results (3 seeds): 2.06, 3.56, 2.05 → Avg 2.56
+- Patrol still dominates: 7779-9412 steps (60%+ of aligner time)
+- Align only 4054-5848 steps
+
+## v58 Changes: reduce patrol, add corner penalty
+- Patrol staleness: 50 → 120 steps
+- Corner penalty in aligner score (>25 from hub)
+- Ship danger decay: 400 steps
+- Testing...

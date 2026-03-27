@@ -64,7 +64,7 @@ class NavigationObservation:
 
 _CLIPS_SCRAMBLE_RADIUS = 15
 _CLIPS_SHIP_SAFE_MARGIN = 2
-_SHIP_DANGER_DECAY_STEPS = 200
+_SHIP_DANGER_DECAY_STEPS = 400
 
 
 class SharedWorldModel:
@@ -507,16 +507,15 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if depot is not None:
                 return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
-        # Frontier exploration first — find NEW neutral junctions beyond our network edge.
-        # This is more productive than patrolling known junctions.
-        frontier_target = self._frontier_explore_target(state)
-        if frontier_target is not None:
-            return self._move_to_position(state, frontier_target, summary="frontier_explore", vibe="change_vibe_aligner")
-
-        # Patrol stale junctions only as fallback (re-check for scrambles)
+        # Patrol stale junctions to detect scrambles and re-align.
         patrol_target = self._patrol_stale_junction(state)
         if patrol_target is not None:
             return self._move_to_position(state, patrol_target, summary="patrol_junction", vibe="change_vibe_aligner")
+
+        # Frontier exploration — find new neutral junctions beyond our network edge.
+        frontier_target = self._frontier_explore_target(state)
+        if frontier_target is not None:
+            return self._move_to_position(state, frontier_target, summary="frontier_explore", vibe="change_vibe_aligner")
 
         return self._explore_action(state, role="aligner", summary="find_neutral_junction")
 
@@ -556,7 +555,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
         current_pos = _h.absolute_position(state)
         team_id = _h.team_id(state)
 
-        max_patrol_distance = 25  # Cover full hub alignment zone
+        max_patrol_distance = 22  # Stay in efficient range
         candidates: list[tuple[int, float, int, tuple[int, int]]] = []
         for (dx, dy), (owner, last_seen_step) in self._shared_junctions.items():
             pos = (hub.global_x + dx, hub.global_y + dy)
@@ -564,8 +563,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if self._is_in_ship_danger_zone(pos):
                 continue
             staleness = step - last_seen_step
-            # Ships scramble every 70 ticks — check anything older than 50
-            if staleness < 50:
+            # Ships scramble every 70 ticks — check after ~2 scramble cycles
+            if staleness < 120:
                 continue
             distance = _h.manhattan(current_pos, pos)
             if distance > max_patrol_distance:
@@ -1335,13 +1334,13 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step < 30:
                 pressure_budget = 2
             else:
-                pressure_budget = 4  # 4 aligners + 4 miners for better economy
-                # Smooth economy scaling: reduce aligners when resources low
+                pressure_budget = 5  # Full pressure
+                # Smooth economy scaling: reduce aligners as economy drops
                 if step > 200:
                     if min_res < 3 and not _h.team_can_refill_hearts(state):
-                        pressure_budget = 2
-                    elif min_res < 7:
                         pressure_budget = 3
+                    elif min_res < 7:
+                        pressure_budget = 4
 
         scrambler_budget = 0  # No scramblers — all pressure agents are aligners
         aligner_budget = pressure_budget - scrambler_budget
