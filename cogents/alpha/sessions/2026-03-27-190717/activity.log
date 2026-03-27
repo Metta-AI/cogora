@@ -127,3 +127,24 @@ Uploaded as alpha.0:v79, v81
 - Deposit threshold 20 is good, higher hurt
 - Dynamic pressure scaling based on economy is critical
 - Running many games in parallel causes CPU contention and worse results
+
+## v95: Restored hub_penalty and ship_penalty (upstream removed them)
+- Fixed NameError from missing hub_pos and _is_in_ship_danger_zone
+- Restored deposit=20 (upstream set to 40), heart_batch ascending (upstream set to 3)
+- Restored friendly_junctions for scrambler targeting
+- Avg 3.54 across 5 seeds (typical variance range)
+- Uploaded as alpha.0:v87
+
+## Current Best Config (v95/v87)
+- Step 0-30: 2 pressure (6 miners)
+- Step 30-3000: 5 pressure, economy-gated:
+  - Critical (min_res<1, can't afford hearts): 2 pressure (6 miners)
+  - Low (min_res<3): 4 pressure (4 miners)
+- Step 3000+: 6 pressure (2 miners)
+- 1 scrambler from step 100, 2 from step 1000
+- Patrol: staleness 35, distance 15
+- Retreat margin: 28
+- Heart batch: 5→6→7→8 (scaling with step)
+- Deposit threshold: 20
+- Hub penalty: dist*0.3 near, (dist-20)*1.5+5 mid, (dist-30)*3+20 far
+- Ship danger penalty: restored in API but set to False (upstream removed detection)
