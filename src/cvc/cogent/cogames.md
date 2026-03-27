@@ -4,6 +4,11 @@
 
 Run `src/cvc/setup.sh` for one-time setup (installs Python 3.12 venv, cogames, auth).
 
+Auth requires `COGAMES_TOKEN` in env. If not authenticated, run:
+```bash
+cogames auth set-token $COGAMES_TOKEN
+```
+
 ## Running Games Locally
 
 ```bash
