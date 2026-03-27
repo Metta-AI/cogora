@@ -1242,27 +1242,22 @@ class SemanticCogAgentPolicy(AgentPolicy):
             if step >= 40 and min_res >= _MINING_ALIGNER_MIN_RESOURCE:
                 pressure_budget = 3
         else:
-            # Economy-first: mine aggressively early, then transition to aligners.
-            # Hub starts with 24 of each element = 3 hearts max.
-            # Aligners need hearts to score. Build economy first for sustained scoring.
-            if step < 60:
-                # First 60 steps: all mine to build resource stockpile
-                pressure_budget = 0
-            elif step < 150:
-                # Steps 60-150: ramp up aligners as economy allows
-                pressure_budget = 3 if min_res >= 10 else 1
-            elif min_res >= _MINING_ALIGNER_MIN_RESOURCE:
-                # Full pressure when economy is strong
-                pressure_budget = 6  # More aligners = more score
-            elif min_res >= 7:
-                pressure_budget = 5
+            # Economy-first: mine early, then ramp up aligners on a fixed schedule.
+            # Resource-gating causes under-alignment because miners carry resources
+            # that don't show in team inventory.
+            if step < 40:
+                pressure_budget = 0  # All mine for first 40 steps
+            elif step < 80:
+                pressure_budget = 2  # 2 aligners while economy builds
+            elif step < 200:
+                pressure_budget = 4  # 4 aligners, 4 miners
             else:
-                # Resources depleted — scale back
-                pressure_budget = 3
+                pressure_budget = 6  # 6 aligners, 2 miners for rest of game
+                # Scale back only if economy is truly starved
+                if min_res < 3 and not _h.team_can_refill_hearts(state):
+                    pressure_budget = 4
 
-        scrambler_budget = 0
-        if num_agents > 4 and step >= 2_000 and _h.team_can_refill_hearts(state):
-            scrambler_budget = 1
+        scrambler_budget = 0  # No scramblers — all pressure agents are aligners
         aligner_budget = pressure_budget - scrambler_budget
         if objective == "resource_coverage":
             return 0, 0
