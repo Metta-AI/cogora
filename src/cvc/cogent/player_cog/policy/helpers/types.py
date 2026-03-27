@@ -40,8 +40,12 @@ _ALIGNER_EXPLORE_OFFSETS = (
     (-15, -15),
 )
 _MINER_EXPLORE_OFFSETS = (
-    (-28, -28), (28, -28), (-28, 28), (28, 28),
-    (0, -35), (35, 0), (0, 35), (-35, 0),
+    # Ring 1: close to hub, within territory
+    (-10, -10), (10, -10), (-10, 10), (10, 10),
+    (0, -14), (14, 0), (0, 14), (-14, 0),
+    # Ring 2: moderate reach, still within territory range
+    (-18, -18), (18, -18), (-18, 18), (18, 18),
+    (0, -22), (22, 0), (0, 22), (-22, 0),
 )
 _SCRAMBLER_EXPLORE_OFFSETS = ((36, -36), (36, 36), (-36, 36), (-36, -36))
 
