@@ -5,28 +5,22 @@ status: interrupted
 ## Session Start
 - Previous best local: 4.92 (v8 with scramble-zone detection)
 - Tournament best: v30 at 1.92 (#1 on leaderboard)
-- v37 uploaded last session with all improvements
 - Goal: achieve score > 10
-- Plan: 1) Check tournament results, 2) Analyze why variance is high, 3) Push score higher
 
-## Progress (continued from previous session)
-- v44 uploaded: 5 aligners, reduced retreat, hub proximity bias, ship zone propagation
-- Tried sharing world model across agents — caused total gridlock (agents block each other), reverted
-- Reduced patrol from 77% to ~40% of aligner time (staleness 30→100, distance 25→15)
-- Ship zone propagation: when scramble detected, mark ALL junctions within ship range as dangerous
-- Ship penalty 50→100 in aligner scoring
-- Added ring 3 explore offsets (35 tiles) for distant safe junctions
-- Increased pathfinding margin 12→16
-- KEY INSIGHT: enemy-owned junctions indicate ship presence (ships auto-align for clips team)
-- Implemented proactive ship detection from enemy junctions (before alignment)
-- v46 uploaded with enemy-junction ship detection
-- Local test scores: 2.10, 1.71, 1.90 (more tests running)
-- Competition matches showing 0.5-1.8
-- Qualifying matches failing with server errors (1011 internal error)
+## Progress (this session continuation)
+- Tried sharing world model — gridlock, reverted
+- Reduced patrol from 77% to ~40% of aligner time
+- Ship zone propagation from scramble events
+- Enemy-junction detection (proactive ship detection) — had to reduce propagation radius
+- Higher heart batching (4→5→6) reduces hub trips from 36% to ~15% of aligner time
+- Upstream fixes: gear station retry, num_agents bug, stagger start
 
-## Analysis
-- Map variance is HUGE: 47 vs 65 junctions per map, some maps cause 0-score wipeouts
+## Key Learnings
 - Same 177 alignments give scores 1.79-3.52 depending on WHICH junctions aligned
-- Safe junctions (outside ship range) are 143x more valuable than ship-zone junctions
-- Key bottleneck: ship zone detection speed determines how many hearts wasted on ship zones
-- Patrol was consuming 77% of aligner time (fixed, now ~40%)
+- Safe junctions 143x more valuable than ship-zone ones
+- Heart trip overhead was 36% of aligner time — reduced with higher batch targets
+- Patrol was 77% of aligner time — reduced to ~40%
+- Enemy-junction propagation was too aggressive, reduced to mark only specific junction
+- Map variance huge: 47 vs 65 junctions, some maps cause 0-score wipeouts
+- Score monotonically increases (no connectivity-based disconnection)
+- Averaging ~1.7-2.2 across runs with peaks at 2.77
