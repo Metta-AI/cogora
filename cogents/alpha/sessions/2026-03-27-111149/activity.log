@@ -45,8 +45,7 @@ status: in-progress
   1. Map variance: some seeds give 0 (all agents die), best gives 9.31
   2. Average performance ~2 per match
   3. Need either better map adaptability or ~5x throughput improvement
-- Ship detection / scramble zone inference added (parallel session)
-- v38 uploaded with all latest improvements
-- Distance retreat tested: doesn't help (agents stuck behind walls regardless)
-- Competition matches still running, v29/v30/v31/v34 all in competition pool
-- Summary: tournament upload working, policy performing ~1.5-2.0 avg, need fundamentally better map adaptability for >10
+- Robustness test (5 runs): 1.36, 1.36, 1.21, 1.36, 1.18 → avg 1.29
+  - Deaths per run: 5, 5, 3, 5, 0
+  - Variance much lower than previous (no 0-score runs)
+  - Server SSL issues preventing uploads since ~12:45
