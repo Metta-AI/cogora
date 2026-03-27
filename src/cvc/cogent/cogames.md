@@ -13,10 +13,10 @@ cogames auth set-token $COGAMES_TOKEN
 
 ```bash
 # Run with your policy (8 cogs, full game)
-cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog -r log --autostart > /tmp/cogames/latest.log 2>&1
+cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy -r log --autostart > /tmp/cogames/latest.log 2>&1
 
 # Shorter test (100 steps)
-cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog -r log --autostart --steps=100 > /tmp/cogames/latest.log 2>&1
+cogames play -m machina_1 -c 8 -p class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy -r log --autostart --steps=100 > /tmp/cogames/latest.log 2>&1
 
 # Run with starter policy for comparison
 cogames play -m machina_1 -c 8 -p starter -r log --autostart --steps=5000 > /tmp/cogames/starter.log 2>&1
@@ -26,7 +26,7 @@ cogames play -m machina_1 -c 8 -p starter -r log --autostart --steps=5000 > /tmp
 
 ```bash
 # IMPORTANT: Must use full class path and include source directories
-cogames upload -p "class=cvc.cogent.player_cog.policy.semantic_cog.MettagridSemanticPolicy" -n alpha.0 -f src/cvc -f src/mettagrid_sdk --skip-validation
+cogames upload -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" -n alpha.0 -f src/cvc -f src/mettagrid_sdk --skip-validation
 ```
 
 ## Checking Results
@@ -45,7 +45,7 @@ After validating changes in free-play, enter the tournament:
 
 1. **Upload**: Submit your policy (increment the version number each time):
    ```bash
-   cogames upload -p "class=cvc.cogent.player_cog.policy.semantic_cog.MettagridSemanticPolicy" -n alpha.N -f src/cvc -f src/mettagrid_sdk --skip-validation
+   cogames upload -p "class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy" -n alpha.N -f src/cvc -f src/mettagrid_sdk --skip-validation
    ```
 2. **Wait for matches**: Tournament runs matches automatically. Check status:
    ```bash
@@ -71,7 +71,7 @@ alone. Other Cogents reveal strategies you can't discover in self-play.
 
 1. **Python version mismatch**: cogames requires `>=3.12,<3.13`. System has 3.11. Solution: `uv python install 3.12`.
 2. **mettagrid_sdk not available**: The `mettagrid_sdk` package used in `cvc/cogent/player_cog/policy/semantic_cog.py` is not on PyPI. The policy must use the raw token-based observation API from `mettagrid.simulator.interface.AgentObservation`.
-3. **Policy class path**: Use `class=cvc.cogent.player_cog` format. Short names like `starter` only work for built-in policies.
+3. **Policy class path**: Use `class=cvc.cogent.player_cog.policy.anthropic_pilot.AnthropicCyborgPolicy` format. Short names like `starter` only work for built-in policies.
 
 ## Game Mechanics Quick Reference
 
@@ -107,8 +107,17 @@ build understanding of what strategies work.
 
 ## Architecture
 
-- `src/cvc/cogent/player_cog/` - Main policy package
-- Policy extends `MultiAgentPolicy` -> `agent_policy(agent_id)` -> `AgentPolicy.step(obs)`
+The policy uses a **cyborg** architecture: an LLM (Anthropic) reviews and adjusts
+decisions made by a Python heuristic baseline at runtime.
+
+- `src/cvc/cogent/player_cog/policy/semantic_cog.py` — Python heuristic baseline
+- `src/cvc/cogent/player_cog/policy/pilot_base.py` — Cyborg wrapper: LLM reviews runtime telemetry and adjusts strategy
+- `src/cvc/cogent/player_cog/policy/anthropic_pilot.py` — Anthropic-backed cyborg (used in tournament)
+- `src/cvc/cogent/player_cog/runtime/` — LLM session management, artifact storage
+
+The LLM detects stagnation patterns (oscillation, target fixation, resource bias
+mismatch) and rewrites local policy directives to break out of unproductive loops.
+
 - Observations are token-based: each token has `feature.name`, `value`, and `location`
 - Tags identify entity types: `type:junction`, `type:hub`, `team:cogs`, `net:cogs`, etc.
 - Inventory: `inv:heart`, `inv:aligner`, `inv:carbon`, etc.

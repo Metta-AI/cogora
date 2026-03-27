@@ -13,6 +13,4 @@ try:
 except ImportError:
     MettagridSemanticPolicy = None  # type: ignore[assignment,misc]
 
-from cvc.cogent.player_cog.policy.alpha_policy import AlphaPolicy
-
-__all__ = ["AlphaPolicy", "AnthropicCyborgPolicy", "MettagridSemanticPolicy", "OpenAICyborgPolicy"]
+__all__ = ["AnthropicCyborgPolicy", "MettagridSemanticPolicy", "OpenAICyborgPolicy"]
