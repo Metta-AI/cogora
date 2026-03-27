@@ -8,3 +8,6 @@ status: in-progress
 - Goal: score > 10, currently ~4x away
 - Key bottleneck: alignments don't last long enough (ship scrambling)
 - Need to check tournament results for v89-v95
+- Uploaded v95/v101 to tournament (still running/qualifying)
+- Additional 5-game validation: 0.00, 1.90, 2.76, 2.14, 2.84 (avg 2.41 non-wipeout)
+- v113-v115 experiments all worse than v112, reverted
