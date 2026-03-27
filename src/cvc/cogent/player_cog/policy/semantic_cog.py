@@ -359,6 +359,11 @@ class SemanticCogAgentPolicy(AgentPolicy):
         )
 
     def _desired_role(self, state: MettagridState, *, objective: str | None = None) -> str:
+        # Emergency: if agent has no gear and economy is dead, always mine
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if hp <= 5 and not _h.has_role_gear(state, "miner") and not _h.has_role_gear(state, "aligner") and not _h.has_role_gear(state, "scrambler"):
+            if _h.needs_emergency_mining(state):
+                return "miner"
         aligner_budget, scrambler_budget = self._pressure_budgets(state, objective=objective)
         scrambler_ids = set(_SCRAMBLER_PRIORITY[:scrambler_budget])
         aligner_ids = []
