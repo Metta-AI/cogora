@@ -81,4 +81,13 @@ status: in-progress
 
 ## v111 (v109 + stronger expansion bonus)
 - Expansion bonus 5.0 (was 3.0), cap 30 (was 24)
-- Testing...
+- Scores: 2.87, 2.54, 2.61, 2.39, 2.69 → avg 2.62 (0 wipeouts, consistent)
+- Uploaded as v93
+
+## v112 (v111 + reduce gear churn)
+- Emergency threshold 1 (was 3), emergency budget 3 (was 2)
+- Economy scale-down at min_res < 5 (was < 8)
+- Scores: 3.46, 3.04, 2.20, 3.07, 2.90 → avg 2.93 (BEST, 0 wipeouts!)
+- Key: agent 3 had 62 alignments with only 3 gear switches (was 8)
+- 219 total alignments, 106 scrambles, 0 deaths in best game
+- Uploaded as v95
