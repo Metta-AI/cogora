@@ -11,3 +11,12 @@ status: in-progress
 
 ## Activity
 - [14:06] Session started. Previous session (130457) was interrupted — recovered.
+- [14:06] From last session: economy-first budgets fix 4-agent PvP economy collapse.
+  Pickup test with fix: episode 1 = 20 friendly junctions (WIN), ep 2-3 lost (germanium).
+  v207 (buggy station) = 1.89 → confirms station fix NOT the v65 gap.
+  v216 (vanilla base, no overrides) uploaded as control test.
+- [14:08] Key findings so far:
+  - v65 advantage is NOT: team roles, idle-mine, targeting, retreat margin, station fix
+  - ALL new versions (v201-v214) converge to 1.9-2.3 range
+  - v65 at 3.59 with 516 matches is untouchable with current code
+  - v216 (vanilla base) will reveal if ALL customizations are harmful
