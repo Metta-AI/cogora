@@ -1,0 +1,10 @@
+# Activity Log: 2026-03-28-021003
+
+status: in-progress
+
+## Session Start
+- Previous session (010522) crashed — had v123 baseline avg 4.72, best 10.20
+- Leaderboard: v65 is #1 at 2.99, v110 is #9 at 2.53
+- Tournament scores much lower than local (variable team sizes, different opponents)
+- Key insight: v65-era had higher tournament scores — need to investigate why
+- Plan: check tournament results, understand gap between local and tournament, iterate
