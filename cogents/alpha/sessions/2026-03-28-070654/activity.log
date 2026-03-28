@@ -48,3 +48,13 @@ Uploads: v166=old RealignBoost, v167=MaxAlign, v169=fixed RealignBoost, v170=V65
 - Expansion weight 15 worse than 10
 - Network weight 0.2 test running
 - Uploads: v169=Fixed RealignBoost (BEST), v170=V65Realign
+
+## BREAKTHROUGH: Score 11.18 on seed 5 (5K)!
+- Fixed RealignBoost scored 11.18 on seed 5 at 5K steps — ABOVE TARGET!
+- Same policy scored 6.97 and 8.51 on earlier runs of same seed
+- Non-determinism means large variance per run
+- Key question: can this translate to consistent tournament performance?
+- Experiments that FAILED: expansion_weight=15, network_weight=0.2, retreat_margin=10
+- Experiments that HELPED: hotspot_weight=8.0 + negative counts (re-alignment boost)
+- Running more verification seeds and 10K tests
+- Uploads: v169, v173, v175 (RealignBoost variants)
