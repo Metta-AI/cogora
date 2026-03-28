@@ -5451,3 +5451,75 @@ class AlphaBalancedPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaAdaptiveV3AgentPolicy(AlphaBalancedAgentPolicy):
+    """Adaptive economy v3: ramps aligners when resources permit.
+
+    Fixes AlphaBalanced's over-hoarding (1000+ resources with only 3 aligners).
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Dynamic budgets: scale aligners proportional to resource health."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 30:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 100 and step >= 500:
+                aligner_budget = min(3, num_agents - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: dynamic scaling, always keep >= 2 miners
+        if step < 30:
+            return 2, 0
+
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 30:
+            return 2, 0
+        elif min_res < 80:
+            return 3, 0
+        elif min_res < 200:
+            scrambler = 1 if step >= 500 else 0
+            return 4, scrambler
+        else:
+            # Rich: max pressure, keep 2 miners
+            scrambler = 1 if step >= 500 else 0
+            aligner = min(5, num_agents - 2 - scrambler)
+            return aligner, scrambler
+
+
+class AlphaAdaptiveV3Policy(MettagridSemanticPolicy):
+    """Adaptive economy v3: dynamic aligner scaling based on resource health."""
+    short_names = ["alpha-adaptive-v3"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAdaptiveV3AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
