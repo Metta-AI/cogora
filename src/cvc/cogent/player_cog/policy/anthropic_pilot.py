@@ -2366,7 +2366,7 @@ class AlphaTournamentAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
         return self._miner_action(state, summary_prefix="idle_align_")
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Team-size-aware budgets for tournament variable team sizes."""
+        """Economy-first budgets for tournament — build economy before aggression."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         can_hearts = _h.team_can_refill_hearts(state)
@@ -2381,32 +2381,36 @@ class AlphaTournamentAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
             return 1, 0
 
         if num_agents <= 4:
-            if step < 20:
-                return 1, 0
+            if step < 100:
+                return 1, 0  # Economy-first: 1 aligner, rest mine
+            if min_res < 7:
+                return 1, 0  # Keep mining until hearts capacity
             aligner_budget = min(2, num_agents - 1)
-            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            scrambler_budget = 1 if step >= 500 and num_agents >= 4 and min_res >= 14 else 0
             if min_res < 1 and not can_hearts:
                 return 1, 0
             if objective == "economy_bootstrap":
-                return min(aligner_budget, 1), 0
+                return 1, 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: v65-style budgets
+        # 5+ agents: economy-responsive
         if step < 30:
             pressure_budget = 2
+        elif step < 100:
+            pressure_budget = 3
         elif step < 3000:
             pressure_budget = 5
-            if min_res < 1 and not can_hearts:
+            if min_res < 3 and not can_hearts:
                 pressure_budget = 2
-            elif min_res < 3:
+            elif min_res < 7:
                 pressure_budget = 4
         else:
             pressure_budget = 6
-            if min_res < 1 and not can_hearts:
-                pressure_budget = 3
+            if min_res < 3 and not can_hearts:
+                pressure_budget = 2
 
         scrambler_budget = 0
-        if step >= 3000:
+        if step >= 3000 and min_res >= 14:
             scrambler_budget = 2
         elif step >= 100:
             scrambler_budget = 1
