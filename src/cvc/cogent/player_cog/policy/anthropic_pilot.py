@@ -44,7 +44,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_budget_change_step = 0
-        self._current_aligner_budget = 2  # Start conservative
+        self._current_aligner_budget = 4  # Match Phase 2 exit (conservative)
 
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         resources = _shared_resources(state)
