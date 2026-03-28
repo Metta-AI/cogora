@@ -23,6 +23,18 @@
 - v135 seeds 1-5: 8.12, 1.34, 3.99, 3.13, 9.09 (avg 5.13)
 - Seed 3 no longer wipeout (3.99 vs 0.00)
 
-### v136: Scrambler only for 6+ agents, ensure 2 miners for 4+
-- Running 10-seed 8-cog and 5-seed 4-cog tests
-- Uploaded current code as v128 to tournament
+### v136-v138: Failed experiments
+- v136 (2-miner minimum): reduced max_pressure for 8-cog, avg dropped to 5.56
+- v137 (heart batch 4): caused wipeouts on seeds 1,2 (0.00)
+- v138 (opp deposit + scrambler>=6): seed 5 wipeout, inconsistent results
+- All reverted back to v134 (pure network targeting)
+
+### Key learnings
+- Non-determinism is HUGE: same seed+code gives 0.00 to 6.70
+- Need 20+ seeds for reliable comparisons
+- Seed 3 is unwinnable (starter policy also scores 0.00)
+- Heart batch increase can starve economy → wipeouts
+- Budget changes are very sensitive — small tweaks cause big regressions
+- Uploaded v128, v129, v131, v132 to tournament
+
+### Running 20-seed test (seeds 11-30) for reliable v134 baseline
