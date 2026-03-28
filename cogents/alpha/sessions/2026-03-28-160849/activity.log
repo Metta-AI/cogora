@@ -1,0 +1,11 @@
+# Session 2026-03-28-160849 Activity Log
+status: in-progress
+started: 2026-03-28T16:08:49Z
+
+## Context
+Previous sessions show tournament ceiling ~2.75-2.80 for well-converged versions.
+All new versions (v231-v247) settling at 2.0-2.5. Target >10 not yet achieved.
+v241 (V65TrueReplica+old_deps) was at 2.45 (#52) with 18 matches, still settling.
+Need fundamentally different approach to reach >10.
+
+## Activity
