@@ -156,3 +156,7 @@ Need fundamentally different approach to reach >10.
   Need a faster RL architecture or inference optimization for tournament upload.
 - [18:54] All heuristic versions at 2.17-2.21 with 60+ matches. Confirmed ceiling.
   Best non-alpha: coglet 2.29-2.33, slanky 2.75, Paz-Bot 2.73.
+- [18:58] Killed LSTM training (too slow for tournament inference).
+  Started STATELESS (feedforward) training on machina_1 4-agent.
+  Stateless should be much faster at inference, suitable for tournament.
+  LSTM v256/v257 failed qualifying (inference timeout).
