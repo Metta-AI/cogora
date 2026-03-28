@@ -8,3 +8,10 @@ status: in-progress
 - Tournament scores much lower than local (variable team sizes, different opponents)
 - Key insight: v65-era had higher tournament scores — need to investigate why
 - Plan: check tournament results, understand gap between local and tournament, iterate
+
+## Baseline Tests (v130)
+- 8-cog 10k (seeds 0-7): 4.88, 3.13, 1.26, 2.46, 0.00, 5.36, 3.90, 2.78 → avg 2.97
+- 4-cog 10k (seeds 0-4): 2.00, 3.78, 1.28, 0.61, 2.95 → avg 2.12
+- Seed 4 (8-cog) was total wipeout: all agents died, hp.gained=0, no territory healing
+- Tournament matches running (v119-v121 vs v35-v44), no completed results yet
+- v130 may have regressed from v123 (was 4.72 avg), but high variance makes comparison hard
