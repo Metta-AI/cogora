@@ -1,17 +1,21 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (best local: 10.63 on one seed, avg ~4.2)
-- [ ] **Check v179/v180/v181 tournament results** — these have the critical role fix
-- [ ] **Monitor role assignment fix impact** — should significantly improve tournament scores
-- [ ] Analyze tournament match logs to understand PvP dynamics
-- [ ] Fix wipe bug (~7% seeds, all agents die immediately)
-- [ ] Try adaptive zone assignment based on actual junction positions
-- [ ] Test with tournament-realistic conditions (pickup vs starter, 8 agents, 10k steps)
-- [ ] Consider LLM-enhanced policy (v178) if heuristic ceiling is ~3.0
+- [ ] Achieve score > 10 in CogsVsClips (best local: 12.68 at 10k, tournament best: v65=3.59)
+- [ ] **CRITICAL: Figure out why v65 outperforms all newer versions in tournament**
+  - v65 at 3.59 (#1) vs v199 at 2.03 (#140), v200 at 2.26 (#87)
+  - Local self-play: newer code avg 5-9 at 10k, but tournament avg 2.0-2.5
+  - Hypothesis: newer features over-fit to 8v8 self-play, fail on 2v6/4v4 splits
+- [ ] Study v65 match logs to understand its tournament behavior
+- [ ] Test with tournament-realistic conditions (variable team sizes, 10k steps)
+- [ ] Fix wipe bug (~7% seeds, all agents die immediately) — HP drops to 0 near hub
+- [ ] Consider LLM-enhanced policy if heuristic ceiling is ~3.0 in tournament
+- [ ] Monitor v199/v200 tournament performance as match count increases
 - [x] CRITICAL FIX: team-relative role assignment for split teams
+- [x] Station targeting fix (spawn-relative → hub-relative)
+- [x] Re-alignment boost (hotspot flip) — +14% local
+- [x] Idle-aligner-mine — +89% local
+- [x] Expand-toward-junction when frontier empty
+- [x] Budget stability (tighter thresholds)
+- [x] network_weight=0, retreat_margin=15
 - [x] Discovered tournament uses 4-agent AND 8-agent game formats
-- [x] Re-alignment boost (hotspot bonus) — +14% over V65True
-- [x] Budget stability (tighter thresholds) — +16% over RealignBoost
-- [x] Zone-based aligner targeting — achieved 10.63 on best seed
-- [x] Confirmed scramblers are critical (removing them hurts consistently)
-- [x] Fix hotspot_weight=0 bug in V65Replica inheritance chain
+- [x] Confirmed local self-play ≠ tournament performance
