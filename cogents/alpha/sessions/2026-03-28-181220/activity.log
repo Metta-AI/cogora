@@ -40,3 +40,11 @@ New opponents: slanky:v112, gtlm-reactive, coglet-v0:v7.
   junctions, silicon=10, oxygen=35. Clips overwhelm after step 5000. Tournament uses 10k steps!
   Need: better late-game economy, more scramblers to slow clips, resource conservation.
 - [18:52] v258-v261 uploaded: EconFixGlobal, EconFix, EconFixGlobal v2, V65PlusFix.
+- [18:55] TOURNAMENT UPDATE: v259 initially at #2 (3.36/8 matches), dropped to 2.51/19 matches.
+  Still converging. v258 (global) at 1.75 — team-relative clearly better than global in tournament.
+- [18:58] Created AlphaLateGamePolicy: phase-based budgets (more scramblers after step 5000).
+  Uploaded v264 (LateGame), v265 (EconFix refresh), v266 (LLM-enhanced AnthropicCyborg).
+- [19:02] KEY INSIGHT: Global role assignment HURTS tournament (v258: 1.75 vs v259: 2.51).
+  Team-relative is essential for 2+6/4+4/6+2 team splits.
+- [19:05] Waiting for 10k scrimmage + tournament results. Resource depletion (especially silicon)
+  is the late-game bottleneck — only 45 silicon extractors vs 50-58 for other resources.
