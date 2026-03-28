@@ -90,3 +90,13 @@ KEY INSIGHT: Heavy scrambling (3 scramblers) is extremely effective in tournamen
 - Updated AlphaV65ReplicaAgentPolicy to override retreat with margin=15
 - Made v65+bias and v65+scramble inherit from v65 replica base
 - Uploaded v153 (v65 replica + retreat_margin=15) and v154 (v65+bias + retreat_margin=15)
+
+## Deposit threshold experiment FAILED
+- Reverting deposit_threshold from 16 to 12 HURT performance: seed 1 dropped 4.48→1.40
+- Keeping deposit_threshold at 16 (current code)
+- v155 had deposit change, v156 reverts it (just network/hotspot removal + retreat_margin=15)
+
+## Current tournament standings for new versions
+- v145-v149 all below v65 (1.29-2.04 vs 3.24)
+- v150-v154 still in qualifying
+- Uploaded v156: best v65 replica (no network/hotspot, retreat_margin=15, deposit=16)
