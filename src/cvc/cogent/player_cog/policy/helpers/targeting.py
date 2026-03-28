@@ -45,24 +45,26 @@ def aligner_target_score(
         if any(manhattan(candidate.position, enemy.position) <= _JUNCTION_AOE_RANGE for enemy in enemy_junctions)
         else 0.0
     )
-    # Strongly prefer hub-proximal junctions: less travel, safer from ships, faster cycling
-    hub_penalty = 0.0
+    # Use network distance: min distance to any hub or friendly junction.
+    # This encourages network expansion by chaining through friendly junctions
+    # while still preferring targets near the existing network.
+    network_dist = 999.0
     if hub_position is not None:
-        hub_dist = float(manhattan(hub_position, candidate.position))
-        if hub_dist > 25:
-            hub_penalty = (hub_dist - 25) * 8.0 + 50.0  # Extremely expensive beyond alignment range
-        elif hub_dist > 15:
-            hub_penalty = (hub_dist - 15) * 3.0 + 10.0  # Strong cost in outer ring
-        elif hub_dist > 10:
-            hub_penalty = (hub_dist - 10) * 1.5 + 2.0  # Moderate cost mid-ring
-        else:
-            hub_penalty = hub_dist * 0.3  # Mild preference for closer junctions
+        network_dist = min(network_dist, float(manhattan(hub_position, candidate.position)))
+    if friendly_junctions:
+        for fj in friendly_junctions:
+            d = float(manhattan(fj.position, candidate.position))
+            if d < network_dist:
+                network_dist = d
+    # Mild penalty based on network distance — encourage staying near network
+    # but don't prevent expansion through chained junctions
+    network_penalty = network_dist * 0.5
     return (
         distance
-        - min(expansion * 8.0, 48.0)
+        - min(expansion * 10.0, 60.0)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
-        + hub_penalty,
+        + network_penalty,
         -float(expansion),
     )
 
