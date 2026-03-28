@@ -113,3 +113,17 @@ KEY INSIGHT: Heavy scrambling (3 scramblers) is extremely effective in tournamen
 - v65 at 3.24 with 321 matches — may have inflated score from weaker opponents
 
 ## Uploaded v158: clean v65 replica (no network/hotspot, retreat_margin=15, expansion 10/60)
+
+## CRITICAL: Tournament uses variable team sizes (2+6, 6+2, 4+4)!
+- Base policy assumes 8 agents, budget allocation breaks with fewer agents
+- 4 agents: base allocates 5 pressure, 0 miners → economy dead → score 0.55
+- Team-aware policy: base=0.55 → team_aware=2.71 at 4 agents (+393%!)
+- Estimated participation-weighted avg: team-aware 3.64 vs base 2.95 (+23%)
+
+## Team-size test results (seed 1):
+  2 agents: team-aware=0.28, base=0.32
+  4 agents: team-aware=2.71, base=0.55  ← biggest win
+  6 agents: team-aware=1.65, base=2.49
+  8 agents: team-aware=6.07, base=4.86
+
+## Uploaded v160: AlphaTeamAwarePolicy (v65 targeting + team-aware budgets)

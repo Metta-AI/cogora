@@ -215,15 +215,61 @@ class AlphaV65ScrambleHeavyAgentPolicy(AlphaV65ReplicaAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
-class AlphaEconFirstAgentPolicy(AlphaV65ReplicaAgentPolicy):
-    """Economy-first: everyone mines until step 200, then normal budgets."""
+class AlphaTeamAwareAgentPolicy(AlphaV65ReplicaAgentPolicy):
+    """V65 targeting + team-size-aware budgets for tournament variable team sizes."""
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index
-        if step < 200:
-            return 0, 0  # All agents mine
-        # After step 200, use base aggressive budgets
-        return super()._pressure_budgets(state, objective=objective)
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2 agents: 1 aligner + 1 miner, no scrambler
+        if num_agents <= 2:
+            if step < 30 or (min_res < 1 and not can_hearts):
+                return 0, 0  # Both mine until economy is established
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return 1, 0
+
+        # 3-4 agents: 2 aligners + rest miners, scrambler at step 200+
+        if num_agents <= 4:
+            if step < 30:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: base aggressive budgets
+        if step < 30:
+            pressure_budget = 2
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(2, num_agents // 4)
+            elif min_res < 3:
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)
+
+        scrambler_budget = 0
+        if step >= 3000:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 100:
+            scrambler_budget = min(1, pressure_budget // 3)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
 
 
 class AlphaNoScrambleAgentPolicy(SemanticCogAgentPolicy):
@@ -552,13 +598,13 @@ class AlphaV65ScrambleHeavyPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
-class AlphaEconFirstPolicy(MettagridSemanticPolicy):
-    """Economy-first: all mine until step 200, then aggressive alignment."""
-    short_names = ["alpha-econ-first"]
+class AlphaTeamAwarePolicy(MettagridSemanticPolicy):
+    """V65 targeting + team-size-aware budgets for 2/4/6/8 agents."""
+    short_names = ["alpha-team-aware"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
-            self._agent_policies[agent_id] = AlphaEconFirstAgentPolicy(
+            self._agent_policies[agent_id] = AlphaTeamAwareAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
