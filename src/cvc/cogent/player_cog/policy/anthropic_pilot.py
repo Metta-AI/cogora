@@ -2364,6 +2364,76 @@ class AlphaHybridPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaNoScrambleCogAgentPolicy(AlphaCogAgentPolicy):
+    """AlphaCog but zero scramblers — all pressure budget goes to alignment.
+
+    Hypothesis: in tournament, hearts spent on scrambling could be better
+    used for alignment. More aligners = more territory = higher score.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7:
+                return 1, 0
+            aligner_budget = min(num_agents - 1, 3)  # Max aligners, keep 1 miner
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, 0  # No scramblers ever
+
+        # 5+ agents
+        if step < 30:
+            return 2, 0
+        elif step < 100:
+            return 3, 0
+        else:
+            aligner_budget = min(num_agents - 2, 6)
+            if min_res < 3 and not can_hearts:
+                aligner_budget = max(2, num_agents // 3)
+            elif min_res < 7:
+                aligner_budget = min(4, num_agents - 2)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, 0  # No scramblers ever
+
+
+class AlphaNoScramblePolicy(MettagridSemanticPolicy):
+    """AlphaCog with zero scramblers."""
+    short_names = ["alpha-noscramble"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaNoScrambleCogAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaSoftHubAgentPolicy(AlphaCogAgentPolicy):
     """AlphaCog + mild hub proximity preference (network_weight=0.5).
 

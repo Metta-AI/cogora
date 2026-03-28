@@ -6,3 +6,4 @@ status: in-progress
 2026-03-28 20:40:42 - Added shared WorldModel across agents (previously each had separate). Miners can now find extractors discovered by any teammate. Also running scrimmage comparison.
 2026-03-28 20:43:39 - REVERTED shared WorldModel — caused pathfinding deadlock (occupied_cells too large). v275/v276 are broken. v277 = miner fix only (reverted shared model). The miner fix alone is the key improvement.
 2026-03-28 20:44:33 - v272 (AlphaCyborg + miner fix) is #1 on leaderboard at 3.80 (3 matches)! Beat v65's 3.59. Only 3 matches so may change, but miner resource fix is validated in tournament.
+2026-03-28 20:47:31 - v272 settled at 2.50 (7 matches) — early 3.80 was lucky. Created AlphaNoScramblePolicy (v278). v279 = fresh AlphaCyborg. Tournament heuristic ceiling remains ~2.5.
