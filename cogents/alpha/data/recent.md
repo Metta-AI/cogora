@@ -1,6 +1,8 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-28-080803**: Best local: 10.63 (ZoneBoost). StableBoost avg 4.20. Re-alignment boost +14%, budget stability +16%. Uploaded v171/v174/v176. [sessions/2026-03-28-080803/](sessions/2026-03-28-080803/)
+- **2026-03-28-070654**: (Interrupted) RealignBoost testing, hotspot_weight bug fix. [sessions/2026-03-28-070654/](sessions/2026-03-28-070654/)
 - **2026-03-28-051302**: Discovered variable team sizes (2+6,6+2,4+4). Team-aware budgets 4x better at 4 agents. v155 best at 2.19. Uploaded v145-v161. [sessions/2026-03-28-051302/](sessions/2026-03-28-051302/)
 - **2026-03-28-040422**: CRITICAL: local self-play ≠ tournament. v65 (base policy) still #1 at 3.24. All "improvements" (stable budgets, hotspot, network targeting) net negative in tournament. Uploaded v134-v143. [sessions/2026-03-28-040422/](sessions/2026-03-28-040422/)
 - **2026-03-28-030459**: Network-distance targeting → #1 on leaderboard (v132, 3.51). Local 20-seed avg 4.98. Best single: 14.85. Many failed experiments (heart batch, stable budgets). [sessions/2026-03-28-030459/](sessions/2026-03-28-030459/)
@@ -9,10 +11,3 @@
 - **2026-03-27-231221**: v115-v126 sweep, best avg 4.67 (v120), best single 9.02 (10k). Key: hysteresis budgets, scramble targeting fix, discovered 10k tournament steps. Uploaded v106/v109/v114/v119. [sessions/2026-03-27-231221/](sessions/2026-03-27-231221/)
 - **2026-03-27-220812**: v104-v115, best avg 2.93 (v112), best single 3.46, scrambler+hub proximity+gear churn fixes, uploaded v89-v95. [sessions/2026-03-27-220812/](sessions/2026-03-27-220812/)
 - **2026-03-27-211330**: Interrupted. v98-v103, hub camp fix, economy bottleneck analysis. [sessions/2026-03-27-211330/](sessions/2026-03-27-211330/)
-- **2026-03-27-190717**: Economy protection + v93 pressure budgets, avg 4.47/10 seeds, best 21.35, uploaded v79/v81/v87/v88/v94. [sessions/2026-03-27-190717/](sessions/2026-03-27-190717/)
-- **2026-03-27-180323**: Interrupted. v75-v78 patrol optimization, staleness 35 breakthrough, avg 5.70. [sessions/2026-03-27-180323/](sessions/2026-03-27-180323/)
-- **2026-03-27-171030**: Interrupted. v68-v78, removed aligner emergency mining, patrol 35, 2 scramblers. [sessions/2026-03-27-171030/](sessions/2026-03-27-171030/)
-- **2026-03-27-161020**: Interrupted. Ship mechanics analysis, 10k testing, v57-v65, patrol 60%+ bottleneck, best seed 5.73. [sessions/2026-03-27-161020/](sessions/2026-03-27-161020/)
-- **2026-03-27-151427**: Interrupted. v51-v56, best single 6.00, avg ~2.63, emergency mining wastes 50% aligner time. [sessions/2026-03-27-151427/](sessions/2026-03-27-151427/)
-- **2026-03-27-141327**: Interrupted. Fixed num_agents bug, staggered start, v51 best at ~2.06 avg. [sessions/2026-03-27-141327/](sessions/2026-03-27-141327/)
-- **2026-03-27-130646**: Interrupted. Hub proximity bias + fast scramble detection, avg score ~2.3, uploaded v39-v43. [sessions/2026-03-27-130646/](sessions/2026-03-27-130646/)
