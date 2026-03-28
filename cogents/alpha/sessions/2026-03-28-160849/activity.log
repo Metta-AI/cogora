@@ -160,3 +160,8 @@ Need fundamentally different approach to reach >10.
   Started STATELESS (feedforward) training on machina_1 4-agent.
   Stateless should be much faster at inference, suitable for tournament.
   LSTM v256/v257 failed qualifying (inference timeout).
+- [19:04] **v259 appeared at 3.42 (#2, 6m)!** — Very close to v65's 3.59!
+  Uploaded by another worker. If it holds, it's our best recent version by far.
+- [19:04] Stateless RL training at 4.6M steps. Many checkpoints saved.
+  Hearts: 1.25/agent, hub withdrawals: 5.0. Entropy 1.61.
+  Uploaded stateless RL as v263 — should pass qualifying (fast inference).
