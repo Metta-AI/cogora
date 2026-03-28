@@ -24,3 +24,7 @@ status: in-progress
 - [14:40] Settled scores (24+ matches): v216 vanilla=2.35 (#67), v211=2.17, v215=2.11
   All customized versions score worse. More overrides = worse performance.
 - [14:40] v65 gap: 3.59 vs v216 2.35 = 53% gap. Due to base class code or dependency changes.
+- [14:45] v216 (vanilla) settled at 2.15 (30 matches). Not as far ahead as initially seemed.
+  v217 (hybrid) at 2.21 (2 matches — early).
+- [14:45] All new versions converge to 2.0-2.3 regardless of customization level.
+  v65's 3.59 advantage is in the frozen code/dependencies, not in strategy choices.
