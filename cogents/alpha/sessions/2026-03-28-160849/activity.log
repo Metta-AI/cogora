@@ -38,3 +38,11 @@ Need fundamentally different approach to reach >10.
   Can afford aligner gear immediately.
 - [16:39] Testing AlphaSmallTeam v2 (with team_summary fix) at 1-4 agents.
 - [16:39] RL training on 4-agent machina_1 in background.
+- [16:45] SmallTeam v2 results (5 seeds, 5k steps):
+  4-agent: 0.00, 1.26, 1.08, 0.00, 5.14 → avg 1.50
+  8-agent: 6.61, 3.62, 0.98, 5.46, 6.86 → avg 4.71
+  8-agent is 22% better than AlphaCyborg's 3.87 avg!
+  4-agent still has wipe issues (seeds 1,4).
+- [16:45] Mining optimization needed: sticky targets prevent resource rebalancing.
+  Aligner falls back to mining wrong resource when hearts unavailable.
+- [16:45] Running AlphaCyborg comparison at same seeds for fair comparison.
