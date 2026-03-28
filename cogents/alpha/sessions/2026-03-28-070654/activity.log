@@ -23,3 +23,12 @@ status: interrupted
 - Also fixed MaxAlign with same issue
 - Early rush experiment: reverted — made things worse (seed 5: 8.51→1.24)
 - Running 20-seed comparison tests: baseline vs fixed RealignBoost
+
+## Test Results Summary (in-progress)
+Baseline (20 seeds): avg 3.38 (range 0.00-8.28)
+Fixed RealignBoost (5 seeds): avg 4.28 (range 1.23-6.97) — BEST SO FAR
+Old RealignBoost (bug: hotspot_weight=0): avg ~3.28 (no effect, as expected)
+V65 True Replica (4 seeds): avg 2.48
+V65 Realign (3 seeds): avg 2.99
+Tournament: all running/scheduled, no results yet
+Uploads: v166=old RealignBoost, v167=MaxAlign, v169=fixed RealignBoost, v170=V65Realign
