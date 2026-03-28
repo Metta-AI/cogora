@@ -1,5 +1,5 @@
 # Session 2026-03-28-160849 Activity Log
-status: in-progress
+status: completed
 started: 2026-03-28T16:08:49Z
 
 ## Context
@@ -183,3 +183,4 @@ Need fundamentally different approach to reach >10.
   * All heuristic versions converge to 2.18-2.52 in tournament
   * Target of >10 requires fundamentally different approach (trained RL agent)
   * Best path: curriculum training on GPU with shaped rewards
+- [19:20] Session wrapping up. Written learnings.md, summary.md, updated todos.md, recent.md.

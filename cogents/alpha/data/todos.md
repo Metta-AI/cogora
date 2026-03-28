@@ -1,21 +1,21 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (structural ceiling ~2.75 in tournament)
-- [ ] **Investigate why v17-v38 (2.75+) outperform new versions (2.1-2.4)** — same game,
-  different opponent pool/era. Need 50-100+ matches for fair comparison.
-- [ ] **Wait for v241-v249 to converge** — v241 at 2.35 (23m), could still rise to 2.5+.
-- [ ] **Improve V65TrueReplica incrementally**: add idle-mine (NOT idle-explore!),
-  re-alignment boost, resource bias. Test each feature separately with old deps.
-- [ ] **Improve 2-agent performance** — currently wipes (0.00). Tournament uses 6v2/2v6.
-  Better 2-agent strategy could raise overall average by 0.1-0.2.
-- [ ] **Consider trained RL agent** — heuristic ceiling ~2.75, target >10. Gap of ~4x.
-- [ ] Fix wipe bug (~7% seeds) — HP drops to 0 near hub, not fixable in policy
-- [x] CONFIRMED: idle-mine >> idle-explore for AlphaCyborg (avg 8.05 vs 3.54 at 10k)
-- [x] TESTED: Old deps (cogames 0.19) — marginal +0.2-0.3 tournament advantage
-- [x] TESTED: Radical strategies (FlashRush, EconDominance, ScrambleDominance) — ALL failed
-- [x] CONFIRMED: Game is reproducible (seed-dependent, ±3 variance)
-- [x] CONFIRMED: Tournament ceiling ~2.75-2.81 for well-converged policies (v17/v38)
-- [x] CONFIRMED: v65 gap from different era/opponent pool, NOT code quality
-- [x] CONFIRMED: all heuristic versions converge to 2.0-2.4 with 20+ matches
-- [x] LLM-enhanced (v225) at 2.26 — marginal +0.1 above heuristic ceiling
-- [x] Survival code (hub_camp_heal) HELPS tournament — don't bypass
+- [ ] Achieve score > 10 in CogsVsClips (heuristic ceiling ~2.8, need trained RL)
+- [ ] **GPU-accelerated RL training** — CPU at 10K SPS too slow. LSTM learns but
+  can't deploy (inference too slow). Need GPU for faster training AND faster inference.
+- [ ] **Curriculum training** — Start on tutorial.aligner/miner, transfer to arena,
+  then machina_1. Full game has sparse rewards that prevent learning from scratch.
+- [ ] **Shaped rewards** — Add intermediate rewards for resource collection, heart
+  acquisition, gear equipping, junction proximity. Current reward is too sparse.
+- [ ] **Imitation learning** — Use heuristic policy as teacher, train RL to mimic,
+  then fine-tune with RL. Bootstraps learning from heuristic's existing strategy.
+- [ ] **Monitor v259 tournament convergence** — Currently at 2.52 (#38, 25m).
+  May settle to 2.2-2.5 like other versions.
+- [ ] **SmallTeamPolicy validation** — v253 at 2.20 in tournament despite 33% local gain.
+  Need 100+ matches to see if it converges higher than vanilla (2.14-2.18).
+- [x] Discovered tournament uses 75% 4-agent games (1v3, 2v2, 3v1 splits)
+- [x] Created AlphaSmallTeamPolicy — VOR 1.23, 33% better locally
+- [x] LSTM RL learns economy but too slow for tournament inference
+- [x] Stateless RL can't learn (stuck at max entropy)
+- [x] All heuristic versions converge to 2.18-2.52 in tournament
+- [x] Hub starts with 5 hearts regardless of team size — free early alignment
