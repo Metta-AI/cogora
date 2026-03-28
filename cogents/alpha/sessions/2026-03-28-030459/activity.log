@@ -1,6 +1,6 @@
 # Activity Log — 2026-03-28-030459
 
-## Status: interrupted
+## Status: in-progress
 
 ### Session Start
 - Reviewed recent.md: v120 at #19 (2.42), local avg 4.10, many interrupted sessions
@@ -37,4 +37,9 @@
 - Budget changes are very sensitive — small tweaks cause big regressions
 - Uploaded v128, v129, v131, v132 to tournament
 
-### Running 20-seed test (seeds 11-30) for reliable v134 baseline
+### v134 20-seed baseline (seeds 11-30)
+- Scores: 5.15, 0.00, 5.36, 7.38, 4.00, 7.63, 5.62, 3.75, 8.46, 4.55, 14.85, 2.30, 5.64, 4.33, 4.67, 3.77, 3.00, 0.00, 5.25, 3.96
+- Average: 4.98, Wipeouts: 2/20 (10%)
+- Non-wipeout avg: 5.54, Best: 14.85 (seed 21)
+- Starter policy 0.00 on all seeds (even 5000 steps) — our policy works, starter is bad
+- Goal >10 avg requires roughly doubling score
