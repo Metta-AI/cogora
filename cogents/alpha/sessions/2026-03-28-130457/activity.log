@@ -2,24 +2,20 @@
 status: interrupted
 
 ## Plan
-1. Check latest tournament results (v196-v200+)
-2. Understand why local improvements don't translate to tournament wins
-3. Focus on what makes v65 work in tournament that newer versions break
-4. Run targeted experiments and upload improvements
-5. Goal: beat v65's 3.59 tournament score, push toward >10
+1. Understand v65 gap and improve tournament performance
+2. Economy-first budgets for 4-agent teams
+3. Upload and test multiple variants
+4. Goal: beat v65's 3.59 tournament score, push toward >10
 
 ## Activity
-- [13:05] Session started. Previous session (121219) was interrupted — recovered.
-- [13:05] Context: idle-aligner-mine +89% local, but tournament scores still lag. v65 (3.59) still #1.
-- [13:10] Local baseline (AlphaCyborgPolicy, 5k): avg=5.14
-- [13:16] Tournament uploads previously used AnthropicCyborgPolicy which LACKS idle-mine.
-- [13:17] Uploaded v201-v207 (various variants for A/B testing)
-- [13:32] 10k local self-play avg=7.09 (range 3.48-11.88). Two seeds above 10.
-- [13:40] Tournament: v201-v204 all settle at 1.8-2.1 range. v65 (3.59) still #1.
-- [13:40] Team-relative roles NOT the issue. Gap likely in base class changes since v65.
-- [13:50] PICKUP TEST (PvP vs starter, 4v4): We LOST badly — 0 friendly junctions!
-  ROOT CAUSE: 4-agent budget (2a+1s+1m) too aggressive, 1 miner can't sustain economy.
-- [13:55] FIX: Economy-first budgets — 1 aligner for first 100 steps, ramp up when min_res>=7.
-  Scramblers delayed to step 500+ with min_res >= 14.
-- [13:56] Running pickup test with economy-first budgets + self-play regression check
-- Session interrupted before results.
+- [13:05] Session started. Context: v65 at 3.59 (#1), all improvements score worse.
+- [13:10] Local self-play avg=5.14 (5k), 7.09 (10k). Two seeds above 10.
+- [13:17] Uploaded v201-v207 (various strategy variants for A/B testing)
+- [13:40] Tournament: v201-v206 settle at 1.9-2.3. v65 gap not explained by:
+  roles, idle-mine, targeting, retreat margin, or station fix
+- [13:50] PICKUP TEST: 4-agent economy collapse vs starter. 0 friendly junctions!
+- [13:55] FIX: Economy-first budgets (delayed aggression, min_res thresholds)
+- [14:00] Pickup with fix: Episode 1 = 20 friendly (WIN). Episodes 2-3 still lost (germanium).
+- [14:05] Tournament update: v207 (buggy station) 1.89, v206 (global roles) 2.25
+- [14:06] Uploaded v211-v216 (economy-first variants + vanilla base control)
+- Session interrupted.
