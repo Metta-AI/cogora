@@ -76,3 +76,12 @@ status: in-progress
 - StableBoost 10k seed 5: 0.00 (wipe — different outcome than 5k!)
 - Uploaded StableBoost as v174, waiting for tournament results
 - Tournament matches all running, no results yet
+
+## Deeper analysis
+- Score driven by junction layout near hub (early alignment → higher cumulative score)
+- Seed 5 (9.23): 182 aligned, 107 lost vs Seed 2 (1.60): 128 aligned, 81 lost
+- 2-agent: 0.24, 4-agent: 0.58 — hub starts with only num_agents*3 resources
+- AggroBoost (earlier scramblers at step 50/200): avg 3.47 — REJECTED (worse than StableBoost)
+- Wipe fix: too complex, ~7% rate, marginal impact
+- Created AggroBoostPolicy but it's inferior to StableBoost
+- Tournament: v171 + v174 running, all against v30-v46 opponents, no results yet
