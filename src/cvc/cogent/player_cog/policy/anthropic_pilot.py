@@ -47,6 +47,76 @@ class AlphaBiasOnlyAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
 
+class AlphaDoubleScrambleAgentPolicy(SemanticCogAgentPolicy):
+    """Base policy + 2 scramblers from step 100 for more opponent disruption."""
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if step < 30:
+            pressure_budget = 2
+        elif step < 3000:
+            pressure_budget = 6  # 4 aligners + 2 scramblers, 2 miners
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 2
+            elif min_res < 3:
+                pressure_budget = 4
+        else:
+            pressure_budget = 6
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 3
+
+        scrambler_budget = 0
+        if step >= 100:
+            scrambler_budget = 2
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaSuperAggroAgentPolicy(SemanticCogAgentPolicy):
+    """Maximum aggression: 6 pressure from step 30, resource bias."""
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if step < 20:
+            pressure_budget = 3
+        else:
+            pressure_budget = 6  # 4a + 2s = 2 miners
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 3
+
+        scrambler_budget = 0
+        if step >= 50:
+            scrambler_budget = 2
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
 class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     """Optimized agent policy: aggressive alignment with scrambler defense."""
 
@@ -233,6 +303,40 @@ class AlphaBiasOnlyPolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaBiasOnlyAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaDoubleScramblePolicy(MettagridSemanticPolicy):
+    """Base + resource bias + 2 scramblers from step 100."""
+    short_names = ["alpha-double-scramble"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaDoubleScrambleAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaSuperAggroPolicy(MettagridSemanticPolicy):
+    """Maximum aggression: 6 pressure from step 30."""
+    short_names = ["alpha-super-aggro"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaSuperAggroAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),

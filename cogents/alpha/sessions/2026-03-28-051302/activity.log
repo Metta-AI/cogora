@@ -12,3 +12,14 @@ status: in-progress
 - Created AlphaBiasOnlyPolicy: base budgets + resource_bias (mine least resource)
 - Running 5-seed comparison: base vs bias-only
 - Single seed results: base 2.92 vs alpha 2.37 (base wins locally too!)
+
+## 5-seed local comparison (5000 steps each)
+Base (SemanticPolicy): avg 4.96 (seeds: 4.86, 1.39, 2.49, 6.83, 9.26)
+Bias-only (base+resource_bias): avg 4.87 (seeds: 6.02, 3.47, 2.50, 5.07, 7.30)
+- Bias helps on bad seeds (+2.08 on seed 2), hurts on good seeds (-1.96 on seed 5)
+- Mixed results locally — need tournament signal
+
+## Uploaded 3 new variants
+- v145: AlphaBiasOnlyPolicy (base + resource_bias)
+- v146: AlphaDoubleScramblePolicy (base + resource_bias + 2 scramblers from step 100)
+- v147: AlphaSuperAggroPolicy (6 pressure from step 20, 2 scramblers from step 50)
