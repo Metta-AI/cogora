@@ -165,3 +165,9 @@ Need fundamentally different approach to reach >10.
 - [19:04] Stateless RL training at 4.6M steps. Many checkpoints saved.
   Hearts: 1.25/agent, hub withdrawals: 5.0. Entropy 1.61.
   Uploaded stateless RL as v263 — should pass qualifying (fast inference).
+- [19:09] v259 settled to 2.51 (#39, 19m). v262 at 2.40 (#62, 7m). Both early.
+  v258-262 uploaded by other workers.
+- [19:09] Stateless RL at 9.5M steps but entropy=1.609 (max!) — hasn't started learning.
+  Hearts: 1.5/agent (from initial supply, not learned).
+  Stateless architecture may need much more training to learn.
+- [19:09] v263 (our stateless RL) not yet on leaderboard.
