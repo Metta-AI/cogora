@@ -2144,6 +2144,25 @@ class AlphaCyborgPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaCyborgGlobalRolesPolicy(MettagridSemanticPolicy):
+    """All AlphaCog improvements + global role assignment (like v65)."""
+    short_names = ["alpha-cyborg-global"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        # Do NOT pass shared_team_ids — use global role priorities like v65
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaCogAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                # No shared_team_ids → global role priorities like v65
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaV65OriginalPolicy(MettagridSemanticPolicy):
     """True v65 replica WITHOUT team-relative role assignment.
 
@@ -2298,5 +2317,29 @@ class AlphaTournamentPolicy(MettagridSemanticPolicy):
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
                 shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaV65IdleMinePolicy(MettagridSemanticPolicy):
+    """V65 targeting + global roles (like v65) + idle-mine improvement.
+
+    Combines the proven v65 tournament formula (global role assignment,
+    hub_penalty targeting) with the biggest local improvement (idle-mine).
+    Does NOT use shared_team_ids to match v65's behavior.
+    """
+    short_names = ["alpha-v65-idle-mine"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        # Do NOT pass shared_team_ids — match v65's global role assignment
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                # No shared_team_ids → global role priorities like v65
             )
         return self._agent_policies[agent_id]
