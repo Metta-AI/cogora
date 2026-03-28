@@ -195,10 +195,8 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
 
         aligner_budget = min(4, num_agents - 2)
         scrambler_budget = 1 if step >= 200 else 0
-
         if min_res < 1 and not _h.team_can_refill_hearts(state):
             aligner_budget = max(aligner_budget - 1, 1)
-
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
         return aligner_budget, scrambler_budget
