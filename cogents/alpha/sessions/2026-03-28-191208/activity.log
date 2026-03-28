@@ -85,3 +85,16 @@ Running comprehensive 5-seed comparison of Baseline vs AlignMax vs V65
 - Scramblers convert clips→neutral but don't score directly
 - Hypothesis: replacing scramblers with aligners gives more direct score
 - Uploaded NoScramble variant to test this
+
+## Leaderboard Update
+- v287 at #1 with 5.47 (1 match — not reliable, likely lucky 6v2)
+- v284 (FlashRush): 1.69 (2 matches)
+- v285 (V65Replica): 1.56 (1 match)
+- v286 (SoftHub): 0.97 (1 match)
+- Need 50+ matches for reliable convergence
+
+## Score Formula Analysis
+- Score per cog ≈ 0.0001 × sum_over_ticks(|cogs_network| - 1)
+- For score >10: need avg ~15-20 aligned junctions over 10k steps
+- Currently achieving 5-15 junctions average depending on seed
+- Fundamental limit: need to dominate map against clips
