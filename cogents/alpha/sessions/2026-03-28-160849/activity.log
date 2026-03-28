@@ -87,3 +87,11 @@ Need fundamentally different approach to reach >10.
   Tournament results may just be early variance (only 25 matches).
 - [17:30] RL training at ~6.5M steps, learning to get hearts (0.875/episode).
   Aligning 1-1.5 junctions/episode. Still very early but progressing.
+- [17:38] Pickup VOR: SmallTeam vs AlphaCyborg = 1.03 (SmallTeam beats AlphaCyborg)
+  4 agents: SmallTeam 2.34 vs AlphaCyborg-only 0.69, VOR +1.65
+  2 agents: VOR -0.12 (slightly worse)
+  Overall: SmallTeam dominates at full team, weaker at 2 agents.
+- [17:38] RL training at 10.7M steps, entropy 0.97. Still learning basics
+  (1-2 junction alignments/episode). Needs much more training.
+- [17:38] Tournament v250-252 all converging to 2.14-2.21 (40+ matches).
+  Heuristic ceiling confirmed at ~2.2 with current opponent pool.
