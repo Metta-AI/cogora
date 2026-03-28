@@ -36,3 +36,18 @@ status: in-progress
 - [14:58] Uploaded v224 (AlphaCyborg), v225 (AnthropicCyborg LLM-enhanced)
 - [15:00] No tournament matches completed yet — all still running.
   v218/v219 in competition, v224/v225 qualifying.
+- [15:05] LEADERBOARD CHECK:
+  - v65: 3.59 (#1) — untouchable, 516 matches
+  - v60-v64: 2.89-3.02 (#2-5) — old versions with minimal customization
+  - slanky:v112: 2.66 (#19), Paz-Bot:v1: 2.63 (#23)
+  - v216 (vanilla): 2.14 (#135) — WORSE than expected
+  - v217 (hybrid): 2.01 (#156) — our customization HURTS
+  - v222 (fixed hybrid global): 1.68 (#172) — survival bypass HURTS MORE
+  - v218 (hybrid global): 1.66 (#173) — worst of our new versions
+  CONCLUSION: survival code bypass HURT tournament performance!
+  The hub_camp_heal actually HELPS in tournament by keeping agents alive.
+  Our "improvements" keep making things worse.
+- [15:05] The real gap is v65 (3.59) vs v60-v64 (2.89-3.02) vs current (2.0-2.2)
+  The base class rewrite degraded EVERYTHING by ~0.7 points. Code/deps issue.
+- [15:10] Key open question: can v226/v227 (improved 2-agent + AlphaCyborg budgets)
+  close the gap? Or is the base class itself the problem?
