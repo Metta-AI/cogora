@@ -47,3 +47,6 @@ status: in-progress
 - [14:30] Conclusion: the path forward is LESS customization, not more.
   v65 was likely uploaded with minimal changes from base. Our improvements
   (idle-mine, hotspot flip, expand-toward, budget tweaks) all HURT in PvP.
+- [14:35] v216 (vanilla) dropped to 2.45 (16 matches) — still settling but still best new version
+- [14:36] Uploaded v219: AnthropicCyborgPolicy (matches v65's policy class) with current code
+  This is the closest match to v65's upload method — same class, same LLM integration
