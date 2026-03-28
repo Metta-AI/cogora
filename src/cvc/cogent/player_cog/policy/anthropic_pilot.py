@@ -52,23 +52,23 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Economy-responsive with hysteresis to prevent gear churn — v120."""
+        """Economy-responsive with hysteresis — v123. Adapts to team size."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
+        # Ensure at least 1 miner: max pressure = team_size - 1
+        num_agents = self.policy_env_info.num_agents
+        max_pressure = max(num_agents - 1, 1)
 
         # Phase 1: Economy bootstrap
         if step < 10:
-            return 2, 0
+            return min(2, max_pressure), 0
 
         # Phase 2: Early ramp
         if step < 50:
             aligner_budget = 4 if min_res >= 3 else 3
-            return aligner_budget, 0
+            return min(aligner_budget, max_pressure), 0
 
         # Phase 3: Steady state with hysteresis
-        # Scale UP to 5 only when economy is strong (min_res >= 5)
-        # Scale DOWN to 4 only when economy is dire (min_res < 1)
-        # This wide hysteresis band [1, 5] prevents oscillation
         desired = self._current_aligner_budget
         if min_res >= 5:
             desired = 5
@@ -77,7 +77,6 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         elif min_res < 1:
             desired = 4
 
-        # Only change if enough time has passed (200 step cooldown)
         if desired != self._current_aligner_budget:
             if step - self._last_budget_change_step >= 200 or desired < self._current_aligner_budget:
                 self._current_aligner_budget = desired
@@ -86,10 +85,14 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         aligner_budget = self._current_aligner_budget
         scrambler_budget = 0
 
-        # Add scrambler at step 300 (takes 1 slot from aligners)
+        # Add scrambler at step 300
         if step >= 300:
             scrambler_budget = 1
-            aligner_budget = min(aligner_budget, 4)  # Cap at 4 when scrambler active
+
+        # Cap total pressure to leave at least 1 miner
+        total = aligner_budget + scrambler_budget
+        if total > max_pressure:
+            aligner_budget = max(max_pressure - scrambler_budget, 0)
 
         if objective == "resource_coverage":
             return 0, 0
