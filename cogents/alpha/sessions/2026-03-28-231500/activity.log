@@ -5,3 +5,12 @@
 - [2026-03-28 23:13] Session started. Previous session interrupted during multi-seed testing.
   Context: AlphaAggressive best policy. v303/v304/v305 uploaded, awaiting tournament results.
   Focus: Check tournament results, iterate on strategy, push for score > 10.
+- [2026-03-28 23:22] Continuing from previous session work:
+  - AlphaSustainPolicy: FAILED (conservation approach counterproductive)
+  - AlphaExplorerPolicy: FAILED (wider exploration delays early game)
+  - Bridge scoring: FAILED (agents walk too far)
+  - Tighter retreat margins: IMPROVED (retreat:26→17, align:19→36)
+  - Lower surplus threshold (100→50): FAILED (collapses economy)
+  - 4a 3-aligner (min_res>=50 step>=500): Added
+  Current performance: 8a avg 5.87, 4a avg 4.29, estimated tournament ~4.69
+  v303/v304/v305 uploaded, all matches still running.
