@@ -33,3 +33,15 @@ RL training was started but interrupted. Need to continue RL approach.
 - [17:40] Killed clips RL training, kept base RL (10.8M steps, ~1h remaining).
 - [17:40] v254 (SmallTeam) uploaded, waiting for match results.
 - [17:40] RL training at 10.8M+ steps, SPS recovered to 10.8K after killing second trainer.
+- [17:50] 4-agent 10k comparison (5 seeds, clips mode):
+  AlphaCyborg avg: 3.24 (3.96, 0.90, 0.96, 1.84, 8.54)
+  SmallTeam avg: 0.88 (0.00, 0.62, 0.54, 1.75, 1.50)
+  AlphaCyborg decisively better — SmallTeam's aggressive alignment hurts economy.
+- [17:50] AlphaAggressivePolicy tested — avg 3.09 at 8-agent, worse than AlphaCyborg (4.89).
+  Tighter retreat margin causes more wipes. Reverting to AlphaCyborg as best heuristic.
+- [17:55] RL training at 17.7M steps (epoch 270), ~54 min remaining. Agents learning hearts.
+  No checkpoints found yet — may save at end or at intervals.
+- [17:55] Tournament matches all still running/scheduled. Multiple opponents: slanky:v112, 
+  gtlm-reactive, coglet-v0:v7. Leaderboard requires auth.
+- [17:55] Key insight: heuristic ceiling confirmed at ~3-5 for clips self-play.
+  Best seed (5) hit 8.54 — map-dependent. RL is still the path to >10.
