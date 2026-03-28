@@ -65,3 +65,23 @@ Running comprehensive 5-seed comparison of Baseline vs AlignMax vs V65
 - v286: SoftHub (mild hub preference)
 - v291: AlphaOptimal (v65 targeting + AlphaCog improvements)
 - v292: V65Exact (exact v65 constants/budgets)
+
+## More Uploads (v291-v298)
+- v291: AlphaOptimal (v65 targeting + idle-mine + team budgets)
+- v292: V65Exact (exact v65 constants/priorities)
+- v293: AlphaTournament (v65 targeting + idle-explore + team budgets)
+- v296: NoScramble (zero scramblers, all aligners)
+- v297: AlphaHybrid (v65 targeting + AlphaCog economy)
+- v298: V65Original (global roles, not team-relative)
+
+## Early Tournament Results (low match count)
+- v280 (AlphaCyborg): 1.93 (18 matches) — needs more matches
+- v281 (AlignMax): 2.36 (36 matches) — decent
+- v283 (Blitz): 2.26 (36 matches)
+- v282 (DefenseWall): 2.03 (38 matches) — worst as expected
+
+## Key Analysis: Scrambler Heart Cost
+- In 5k game: scrambler agent 3 used 87 hearts (most of any agent)
+- Scramblers convert clips→neutral but don't score directly
+- Hypothesis: replacing scramblers with aligners gives more direct score
+- Uploaded NoScramble variant to test this
