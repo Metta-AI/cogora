@@ -30,3 +30,11 @@ Need fundamentally different approach to reach >10.
 - [16:31] Action: train RL on 4-agent machina_1. Also optimize heuristic for small teams.
 - [16:31] RL training on machina_1 (8-agent) got 0 reward after 31 epochs — sparse reward.
   Killed that run. Started 4-agent training instead.
+- [16:38] Root cause of 1-agent failure: state.team_summary=None early → can_hearts=False
+  → budget=(0,0) → always miner. Fixed: assume starting resources when team_summary=None.
+- [16:38] Created AlphaSmallTeamPolicy with aggressive early alignment for small teams.
+  Key: solo agent always tries to align (hub has 5 free hearts), 2-agent always has 1 aligner.
+- [16:38] Aligner gear costs: carbon=3,oxygen=1,germanium=1,silicon=1. Hub starts with 3 each.
+  Can afford aligner gear immediately.
+- [16:39] Testing AlphaSmallTeam v2 (with team_summary fix) at 1-4 agents.
+- [16:39] RL training on 4-agent machina_1 in background.

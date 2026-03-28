@@ -3283,3 +3283,80 @@ class AlphaV65PurePolicy(_V65BasePolicy):
     If this matches v65's 3.59, the rewrite itself is the problem.
     """
     short_names = ["alpha-v65-pure"]
+
+
+class AlphaSmallTeamAgentPolicy(AlphaCogAgentPolicy):
+    """Optimized for tournament's 4-agent games with 1-3 agent team sizes.
+
+    Key changes from AlphaCog:
+    - 1-2 agents: Rush alignment immediately (hub has 5 free hearts)
+    - No mining phase for tiny teams — hearts are free, align first
+    - After hearts spent, mine to replenish then align again
+    - Better economy: mine least resource specifically
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Small-team-optimized budgets: align first, mine later.
+
+        KEY INSIGHT: Hub starts with 5 hearts regardless of team size.
+        Small teams should rush alignment with free hearts before mining.
+        state.team_summary may be None early (hub not yet observed), so
+        we assume starting resources are available.
+        """
+        step = state.step or self._step_index
+        num_agents = self.policy_env_info.num_agents
+
+        # Check actual hub state, but assume positive for early steps
+        has_team_summary = state.team_summary is not None
+        min_res = _h.team_min_resource(state) if has_team_summary else (num_agents * 3)
+        can_hearts = _h.team_can_refill_hearts(state) if has_team_summary else True
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 1:
+            # Solo agent: ALWAYS be aligner (mine as idle activity when no hearts)
+            # Hub has 5 free hearts at start — use them immediately
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0  # Always try to align
+
+        if num_agents <= 2:
+            # 2 agents: 1 aligner from step 0 (free hearts!)
+            if objective == "economy_bootstrap" and not can_hearts:
+                return 0, 0
+            return 1, 0  # One aligns, one mines
+
+        if num_agents <= 4:
+            # 3-4 agents: aggressive alignment from start
+            if step < 50:
+                return min(2, num_agents - 1), 0  # Align with free hearts
+            if min_res < 3 and not can_hearts:
+                return 1, 0  # Keep 1 aligner, rest mine
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 500 and num_agents >= 4 and min_res >= 14 else 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: use parent's logic
+        return super()._pressure_budgets(state, objective=objective)
+
+
+class AlphaSmallTeamPolicy(MettagridSemanticPolicy):
+    """Tournament-optimized policy for small team games (1-4 agents)."""
+    short_names = ["alpha-small-team"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaSmallTeamAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
