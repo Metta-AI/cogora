@@ -35,50 +35,9 @@ status: in-progress
 - [13:01] Wipe bug investigation: HP drops to 0 despite hub proximity. Map/engine issue, not fixable in policy.
 - [13:01] 5-game 10k runs killed by system (OOM?) — running 1-2 at a time instead.
 - [13:02] Idle-aligner-mine is the biggest improvement: seed 2 went from 2.01→6.25, seed 3 from 1.98→6.10.
-<<<<<<< Updated upstream
-- [13:00] 10k single seed: seed 6 = 6.39
-- [13:01] Wipe bug investigation: HP drops to 0 despite hub proximity. Map/engine issue, not fixable in policy.
-- [13:01] 5-game 10k runs killed by system (OOM?) — running 1-2 at a time instead.
-- [13:02] Idle-aligner-mine is the biggest improvement: seed 2 went from 2.01→6.25, seed 3 from 1.98→6.10.
-- [13:15] 10k results (v4 = v197): seed 6=6.39, seed 7=2.38, seed 8=13.27, seed 9=4.58, seed 10=0.00(wipe)
-- [13:15] 10k avg (no-wipe): 6.66. Best: 13.27 (seed 8). High variance.
-- [13:15] 10k results (v4 = v197): seed 6=6.39, seed 7=2.38, seed 8=13.27, seed 9=4.58, seed 10=0.00(wipe)
-- [13:15] 10k avg (no-wipe): 6.66. Best: 13.27 (seed 8). High variance.
-- [13:30] More 5k results: seeds 14-18 = [4.31, 4.98, 1.57, 2.02, 2.79]
-- [13:30] Combined 5k avg across 9 seeds: 4.42 (high variance: 1.57-8.52)
-- [13:30] 10k avg (non-wipe, 4 seeds): 6.66. Wipe rate ~25% (seeds 10,11 wiped).
-- [13:31] Germanium bottleneck remains a key issue on low-scoring seeds.
-- [13:30] More 5k results: seeds 14-18 = [4.31, 4.98, 1.57, 2.02, 2.79]
-- [13:30] Combined 5k avg across 9 seeds: 4.42 (high variance: 1.57-8.52)
-- [13:30] 10k avg (non-wipe, 4 seeds): 6.66. Wipe rate ~25% (seeds 10,11 wiped).
-- [13:31] Germanium bottleneck remains a key issue on low-scoring seeds.
-=======
-- [13:10] v197 tournament: 2.30 (4v4), 2.30 (4v4), 6.64 (6a game). All self-play. v198 qualifying.
-- [13:15] Seeds 6-10 at 5k: 0.00, 1.46, 4.09, 6.54, 0.82 → avg 2.58 (3.23 excl wipe).
-=======
-- [12:12] Session started.
-- [12:20] Baseline 5k test: avg=3.70
-- [12:28] BUG: hotspot_weight=8 without count flip.
-- [12:30] Fixes: hotspot flip, idle-mine, late scrambler, lower deposit.
-- [12:50] KEY FIX: idle aligners mine → +89% improvement locally
-- [12:55] v196/v197 uploaded with all fixes.
-- [13:00] 10k results with fixes: avg 5-9 locally, high variance.
-- [13:10] **LEADERBOARD — v65 still #1 at 3.59 (516 matches)**
-  - All "improvements" (v193=2.41, v197=2.21) score WORSE than v65
-  - slanky: 2.57 (#24), Paz-Bot: 2.53 (#28)
-  - Local self-play avg=5-9 but tournament avg=2-3
-- [13:12] Strategy pivot: local gains don't translate to tournament.
-- [13:15] Uploaded v200 (V65TrueReplica) to match v65's proven approach.
-- [13:15] Need to understand: what makes v65 work in tournament that newer versions don't?
-- [13:20] v198 initially #2 at 3.32 (4 matches) but dropped to 1.91 (17 matches). Early scores unreliable.
-- [13:25] v200 (V65TrueReplica) still in qualifying. Waiting for competition results.
-- [13:30] **Analysis: why v65 beats newer versions in tournament:**
-  - v65 uses simple targeting (hub_penalty), conservative expansion (5/30)
-  - Newer versions over-optimize for 8v8 self-play, fail on 2v6 and 4v4 formats
-  - Team-size aware budgets might HURT by reducing aggression on favorable splits (6v2)
-  - expand-toward and idle-mine help locally but may waste resources in PvP
-  - Key hypothesis: v65's simplicity handles variable conditions more robustly
-- [13:35] v199 started at #1 (5.72, 1 match), now #29 (2.53, 4 matches). Settling.
-- [13:40] v200 (V65TrueReplica) still not on leaderboard. Waiting.
->>>>>>> Stashed changes
->>>>>>> Stashed changes
+- [13:10] v197 tournament: 2.30 (4v4), 6.64 (6a). v198 qualifying.
+- [13:15] 10k results: seed 6=6.39, seed 7=2.38, seed 8=13.27, seed 9=4.58, seed 10=0.00(wipe). Avg(no-wipe): 6.66.
+- [13:30] More 5k results: seeds 14-18 = [4.31, 4.98, 1.57, 2.02, 2.79]. Combined avg: 4.42.
+- [13:30] **LEADERBOARD — v65 still #1 at 3.59 (516 matches)**. All "improvements" score WORSE.
+- [13:35] Strategy pivot: local gains don't translate to tournament. v65's simplicity wins.
+- [13:40] Uploaded v200 (V65TrueReplica). Session interrupted before results.
