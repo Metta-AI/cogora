@@ -5106,3 +5106,141 @@ class AlphaSustainPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# Wider explore offsets for full map coverage (88x88 map)
+_WIDE_ALIGNER_EXPLORE_OFFSETS = (
+    (0, -35),
+    (25, -25),
+    (35, 0),
+    (25, 25),
+    (0, 35),
+    (-25, 25),
+    (-35, 0),
+    (-25, -25),
+    (0, -15),
+    (15, 0),
+    (0, 15),
+    (-15, 0),
+)
+
+
+class AlphaExplorerAgentPolicy(AlphaAggressiveAgentPolicy):
+    """Explorer variant: better junction discovery through wider exploration.
+
+    Key changes from AlphaAggressive:
+    1. Wider explore offsets (35 vs 22) to cover full 88x88 map.
+    2. No hub distance limit on expansion (was 40, now unlimited).
+    3. Idle aligners explore before mining — discover junctions is priority.
+    4. Bridge expansion: prefer junctions that extend network toward unexplored areas.
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner with aggressive exploration and no hub-distance limits."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        # Early game: go align immediately (no batching for first 200 steps)
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions — NO hub distance limit
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            # Prefer junctions that bridge to more unreachable junctions
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 15  # Less conservative
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+
+            def bridge_score(j):
+                # How many other unreachable junctions would become reachable
+                # if we aligned this one (within alignment distance 15)?
+                bridged = sum(
+                    1 for other in unreachable
+                    if other is not j and _h.manhattan(j.position, other.position) <= 15
+                )
+                dist = _h.manhattan(current_pos, j.position)
+                return dist - bridged * 8  # Strong bonus for bridging
+            best = min(targets, key=bridge_score)
+            dist = _h.manhattan(current_pos, best.position)
+            if dist < hp - 15:
+                return self._move_to_known(state, best, summary="expand_bridge_junction", vibe="change_vibe_aligner")
+
+        # Idle aligners: scramble if economy healthy
+        min_res = _h.team_min_resource(state)
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        # Explore with wider offsets to discover distant junctions
+        return self._wide_explore_action(state, role="aligner", summary="wide_explore_junctions")
+
+    def _wide_explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
+        """Explore with wider offsets to cover the full map."""
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+        offsets = _WIDE_ALIGNER_EXPLORE_OFFSETS
+        offset_index = (self._explore_index + self._agent_id) % len(offsets)
+        target = offsets[offset_index]
+        absolute_target = (center[0] + target[0], center[1] + target[1])
+        if _h.manhattan(current_pos, absolute_target) <= 2:
+            self._explore_index += 1
+            offset_index = (self._explore_index + self._agent_id) % len(offsets)
+            target = offsets[offset_index]
+            absolute_target = (center[0] + target[0], center[1] + target[1])
+        return self._move_to_position(state, absolute_target, summary=summary, vibe=_h.role_vibe(role))
+
+
+class AlphaExplorerPolicy(MettagridSemanticPolicy):
+    """Explorer: wider exploration, no hub-distance limits, bridge expansion."""
+    short_names = ["alpha-explorer"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaExplorerAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

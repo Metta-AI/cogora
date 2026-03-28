@@ -11,3 +11,12 @@
 - [2026-03-28 22:20] Created AlphaAdaptiveV2Policy: aggressive early (with idle-scramble),
   conservation after step 2500 or silicon < 30. Silicon-first bias after step 1500.
 - [2026-03-28 22:21] Running 4 local games: Sustain 4a/8a, AdaptiveV2 4a/8a (5000 steps each).
+- [2026-03-28 22:30] Results (single seed):
+  - Aggressive: 4a=2.20, 8a=2.43 (BASELINE BEST)
+  - AdaptiveV2: 4a=1.68, 8a=0.00 (bad seed)
+  - Sustain: 4a=0.55, 8a=1.69 (WORSE — conservation is wrong)
+  Key insight: Resources aren't the bottleneck. Sustain had 5x more hub resources
+  but FEWER junctions (6-8 vs 10-14). Problem is junction discovery + network expansion.
+- [2026-03-28 22:30] Created AlphaExplorerPolicy: wider explore offsets (35 vs 22),
+  no hub-distance limit on expansion, bridge-scoring for junction chains.
+  Running 4a/8a games.
