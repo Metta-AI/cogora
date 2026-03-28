@@ -3601,3 +3601,156 @@ class AlphaEconFixGlobalPolicy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaV65PlusFixAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """V65 exact behavior + resource fix + idle-mine.
+
+    Minimal changes to v65 that are known to help:
+    1. Resource-aware miner switching (fix carbon bottleneck)
+    2. Idle-mine for aligners when no frontier (biggest local improvement)
+    3. V65 budgets and targeting (proven in tournament)
+    4. No hotspot/network weights (v65 had 0)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_bias_resource: str | None = None
+        # Match v65: no hotspot/network weights
+        self._hotspot_weight = 0.0
+        self._network_weight = 0.0
+
+    def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
+        """Clear sticky target when resource priority changes significantly."""
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        least_amount = resources[least]
+
+        if (
+            self._sticky_target_kind is not None
+            and self._sticky_target_kind.endswith("_extractor")
+        ):
+            current_resource = self._sticky_target_kind.removesuffix("_extractor")
+            if current_resource != least:
+                if least_amount < 7:
+                    self._clear_sticky_target()
+                elif least_amount > 0:
+                    max_amount = max(resources.values())
+                    if resources[current_resource] > max_amount * 0.8 and least_amount < max_amount * 0.5:
+                        self._clear_sticky_target()
+
+        if self._last_bias_resource is not None and self._last_bias_resource != self._resource_bias:
+            if least_amount < 14:
+                self._clear_sticky_target()
+        self._last_bias_resource = self._resource_bias
+
+        return super()._preferred_miner_extractor(state)
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """V65 targeting with idle-mine: mine when no frontier junctions available."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Idle-mine instead of explore (proven +89% local improvement)
+        return self._miner_action(state, summary_prefix="idle_mine_")
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """V65 original budgets: 4 aligners from step 0, scrambler at 1500."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        pressure_budget = 4
+        if step >= 40 and min_res >= 20:
+            pressure_budget = 5
+
+        scrambler_budget = 0
+        if step >= 1_500:
+            scrambler_budget = 1
+        aligner_budget = pressure_budget - scrambler_budget
+
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+    def evaluate_state(self, state: MettagridState) -> Action:
+        action = super().evaluate_state(state)
+        step = state.step or self._step_index
+        role = self._infos.get("role", "?")
+        subtask = self._infos.get("subtask", "?")
+        if step % 500 == 0 or step == 1 or (step % 100 == 0 and self._agent_id == 0):
+            pos = _h.absolute_position(state)
+            hp = int(state.self_state.inventory.get("hp", 0))
+            hearts = int(state.self_state.inventory.get("heart", 0))
+            cargo = _h.resource_total(state)
+            aligner_b = self._infos.get("aligner_budget", "?")
+            scrambler_b = self._infos.get("scrambler_budget", "?")
+            frontier = self._infos.get("frontier_neutral_junctions", "?")
+            team_id = _h.team_id(state)
+            friendly = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner == team_id))
+            enemy = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+            shared = _shared_resources(state)
+            hub = self._nearest_hub(state)
+            hub_pos = (hub.global_x, hub.global_y) if hub else None
+            print(
+                f"[COG] step={step} agent={self._agent_id} pos={pos} hub={hub_pos} role={role} "
+                f"subtask={subtask} hp={hp} hearts={hearts} cargo={cargo} "
+                f"aligners={aligner_b} scramblers={scrambler_b} "
+                f"friendly_j={friendly} enemy_j={enemy} frontier={frontier} "
+                f"hub_res={shared}",
+                flush=True,
+            )
+        return action
+
+
+class AlphaV65PlusFixPolicy(MettagridSemanticPolicy):
+    """V65 + resource fix + idle-mine. Global role assignment."""
+    short_names = ["alpha-v65-plus-fix"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        # No shared_team_ids — match v65's global role assignment
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65PlusFixAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]

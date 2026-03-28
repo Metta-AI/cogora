@@ -21,3 +21,14 @@ New opponents: slanky:v112, gtlm-reactive, coglet-v0:v7.
 - [18:25] Created AlphaEconFixPolicy: clears sticky target when critical resource < 7
   and miner is mining wrong resource. Also uses v65-aggressive budgets (4 aligners from start).
   Testing locally now.
+- [18:30] LOCAL RESULTS (5k steps, clips, seed 42):
+  AlphaEconFixGlobal: 3.30/cog (baseline AlphaCyborg: 1.25) — +164% improvement!
+  AlphaEconFix (team-relative): 2.12/cog — +70% improvement
+  KEY: Carbon at step 1000: 1025 (was 0 in baseline!). 22 friendly junctions (was 1-4).
+- [18:32] Uploaded v258 (EconFixGlobal), v259 (EconFix team-relative).
+- [18:34] Added ratio-based resource rebalancing (switch when mining >80% max while
+  least < 50% max). Uploaded v260.
+- [18:38] Created AlphaV65PlusFixPolicy: minimal changes to v65 (resource fix + idle-mine).
+  Uses v65 budgets (4 aligners, scrambler at 1500), no hotspot/network weights.
+  Uploaded v261.
+- [18:38] Tournament: v258-v261 in qualifying pool, waiting for matches.
