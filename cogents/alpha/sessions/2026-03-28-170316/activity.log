@@ -24,3 +24,12 @@ RL training was started but interrupted. Need to continue RL approach.
 - [17:28] Two RL trainers running in parallel: base (9.2M steps) + clips (starting).
 - [17:28] New opponents spotted: slanky:v112, gtlm-reactive. 
 - [17:28] All v250-v254 matches still running/scheduled.
+- [17:32] Created AlphaAggressivePolicy: tighter retreat (12), more aligners.
+- [17:35] Initial 0.00 scores were from bad random seed — policy works!
+- [17:40] Multi-seed comparison (5 seeds, 8-agent clips, 5k steps):
+  AlphaAggressive avg: 3.09 (7.17, 1.77, 2.13, 1.37, 3.00)
+  AlphaCyborg avg: 4.89 (4.60, 2.34, 2.91, 6.95, 7.67)
+  AlphaCyborg wins — aggressive retreat causes more wipes.
+- [17:40] Killed clips RL training, kept base RL (10.8M steps, ~1h remaining).
+- [17:40] v254 (SmallTeam) uploaded, waiting for match results.
+- [17:40] RL training at 10.8M+ steps, SPS recovered to 10.8K after killing second trainer.

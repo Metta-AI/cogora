@@ -3360,3 +3360,110 @@ class AlphaSmallTeamPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
+    """More aggressive alignment with tighter retreat and faster economy cycle.
+
+    Key changes from AlphaCog:
+    - Tighter retreat margin (12 vs 15) — less time wasted retreating
+    - Aggressive alignment budgets across all team sizes
+    - Faster economy cycle: mine briefly then align
+    - Reduced scrambler allocation (focus on alignment over disruption)
+    """
+
+    def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
+        """Tighter retreat margin (12) — spend more time aligned, less retreating."""
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if safe_target is None:
+            return hp <= _h.retreat_threshold(state, role)
+        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+        margin = 12  # Tighter than 15: less conservative
+        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            margin += 8  # Less panic in enemy territory
+        margin += int(state.self_state.inventory.get("heart", 0)) * 4
+        margin += min(_h.resource_total(state), 12) // 3
+        if not _h.has_role_gear(state, role):
+            margin += 8
+        if (state.step or 0) >= 3_000:
+            margin += 8 if role in {"aligner", "scrambler"} else 4
+        if hp <= safe_steps + margin:
+            return True
+        if role == "miner" and safe_target is not None:
+            pos = _h.absolute_position(state)
+            dist = _h.manhattan(pos, safe_target.position)
+            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 15:
+                return True
+        return False
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Aggressive alignment budgets: maximize aligners, minimize scramblers."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # For small teams, use SmallTeam logic (proven better at 4-agent)
+        if num_agents <= 1:
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 2:
+            # Aggressive: start aligning at step 100 instead of 200
+            if step < 100 or (min_res < 5 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            # Aggressive from step 0 with free hearts
+            if step < 50:
+                return min(2, num_agents - 1), 0
+            if min_res < 3 and not can_hearts:
+                return 1, 0
+            aligner_budget = min(num_agents - 1, 3)  # Max aligners
+            # No scramblers for small teams — focus on alignment
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, 0
+
+        # 5+ agents: aggressive alignment, minimal scramblers
+        if step < 20:
+            return min(3, num_agents - 2), 0
+        elif step < 100:
+            return min(4, num_agents - 2), 0
+        elif step < 3000:
+            if min_res < 3 and not can_hearts:
+                return max(2, num_agents // 3), 0
+            return min(num_agents - 2, 5), 0
+        else:
+            if min_res < 3 and not can_hearts:
+                return max(2, num_agents // 3), 0
+            aligner_budget = min(num_agents - 2, 5)
+            # Only scramble when economy is strong
+            scrambler_budget = 1 if min_res >= 14 else 0
+            return aligner_budget, scrambler_budget
+
+
+class AlphaAggressivePolicy(MettagridSemanticPolicy):
+    """Aggressive alignment policy for tournament play."""
+    short_names = ["alpha-aggressive"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAggressiveAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
