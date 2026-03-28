@@ -119,3 +119,11 @@ status: interrupted
 ## Init=5 Test
 - Seed 1: 4.10, Seed 4: 3.35 — worse than init=4
 - Init=4 remains optimal
+
+## CRITICAL FINDING: Game is NON-DETERMINISTIC
+- Same seed (1), same code, two runs: **2.77 vs 8.97**
+- This means all "A/B comparisons" on single seeds are unreliable
+- The 8.31 baseline was partly luck; the 3.01 "regression" was just variance
+- Need 10+ runs per config to get reliable averages
+- Running final 10-seed test with current corrected code
+- Uploaded v113: AlphaCyborgPolicy with all fixes
