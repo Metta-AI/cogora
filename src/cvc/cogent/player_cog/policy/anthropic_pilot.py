@@ -39,32 +39,41 @@ def _least_resource(resources: dict[str, int]) -> str:
 
 
 class AlphaV65ReplicaAgentPolicy(SemanticCogAgentPolicy):
-    """Replica of v65 behavior: base budgets, no network/hotspot penalties."""
+    """Replica of v65 behavior: base budgets, no network/hotspot penalties, retreat_margin=15."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._network_weight = 0.0
         self._hotspot_weight = 0.0
+        self._retreat_margin = 15  # v65 era used 15, not 20
 
     def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
         return 0
 
+    def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if safe_target is None:
+            return hp <= _h.retreat_threshold(state, role)
+        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+        margin = self._retreat_margin
+        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            margin += 10
+        margin += int(state.self_state.inventory.get("heart", 0)) * 5
+        margin += min(_h.resource_total(state), 12) // 2
+        if not _h.has_role_gear(state, role):
+            margin += 10
+        if (state.step or 0) >= 2_500:
+            margin += 10 if role in {"aligner", "scrambler"} else 5
+        return hp <= safe_steps + margin
 
-class AlphaV65PlusBiasAgentPolicy(SemanticCogAgentPolicy):
-    """V65-style targeting + resource bias. Best of both worlds."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._network_weight = 0.0
-        self._hotspot_weight = 0.0
+class AlphaV65PlusBiasAgentPolicy(AlphaV65ReplicaAgentPolicy):
+    """V65-style targeting + resource bias."""
 
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         resources = _shared_resources(state)
         least = _least_resource(resources)
         return MacroDirective(resource_bias=least)
-
-    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
-        return 0
 
 
 class AlphaBiasOnlyAgentPolicy(SemanticCogAgentPolicy):
@@ -176,21 +185,13 @@ class AlphaScrambleHeavyAgentPolicy(SemanticCogAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
-class AlphaV65ScrambleHeavyAgentPolicy(SemanticCogAgentPolicy):
-    """V65 targeting + 3 scramblers. Combines best targeting with heavy disruption."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._network_weight = 0.0
-        self._hotspot_weight = 0.0
+class AlphaV65ScrambleHeavyAgentPolicy(AlphaV65ReplicaAgentPolicy):
+    """V65 targeting + 3 scramblers."""
 
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         resources = _shared_resources(state)
         least = _least_resource(resources)
         return MacroDirective(resource_bias=least)
-
-    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
-        return 0
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index

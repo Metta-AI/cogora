@@ -78,3 +78,15 @@ KEY INSIGHT: Heavy scrambling (3 scramblers) is extremely effective in tournamen
 ## Uploaded
 - v152: AlphaV65ScrambleHeavyPolicy (v65 targeting + 3 scramblers + resource bias)
 - v150: V65 replica, v151: v65+bias — already uploaded
+
+## Tournament update
+- v148 (scramble-heavy) regressed from 5.66 to 1.09 (8 matches) — initial luck
+- v149 (no scramble) at 2.08 — scramblers DO help but 3 is too many
+- v145 (bias-only): 1.93, v146 (double scramble): 1.75, v147 (super aggro): 2.17
+- All custom variants still below v65 (3.24)
+
+## Code improvements
+- Found retreat_margin difference: v123 era had 15, current has 20
+- Updated AlphaV65ReplicaAgentPolicy to override retreat with margin=15
+- Made v65+bias and v65+scramble inherit from v65 replica base
+- Uploaded v153 (v65 replica + retreat_margin=15) and v154 (v65+bias + retreat_margin=15)
