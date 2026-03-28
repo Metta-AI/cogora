@@ -48,3 +48,14 @@ status: in-progress
   - v234: AlphaTournament (old deps 0.19)
   - v235: V65PurePolicy (old deps 0.19)
   If old deps hypothesis correct, v233-v235 should score >> v231-v232.
+- [15:30] **AlphaCyborg 10k clips (5 seeds): 11.01, 1.68, 3.52, 8.53, 15.51 → avg 8.05!**
+  TWO SEEDS ABOVE 10! (seed 1: 11.01, seed 5: 15.51)
+  Seed 5: reaches 21 junctions by step 1200, holds 19-22 throughout.
+  Seed 2: never exceeds 11 junctions, clips ships very aggressive on this seed.
+- [15:31] Fixed AlphaCyborg idle behavior: changed idle_align_mine to idle_explore
+  (avoids gear churn). This was the VT3 fix that previously hit 10.29.
+- [15:32] Uploaded v236 (improved AlphaCyborg, current deps) and v237 (old deps).
+  Also uploaded v231-v235 earlier. Total 7 versions testing: AlphaCyborg, AlphaTournament,
+  V65Pure, with old vs new deps.
+- [15:33] 4-agent clips: AlphaCyborg=0.65, VT=0.74 — both weak at small teams.
+- [15:33] auto_clips mode doesn't exist. clips mode is the correct PvP test.
