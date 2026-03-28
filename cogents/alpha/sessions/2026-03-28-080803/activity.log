@@ -38,3 +38,19 @@ status: in-progress
 - Seed 4 causes AlphaCyborg/NoScramble to score 0.00 (all agents die). V65True/RealignBoost handle it fine.
 - Created AlphaV65NoScrambleBoostPolicy: V65Realign + no scramblers
 - Running tests: V65NoScrambleBoost and V65Realign
+
+## Full 5-seed comparison results
+| Policy | S1 | S2 | S3 | S4 | S5 | Avg |
+| RealignBoost | 1.73 | 2.05 | 1.96 | 5.49 | 7.98 | 3.84 |
+| V65True | 4.11 | 2.10 | 1.92 | 3.43 | 5.30 | 3.37 |
+| V65Realign | 5.09 | 1.59 | 1.37 | 4.89 | 0.00 | 2.59 |
+| AlphaCyborg | 4.40 | 2.84 | 1.12 | 0.00 | 1.86 | 2.04 |
+| NoScramble | 1.91 | 0.98 | 1.40 | 0.00 | 2.83 | 1.42 |
+| V65NSBoost | 1.55 | 1.07 | 1.19 | 1.76 | 0.70 | 1.25 |
+
+## Key conclusions
+- RealignBoost (V65Replica + hotspot bonus + team-aware) is BEST at 3.84
+- Standard targeting + hotspot boost beats v65 hub_penalty targeting
+- Scramblers are CRITICAL — removing them consistently hurts (1.25 avg vs 3.84)
+- Some seeds cause wipe-to-zero (all agents die immediately) — map-dependent
+- Uploaded RealignBoost as v171 to tournament
