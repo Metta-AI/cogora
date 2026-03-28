@@ -63,3 +63,18 @@ Base (current code): avg 3.89 (seeds: 4.86, 1.39, 2.49, 6.83, 9.26, 2.98, 2.77, 
 ## Uploaded
 - v150: AlphaV65ReplicaPolicy (v65-style targeting)
 - v151: AlphaV65PlusBiasPolicy (v65 targeting + resource bias)
+
+## Tournament Signal
+- v148 (scramble-heavy): #1 at 5.66 (1 match only)
+- v147 (super aggro): 2.27 (12 matches)
+- v145 (bias-only): 1.91 (13 matches)
+- v149 (no scramble): 1.05 (1 match)
+KEY INSIGHT: Heavy scrambling (3 scramblers) is extremely effective in tournament!
+
+## V65+bias test (5 seeds): avg 4.10, has wipeout on seed 5
+- Resource bias helps some seeds but causes wipeout on others
+- V65 replica (no bias) more reliable: avg 5.03, 0 wipeouts
+
+## Uploaded
+- v152: AlphaV65ScrambleHeavyPolicy (v65 targeting + 3 scramblers + resource bias)
+- v150: V65 replica, v151: v65+bias — already uploaded

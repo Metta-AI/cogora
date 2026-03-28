@@ -176,6 +176,44 @@ class AlphaScrambleHeavyAgentPolicy(SemanticCogAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaV65ScrambleHeavyAgentPolicy(SemanticCogAgentPolicy):
+    """V65 targeting + 3 scramblers. Combines best targeting with heavy disruption."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.0
+        self._hotspot_weight = 0.0
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        return 0
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if step < 30:
+            return 2, 0
+
+        pressure_budget = 6
+        if min_res < 1 and not can_hearts:
+            pressure_budget = 3
+
+        scrambler_budget = min(3, pressure_budget // 2) if step >= 100 else 0
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
 class AlphaNoScrambleAgentPolicy(SemanticCogAgentPolicy):
     """All aligners, no scramblers. 5 aligners + 3 miners."""
 
@@ -475,6 +513,23 @@ class AlphaScrambleHeavyPolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaScrambleHeavyAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaV65ScrambleHeavyPolicy(MettagridSemanticPolicy):
+    """V65 targeting + 3 scramblers. Best targeting + best disruption."""
+    short_names = ["alpha-v65-scramble"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65ScrambleHeavyAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
