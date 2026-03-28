@@ -22,3 +22,5 @@ status: in-progress
 - [11:30] Updated AlphaCyborg+expansion=15/90: seeds=[6.91,3.06,0.00,0.00,2.58] avg=2.51. Expansion=15 causes wipes!
 - [11:35] Reverted expansion to default 10/60. Seeds 3,4 retested: 6.96, 4.10 (was 0.00, 0.00). Huge fix.
 - [11:37] Running seeds 1,2,5 with final config. Key changes from old code: network_weight=0, retreat_margin=15, re-alignment boost, stable budgets, lower deposit, expand-toward-junction.
+- [11:40] (Second worker) Uploaded v190 (expand-toward + 5-aligner, avg 4.65) and v191 (+ hotspot/deposit, avg 4.01).
+- [11:45] (Second worker) Confirmed expansion=15/90 causes wipes, reverted. Accepted network_weight=0, retreat_margin=15 from first worker.

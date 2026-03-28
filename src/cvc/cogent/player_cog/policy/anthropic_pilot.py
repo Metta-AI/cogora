@@ -1128,38 +1128,6 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         self._hotspot_weight = 8.0   # Re-alignment boost (flip hotspot to bonus)
         self._network_weight = 0.0   # No network proximity penalty (allows expansion)
 
-    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
-        """Re-alignment boost: prioritize recently scrambled junctions.
-
-        Flips hotspot count to negative so scrambled junctions get a BONUS
-        (lower score = better target). Cap at -3 to avoid over-prioritizing.
-        """
-        if hub is None:
-            return 0
-        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
-        count = self._shared_hotspots.get(rel, 0)
-        return -min(count, 3)
-
-    def _should_deposit_resources(self, state: MettagridState) -> bool:
-        """Lower deposit threshold (12) for faster economy turnover."""
-        cargo = _h.resource_total(state)
-        if cargo <= 0:
-            return False
-        threshold = 12 if _h.has_role_gear(state, "miner") else 4
-        if cargo >= threshold:
-            return True
-        safe_target = self._nearest_friendly_depot(state)
-        if safe_target is None:
-            return cargo >= 4
-        safe_distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
-        if cargo >= 12 and safe_distance > 18:
-            return True
-        if cargo >= 8 and self._should_retreat(state, "miner", safe_target):
-            return True
-        if cargo >= 8 and self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
-            return True
-        return False
-
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
         """Less conservative retreat (margin=15) + miner hub-distance check."""
         hp = int(state.self_state.inventory.get("hp", 0))
