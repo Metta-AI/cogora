@@ -3134,6 +3134,142 @@ class AlphaScrambleDominancePolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaHybridAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """Hybrid: v65 conservative targeting + re-alignment boost + idle-mine + AT budgets.
+
+    Combines:
+    - v65 hub_penalty targeting (conservative, proven in tournament)
+    - Re-alignment boost from AlphaCyborg (hotspot flip)
+    - Idle-mine for economy boost when no junctions to align
+    - AlphaTournament's economy-first budgets
+    - Retreat margin 20 (conservative for PvP)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = 8.0  # Re-alignment boost (flip hotspot to bonus)
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        """Flip hotspot count to BONUS — prioritize re-aligning scrambled junctions."""
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        return -min(count, 3)
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """V65 targeting + idle-mine (when no frontier junctions, mine for economy)."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # No frontier — mine for economy (idle-mine >> idle-explore)
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """AlphaTournament economy-first budgets."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 30 or (min_res < 1 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 500 and num_agents >= 4 and min_res >= 14 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents
+        if step < 30:
+            pressure_budget = 2
+        elif step < 100:
+            pressure_budget = 3
+        elif step < 3000:
+            pressure_budget = 5
+            if min_res < 3 and not can_hearts:
+                pressure_budget = 2
+            elif min_res < 7:
+                pressure_budget = 4
+        else:
+            pressure_budget = 6
+            if min_res < 3 and not can_hearts:
+                pressure_budget = 2
+
+        scrambler_budget = 0
+        if step >= 3000 and min_res >= 14:
+            scrambler_budget = 2
+        elif step >= 100:
+            scrambler_budget = 1
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaHybridPolicy(MettagridSemanticPolicy):
+    """Hybrid: v65 targeting + re-alignment boost + idle-mine + AT budgets."""
+    short_names = ["alpha-hybrid"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaHybridAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 # Re-export the ORIGINAL pre-rewrite semantic_cog for pure v65 testing
 from cvc.cogent.player_cog.policy.semantic_cog_v65 import (
     MettagridSemanticPolicy as _V65BasePolicy,

@@ -112,3 +112,12 @@ status: in-progress
   MUCH WORSE than current deps locally (3.87)! Old engine makes clips harder.
   But tournament shows old deps slightly better — different PvP dynamics.
   Game mechanics differ between 0.19 and 0.21 in ways that affect PvP vs NPC.
+- [15:57] Created AlphaHybridPolicy: v65 targeting + re-alignment boost + idle-mine + AT budgets.
+  Combines best tournament features (conservative targeting/retreat) with best local
+  features (re-alignment boost, idle-mine economy). Uploaded v243 (old deps), v244 (current deps).
+- [15:58] Updated leaderboard check:
+  - v233 (AlphaCyborg old): 2.38 (16m) — best of new versions
+  - v234 (AlphaTournament old): 1.94 (14m) — disappointing
+  - v235 (V65Pure old): 2.17 (16m) — middle ground
+  All old deps versions settling in 2.0-2.4 range. Improvement over current deps (~2.1)
+  but not the dramatic improvement v235's initial 6.07 suggested.
