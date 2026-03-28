@@ -54,52 +54,43 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Economy-responsive with hysteresis. Adapts to team size."""
+        """Stable role allocation. Avoids role oscillation that wastes gear."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         num_agents = self.policy_env_info.num_agents
-        if num_agents <= 4:
-            max_pressure = max(num_agents // 2, 1)
-        else:
-            max_pressure = max(num_agents - 1, 1)
-
-        # Phase 1: Economy bootstrap
-        if step < 10:
-            return min(2, max_pressure), 0
-
-        # Phase 2: Early ramp
-        if step < 50:
-            aligner_budget = 4 if min_res >= 3 else 3
-            return min(aligner_budget, max_pressure), 0
-
-        # Phase 3: Steady state with hysteresis
-        desired = self._current_aligner_budget
-        if min_res >= 5:
-            desired = 5
-        elif min_res < 1 and not _h.team_can_refill_hearts(state):
-            desired = 3
-        elif min_res < 1:
-            desired = 4
-
-        if desired != self._current_aligner_budget:
-            if step - self._last_budget_change_step >= 200 or desired < self._current_aligner_budget:
-                self._current_aligner_budget = desired
-                self._last_budget_change_step = step
-
-        aligner_budget = self._current_aligner_budget
-        scrambler_budget = 0
-
-        # Add scrambler at step 300
-        if step >= 300 and num_agents >= 4:
-            scrambler_budget = 1
-
-        # Cap total pressure
-        total = aligner_budget + scrambler_budget
-        if total > max_pressure:
-            aligner_budget = max(max_pressure - scrambler_budget, 0)
 
         if objective == "resource_coverage":
             return 0, 0
+
+        if num_agents <= 2:
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 10:
+                return 1, 0
+            aligner_budget = 2
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents
+        if step < 10:
+            return min(2, num_agents - 1), 0
+        if step < 100:
+            aligner_budget = min(3, num_agents - 2)
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 2), 0
+            return aligner_budget, 0
+
+        aligner_budget = min(4, num_agents - 2)
+        scrambler_budget = 1 if step >= 200 else 0
+
+        if min_res < 1 and not _h.team_can_refill_hearts(state):
+            aligner_budget = max(aligner_budget - 1, 1)
+
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
         return aligner_budget, scrambler_budget
@@ -162,39 +153,38 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         num_agents = self.policy_env_info.num_agents
-        min_miners = 2 if num_agents >= 4 else 1
-        max_pressure = max(num_agents - min_miners, 1)
-
-        if step < 10:
-            return min(2, max_pressure), 0
-        if step < 50:
-            aligner_budget = 4 if min_res >= 3 else 3
-            return min(aligner_budget, max_pressure), 0
-
-        desired = self._current_aligner_budget
-        if min_res >= 5:
-            desired = 5
-        elif min_res < 1 and not _h.team_can_refill_hearts(state):
-            desired = 3
-        elif min_res < 1:
-            desired = 4
-
-        if desired != self._current_aligner_budget:
-            if step - self._last_budget_change_step >= 200 or desired < self._current_aligner_budget:
-                self._current_aligner_budget = desired
-                self._last_budget_change_step = step
-
-        aligner_budget = self._current_aligner_budget
-        scrambler_budget = 0
-        if step >= 300 and num_agents >= 6:
-            scrambler_budget = 1
-
-        total = aligner_budget + scrambler_budget
-        if total > max_pressure:
-            aligner_budget = max(max_pressure - scrambler_budget, 0)
 
         if objective == "resource_coverage":
             return 0, 0
+
+        if num_agents <= 2:
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 10:
+                return 1, 0
+            aligner_budget = 2
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, scrambler_budget
+
+        if step < 10:
+            return min(2, num_agents - 1), 0
+        if step < 100:
+            aligner_budget = min(3, num_agents - 2)
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 2), 0
+            return aligner_budget, 0
+
+        aligner_budget = min(4, num_agents - 2)
+        scrambler_budget = 1 if step >= 200 else 0
+
+        if min_res < 1 and not _h.team_can_refill_hearts(state):
+            aligner_budget = max(aligner_budget - 1, 1)
+
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
         return aligner_budget, scrambler_budget
