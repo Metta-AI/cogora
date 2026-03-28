@@ -31,3 +31,12 @@ status: in-progress
 - DSM 10k: 5.44, 7.03, 0.87, 7.33, 8.04 = avg 5.74
   - Seed 5 collapsed (11.02 at 5k → 0.87 at 10k) — economy ran out
 - Testing TurboMid: MidExpansion + late-game double scrambler (step 3000+)
+
+## Non-determinism discovery (CRITICAL)
+- Same policy + same seed produces wildly different scores
+- MidExpansion seed 4 at 10k: 3.43, 8.48, 3.55 across 3 runs (2.5x variance!)
+- Seed 5 at 10k: 5.45, 6.11, 5.65 (less variance but still ~15%)
+- Implication: 5-seed tests are UNRELIABLE for measuring policy quality
+- Need 20+ runs to get meaningful averages
+- TurboMid's 9.60 on seed 4 was luck, not policy improvement
+- Running 20-seed MidExpansion 10k baseline for reliable measurement
