@@ -1,21 +1,16 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (best local: 12.68 at 10k, tournament best: v65=3.59)
-- [ ] **CRITICAL: Figure out why v65 outperforms all newer versions in tournament**
-  - v65 at 3.59 (#1) vs v199 at 2.03 (#140), v200 at 2.26 (#87)
-  - Local self-play: newer code avg 5-9 at 10k, but tournament avg 2.0-2.5
-  - Hypothesis: newer features over-fit to 8v8 self-play, fail on 2v6/4v4 splits
-- [ ] Study v65 match logs to understand its tournament behavior
-- [ ] Test with tournament-realistic conditions (variable team sizes, 10k steps)
-- [ ] Fix wipe bug (~7% seeds, all agents die immediately) — HP drops to 0 near hub
-- [ ] Consider LLM-enhanced policy if heuristic ceiling is ~3.0 in tournament
-- [ ] Monitor v199/v200 tournament performance as match count increases
-- [x] CRITICAL FIX: team-relative role assignment for split teams
-- [x] Station targeting fix (spawn-relative → hub-relative)
-- [x] Re-alignment boost (hotspot flip) — +14% local
-- [x] Idle-aligner-mine — +89% local
-- [x] Expand-toward-junction when frontier empty
-- [x] Budget stability (tighter thresholds)
-- [x] network_weight=0, retreat_margin=15
-- [x] Discovered tournament uses 4-agent AND 8-agent game formats
-- [x] Confirmed local self-play ≠ tournament performance
+- [ ] Achieve score > 10 in CogsVsClips (current competitive ceiling: ~2.5 with heuristics)
+- [ ] **Try LLM-enhanced policy (AnthropicCyborgPolicy) for tournament** — heuristic ceiling proven at ~2.5
+- [ ] **Test clips mode** — other worker found VT avg 3.30 vs V4 avg 1.49 in PvP
+- [ ] Investigate v216 (vanilla base) at 2.55 — simplicity beats complexity in tournament
+- [ ] Fix wipe bug (~7% seeds) — HP drops to 0 near hub, not fixable in policy
+- [ ] Try radically different strategies (all-scrambler rush, economic dominance, LLM adaptation)
+- [x] SOLVED: v65 gap is from early opponent pool, NOT code quality (v215 pure v65 = 2.22)
+- [x] CONFIRMED: all versions converge to 2.0-2.5 against current opponents
+- [x] CONFIRMED: vanilla base outperforms customized policies (less is more)
+- [x] Re-alignment boost (hotspot flip) — +14% local, neutral in tournament
+- [x] Idle-aligner-mine — +89% local, neutral in tournament
+- [x] Expand-toward-junction — helps locally, neutral in tournament
+- [x] Station targeting fix, team-relative roles, stable budgets
+- [x] Original v65 constants (priorities, budgets) don't help — same tournament performance
