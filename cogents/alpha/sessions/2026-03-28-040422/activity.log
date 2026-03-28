@@ -58,4 +58,7 @@
 - Each scramble adds +8.0 penalty to junction's alignment score (max 24.0 at 3+)
 - This should reduce wasted hearts on junctions near ships
 - Also increased miner retreat safety margin (dist+10 → dist+20)
-- Testing...
+- Single seed test: 4.12 (227 alignments, 97 scrambles)
+- Agent 6 (miner) died 7x despite retreat margin increase
+- Uploaded v138 (AlphaCyborg) and v139 (AnthropicCyborg) to tournament
+- Running 10-episode scrimmage for v134 baseline comparison
