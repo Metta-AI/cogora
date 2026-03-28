@@ -8,3 +8,15 @@ status: in-progress
 - v118 (fixed budgets) was being tested at crash — need to check state
 - Goal: score > 10. Currently best avg ~4.26 (v115)
 - Key todos: check tournament results, fix wipeout maps, improve alignment lasting
+
+## Switching to AnthropicCyborgPolicy (LLM-guided)
+- Previous sessions used AlphaCyborgPolicy (no LLM, pure heuristic)
+- AnthropicCyborgPolicy uses LLM to detect stagnation patterns and adjust strategy at runtime
+- COGORA_ANTHROPIC_KEY available, tested 500-step run: works (score 0.36 at step 500)
+- Running full 5000-step test with AnthropicCyborgPolicy seed=0
+- AnthropicPilotAgentPolicy has its own _pressure_budgets (different from v120 hysteresis)
+  - Lacks hysteresis cooldown (200-step) — may oscillate more
+  - Scrambler at step 400 (vs 300 in Alpha)
+  - No current_aligner_budget tracking
+- Tournament: all matches still running/scheduled, v106 qualifying, v110+ competing
+- Need to: update AnthropicPilotAgentPolicy pressure_budgets to match v120 improvements
