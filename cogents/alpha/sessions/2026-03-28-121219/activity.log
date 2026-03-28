@@ -11,6 +11,7 @@ status: in-progress
 - [12:12] Session started. Previous session (110102) was interrupted — recovered.
 - [12:18] Environment setup: fixed missing packages (anthropic, openai).
 - [12:20] Baseline 5k test: [6.11, 2.01, 1.98, 5.77, 2.62] avg=3.70
+<<<<<<< Updated upstream
 - [12:25] Analyzed seed 2 (low scorer): germanium bottleneck → hearts collapse → all aligners become miners
 - [12:28] BUG FOUND: AlphaCogAgentPolicy has hotspot_weight=8.0 but doesn't flip count → penalizes re-alignment instead of boosting it!
 - [12:30] Improvements applied:
@@ -43,3 +44,25 @@ status: in-progress
 - [13:15] 10k avg (no-wipe): 6.66. Best: 13.27 (seed 8). High variance.
 - [13:15] 10k results (v4 = v197): seed 6=6.39, seed 7=2.38, seed 8=13.27, seed 9=4.58, seed 10=0.00(wipe)
 - [13:15] 10k avg (no-wipe): 6.66. Best: 13.27 (seed 8). High variance.
+=======
+- [12:28] BUG: hotspot_weight=8 without count flip → penalizes re-alignment.
+- [12:30] Fixes: hotspot flip, resource-responsive budget, late 2nd scrambler, lower deposit.
+- [12:40] V3 5k results: avg(no-wipe)=4.15 vs baseline 3.70
+- [12:44] Reverted resource-responsive budget (death spiral on seed 3).
+- [12:50] KEY FIX: idle aligners mine instead of explore → seed 2: 2.01→6.25, seed 3: 1.98→6.10
+- [12:55] v196 (safer expansion): 10k avg=9.38, two seeds above 15!
+- [12:55] v197 uploaded (idle-mine + all fixes).
+- [13:00] Worker 2: 10-seed 10k avg=5.84 (old code). v194 uploaded.
+- [13:05] Worker 2: 10k seed 1=12.68 (with idle-mine+hotspot flip). Uploaded v199.
+- [13:05] Tournament: Paz-Bot-9005, slanky:v112 matches still running. Waiting for results.
+- [13:10] **LEADERBOARD CHECK — CRITICAL FINDING:**
+  - #1: v65 at 3.59 (516 matches) — old simple policy still winning!
+  - v193: 2.41 (#57), v197: 2.21 (#108), v194: 1.90 (#147)
+  - slanky: 2.57 (#24), Paz-Bot: 2.53 (#28)
+  - All "improvements" (hotspot flip, stable budgets, expand-toward, idle-mine) score WORSE in tournament
+- [13:12] **STRATEGY PIVOT**: Local self-play gains don't translate to tournament.
+  v65's simple approach (default targeting, basic budgets) handles variable tournament conditions better.
+- [13:15] Uploaded v200 (AlphaV65TrueReplicaPolicy) to try to match v65's tournament performance.
+- [13:15] Key difference: tournament has variable team sizes (2v6, 4v4, 6v2) and opponent strategies.
+  Our "improvements" may over-fit to 8v8 self-play.
+>>>>>>> Stashed changes
