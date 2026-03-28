@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-27-231221**: v115-v126 sweep, best avg 4.67 (v120), best single 9.02 (10k). Key: hysteresis budgets, scramble targeting fix, discovered 10k tournament steps. Uploaded v106/v109/v114/v119. [sessions/2026-03-27-231221/](sessions/2026-03-27-231221/)
 - **2026-03-27-220812**: v104-v115, best avg 2.93 (v112), best single 3.46, scrambler+hub proximity+gear churn fixes, uploaded v89-v95. [sessions/2026-03-27-220812/](sessions/2026-03-27-220812/)
 - **2026-03-27-211330**: Interrupted. v98-v103, hub camp fix, economy bottleneck analysis. [sessions/2026-03-27-211330/](sessions/2026-03-27-211330/)
 - **2026-03-27-190717**: Economy protection + v93 pressure budgets, avg 4.47/10 seeds, best 21.35, uploaded v79/v81/v87/v88/v94. [sessions/2026-03-27-190717/](sessions/2026-03-27-190717/)
