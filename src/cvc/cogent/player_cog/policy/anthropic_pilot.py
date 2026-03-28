@@ -1184,16 +1184,29 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if depot is not None:
                 return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
-        # No frontier junctions — walk toward nearest unreachable neutral junction
-        # to expand the network chain
+        # No frontier junctions — walk toward nearest reachable unreachable neutral junction
+        # to expand the network chain. Only go if we have enough HP.
         team_id = _h.team_id(state)
         current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else current_pos
         unreachable = self._known_junctions(
             state, predicate=lambda j: j.owner in {None, "neutral"}
         )
         if unreachable:
-            nearest = min(unreachable, key=lambda j: _h.manhattan(current_pos, j.position))
-            return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+            # Filter to junctions we can safely reach: distance < hp - safety margin
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 30
+                and _h.manhattan(hub_pos, j.position) < 40  # Don't go too far from hub
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            # Only expand if target is reasonably close
+            if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
         return self._explore_action(state, role="aligner", summary="find_neutral_junction")
 
