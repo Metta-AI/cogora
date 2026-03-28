@@ -21,3 +21,7 @@ status: interrupted
 - [12:00] My 10k 4a test: [0.00,1.05,3.69,5.14,11.67] avg=4.31
 - [12:05] Key finding: 5a is better at 10k (tournament length). 5a avg=8.30 vs 4a avg=4.31.
 - [12:10] Re-testing 5a at 10k with all StableBoost fixes (network_weight=0, retreat_margin=15, re-alignment boost).
+- [12:15] 10k 5a results: [7.30,2.15,1.91,6.35,12.02] avg=5.95. Better than 4a (4.31) but below other worker (8.30). Non-determinism.
+- [12:20] Key insight: other worker's code does NOT have hotspot flip or deposit threshold. Just hotspot_weight=8, network_weight=0, retreat_margin=15.
+- [12:22] My code already matches (overrides were reverted by other worker). Difference is just variance.
+- [12:25] Uploaded v194 (5a+1s, network=0, margin=15, expand-toward). Running seeds 6-10 at 10k.
