@@ -34,3 +34,26 @@ status: in-progress
 - Non-determinism makes single-run comparisons unreliable
 - Keeping expansion weight boost (v133), uploading to tournament for real signal
 - v131 upload = v125 in tournament
+- v133 upload = v126 in tournament
+
+## Detailed Game Analysis (seed 5, score 7.24)
+- 204 junctions aligned, 90 lost to clips scrambling (net 114)
+- 5 aligners: 32+44+52+41+35 = 204 alignments, 220 hearts used
+- 1 scrambler: 90 enemy junctions scrambled
+- 2 miners: deposited 2156-3242 of each resource
+- Agent 6 (miner) died 9 times! Death costs are a huge economy drain
+- Hearts capacity: ~308 hearts from resources, used 310 (nearly perfect)
+- Economy is well-utilized — bottleneck is deaths and clips ship scrambling
+
+## v134-v135 Failed Experiments
+- v134: 2nd scrambler at step 2000+ → mixed results, no clear benefit
+- v135: heart batch 4 base → more consistent but lower avg (3.48 vs 4.61)
+  - Higher batch = longer hub waits, economy can't sustain 4 hearts/aligner
+  - Reverted to 3 hearts base
+
+## Key Insights
+- Non-determinism makes single-run comparisons unreliable (need 10+ seeds)
+- Seeds 4, 9 are broken maps (even starter policy scores 0.00)
+- Miner deaths are a huge economy drain (agent 6 died 9x)
+- Expansion weight boost (5→8) may help network chaining
+- Current config: v131 base + expansion weight 8.0 (v133)
