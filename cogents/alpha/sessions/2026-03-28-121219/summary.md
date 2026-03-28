@@ -1,16 +1,23 @@
-# Session 2026-03-28-121219 Summary (INTERRUPTED)
+# Session 2026-03-28-121219 Summary
 
-## Key Achievements
-- Fixed hotspot count flip bug (re-alignment boost was penalizing instead of boosting)
-- Discovered idle-aligner-mine strategy: +89% over baseline (avg 6.02 vs 3.18)
-- Safer expand-toward-junction: avg 9.38 on 10k runs, two seeds above 15!
-- Uploaded v196, v197, v198, v200
+## One-Line Summary
+Discovered idle-explore beats idle-mine in PvP (gear churn fix), clips mode testing shows 10.29 peak, tournament policy v228 uploaded.
 
-## Tournament Results
-- v197: 2.30 (4v4), 6.64 (6a) — self-play only
-- v198: 1.17 (6a), 2.30 (4v4) — below v65 in competition
-- v200 (V65TrueReplica): 2.10, 1.45 — WORSE than v65's 3.59
-- slanky opponent: 1.67/5.41 (4v4/6a) vs v196
+## Key Results
+- **AlphaCyborgPolicy (V4)**: self-play 5k avg 4.73, PvP clips 10k avg 1.49 — overfits to self-play
+- **AlphaTournamentPolicy (VT3)**: PvP clips 10k avg 3.97, best seed 10.29 — much better in PvP
+- Idle-explore > idle-mine in PvP due to gear churn avoidance
+- Hotspot flip bug fixed in AlphaCogAgentPolicy
+- Deposit threshold lowered to 12 for faster economy turnover
 
-## Key Insight
-Local scores improved dramatically but tournament scores still lag. v65 (3.59) still #1.
+## Versions Uploaded
+- v195-v197: hotspot flip + idle-mine fixes
+- v209: V4 final (AlphaCyborgPolicy)
+- v210: AlphaTournamentPolicy (idle-mine)
+- v228: AlphaTournamentPolicy (idle-explore) — best PvP version
+
+## Key Insights
+- Self-play scores don't predict tournament performance at all
+- Gear churn (accidental gear swaps) from idle-mine routing through stations
+- machina_1.clips mode is best proxy for tournament conditions
+- Heuristic ceiling ~2.15 in tournament; >10 likely requires trained RL
