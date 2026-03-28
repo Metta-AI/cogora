@@ -1,0 +1,12 @@
+# Session 2026-03-28-151010 Activity Log
+status: in-progress
+
+## Plan
+1. Check v225 (LLM-enhanced) tournament results — best hope for breaking 2.2 ceiling
+2. If v225 promising, iterate on LLM policy; if not, try radically different strategies
+3. Test clips mode (other worker found VT avg 3.30 vs V4 avg 1.49 in PvP)
+4. Goal: break heuristic ceiling, push toward >10
+
+## Activity
+- [15:10] Session started. Previous session (140609) was interrupted — recovered.
+- [15:10] Context: ALL heuristic policies converge to 2.0-2.2. v225 LLM was at 3.40 (3 matches).
