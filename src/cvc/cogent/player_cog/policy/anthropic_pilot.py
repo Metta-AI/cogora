@@ -2692,6 +2692,118 @@ class AlphaV65HybridGlobalPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaWaveAgentPolicy(AlphaV65HybridAgentPolicy):
+    """Wave strategy: economy-first, then mass alignment.
+
+    Phase 1 (step 0-199): ALL mine — build massive resource stockpile
+    Phase 2 (step 200-499): 6 aligners + 2 miners — rapid territory grab
+    Phase 3 (step 500+): 5 aligners + 1 scrambler + 2 miners — hold territory
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 100:
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 150:
+                return 0, 0  # All mine
+            if step < 400:
+                return min(3, num_agents - 1), 0  # Mass align
+            return min(2, num_agents - 1), 1  # Hold + scramble
+
+        # 5+ agents
+        if step < 150:
+            return 0, 0  # Phase 1: ALL MINE
+        if step < 500:
+            return min(6, num_agents - 2), 0  # Phase 2: MASS ALIGN
+        # Phase 3: Hold + scramble
+        scrambler = min(2, num_agents // 4)
+        aligner = min(5, num_agents - 2 - scrambler)
+        if objective == "economy_bootstrap":
+            return min(aligner, 2), 0
+        return aligner, scrambler
+
+
+class AlphaWavePolicy(MettagridSemanticPolicy):
+    """Wave strategy: economy-first, then mass alignment."""
+    short_names = ["alpha-wave"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaWaveAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaMaxPressureAgentPolicy(AlphaV65HybridAgentPolicy):
+    """Maximum pressure from step 0: 6 aligners + 2 miners.
+
+    Skip economy buildup entirely. The starting resources (24 each)
+    give 3 hearts. Use them immediately and mine to sustain.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            return 1, 0
+
+        if num_agents <= 4:
+            aligner = num_agents - 1  # All but 1 align
+            scrambler = 1 if step >= 1000 else 0
+            aligner = max(aligner - scrambler, 1)
+            return aligner, scrambler
+
+        # 5+ agents: maximum alignment pressure
+        aligner = max(num_agents - 2, 4)  # 6 aligners for 8 agents
+        scrambler = 0
+        if step >= 2000:
+            scrambler = 1
+            aligner -= 1
+        if objective == "economy_bootstrap":
+            return min(aligner, 3), 0
+        return aligner, scrambler
+
+
+class AlphaMaxPressurePolicy(MettagridSemanticPolicy):
+    """Maximum pressure: 6 aligners from step 0."""
+    short_names = ["alpha-max-pressure"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaMaxPressureAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 # Re-export the ORIGINAL pre-rewrite semantic_cog for pure v65 testing
 from cvc.cogent.player_cog.policy.semantic_cog_v65 import (
     MettagridSemanticPolicy as _V65BasePolicy,
