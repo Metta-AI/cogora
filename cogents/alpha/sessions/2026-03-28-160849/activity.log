@@ -72,3 +72,11 @@ Need fundamentally different approach to reach >10.
   SmallTeam is 33% better at 10k! Wins 3/5 seeds by large margins.
   Seed 3: SmallTeam 8.80 (near target!). Wipe on seed 4 is main weakness.
 - [17:08] v251 (SmallTeam) in tournament — need to wait for results to confirm.
+- [17:18] SmallTeam v3 (1 aligner early) still wipes seed 4. Wipe is map-dependent.
+  v2 (2 aligners early) has better avg despite wipe:
+  v3: 2.84, ?, 6.63, 0.00, 3.06 → avg 3.13
+  v2: 4.40, 0.89, 8.80, 0.00, 3.18 → avg 3.45
+  Reverted to v2 aggressive approach. Uploaded as v253.
+- [17:18] Tournament early results: v251 (SmallTeam) at 2.51 (#40, 7m), v252 (vanilla) at 2.61 (#31, 4m).
+  Need more matches to converge.
+- [17:18] RL training progressing in background (~3M steps).
