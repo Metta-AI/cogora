@@ -34,6 +34,8 @@ _SHARED_JUNCTION_MEMORY_STEPS = 400
 _OSCILLATION_HISTORY_STEPS = 6
 _OSCILLATION_UNSTICK_STEPS = 4
 _MINING_ALIGNER_MIN_RESOURCE = 14
+_DEFAULT_NETWORK_WEIGHT = 0.5
+_DEFAULT_HOTSPOT_WEIGHT = 8.0
 _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET = 2
 _ALIGNER_PRIORITY = (0, 1, 2, 3, 4, 5, 6, 7)
 _SCRAMBLER_PRIORITY = (3, 7, 6, 2)
@@ -230,6 +232,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
         self._sticky_target_position: tuple[int, int] | None = None
         self._sticky_target_kind: str | None = None
         self._current_directive = MacroDirective()
+        self._network_weight = _DEFAULT_NETWORK_WEIGHT
+        self._hotspot_weight = _DEFAULT_HOTSPOT_WEIGHT
 
     def step(self, obs: AgentObservation) -> Action:
         self._step_index += 1
@@ -824,6 +828,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     hub_position=hub_pos,
                     friendly_junctions=friendly_junctions,
                     hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
                 ),
                 entity.position,
             ),
@@ -862,6 +868,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
             hub_position=hub_pos,
             friendly_junctions=friendly_junctions,
             hotspot_count=self._junction_hotspot_count(sticky, hub),
+            network_weight=self._network_weight,
+            hotspot_weight=self._hotspot_weight,
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -877,6 +885,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
             hub_position=hub_pos,
             friendly_junctions=friendly_junctions,
             hotspot_count=self._junction_hotspot_count(candidate, hub),
+            network_weight=self._network_weight,
+            hotspot_weight=self._hotspot_weight,
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate

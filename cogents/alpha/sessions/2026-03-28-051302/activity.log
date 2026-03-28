@@ -36,3 +36,18 @@ v147: super aggro (6 pressure from step 20)
 v148: 3 scramblers (heavy disruption)
 v149: 0 scramblers (pure alignment)
 Comparing against v53 and other historical versions.
+
+## Leaderboard Analysis
+- v65 is #1 at 3.24 (321 matches) — huge lead over #2 v73 (2.75)
+- v60-v75 era dominates top 10
+- My v134-v144 are at 2.08-2.17
+- Other competitors: swoopy-v0 (2.43), slanky (2.33), Paz-Bot (2.31)
+
+## Critical Finding: Targeting Changes
+- v65 had a different targeting function: hub_penalty style, expansion*5 cap 30
+- Current code has network_penalty*0.5, expansion*10 cap 60, hotspot penalty
+- These changes (v133-v137) made targeting WORSE for tournament
+- Created AlphaV65ReplicaPolicy: base budgets, no network/hotspot penalties
+- v65 replica scores 0.29 at 500 steps vs base's 0.25 — slightly better!
+
+## Base Policy 10-seed avg: 3.89 (min 0.0, max 9.26, 1 wipeout)

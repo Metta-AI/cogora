@@ -36,6 +36,8 @@ def aligner_target_score(
     hub_position: tuple[int, int] | None = None,
     friendly_junctions: list[KnownEntity] | None = None,
     hotspot_count: int = 0,
+    network_weight: float = 0.5,
+    hotspot_weight: float = 8.0,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     expansion = sum(
@@ -46,18 +48,18 @@ def aligner_target_score(
         if any(manhattan(candidate.position, enemy.position) <= _JUNCTION_AOE_RANGE for enemy in enemy_junctions)
         else 0.0
     )
-    network_dist = 999.0
-    if hub_position is not None:
-        network_dist = min(network_dist, float(manhattan(hub_position, candidate.position)))
-    if friendly_junctions:
-        for fj in friendly_junctions:
-            d = float(manhattan(fj.position, candidate.position))
-            if d < network_dist:
-                network_dist = d
-    network_penalty = network_dist * 0.5
-    # Penalize junctions near enemy ships (repeatedly scrambled).
-    # Each observed scramble adds 8.0 penalty, capped at 3 scrambles.
-    hotspot_penalty = min(hotspot_count, 3) * 8.0
+    network_penalty = 0.0
+    if network_weight > 0:
+        network_dist = 999.0
+        if hub_position is not None:
+            network_dist = min(network_dist, float(manhattan(hub_position, candidate.position)))
+        if friendly_junctions:
+            for fj in friendly_junctions:
+                d = float(manhattan(fj.position, candidate.position))
+                if d < network_dist:
+                    network_dist = d
+        network_penalty = network_dist * network_weight
+    hotspot_penalty = min(hotspot_count, 3) * hotspot_weight
     return (
         distance
         - min(expansion * 10.0, 60.0)

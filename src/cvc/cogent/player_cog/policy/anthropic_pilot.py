@@ -38,6 +38,18 @@ def _least_resource(resources: dict[str, int]) -> str:
     return min(_ELEMENTS, key=lambda r: resources[r])
 
 
+class AlphaV65ReplicaAgentPolicy(SemanticCogAgentPolicy):
+    """Replica of v65 behavior: base budgets, no network/hotspot penalties."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.0
+        self._hotspot_weight = 0.0
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        return 0
+
+
 class AlphaBiasOnlyAgentPolicy(SemanticCogAgentPolicy):
     """Base policy + resource bias only. No budget/retreat changes."""
 
@@ -352,6 +364,23 @@ class AnthropicCyborgPolicy(PilotCyborgPolicy):
             "anthropic_api_key": kwargs.get("anthropic_api_key"),
             "anthropic_api_key_file": kwargs.get("anthropic_api_key_file"),
         }
+
+
+class AlphaV65ReplicaPolicy(MettagridSemanticPolicy):
+    """Replica of v65: base budgets, no network/hotspot penalties."""
+    short_names = ["alpha-v65-replica"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65ReplicaAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
 
 
 class AlphaBiasOnlyPolicy(MettagridSemanticPolicy):
