@@ -84,3 +84,9 @@ status: in-progress
 - [14:40] Full VT clips 8a 10k avg (8 seeds): 4.29. Best: 8.28.
 - [14:41] High-score analysis (seed 5=8.28): 290 aligned, 221 lost, 141 scrambles by agent 3
 - [14:41] Key to high scores: productive scramblers + strong economy (3000+ resources deposited)
+- [15:00] Gear churn analysis: agent 2 on seed 6 lost aligner gear 30 times from idle-mine routing through gear stations
+- [15:02] VT3: changed idle-mine to idle-explore to avoid gear churn
+- [15:03] VT3 clips (8a, 10k): [5.13, 2.19, 2.51, 10.29, 3.19] avg=4.66
+- [15:03] **SEED 5 HIT 10.29!** First PvP score above 10!
+- [15:03] VT3 beats VT: avg 4.66 vs 4.05 on same seeds
+- [15:04] Uploaded v228 (AlphaTournamentPolicy with idle-explore).

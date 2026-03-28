@@ -2365,8 +2365,8 @@ class AlphaTournamentAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
             if depot is not None:
                 return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
-        # No frontier — mine to help economy instead of wandering
-        return self._miner_action(state, summary_prefix="idle_align_")
+        # No frontier — explore to find new junctions (avoid _miner_action to prevent gear churn)
+        return self._explore_action(state, role="aligner", summary="idle_explore")
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         """Economy-first budgets for tournament — build economy before aggression."""
