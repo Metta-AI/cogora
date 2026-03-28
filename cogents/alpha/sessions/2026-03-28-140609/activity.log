@@ -93,3 +93,13 @@ status: in-progress
 - [15:55] Summary: heuristic ceiling ~2.15, LLM ceiling ~2.30, target >10.
   Old engine versions (v60-v65 era) scored 2.89-3.59 on older mettagrid.
   Game engine changes likely responsible for ~0.7 point drop.
+- [16:05] FINAL STANDINGS (48 matches each):
+  - v224 (AlphaCyborg, old): 2.25 (#92) — BEST heuristic
+  - v225 (AnthropicCyborg LLM): 2.24 (#95) — LLM advantage GONE
+  - v226 (AlphaCyborg, improved): 2.22 (#113)
+  - v220 (hybrid): 2.07, v227: 2.02, v222: 1.76, v223: 1.68
+  All converged to 2.2-2.25 for good policies, 1.7-2.1 for experimental ones.
+  LLM provided NO lasting advantage over heuristic.
+  Survival code bypass hurts (v220/v222 worst).
+  Gap to >10 target: 4.4x. Heuristic+LLM approach insufficient.
+- [16:05] v230 (improved LLM) not showing on leaderboard — may have failed qualifying.
