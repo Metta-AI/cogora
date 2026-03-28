@@ -3856,3 +3856,265 @@ class AlphaV65PlusFixPolicy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaAlignMax: maximize aligner count, minimize scramblers.
+# Hypothesis: extra aligner > extra scrambler since alignment rate is the
+# bottleneck (each alignment = 0.03/tick, each scramble = 0.01/tick).
+# ---------------------------------------------------------------------------
+
+class AlphaAlignMaxAgentPolicy(AlphaCogAgentPolicy):
+    """More aligners, fewer scramblers. Aggressive re-alignment."""
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7:
+                return 1, 0
+            # 4 agents: 3 aligners, 0 scramblers, 1 miner
+            aligner_budget = min(3, num_agents - 1)
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, 0
+
+        # 5+ agents: maximize aligners
+        if step < 30:
+            return 2, 0
+        elif step < 100:
+            return 3, 0
+        elif step < 500:
+            # Ramp up: 4 aligners, 0 scramblers, rest mine
+            pressure_budget = min(4, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            return pressure_budget, 0
+        elif step < 5000:
+            # Peak: 5 aligners, 1 scrambler for clips defense
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            elif min_res < 7:
+                pressure_budget = min(5, num_agents - 2)
+            scrambler_budget = 1 if min_res >= 7 else 0
+            aligner_budget = max(pressure_budget - scrambler_budget, 0)
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 2), 0
+            return aligner_budget, scrambler_budget
+        else:
+            # Late game: 4 aligners, 2 scramblers
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            scrambler_budget = min(2, pressure_budget // 3)
+            aligner_budget = max(pressure_budget - scrambler_budget, 0)
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 2), 0
+            return aligner_budget, scrambler_budget
+
+
+class AlphaAlignMaxPolicy(MettagridSemanticPolicy):
+    """Maximum aligners, minimal scramblers."""
+    short_names = ["alpha-align-max"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAlignMaxAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaDefenseWall: Heavy scramblers to suppress clips early, then shift to alignment.
+# Counter-hypothesis: scramblers reduce clips pressure, freeing aligners.
+# ---------------------------------------------------------------------------
+
+class AlphaDefenseWallAgentPolicy(AlphaCogAgentPolicy):
+    """Early scramblers to fight clips, then ramp up aligners."""
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if num_agents >= 4 and step >= 200 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: early scramblers
+        if step < 30:
+            return 2, 0
+        elif step < 200:
+            return 3, 0  # Economy first
+        elif step < 500:
+            # 3 aligners + 2 scramblers: aggressively fight clips
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            scrambler_budget = min(2, pressure_budget // 2)
+            aligner_budget = max(pressure_budget - scrambler_budget, 0)
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 2), 0
+            return aligner_budget, scrambler_budget
+        else:
+            # Settled: 4 aligners, 2 scramblers
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            scrambler_budget = min(2, pressure_budget // 3)
+            aligner_budget = max(pressure_budget - scrambler_budget, 0)
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 2), 0
+            return aligner_budget, scrambler_budget
+
+
+class AlphaDefenseWallPolicy(MettagridSemanticPolicy):
+    """Heavy early scramblers to suppress clips."""
+    short_names = ["alpha-defense-wall"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaDefenseWallAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaBlitz: All-in on alignment in early game (all agents align with free hearts),
+# then transition to normal economy.
+# ---------------------------------------------------------------------------
+
+class AlphaBlitzAgentPolicy(AlphaCogAgentPolicy):
+    """Early blitz: all agents try to align using the 5 free hearts, then economy."""
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        # Early blitz: ALL agents try to align with free hearts
+        # Hub starts with 5 hearts. Use them before mining.
+        if step < 50:
+            # All aligners to use free hearts (hub starts with 5 hearts)
+            return min(num_agents, 5), 0  # Up to 5 aligners (1 heart each)
+
+        if num_agents <= 4:
+            if step < 200:
+                return min(2, num_agents - 1), 0
+            if min_res < 7:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if num_agents >= 4 and step >= 500 and min_res >= 14 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: standard after blitz
+        if step < 100:
+            return 3, 0
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            elif min_res < 7:
+                pressure_budget = min(4, num_agents - 2)
+            scrambler_budget = 1 if step >= 200 and min_res >= 7 else 0
+            aligner_budget = max(pressure_budget - scrambler_budget, 0)
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 2), 0
+            return aligner_budget, scrambler_budget
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            scrambler_budget = min(2, pressure_budget // 3)
+            aligner_budget = max(pressure_budget - scrambler_budget, 0)
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 2), 0
+            return aligner_budget, scrambler_budget
+
+
+class AlphaBlitzPolicy(MettagridSemanticPolicy):
+    """Early blitz alignment with free hearts."""
+    short_names = ["alpha-blitz"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaBlitzAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

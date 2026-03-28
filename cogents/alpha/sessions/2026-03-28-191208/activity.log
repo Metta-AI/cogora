@@ -11,3 +11,17 @@ started: 2026-03-28T19:12:35Z
   - Top 6-agent matches: 7.33 (v11-v17)
 - Tournament uses clips (enemy ships that scramble junctions)
 - Running local experiments: 6-agent cyborg, clips variant
+
+## Clips Analysis
+- Clips: 4 ships, each scrambles every 70 ticks
+- cogs_to_neutral: clips scramble our junctions to neutral (step 50, then every 70)
+- neutral_to_clips: clips convert neutral to clips (step 100, then every 70)
+- Total clips pressure: ~0.114 scrambles per tick
+- Alignment rate with 4 aligners: ~0.12 per tick (roughly equilibrium)
+- Extra aligner: +0.03/tick, Extra scrambler: +0.01/tick → aligners 3x more valuable
+
+## New Policies Created
+- AlphaAlignMax: 5 aligners, minimal scramblers
+- AlphaDefenseWall: early 2 scramblers to suppress clips
+- AlphaBlitz: all-in alignment with free hearts in early game
+- Running 5-episode scrimmages on all + baseline + v65
