@@ -44,7 +44,9 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_budget_change_step = 0
-        self._current_aligner_budget = 4  # IMPORTANT: init=4 scores 8.31 vs init=2 scores 4.76 on seed 1
+        # Init budget adapts to team size, capped to leave 1 miner
+        num_agents = self.policy_env_info.num_agents
+        self._current_aligner_budget = min(4, max(num_agents - 1, 1))
 
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         resources = _shared_resources(state)

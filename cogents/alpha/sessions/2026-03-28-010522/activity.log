@@ -9,3 +9,31 @@ status: in-progress
 - Key bottleneck: alignment throughput, not economy or junction retention
 - Goal: score > 10 (best avg: 3.82, best single: 8.31)
 - Plan: check tournament results, then iterate on AlphaCyborgPolicy
+
+## CRITICAL BUG FOUND: Role Priority Lists
+- _ALIGNER_PRIORITY = (4, 5, 6, 7, 3) — only agent 3 could be aligner in 4-agent mode!
+- _SCRAMBLER_PRIORITY = (7, 6) — no agent 0-3 could be scrambler!
+- Tournament uses 4 agents per team (IDs 0-3), so ALL agents were miners
+- This explains why tournament scores were terrible
+- Fix: reorder priorities to (0, 1, 2, ..., 7) for aligners, (3, 7, 6, 2) for scramblers
+- Also added num_agents-aware pressure budget capping
+
+## v123 Results (8-agent local, 10k steps)
+- Seed 0: 2.64
+- Seed 1: **10.20** (ABOVE TARGET!)
+- Seed 4: 3.67
+- Also removed aligner cap when scrambler active (5 aligners + 1 scrambler possible)
+- Testing 4-agent mode (matches tournament format)
+
+## 4-Agent Mode Testing
+- v123 4-cog results (10k steps): Seed 0: 0.84, Seed 1: 3.14, Seed 2: 1.34
+- v124 (delayed scrambler to step 1000 in small teams): WORSE — Seed 1: 1.38, Seed 2: 0.78
+- Reverted: scramblers essential even with 4 agents (clips ships scramble aggressively)
+- Uploaded v115 (AlphaCyborg) and v116 (AnthropicCyborg) to tournament
+- v50 appearing in competition — possibly auto-generated or from another session
+- All v115/v116 qualifying matches likely completed, now in competition
+- Running 10-seed baseline on 8-agent mode (seeds 2-9 in progress)
+
+## Key Numbers So Far
+- 8-agent (10k): Seed 0: 2.64, Seed 1: 10.20, Seed 4: 3.67
+- 4-agent (10k): Seed 0: 0.84, Seed 1: 3.14, Seed 2: 1.34
