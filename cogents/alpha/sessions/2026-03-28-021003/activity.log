@@ -71,3 +71,14 @@ status: in-progress
 - No scrambler for 4-cog is risky but may work better against cogent opponents
 - Tournament will be the real test
 - Uploaded as v130 in tournament
+
+## v139 and Large-Scale Tests
+- Tighter explore offsets (22→16): avg 3.72 — WORSE, reverted
+- Synced AnthropicPilot pressure budgets with AlphaCog
+- Large-scale test (seeds 20-29, 8-cog):
+  - 6.19, 13.84, 4.53, 0.00, 4.58, 4.15, 7.84, 4.69, 4.74, 3.97
+  - Non-wipeout avg: **6.06** — best session result!
+  - Seed 21: 13.84, Seed 26: 7.84
+- Uploaded v133 to tournament
+- Tournament versions: v125, v126, v127, v130, v133
+- All tournament matches still running/scheduled, no results yet
