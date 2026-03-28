@@ -1125,6 +1125,35 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         num_agents = self.policy_env_info.num_agents
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
 
+    def evaluate_state(self, state: MettagridState) -> Action:
+        action = super().evaluate_state(state)
+        step = state.step or self._step_index
+        if step % 500 == 0 or step == 1:
+            pos = _h.absolute_position(state)
+            hp = int(state.self_state.inventory.get("hp", 0))
+            hearts = int(state.self_state.inventory.get("heart", 0))
+            cargo = _h.resource_total(state)
+            role = self._infos.get("role", "?")
+            subtask = self._infos.get("subtask", "?")
+            aligner_b = self._infos.get("aligner_budget", "?")
+            scrambler_b = self._infos.get("scrambler_budget", "?")
+            frontier = self._infos.get("frontier_neutral_junctions", "?")
+            team_id = _h.team_id(state)
+            friendly = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner == team_id))
+            enemy = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+            shared = _shared_resources(state)
+            print(
+                f"[COG] step={step} agent={self._agent_id} pos={pos} role={role} "
+                f"subtask={subtask} hp={hp} hearts={hearts} cargo={cargo} "
+                f"aligners={aligner_b} scramblers={scrambler_b} "
+                f"friendly_j={friendly} enemy_j={enemy} frontier={frontier} "
+                f"hub_res={shared}",
+                flush=True,
+            )
+        return action
+
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         resources = _shared_resources(state)
         least = _least_resource(resources)

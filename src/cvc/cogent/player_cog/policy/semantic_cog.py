@@ -460,11 +460,13 @@ class SemanticCogAgentPolicy(AgentPolicy):
         if station is not None:
             return self._move_to_known(state, station, summary=f"get_{role}_gear", vibe="change_vibe_gear")
 
-        target = _h.spawn_relative_station_target(self._agent_id, role)
-        if target is None:
-            hub = self._nearest_hub(state)
-            if hub is None:
-                return self._explore_action(state, role=role, summary=f"find_{role}_station")
+        hub = self._nearest_hub(state)
+        if hub is None:
+            return self._explore_action(state, role=role, summary=f"find_{role}_station")
+        relative_target = _h.spawn_relative_station_target(self._agent_id, role)
+        if relative_target is not None:
+            target = (hub.global_x + relative_target[0], hub.global_y + relative_target[1])
+        else:
             dx, dy = _STATION_OFFSETS[role]
             target = (hub.global_x + dx, hub.global_y + dy)
         return self._move_to_position(state, target, summary=f"search_{role}_station", vibe="change_vibe_gear")
