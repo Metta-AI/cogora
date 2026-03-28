@@ -5,3 +5,13 @@ status: in-progress
 - Context: StableBoost avg 4.20 (15-seed), ZoneBoost avg 4.22 with seed 5 hitting 10.63
 - v171 (RealignBoost), v174 (StableBoost), v176 (ZoneBoost) uploaded, results pending
 - Goal: check tournament results, iterate on best policy, push toward >10 avg
+
+## Experiments: Targeting and Expansion
+- StableBoost baseline (5-seed): 4.84, 1.61, 2.45, 3.69, 5.94 = avg 3.70
+- FastAlign (6 pressure, 2 miners): 0.00, 1.89, 3.16, 2.43, 2.76 = avg 2.05 — REJECTED (economy starved, seed 1 wipe)
+- ClusterBoost (expansion_weight=0): 5.03, 5.18, 1.96, 5.12, 1.41 = avg 3.74 — slightly better but inconsistent
+- HubProximity (network_weight=1.5): 0.00, 1.24, 2.19, 3.20, 0.00 = avg 1.32 — REJECTED (2 wipes)
+- MidExpansion (expansion=3, hotspot=12): 5.53, 3.06, 4.09, 2.84, 4.47 = avg 3.99 — BEST, beats SB on 4/5 seeds
+- Running MidExpansion seeds 6-15 to validate
+- Tournament: all v171-v176 matches still running, new uploads v178-v181 by other session
+- New opponent detected: coglet-v0:v3

@@ -1756,6 +1756,73 @@ class AlphaNoScramblePolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaClusterBoostAgentPolicy(AlphaStableBoostAgentPolicy):
+    """StableBoost with cluster-near-hub targeting.
+
+    Key changes:
+    - expansion_weight=0: don't prioritize frontier expansion
+    - Agents target closest junctions, staying near hub
+    - Faster re-alignment when junctions are lost (shorter travel)
+    - Stronger re-align bonus (hotspot_weight=12 instead of 8)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._expansion_weight = 0.0
+        self._expansion_cap = 0.0
+        self._hotspot_weight = 12.0  # Stronger re-align bonus
+
+
+class AlphaClusterBoostPolicy(MettagridSemanticPolicy):
+    """StableBoost with cluster-near-hub targeting."""
+    short_names = ["alpha-cluster-boost"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaClusterBoostAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaMidExpansionAgentPolicy(AlphaStableBoostAgentPolicy):
+    """StableBoost with reduced expansion and stronger re-alignment.
+
+    Balance between cluster (expansion=0) and full expansion (expansion=10).
+    Reduced expansion keeps agents closer to hub while still allowing
+    some frontier pushing. Stronger re-alignment ensures lost junctions
+    are quickly recaptured.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._expansion_weight = 3.0  # Reduced from 10.0
+        self._expansion_cap = 20.0    # Reduced from 60.0
+        self._hotspot_weight = 12.0   # Stronger re-align bonus
+
+
+class AlphaMidExpansionPolicy(MettagridSemanticPolicy):
+    """StableBoost with reduced expansion and stronger re-alignment."""
+    short_names = ["alpha-mid-expansion"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaMidExpansionAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaCyborgPolicy(MettagridSemanticPolicy):
     """Lightweight policy without LLM dependencies."""
     short_names = ["alpha-cyborg"]
