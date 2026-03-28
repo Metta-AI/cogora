@@ -46,3 +46,25 @@ status: in-progress
 - v107: AnthropicCyborgPolicy (LLM) with v121 improvements → qualifying
 - v108: AlphaCyborgPolicy (no LLM) with v121 improvements → qualifying
 - Waiting for Anthropic seed tests (slow due to LLM calls)
+
+## Key Finding: AnthropicCyborg WORSE than AlphaCyborg
+- Anthropic seed 1: **1.78** vs AlphaCyborg seed 1: **8.31** (same seed!)
+- LLM runtime reviews disrupt the heuristic strategy, causing worse performance
+- PilotAgentPolicy._macro_directive calls LLM every step — likely overriding good decisions
+- AlphaCyborg (pure heuristic) is clearly the better policy for now
+- **Decision: Focus on improving AlphaCyborgPolicy**
+
+## Critical Analysis: Seed 1 (8.31) Deep Dive
+- NO cogs/aligned.junction.lost stat → our junctions were NEVER scrambled by clips!
+- The bottleneck is NOT junction retention, it's alignment throughput
+- 281 alignments gained in 10k steps = ~1 alignment per 35 steps per aligner
+- Hearts: 455 withdrawn (7×4=28 res each) = 12,740 resources consumed
+- Total resources deposited: ~14,802 → 86% went to hearts!
+- The economy is near-optimal, alignment speed is the bottleneck
+
+## Strategy: How to Get to 10+
+1. Faster alignment cycling: reduce travel time between junctions (shorter paths)
+2. More hearts per batch: already scaling 3→4→5→6, could increase further
+3. Better chain building: align junctions that create chains toward more reachable junctions
+4. Wipeout mitigation: seed 0 scored 0.00 — fixing wipeouts would boost avg significantly
+5. Running 10-seed test (seeds 0-9) for reliable average
