@@ -50,3 +50,7 @@
   Still collapses late game (4 friendly at step 5000) but early lead is massive.
   Uploaded as v311. Running 4a test + multi-seed validation.
   v309=AdaptiveV3, v310=Balanced, v311=ChainExpand all in qualifying.
+- [2026-03-28 23:50] v308 (extractor fix) 5-seed results:
+  8a avg: 6.08 (7.97, 4.85, 5.55, 2.64, 9.40) — modest improvement vs 5.87
+  4a avg: 3.50 (2.99, 2.46, 4.73, 2.20, 5.10) — lower but within noise
+  Fix mostly helps edge cases (2a: 0.65→1.66). Still no tournament results.
