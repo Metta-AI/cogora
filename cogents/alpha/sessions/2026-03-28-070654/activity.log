@@ -16,3 +16,10 @@ status: interrupted
 - Seed 5 RealignBoost=8.51 vs baseline=7.64 (improvement)
 - Some seeds score 0.00 — need to investigate
 - Tournament matches still running, no results yet
+
+## Bug fix: hotspot_weight was 0.0
+- CRITICAL: RealignBoost's negative hotspot count was multiplied by 0 (hotspot_weight=0.0 inherited from V65Replica)
+- Fixed: set hotspot_weight=8.0 in __init__, so negative count creates -24 bonus
+- Also fixed MaxAlign with same issue
+- Early rush experiment: reverted — made things worse (seed 5: 8.51→1.24)
+- Running 20-seed comparison tests: baseline vs fixed RealignBoost

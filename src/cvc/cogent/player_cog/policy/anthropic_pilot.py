@@ -526,8 +526,18 @@ class AlphaRealignBoostAgentPolicy(AlphaV65ReplicaAgentPolicy):
     Also: faster ramp, team-aware budgets, lower deposit threshold.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # CRITICAL: V65Replica sets hotspot_weight=0.0, which nullifies our boost.
+        # Re-enable it so negative hotspot counts create bonuses.
+        self._hotspot_weight = 8.0
+
     def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
-        """Return negative hotspot count = BONUS for re-alignment targets."""
+        """Return negative hotspot count = BONUS for re-alignment targets.
+
+        With hotspot_weight=8.0, a count of -3 gives a bonus of -24 points,
+        strongly prioritizing recently scrambled junctions for re-alignment.
+        """
         if hub is None:
             return 0
         rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
@@ -613,6 +623,10 @@ class AlphaRealignBoostAgentPolicy(AlphaV65ReplicaAgentPolicy):
 class AlphaMaxAlignAgentPolicy(AlphaV65ReplicaAgentPolicy):
     """Maximum alignment: 6 aligners, 0 scramblers for 8 agents.
     Tests whether pure alignment focus beats mixed strategy."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = 8.0
 
     def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
         """Re-alignment boost (same as RealignBoost)."""
