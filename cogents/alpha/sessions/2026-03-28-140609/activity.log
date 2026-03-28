@@ -1,5 +1,5 @@
 # Session 2026-03-28-140609 Activity Log
-status: interrupted
+status: in-progress
 
 ## Plan
 1. Understand v65 gap and improve tournament performance
@@ -75,3 +75,12 @@ status: interrupted
   - v224 (heuristic): 2.08 (24 matches) — at ceiling
   THE LLM IS MAKING A DIFFERENCE! +0.25 above heuristic ceiling.
   Need to amplify this advantage. Consider more aggressive LLM integration.
+- [15:40] v225 (LLM) settling: 2.45→2.39→2.26 (36 matches).
+  LLM advantage narrowing. Still ~0.1 above heuristic ceiling but convergingtoward same range. The LLM stagnation detection helps marginally.
+- [15:40] Current standings:
+  - v225 (LLM): 2.26 (#90) — best of new uploads
+  - v226 (heuristic): 2.19 (#123) — at ceiling
+  - v227 (heuristic): 2.08 (#149) — at ceiling
+  All converging to 2.1-2.3 regardless of approach.
+- [15:40] The gap to >10 is 4x. Heuristics + minor LLM adjustments won't close it.
+  Need fundamentally different approach: trained RL agent, or major LLM redesign.
