@@ -2185,6 +2185,83 @@ class AlphaV65OriginalPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaV65ExactAgentPolicy(SemanticCogAgentPolicy):
+    """Exact v65 agent: original constants, budgets, priorities.
+
+    Matches v65's original behavior:
+    - pressure_budget=4 immediate, 5 when resources>=20
+    - Scrambler at step 1500 (not 100)
+    - No early-game survival logic overrides
+    - No hotspot tracking (weight=0)
+    - No network weight
+    """
+
+    # v65 original priorities
+    _V65_ALIGNER_PRIORITY = (4, 5, 6, 7, 3)
+    _V65_SCRAMBLER_PRIORITY = (7, 6)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = 0.0   # v65 had no hotspot tracking
+        self._network_weight = 0.0   # v65 had no network penalty
+
+    def _desired_role(self, state: MettagridState, *, objective: str | None = None) -> str:
+        """v65 role assignment: agents 4,5,6,7 are aligners, 7,6 are scramblers."""
+        aligner_budget, scrambler_budget = self._pressure_budgets(state, objective=objective)
+        scrambler_ids = set(self._V65_SCRAMBLER_PRIORITY[:scrambler_budget])
+        aligner_ids = []
+        for agent_id in self._V65_ALIGNER_PRIORITY:
+            if agent_id in scrambler_ids:
+                continue
+            if len(aligner_ids) == aligner_budget:
+                break
+            aligner_ids.append(agent_id)
+        if self._agent_id in scrambler_ids:
+            return "scrambler"
+        if self._agent_id in aligner_ids:
+            return "aligner"
+        return "miner"
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """v65 original: simple 4-aligner budget, scrambler at step 1500."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        pressure_budget = 4
+        if step >= 40 and min_res >= 20:
+            pressure_budget = 5
+
+        scrambler_budget = 0
+        if step >= 1_500:
+            scrambler_budget = 1
+        aligner_budget = pressure_budget - scrambler_budget
+
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaV65ExactPolicy(MettagridSemanticPolicy):
+    """Exact v65 replica: original constants, global role assignment, simple budgets."""
+    short_names = ["alpha-v65-exact"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        # No shared_team_ids — v65 used global role priorities
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65ExactAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaTournamentAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
     """Tournament-optimized: v65 targeting + idle-mine + team-aware budgets.
 
