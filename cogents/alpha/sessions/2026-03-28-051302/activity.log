@@ -51,3 +51,15 @@ Comparing against v53 and other historical versions.
 - v65 replica scores 0.29 at 500 steps vs base's 0.25 — slightly better!
 
 ## Base Policy 10-seed avg: 3.89 (min 0.0, max 9.26, 1 wipeout)
+
+## BREAKTHROUGH: V65 Replica 10-seed results
+V65r (no network/hotspot penalty): avg 5.03 (seeds: 4.48, 4.33, 3.95, 3.67, 7.56, 5.38, 3.63, 7.78, 3.56, 5.92)
+Base (current code): avg 3.89 (seeds: 4.86, 1.39, 2.49, 6.83, 9.26, 2.98, 2.77, 0.00, 4.20, 4.14)
+- V65r avg 5.03 vs base 3.89 (+29% improvement!)
+- V65r 0 wipeouts vs base 1 wipeout
+- Seed 8: base 0.00 → v65r 7.78 (fixed wipeout)
+- V65r much more consistent: range 3.56-7.78 vs 0.00-9.26
+
+## Uploaded
+- v150: AlphaV65ReplicaPolicy (v65-style targeting)
+- v151: AlphaV65PlusBiasPolicy (v65 targeting + resource bias)

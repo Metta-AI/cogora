@@ -50,6 +50,23 @@ class AlphaV65ReplicaAgentPolicy(SemanticCogAgentPolicy):
         return 0
 
 
+class AlphaV65PlusBiasAgentPolicy(SemanticCogAgentPolicy):
+    """V65-style targeting + resource bias. Best of both worlds."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.0
+        self._hotspot_weight = 0.0
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        return 0
+
+
 class AlphaBiasOnlyAgentPolicy(SemanticCogAgentPolicy):
     """Base policy + resource bias only. No budget/retreat changes."""
 
@@ -373,6 +390,23 @@ class AlphaV65ReplicaPolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaV65ReplicaAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaV65PlusBiasPolicy(MettagridSemanticPolicy):
+    """V65 targeting + resource bias."""
+    short_names = ["alpha-v65-bias"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65PlusBiasAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
