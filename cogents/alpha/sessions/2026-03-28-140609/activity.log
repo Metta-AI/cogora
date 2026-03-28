@@ -84,3 +84,12 @@ status: in-progress
   All converging to 2.1-2.3 regardless of approach.
 - [15:40] The gap to >10 is 4x. Heuristics + minor LLM adjustments won't close it.
   Need fundamentally different approach: trained RL agent, or major LLM redesign.
+- [15:50] DISCOVERY: AnthropicPilotAgentPolicy._macro_directive was only LOGGING
+  LLM opinions, not using them! The LLM's rewrites via runtime reviews were ignored.
+  Fixed to actually pass through LLM objectives while keeping heuristic resource_bias.
+  Uploaded v230 with fix. v225's marginal advantage was from runtime review scheduling
+  alone (background pattern detection), not actual LLM-guided strategy.
+- [15:55] v225 stable at 2.30 (42 matches). v230 qualifying — waiting for results.
+- [15:55] Summary: heuristic ceiling ~2.15, LLM ceiling ~2.30, target >10.
+  Old engine versions (v60-v65 era) scored 2.89-3.59 on older mettagrid.
+  Game engine changes likely responsible for ~0.7 point drop.
