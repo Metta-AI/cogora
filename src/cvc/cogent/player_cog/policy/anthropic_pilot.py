@@ -87,8 +87,8 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         aligner_budget = self._current_aligner_budget
         scrambler_budget = 0
 
-        # Add scrambler at step 300
-        if step >= 300:
+        # Add scrambler at step 300 (only if team has 3+ agents to spare)
+        if step >= 300 and num_agents >= 3:
             scrambler_budget = 1
 
         # Cap total pressure to leave at least 1 miner
@@ -124,7 +124,8 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_budget_change_step = 0
-        self._current_aligner_budget = 4  # IMPORTANT: init=4 scores 8.31 vs init=2 scores 4.76 on seed 1
+        num_agents = self.policy_env_info.num_agents
+        self._current_aligner_budget = min(4, max(num_agents - 1, 1))
 
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         resources = _shared_resources(state)
@@ -154,17 +155,18 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             print(f"[LLM] step={state.step} agent={self._agent_id} error={e}", flush=True)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Economy-responsive with hysteresis — matches AlphaCogAgentPolicy v122."""
+        """Economy-responsive with hysteresis — synced with AlphaCogAgentPolicy."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
+        num_agents = self.policy_env_info.num_agents
+        max_pressure = max(num_agents - 1, 1)
 
         if step < 10:
-            return 2, 0
+            return min(2, max_pressure), 0
         if step < 50:
             aligner_budget = 4 if min_res >= 3 else 3
-            return aligner_budget, 0
+            return min(aligner_budget, max_pressure), 0
 
-        # Hysteresis: scale UP at min_res >= 5, DOWN at min_res < 1
         desired = self._current_aligner_budget
         if min_res >= 5:
             desired = 5
@@ -180,9 +182,12 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
 
         aligner_budget = self._current_aligner_budget
         scrambler_budget = 0
-        if step >= 300:
+        if step >= 300 and num_agents >= 3:
             scrambler_budget = 1
-            aligner_budget = min(aligner_budget, 4)
+
+        total = aligner_budget + scrambler_budget
+        if total > max_pressure:
+            aligner_budget = max(max_pressure - scrambler_budget, 0)
 
         if objective == "resource_coverage":
             return 0, 0
