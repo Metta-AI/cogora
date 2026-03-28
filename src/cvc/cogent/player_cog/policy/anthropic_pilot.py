@@ -2031,6 +2031,83 @@ class AlphaExp5Policy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaTurboMidAgentPolicy(AlphaMidExpansionAgentPolicy):
+    """MidExpansion with faster early ramp and late-game double scrambler.
+
+    Early game (steps 0-3000): faster ramp to max aligners
+    Late game (steps 3000+): add second scrambler to protect gains
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 30 or (min_res < 1 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 15:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 150 and num_agents >= 4 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: faster early ramp
+        if step < 5:
+            pressure_budget = 2
+        elif step < 30:
+            pressure_budget = 3
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)
+            elif min_res < 2:
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            # Late game: 6 pressure with 2 scramblers
+            pressure_budget = min(6, num_agents - 1)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(4, num_agents // 3)
+
+        scrambler_budget = 0
+        if step >= 3000:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 100:
+            scrambler_budget = min(1, pressure_budget // 3)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaTurboMidPolicy(MettagridSemanticPolicy):
+    """MidExpansion with faster ramp and late-game double scrambler."""
+    short_names = ["alpha-turbo-mid"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTurboMidAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaCyborgPolicy(MettagridSemanticPolicy):
     """Lightweight policy without LLM dependencies."""
     short_names = ["alpha-cyborg"]
