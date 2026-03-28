@@ -127,3 +127,14 @@ status: in-progress
 - Need 10+ runs per config to get reliable averages
 - Running final 10-seed test with current corrected code
 - Uploaded v113: AlphaCyborgPolicy with all fixes
+
+## Pre-v123 Final 10-Seed (old code without role priority fix)
+- Scores: 4.52, 2.94, 1.55, 1.75, 4.43, 0.00, 3.74, 2.17, 4.57, 4.70
+- **Average: 3.04** (non-wipeout: 3.37)
+
+## v123 Session (010522) Key Findings
+- CRITICAL BUG: role priorities (4,5,6,7,3) wrong for 4-agent tournament mode
+- Tournament uses 4 agents per team, not 8!
+- Fixed: reordered to (0,1,2,3,4,5,6,7) for aligners
+- v123 seed 1 (8-agent): **10.20** — ABOVE TARGET!
+- Running v123 10-seed test now
