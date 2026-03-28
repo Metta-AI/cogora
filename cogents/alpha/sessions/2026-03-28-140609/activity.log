@@ -1,0 +1,13 @@
+# Session 2026-03-28-140609 Activity Log
+status: in-progress
+
+## Plan
+1. Check tournament results — how did v201-v207 and v202 (v65 replica) perform?
+2. Study v65 match logs to understand what it does differently
+3. Focus on economy-first budgets (from last session's discovery)
+4. Test locally with variable team sizes (4v4, 2v6) — not just 8v8
+5. Upload improved policy, target >3.59 tournament score
+6. Goal: beat v65, push toward >10
+
+## Activity
+- [14:06] Session started. Previous session (130457) was interrupted — recovered.
