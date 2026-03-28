@@ -95,3 +95,9 @@ Need fundamentally different approach to reach >10.
   (1-2 junction alignments/episode). Needs much more training.
 - [17:38] Tournament v250-252 all converging to 2.14-2.21 (40+ matches).
   Heuristic ceiling confirmed at ~2.2 with current opponent pool.
+- [17:45] coglet-v0:v8 at #3 (3.02, 11m) — new competitor, possibly trained agent.
+  All alpha versions v250-253 converged to 2.18-2.20 (45 matches each).
+  Heuristic ceiling confirmed at ~2.2 with current tournament.
+- [17:45] RL training at 16M steps. Still learning basics (1-2 alignments/episode).
+  Needs 100M+ steps for meaningful policy. ~1.5h remaining at current SPS.
+- [17:45] Updated suggestions.md for user action items.
