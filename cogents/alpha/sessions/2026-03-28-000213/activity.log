@@ -138,3 +138,11 @@ status: in-progress
 - Fixed: reordered to (0,1,2,3,4,5,6,7) for aligners
 - v123 seed 1 (8-agent): **10.20** — ABOVE TARGET!
 - Running v123 10-seed test now
+
+## V123 10-Seed Results (8-agent, role priority fix + adaptive budgets)
+- Scores: 5.84, 5.29, 1.73, 2.98, 5.10, 4.98, 3.26, 4.45, 7.30, 0.00
+- **Average: 4.09** (non-wipeout: 4.55)
+- Improvement: +35% over pre-v123 (3.04 avg)
+- Best: 7.30, 1 wipeout (10%)
+- Uploaded v120 to tournament
+- Still far from target of 10. Need ~2.5x improvement.
