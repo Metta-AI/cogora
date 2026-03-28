@@ -977,6 +977,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     hub_position=hub_position,
                     candidate=entity,
                     neutral_junctions=neutral_junctions,
+                    friendly_junctions=friendly_junctions,
                 ),
                 entity.position,
             ),
@@ -1012,23 +1013,27 @@ class SemanticCogAgentPolicy(AgentPolicy):
             return sticky
 
         current_pos = _h.absolute_position(state)
+        team_id = _h.team_id(state)
         hub = self._nearest_hub(state)
         hub_position = current_pos if hub is None else hub.position
         neutral_junctions = self._world_model.entities(
             entity_type="junction",
             predicate=lambda entity: entity.owner in {None, "neutral"},
         )
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
         sticky_score = _h.scramble_target_score(
             current_position=current_pos,
             hub_position=hub_position,
             candidate=sticky,
             neutral_junctions=neutral_junctions,
+            friendly_junctions=friendly_junctions,
         )[0]
         candidate_score = _h.scramble_target_score(
             current_position=current_pos,
             hub_position=hub_position,
             candidate=candidate,
             neutral_junctions=neutral_junctions,
+            friendly_junctions=friendly_junctions,
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate
