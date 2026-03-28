@@ -171,3 +171,15 @@ Need fundamentally different approach to reach >10.
   Hearts: 1.5/agent (from initial supply, not learned).
   Stateless architecture may need much more training to learn.
 - [19:09] v263 (our stateless RL) not yet on leaderboard.
+- [19:14] Stateless RL at 14.1M steps — **STUCK at max entropy (1.609)**.
+  Feedforward agent can't learn from sparse rewards without memory.
+  LSTM learned economy but too slow for tournament.
+  Need: shaped rewards, faster LSTM, or hybrid approach.
+- [19:14] v259 at 2.52 (#38, 25m). v262 at 2.25 (#99, 27m). v263 not qualifying.
+- [19:14] SESSION SUMMARY SO FAR:
+  * Discovered tournament is 75% 4-agent games (critical insight)
+  * Created SmallTeamPolicy (33% better locally, tournament TBD)
+  * Attempted RL training: LSTM learns but too slow, stateless doesn't learn
+  * All heuristic versions converge to 2.18-2.52 in tournament
+  * Target of >10 requires fundamentally different approach (trained RL agent)
+  * Best path: curriculum training on GPU with shaped rewards
