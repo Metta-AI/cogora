@@ -22,9 +22,30 @@ Identified the EXACT changes between v65 era and current code in semantic_cog.py
 
 Created AlphaV65TrueReplicaPolicy that uses EXACT v65 targeting function (hub_penalty).
 
-## 5-seed Local Test (5000 steps)
+## 5-seed Local Test (5000 steps, 8 agents)
 Base (current code): avg 3.29 (1.70, 1.31, 2.23, 4.79, 6.42)
 V65 True Replica: avg 3.22 (4.29, 1.70, 1.92, 1.97, 6.24)
 - Nearly identical averages
 - V65 true helps seed 1 a lot (1.70→4.29), hurts seeds 3-4
-- Hub penalty vs network penalty: marginal local difference
+
+## CRITICAL FINDING: Tournament uses variable team sizes!
+Pool config: "2+6, 6+2, 4+4" — NOT 8v8!
+Base policy assumes 8 agents, allocates 5 pressure → no miners with 2-4 agents.
+
+## Variable Team Size Results (3 seeds each)
+| Team size | Base    | Team-aware | V65+TeamAware |
+|-----------|---------|------------|---------------|
+| 2 agents  | 0.03    | 0.08       | 0.04          |
+| 4 agents  | 0.28    | 1.14       | 1.51          |
+| 6 agents  | 1.90    | 2.08       | 0.98          |
+| 8 agents  | 1.75    | -          | 2.31          |
+
+Key insights:
+- Team-aware policies MASSIVELY outperform base at 4 agents (1.14 vs 0.28)
+- V65+TeamAware best at 4 agents (1.51) but worse at 6 (0.98)
+- 2-agent games are very hard regardless
+
+## Uploads
+- v162: AlphaV65TrueReplicaPolicy (exact v65 targeting, 8-agent budgets)
+- v163: AlphaTeamAwarePolicy (team-size-aware budgets)
+- Created AlphaV65TeamAwarePolicy (v65 targeting + team-size budgets)

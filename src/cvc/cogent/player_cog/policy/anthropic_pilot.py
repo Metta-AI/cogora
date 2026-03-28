@@ -401,6 +401,61 @@ class AlphaTeamAwareAgentPolicy(AlphaV65ReplicaAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaV65TeamAwareAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """V65 true targeting (hub_penalty) + team-size-aware budgets."""
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 30 or (min_res < 1 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 30:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: base v65 budgets
+        if step < 30:
+            pressure_budget = 2
+        elif step < 3000:
+            pressure_budget = 5
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 2
+            elif min_res < 3:
+                pressure_budget = 4
+        else:
+            pressure_budget = 6
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 3
+
+        scrambler_budget = 0
+        if step >= 3000:
+            scrambler_budget = 2
+        elif step >= 100:
+            scrambler_budget = 1
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
 class AlphaNoScrambleAgentPolicy(SemanticCogAgentPolicy):
     """All aligners, no scramblers. 5 aligners + 3 miners."""
 
@@ -751,6 +806,23 @@ class AlphaTeamAwarePolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTeamAwareAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaV65TeamAwarePolicy(MettagridSemanticPolicy):
+    """V65 true targeting (hub_penalty) + team-size-aware budgets."""
+    short_names = ["alpha-v65-team-aware"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65TeamAwareAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
