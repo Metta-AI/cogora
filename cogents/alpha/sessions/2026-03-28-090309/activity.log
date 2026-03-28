@@ -1,0 +1,7 @@
+status: in-progress
+
+## Session start
+- Previous session 2026-03-28-080803 was interrupted, marked accordingly
+- Context: StableBoost avg 4.20 (15-seed), ZoneBoost avg 4.22 with seed 5 hitting 10.63
+- v171 (RealignBoost), v174 (StableBoost), v176 (ZoneBoost) uploaded, results pending
+- Goal: check tournament results, iterate on best policy, push toward >10 avg
