@@ -14,3 +14,12 @@ status: in-progress
 - [15:13] AlphaTournament vs clips 8a 5k: 1.47 — lower than previous VT tests (3.30+).
 - [15:14] Created two new strategies: FlashRush (all-mine 50 steps then mass-align) and EconDominance (5 miners, 2 efficient aligners). Testing vs clips.
 - [15:15] Tournament matches still running (v224-v228). No completed results yet.
+- [15:16] FlashRush (all-mine 50 steps then mass-align) vs clips: 1.21 — WORSE than baseline.
+- [15:16] EconDominance (5 miners, 2 aligners) vs clips: 0.00 (wipe!) — economy-first fails.
+- [15:17] INSIGHT from self-play analysis: junctions peak ~17 at step 1200, then churn to 10-16.
+  Churn from opponent scrambling is the main problem. Need to suppress enemy network.
+- [15:18] Previous session confirmed: v225 LLM settled to 2.26. ALL approaches converge to 2.1-2.3.
+- [15:19] Created ScrambleDominance (4 scramblers + 2 aligners). Theory: keep enemy at 0 junctions
+  while slowly building own network. Testing vs clips and self-play.
+- [15:19] Running 5-seed batch tests for FlashRush and AlphaTournament for reliable comparison.
+- [15:20] v47 appeared in tournament — likely from another worker. New matches being scheduled.

@@ -3036,6 +3036,104 @@ class AlphaEconDominancePolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaScrambleDominanceAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """Scramble Dominance: 4-5 scramblers + 2 aligners + 1-2 miners.
+
+    Theory: overwhelm enemy with scramblers to keep them at 0 junctions.
+    Even 3-4 friendly junctions = huge score advantage if enemy holds 0.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            return 0, 1 if step >= 200 else (1, 0)
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            return 1, min(2, num_agents - 2)
+
+        # 5+ agents: scramble-heavy
+        if step < 50:
+            return 2, 0  # Quick territory grab
+        if step < 200:
+            return 2, 2  # 2 aligners + 2 scramblers + 4 miners
+
+        if min_res < 3 and not can_hearts:
+            return 1, 1
+
+        # 2 aligners + 4 scramblers + 2 miners
+        scrambler_budget = min(4, num_agents - 3)
+        aligner_budget = 2
+        if objective == "economy_bootstrap":
+            return 1, 1
+        return aligner_budget, scrambler_budget
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Idle-explore for aligners."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        return self._explore_action(state, role="aligner", summary="idle_explore")
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaScrambleDominancePolicy(MettagridSemanticPolicy):
+    """Scramble Dominance: overwhelm with scramblers, hold few junctions."""
+    short_names = ["alpha-scramble-dominance"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaScrambleDominanceAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 # Re-export the ORIGINAL pre-rewrite semantic_cog for pure v65 testing
 from cvc.cogent.player_cog.policy.semantic_cog_v65 import (
     MettagridSemanticPolicy as _V65BasePolicy,
