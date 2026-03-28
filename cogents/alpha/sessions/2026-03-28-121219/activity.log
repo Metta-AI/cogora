@@ -19,3 +19,10 @@ status: in-progress
   3. Late-game 2nd scrambler delayed to step 5000 (was 3000) and requires min_res >= 30
   4. Lower deposit threshold (12 vs 16) for faster economy turnover
 - [12:31] Running v2 tests with fixes.
+- [12:40] V3 5k results: [6.43, 3.07, 1.21, 0.00(wipe), 5.90] avg(no-wipe)=4.15 vs baseline 3.70
+- [12:42] Seed 4 wipe confirmed deterministic (known bug, ~7% seeds)
+- [12:43] 10k games crashed at step 5-6k (killed by system). Mid-run reward ~6.68.
+- [12:44] Key improvement: hotspot flip from penalty→bonus, lower deposit threshold (12)
+- [12:44] Reverted resource-responsive budget (caused death spiral on seed 3)
+- [12:45] Late 2nd scrambler delayed to step 5000 w/ min_res >= 30 (was 3000)
+- [12:46] Uploading v3 to tournament for competitive evaluation.

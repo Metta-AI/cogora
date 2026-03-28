@@ -1297,24 +1297,23 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 return min(aligner_budget, 1), 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: aggressive alignment with resource-responsive fallback
+        # 5+ agents: 5a+1s+2m — aggressive for 10k tournament games
         if step < 10:
             return min(2, num_agents - 1), 0
         if step < 50:
             pressure_budget = 3
-        elif min_res < 1 and not can_hearts:
-            # Critical resource crisis — send most agents to mine
-            pressure_budget = max(2, num_agents // 4)
-        elif min_res < 7:
-            # Low resources — reduce pressure to keep economy running
-            # Hearts cost 7 of each element, so < 7 means can't even make 1 heart
-            pressure_budget = min(4, num_agents - 3)
         elif step < 3000:
             pressure_budget = min(6, num_agents - 2)  # 5a+1s for 8 agents
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)  # Floor 3
+            elif min_res < 2:
+                pressure_budget = min(5, num_agents - 2)
         else:
             pressure_budget = min(6, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)
 
-        # Scramblers: only 1 until step 5000, then 2 if resources healthy
+        # Scramblers: 1 scrambler from step 100, 2nd only at step 5000+ with healthy resources
         scrambler_budget = 0
         if step >= 5000 and min_res >= 30:
             scrambler_budget = min(2, pressure_budget // 3)
