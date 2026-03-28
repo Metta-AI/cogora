@@ -20,4 +20,9 @@
 
 ### v135: Increased heart batch from 3→4 base
 - More alignments per hub trip = less travel overhead
-- Testing with seeds 1-5
+- v135 seeds 1-5: 8.12, 1.34, 3.99, 3.13, 9.09 (avg 5.13)
+- Seed 3 no longer wipeout (3.99 vs 0.00)
+
+### v136: Scrambler only for 6+ agents, ensure 2 miners for 4+
+- Running 10-seed 8-cog and 5-seed 4-cog tests
+- Uploaded current code as v128 to tournament
