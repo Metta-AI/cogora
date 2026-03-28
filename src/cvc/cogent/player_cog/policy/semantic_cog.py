@@ -26,7 +26,7 @@ _STATION_OFFSETS = {
     "scout": (3, 4),
 }
 _TEMP_BLOCK_STEPS = 10
-_RETREAT_MARGIN = 15
+_RETREAT_MARGIN = 20
 _DEFAULT_BOUND_MARGIN = 12
 _ALIGNER_GEAR_DELAY_STEPS = 0
 _TARGET_SWITCH_THRESHOLD = 3.0
@@ -814,6 +814,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                         step=self._step_index,
                     ),
                     hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
                 ),
                 entity.position,
             ),
@@ -839,6 +840,10 @@ class SemanticCogAgentPolicy(AgentPolicy):
         )
         hub = self._nearest_hub(state)
         hub_pos = hub.position if hub is not None else None
+        friendly_junctions = self._world_model.entities(
+            entity_type="junction",
+            predicate=lambda junction: junction.owner == team_id,
+        )
         sticky_score = _h.aligner_target_score(
             current_position=current_pos,
             candidate=sticky,
@@ -846,6 +851,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             enemy_junctions=enemy_junctions,
             claimed_by_other=False,
             hub_position=hub_pos,
+            friendly_junctions=friendly_junctions,
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -859,6 +865,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 step=self._step_index,
             ),
             hub_position=hub_pos,
+            friendly_junctions=friendly_junctions,
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate
