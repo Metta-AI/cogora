@@ -17,3 +17,10 @@ RL training was started but interrupted. Need to continue RL approach.
   Learning to withdraw hearts and resources from hub. Entropy dropping (1.42).
 - [17:10] Matches v250-v252 still running against v17, v14, and gtlm-reactive (new opponent!).
 - [17:10] Key issue: 4-agent self-play produces 0.00 scores — policy has a bug in solo-team mode.
+- [17:22] 8-agent self-play (no clips): 1.43/cog. 4-agent clips: 0.88/cog.
+- [17:23] 4-agent self-play bug confirmed: NOT tournament-relevant (tournament uses opponents).
+- [17:26] Uploaded v254 (AlphaSmallTeamPolicy) to tournament.
+- [17:26] Started second RL training on machina_1.clips (4-agent).
+- [17:28] Two RL trainers running in parallel: base (9.2M steps) + clips (starting).
+- [17:28] New opponents spotted: slanky:v112, gtlm-reactive. 
+- [17:28] All v250-v254 matches still running/scheduled.
