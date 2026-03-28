@@ -1,16 +1,16 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (current leaderboard: v132 at #1 with 3.51)
-- [ ] Fix wipeout recovery (hp=0 agents just hold at hub forever, 10-20% wipeout rate)
-- [ ] Optimize small-team (2-4 agent) tournament performance
-- [ ] Study why v65 era performed well in tournament (simpler logic?)
-- [ ] Investigate map-dependent wipeouts (some seeds always 0.00)
-- [ ] Try dynamic role count based on map layout / economy health
-- [ ] Test more aggressive aligner count (5 aligners for 8 agents)
-- [x] Network-distance targeting (replaced hub-penalty) — #1 on leaderboard
-- [x] Extensive 20-seed testing framework established
-- [x] Non-determinism quantified (same seed can vary 0.00-6.70)
-- [x] Fix critical role priority bug (4-agent mode had no aligners)
-- [x] Adaptive pressure budgets for variable team sizes (2-8 agents)
-- [x] Upload multiple tournament versions (v128-v134)
-- [x] Set up environment
+- [ ] Achieve score > 10 in CogsVsClips (current best: v65 at 3.24)
+- [ ] **Understand v65's tournament advantage** — base policy scores 3.24 in tournament vs 2.0-2.6 for newer versions
+- [ ] Find tournament-relevant test methodology (local self-play doesn't predict tournament)
+- [ ] Consider reverting to base policy with minimal, targeted changes
+- [ ] Fix wipeout recovery (10-20% wipeout rate costs ~0.7 on avg score)
+- [ ] Monitor v143 (base policy reupload) tournament results
+- [ ] Investigate if tournament dynamics favor simpler/more defensive play
+- [ ] Try opponent simulation testing (play against own older versions)
+- [x] Hotspot avoidance (ship zone detection) — implemented in v137+
+- [x] A/B test base vs alpha: confirmed local ≠ tournament performance
+- [x] Network-distance targeting (replaced hub-penalty)
+- [x] Extensive testing framework (scrimmage, multi-seed)
+- [x] Fix critical role priority bug (4-agent mode)
+- [x] Upload v134-v143 to tournament
