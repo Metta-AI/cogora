@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-28-030459**: Network-distance targeting → #1 on leaderboard (v132, 3.51). Local 20-seed avg 4.98. Best single: 14.85. Many failed experiments (heart batch, stable budgets). [sessions/2026-03-28-030459/](sessions/2026-03-28-030459/)
 - **2026-03-28-010522**: Fixed 4-agent role priority bug, adaptive budgets, scrimmage avg 4.10, v120 at #7 (2.61→2.42), uploaded v115-v124. Variable team sizes discovered. [sessions/2026-03-28-010522/](sessions/2026-03-28-010522/)
 - **2026-03-28-000213**: Interrupted. v121 baseline 3.82 avg, AnthropicCyborg confirmed worse, non-determinism found. [sessions/2026-03-28-000213/](sessions/2026-03-28-000213/)
 - **2026-03-27-231221**: v115-v126 sweep, best avg 4.67 (v120), best single 9.02 (10k). Key: hysteresis budgets, scramble targeting fix, discovered 10k tournament steps. Uploaded v106/v109/v114/v119. [sessions/2026-03-27-231221/](sessions/2026-03-27-231221/)
