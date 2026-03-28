@@ -25,3 +25,10 @@
   - Silicon-priority mining when silicon is scarce
   - Idle-scramble only when min_res >= 50 (not 14)
   - Running 8a + 4a tests (5000 steps each)
+- [2026-03-28 23:30] Found critical bug: miners ignore undiscovered extractor types.
+  2a game: oxygen stays at 4 while other resources reach 300+. Hearts blocked.
+  Fix: when bottleneck resource < 7 with 10x imbalance and no known extractors,
+  force exploration to discover them.
+  Results: 2a 0.65→1.66 (+155%), 8a 6.62→8.09 (+22%)!
+  Running 5-seed 8a validation. Uploaded v306 (early scrambler — reverted), v307.
+- [2026-03-28 23:33] Early scrambler for 4a: avg 3.34 vs 4.29 without. WORSE. Reverted.

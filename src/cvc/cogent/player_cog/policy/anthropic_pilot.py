@@ -1140,8 +1140,8 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
         """Clear sticky target when resource priority changes significantly.
 
-        Fixes: miners get locked to wrong resources via sticky targets even when
-        a critical resource hits 0. This wastes mining capacity.
+        Also: if the bottleneck resource has no known extractors and is critically
+        low, return None to force exploration (discover missing extractor types).
         """
         resources = _shared_resources(state)
         least = _least_resource(resources)
@@ -1164,6 +1164,21 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if least_amount < 14:
                 self._clear_sticky_target()
         self._last_bias_resource = self._resource_bias
+
+        # If bottleneck resource is critically low (< 7, can't make hearts)
+        # while other resources are abundant (10x imbalance), and we have no
+        # known extractors for the bottleneck, explore to discover them.
+        # This prevents miners from ignoring undiscovered extractor types.
+        max_amount = max(resources.values())
+        if least_amount < 7 and max_amount >= least_amount * 10 + 20:
+            step = state.step or self._step_index
+            least_extractors = self._world_model.entities(
+                entity_type=f"{least}_extractor",
+                predicate=lambda entity: _h.is_usable_recent_extractor(entity, step=step),
+            )
+            if not least_extractors:
+                self._clear_sticky_target()
+                return None
 
         return super()._preferred_miner_extractor(state)
 
