@@ -1,5 +1,5 @@
 # Session 2026-03-28-151010 Activity Log
-status: in-progress
+status: completed
 
 ## Plan
 1. Check v225 (LLM-enhanced) tournament results — best hope for breaking 2.2 ceiling
@@ -163,3 +163,6 @@ status: in-progress
   Comprehensive A/B: V65Pure vs V65TrueReplica, old deps vs current deps (4 versions).
 - [16:14] v241 (V65TrueReplica+old): 2.91→2.66→2.45→2.39 (19m) — still settling.
   AlphaCyborg self-play 10k: 2.25 — matches expected tournament range.
+- [16:15] Final standings: v240/v241 settling at ~2.35. v245-v249 still qualifying.
+  Best new version is 60+ ranks below v65. Need more matches and likely code fixes.
+- [16:16] SESSION END. Wrote learnings, summary. Updated todos.
