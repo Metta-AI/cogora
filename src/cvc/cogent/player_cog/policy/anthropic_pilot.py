@@ -3491,11 +3491,14 @@ class AlphaEconFixAgentPolicy(AlphaCogAgentPolicy):
     a critical resource (like carbon) hits 0. This wastes mining capacity.
 
     Also uses v65-style budgets (4 aligners early) with earlier scramblers.
+    Disables hotspot weight (hurts in tournament per prior testing).
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_bias_resource: str | None = None
+        # Disable hotspot weight — confirmed to hurt tournament performance
+        self._hotspot_weight = 0.0
 
     def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
         """Override: clear sticky target when resource priority changes significantly."""
