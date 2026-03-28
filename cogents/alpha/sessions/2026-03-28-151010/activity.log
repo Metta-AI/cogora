@@ -148,3 +148,14 @@ status: in-progress
   v247 (V65TrueReplica old deps again). Need more matches to confirm v241's ~2.9.
 - [16:07] Strategy: if V65TrueReplica+old_deps converges at ~2.8-2.9, we can then
   try adding incremental improvements (re-alignment boost, idle-mine) on top.
+- [16:10] v241 settling: 2.91→2.66→2.45 (#52) at 18 matches.
+  Same convergence pattern as all versions. Will likely settle 2.2-2.4.
+  OLD DEPS CONCLUSION: marginal advantage (+0.1-0.3), not a game-changer.
+- [16:10] Comprehensive tournament data:
+  - Well-converged old versions (v17/v11/v38, 900+ matches): 2.75-2.81
+  - v65 (516 matches): 3.59 — outlier, likely from different era
+  - Our new versions (20-30 matches): 2.0-2.2 (not yet converged)
+  - Best non-alpha: slanky 2.69, Paz-Bot 2.67
+  - v241 (V65TrueReplica+old_deps, 18m): 2.45 — still settling
+  REALISTIC TARGET: get our best version to 2.5-2.8 range (top 20).
+  Score >10 is not achievable with current game mechanics.
