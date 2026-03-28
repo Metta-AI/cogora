@@ -1303,7 +1303,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         if step < 50:
             pressure_budget = 3
         elif step < 3000:
-            pressure_budget = min(6, num_agents - 2)  # 5a+1s for 8 agents
+            pressure_budget = min(6, num_agents - 2)  # 5a+1s+2m — full pressure
             if min_res < 1 and not can_hearts:
                 pressure_budget = max(3, num_agents // 3)  # Floor 3
             elif min_res < 2:

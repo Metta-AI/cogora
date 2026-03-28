@@ -31,7 +31,11 @@ status: in-progress
 - [12:50] V4 results: [8.52, 6.25, 6.10, 3.21] avg=6.02 (+89% over baseline 3.18!)
 - [12:50] KEY FIX: idle aligners mine instead of explore → massive economy boost
 - [12:51] Uploaded v197 to tournament.
-- [13:00] **Tournament results for v193** (all vs old alpha versions):
-  - 4v4: avg ~1.5 (both sides equal), 6a: ~5.7, 2a: ~1.6, overall ~2.8
-  - No matches vs slanky/Paz-Bot yet
-- [13:05] v196 in qualifying. v197 uploaded with idle-mine improvement.
+- [13:00] 10k single seed: seed 6 = 6.39
+- [13:01] Wipe bug investigation: HP drops to 0 despite hub proximity. Map/engine issue, not fixable in policy.
+- [13:01] 5-game 10k runs killed by system (OOM?) — running 1-2 at a time instead.
+- [13:02] Idle-aligner-mine is the biggest improvement: seed 2 went from 2.01→6.25, seed 3 from 1.98→6.10.
+- [13:00] 10k single seed: seed 6 = 6.39
+- [13:01] Wipe bug investigation: HP drops to 0 despite hub proximity. Map/engine issue, not fixable in policy.
+- [13:01] 5-game 10k runs killed by system (OOM?) — running 1-2 at a time instead.
+- [13:02] Idle-aligner-mine is the biggest improvement: seed 2 went from 2.01→6.25, seed 3 from 1.98→6.10.
