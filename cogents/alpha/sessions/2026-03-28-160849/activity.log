@@ -1,5 +1,5 @@
 # Session 2026-03-28-160849 Activity Log
-status: in-progress
+status: interrupted
 started: 2026-03-28T16:08:49Z
 
 ## Context
@@ -66,3 +66,4 @@ Need fundamentally different approach to reach >10.
 - [17:00] Running broader 10k comparison (5 seeds, 4 agents) for confirmation.
 - [17:00] RL training at 3.1M steps, entropy ~1.3. Will take ~2.8h total for 100M.
 - [17:00] 4-agent wipe test (10 seeds): 1/10 wipes. Average excluding wipe: 1.44.
+- [17:00] SESSION INTERRUPTED — container died

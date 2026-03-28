@@ -1,0 +1,12 @@
+# Session 2026-03-28-170316 Activity Log
+status: in-progress
+started: 2026-03-28T17:03:16Z
+
+## Context
+Previous session (160849) interrupted during RL training and SmallTeam testing.
+Key findings: tournament is 75% 4-agent, SmallTeam 75% better at 10k/4-agent.
+v250-v252 uploaded. v247 leading at 2.41. Heuristic ceiling ~2.75. Target >10.
+RL training was started but interrupted. Need to continue RL approach.
+
+## Activity
+- [17:03] Session started. Previous session 160849 was interrupted.
