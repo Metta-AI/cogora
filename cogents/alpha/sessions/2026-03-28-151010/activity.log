@@ -140,3 +140,11 @@ status: in-progress
 - [16:04] All our recent versions (v231-v244) settling at 2.0-2.1 with 15-27 matches.
   Need 50-100+ matches to see if they converge to 2.5+ like the old versions.
   Key question: are our new policies genuinely worse than v17/v38, or just not converged?
+- [16:06] **v241 (V65TrueReplica + old deps) at 2.91 (#3) with 10 matches!**
+  Above v60-v62 (2.88-2.89, 500-674 matches). If it holds, we've recovered v65-era perf!
+  V65TrueReplica + old deps is the key formula. The rewrite preserved behavior, and
+  old deps restore the game mechanics that produce higher scores.
+- [16:07] Uploaded v245 (vanilla base, old deps), v246 (vanilla, current),
+  v247 (V65TrueReplica old deps again). Need more matches to confirm v241's ~2.9.
+- [16:07] Strategy: if V65TrueReplica+old_deps converges at ~2.8-2.9, we can then
+  try adding incremental improvements (re-alignment boost, idle-mine) on top.
