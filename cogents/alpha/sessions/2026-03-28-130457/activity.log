@@ -11,38 +11,14 @@ status: in-progress
 ## Activity
 - [13:05] Session started. Previous session (121219) was interrupted — recovered.
 - [13:05] Context: idle-aligner-mine +89% local, but tournament scores still lag. v65 (3.59) still #1.
-- [13:10] Local baseline (AlphaCyborgPolicy, 5k): seed1=0.00(wipe), seeds 2-6=[6.60, 3.26, 6.53, 6.40, 2.93] avg=5.14
-<<<<<<< Updated upstream
-- [13:14] Key observation: v65 frozen with OLD base class (pre-station-fix, pre-role-fix).
-- [13:16] CRITICAL DISCOVERY: Tournament uploads used AnthropicCyborgPolicy which LACKS idle-mine.
-- [13:17] Uploaded v201 (AlphaCyborgPolicy with all improvements) directly to tournament
-- [13:20] Created AlphaTournamentPolicy and AlphaV65OriginalPolicy
-- [13:22] Uploaded v201-v206 (various strategy variants for A/B testing)
-- [13:25] Local results (5k): AlphaCyborgPolicy avg=5.14, AlphaTournamentPolicy avg(no-wipe)=4.45
-- [13:32] 10k results (AlphaCyborgPolicy self-play):
-  - [7.00, 3.48, 11.88, 9.67, 5.18, 4.17, 8.24] avg=7.09
-- [13:33] v202 initially #1 at 5.30 (1 match) — dropped to 1.77 (28 matches). Early scores unreliable.
-- [13:40] TOURNAMENT UPDATE:
-  - v203 (TournamentPolicy) at #9, 2.73 (2 matches)
-  - v204 (V65OriginalPolicy) at #10, 2.72 (2 matches)
-  - v201 at 2.03 (25 matches), v202 at 1.77 (28 matches)
-- [13:40] Team-relative roles NOT the issue — v204 (global) and v203 (team) score same
-- [13:40] Gap must be in BASE CLASS changes since v65. Investigating station fix impact.
-- [13:42] Uploaded v207 (V65 replica with station targeting BUG reintroduced)
-- [13:45] Running pickup test (PvP vs starter policy)
-- [13:50] TOURNAMENT UPDATE (settled scores):
-  - v201: 2.08 (38 matches), v203: 1.97 (39 matches)
-  - v202: 1.84 (41 matches), v204: 1.84 (38 matches)
-  - ALL new versions converge to 1.8-2.1 range — far below v65's 3.59
-  - v65's advantage is NOT: team roles, idle-mine, targeting, or retreat margin
-  - Must be something else in the frozen v65 code that current codebase changed
-=======
-- [13:12] Tournament: v200 matches running/scheduled vs v34-v54. No completed results yet.
-- [13:12] New tournament versions (v54+) being generated. v200 paired against older versions.
-- [13:14] Key observation: v65 frozen with OLD base class (pre-station-fix, pre-role-fix). Newer versions use updated base.
-- [13:20] (Worker 2) Created AlphaV65OriginalPolicy — V65 replica WITHOUT shared_team_ids.
-  v65 used global agent IDs for role assignment; all newer versions use team-relative.
-  If v202 scores close to v65, the team-relative role fix is the culprit.
-- [13:22] Uploaded v202 (AlphaV65OriginalPolicy). Waiting for qualifying then competition.
-- [13:30] v200 stable at 2.38 (#62, 71 matches). v202 not yet on leaderboard.
->>>>>>> Stashed changes
+- [13:10] Local baseline (AlphaCyborgPolicy, 5k): avg=5.14
+- [13:16] Tournament uploads previously used AnthropicCyborgPolicy which LACKS idle-mine.
+- [13:17] Uploaded v201-v207 (various variants for A/B testing)
+- [13:32] 10k local self-play avg=7.09 (range 3.48-11.88). Two seeds above 10.
+- [13:40] Tournament: v201-v204 all settle at 1.8-2.1 range. v65 (3.59) still #1.
+- [13:40] Team-relative roles NOT the issue. Gap likely in base class changes since v65.
+- [13:50] PICKUP TEST (PvP vs starter, 4v4): We LOST badly — 0 friendly junctions!
+  ROOT CAUSE: 4-agent budget (2a+1s+1m) too aggressive, 1 miner can't sustain economy.
+- [13:55] FIX: Economy-first budgets — 1 aligner for first 100 steps, ramp up when min_res>=7.
+  Scramblers delayed to step 500+ with min_res >= 14.
+- [13:56] Running pickup test with economy-first budgets + self-play regression check

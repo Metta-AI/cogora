@@ -1287,37 +1287,40 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             return 1, 0
 
         if num_agents <= 4:
-            if step < 10:
-                return 1, 0
-            aligner_budget = 2
-            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            if step < 100:
+                return 1, 0  # Economy-first: 1 aligner, rest mine
+            # Only ramp up when economy can support it
+            if min_res < 7:
+                return 1, 0  # Keep mining until we have hearts capacity
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 500 and num_agents >= 4 and min_res >= 14 else 0
             if min_res < 1 and not can_hearts:
                 return 1, 0
             if objective == "economy_bootstrap":
-                return min(aligner_budget, 1), 0
+                return 1, 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: 5a+1s+2m — aggressive for 10k tournament games
-        if step < 10:
-            return min(2, num_agents - 1), 0
-        if step < 50:
-            pressure_budget = 3
+        # 5+ agents: economy-responsive with aggressive peak
+        if step < 30:
+            return 2, 0
+        elif step < 100:
+            pressure_budget = 3  # Ramp up slowly
         elif step < 3000:
-            pressure_budget = min(6, num_agents - 2)  # 5a+1s+2m — full pressure
-            if min_res < 1 and not can_hearts:
-                pressure_budget = max(3, num_agents // 3)  # Floor 3
-            elif min_res < 2:
-                pressure_budget = min(5, num_agents - 2)
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            elif min_res < 7:
+                pressure_budget = min(4, num_agents - 2)
         else:
             pressure_budget = min(6, num_agents - 2)
-            if min_res < 1 and not can_hearts:
-                pressure_budget = max(3, num_agents // 3)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
 
-        # Scramblers: 1 scrambler from step 100, 2nd only at step 5000+ with healthy resources
+        # Scramblers: delay until economy can support it
         scrambler_budget = 0
-        if step >= 5000 and min_res >= 30:
+        if step >= 3000 and min_res >= 14:
             scrambler_budget = min(2, pressure_budget // 3)
-        elif step >= 100:
+        elif step >= 200 and min_res >= 7:
             scrambler_budget = min(1, pressure_budget // 3)
         aligner_budget = max(pressure_budget - scrambler_budget, 0)
         if objective == "economy_bootstrap":
