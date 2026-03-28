@@ -146,3 +146,12 @@ status: in-progress
 - Best: 7.30, 1 wipeout (10%)
 - Uploaded v120 to tournament
 - Still far from target of 10. Need ~2.5x improvement.
+
+## Key Bottleneck Analysis (v123)
+- **Deaths** are the #1 factor: Seed 2 (1.73) had 20 deaths, Seed 8 (7.30) had 4 deaths
+- Each death = lost gear + re-equipping time (~50-100 wasted steps)
+- Low-death games score 2-3x more than high-death games
+- **Wipeouts** (score 0.00) happen ~10% of time — all agents die early
+- Agent 4 (aligner) in seed 2: 10 gear switches, 9 deaths → only 35 alignments
+- Agent 1 (aligner) in seed 8: 0 deaths → 74 alignments (2x more!)
+- **Next priority**: reduce death rate through better retreat logic
