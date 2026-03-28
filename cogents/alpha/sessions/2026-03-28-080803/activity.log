@@ -93,3 +93,12 @@ status: in-progress
 - Hurts seed 1 badly (4.90→1.74) but boosts seed 5 (9.23→10.63)
 - Zone bonus = 6.0 might be too strong — try tuning
 - Uploaded ZoneBoost as v176
+
+## ZoneBoost 15-seed results
+- Seeds 6-15: 4.75, 1.34, 7.41, 5.14, 0.00, 3.64, 5.60, 5.18, 3.67, 5.47
+- Full avg: 4.22 (4.52 excl wipes) — nearly identical to StableBoost 4.20
+- ZoneBoost: higher max (10.63), 6 seeds >5, more variance
+- StableBoost: wins 9/15 head-to-heads, more consistent
+- Zone bonus 3.0 was terrible (seed 5 dropped from 10.63 to 1.49)
+- Tournament: v174 (StableBoost) + v176 (ZoneBoost) uploaded, waiting for results
+- ALL tournament matches still running/scheduled — 10k steps take time
