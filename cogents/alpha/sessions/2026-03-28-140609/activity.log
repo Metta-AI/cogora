@@ -103,3 +103,14 @@ status: in-progress
   Survival code bypass hurts (v220/v222 worst).
   Gap to >10 target: 4.4x. Heuristic+LLM approach insufficient.
 - [16:05] v230 (improved LLM) not showing on leaderboard — may have failed qualifying.
+- [16:15] SETTLED SCORES (51-52 matches each):
+  - v224: 2.25 (#92), v225 (LLM): 2.24 (#94), v226: 2.24 (#102)
+  All three identical within noise. Ceiling confirmed at 2.24-2.25.
+  v227: 2.03, v228: 1.91 — below average.
+- [16:15] Clips analysis: AlphaCyborg 8-seed avg 6.92 (range 3.25-14.17).
+  Peak junction control: ~30 junctions by step 1400 (vs 65 total).
+  Tournament opponents harder than clips — prevent us from reaching 30+.
+- [16:15] SESSION SUMMARY: Confirmed heuristic ceiling at ~2.25 with 50+ matches.
+  Tried: v65 budgets, survival bypass, wave strategy, max pressure, idle-mine,
+  LLM integration, scramble heavy, variable team sizes. All converge to 2.0-2.25.
+  The gap to >10 requires trained RL or fundamentally new approach.
