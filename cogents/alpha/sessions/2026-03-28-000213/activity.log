@@ -68,3 +68,28 @@ status: in-progress
 3. Better chain building: align junctions that create chains toward more reachable junctions
 4. Wipeout mitigation: seed 0 scored 0.00 — fixing wipeouts would boost avg significantly
 5. Running 10-seed test (seeds 0-9) for reliable average
+
+## V122 Experiment Results (REVERTED)
+- Tried: expansion bonus 8.0 (was 5.0), heart batch 4 (was 3), faster heart ramp
+- V122 seed 1: 0.00 (wipeout), seed 2: 2.17 — WORSE than v121
+- Reverted all changes, kept init_budget=4 fix only
+- Linter added adjacency_bonus to aligner_target_score (bonus for junctions near friendly ones)
+- Also linter changed Anthropic policy: periodic LLM (500 steps) not every-step
+
+## V121 10-Seed Baseline (running, init_budget=4, pre-adjacency)
+- Seed 0: 0.00 (wipeout)
+- Seed 1: 8.31 (best ever!)
+- Seed 2: 3.22
+- Seed 3: 2.22
+- Seed 4: 4.84
+- Seed 5: 2.69
+- Seed 6: 3.15
+- Seeds 7-9: running
+- Running avg (7 seeds): 3.49
+- Non-wipeout avg: 4.07
+- Competitor spotted: swoopy-v0:v2 in tournament
+
+## Tournament Upload
+- v110: AlphaCyborgPolicy + adjacency bonus → qualifying
+- v111: AnthropicCyborgPolicy + periodic LLM + adjacency → qualifying
+- Testing adjacency bonus locally on seeds 1, 4
