@@ -54,56 +54,58 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Economy-responsive with hysteresis. Adapts to team size.
+        """Stable role allocation. Avoids role oscillation that wastes gear.
 
-        For small teams (<=4), use conservative budget (economy bottleneck).
-        For large teams (5+), allow full pressure (economy can sustain it).
+        Key insight: role switching costs gear (resources + time). A stable
+        4-aligner setup outperforms oscillating between 3-5 aligners.
         """
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         num_agents = self.policy_env_info.num_agents
-        if num_agents <= 4:
-            max_pressure = max(num_agents // 2, 1)
-        else:
-            max_pressure = max(num_agents - 1, 1)
-
-        # Phase 1: Economy bootstrap
-        if step < 10:
-            return min(2, max_pressure), 0
-
-        # Phase 2: Early ramp
-        if step < 50:
-            aligner_budget = 4 if min_res >= 3 else 3
-            return min(aligner_budget, max_pressure), 0
-
-        # Phase 3: Steady state with hysteresis
-        desired = self._current_aligner_budget
-        if min_res >= 5:
-            desired = 5
-        elif min_res < 1 and not _h.team_can_refill_hearts(state):
-            desired = 3
-        elif min_res < 1:
-            desired = 4
-
-        if desired != self._current_aligner_budget:
-            if step - self._last_budget_change_step >= 200 or desired < self._current_aligner_budget:
-                self._current_aligner_budget = desired
-                self._last_budget_change_step = step
-
-        aligner_budget = self._current_aligner_budget
-        scrambler_budget = 0
-
-        # Add scrambler at step 300
-        if step >= 300 and num_agents >= 4:
-            scrambler_budget = 1
-
-        # Cap total pressure
-        total = aligner_budget + scrambler_budget
-        if total > max_pressure:
-            aligner_budget = max(max_pressure - scrambler_budget, 0)
 
         if objective == "resource_coverage":
             return 0, 0
+
+        # Small teams: conservative
+        if num_agents <= 2:
+            aligner_budget = 1
+            scrambler_budget = 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        if num_agents <= 4:
+            # 4 agents: 2 aligners, 0-1 scrambler, rest miners
+            if step < 10:
+                return 1, 0
+            aligner_budget = 2
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: fixed allocation, no oscillation
+        # Phase 1: Economy bootstrap (all mine)
+        if step < 10:
+            return min(2, num_agents - 1), 0
+
+        # Phase 2: Early ramp (get aligners going)
+        if step < 100:
+            aligner_budget = min(3, num_agents - 2)
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 2), 0
+            return aligner_budget, 0
+
+        # Phase 3: Steady state — FIXED allocation, no oscillation
+        # For 8 agents: 4 aligners + 1 scrambler + 3 miners
+        # Only reduce if economy is truly broken (can't make hearts at all)
+        aligner_budget = min(4, num_agents - 2)
+        scrambler_budget = 1 if step >= 200 else 0
+
+        # Emergency economy mode: only if we can't afford ANY hearts
+        if min_res < 1 and not _h.team_can_refill_hearts(state):
+            aligner_budget = max(aligner_budget - 1, 1)
+
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
         return aligner_budget, scrambler_budget

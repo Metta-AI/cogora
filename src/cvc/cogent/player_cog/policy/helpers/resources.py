@@ -43,7 +43,7 @@ def resource_total(state: MettagridState) -> int:
 
 def deposit_threshold(state: MettagridState) -> int:
     if has_role_gear(state, "miner"):
-        return 12
+        return 16
     return 4
 
 

@@ -8,3 +8,15 @@
 - Current leaderboard position: ~#19 (v120 at 2.42)
 - Goal: > 10 score. Best local single-seed: 9.95
 - Plan: check tournament results, run more v134 validation, iterate improvements
+
+### Analysis: Role Oscillation Bug
+- Ran baseline game (seed 1, 10k steps): score 3.79
+- 245 alignments, 109 scrambles
+- Found major issue: agents 4-5 switching roles constantly
+  - Agent 4: 17 aligner gears + 16 miner gears (constant switching!)
+  - Agent 5: 14 aligner gears + 14 miner gears
+- Budget hysteresis (200-step cooldown) insufficient — resources fluctuate faster
+- Each gear change wastes resources (aligner costs 6 resources, miner costs 6)
+- Fix: stable 4-aligner + 1-scrambler + 3-miner allocation (no oscillation)
+- Also increased miner deposit threshold from 12 → 16 (fewer trips)
+- Testing now...
