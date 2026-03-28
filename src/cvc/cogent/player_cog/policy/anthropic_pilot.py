@@ -165,7 +165,8 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         num_agents = self.policy_env_info.num_agents
-        max_pressure = max(num_agents - 1, 1)
+        min_miners = 2 if num_agents >= 4 else 1
+        max_pressure = max(num_agents - min_miners, 1)
 
         if step < 10:
             return min(2, max_pressure), 0
@@ -188,7 +189,7 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
 
         aligner_budget = self._current_aligner_budget
         scrambler_budget = 0
-        if step >= 300 and num_agents >= 3:
+        if step >= 300 and num_agents >= 6:
             scrambler_budget = 1
 
         total = aligner_budget + scrambler_budget
