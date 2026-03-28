@@ -31,3 +31,7 @@ status: in-progress
 - [12:50] V4 results: [8.52, 6.25, 6.10, 3.21] avg=6.02 (+89% over baseline 3.18!)
 - [12:50] KEY FIX: idle aligners mine instead of explore → massive economy boost
 - [12:51] Uploaded v197 to tournament.
+- [13:00] **Tournament results for v193** (all vs old alpha versions):
+  - 4v4: avg ~1.5 (both sides equal), 6a: ~5.7, 2a: ~1.6, overall ~2.8
+  - No matches vs slanky/Paz-Bot yet
+- [13:05] v196 in qualifying. v197 uploaded with idle-mine improvement.
