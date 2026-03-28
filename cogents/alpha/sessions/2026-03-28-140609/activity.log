@@ -68,3 +68,10 @@ status: interrupted
   The 2.89-3.59 range of v60-v65 was with older game engine version.
   Current mettagrid 0.21.1 has different characteristics.
   v225 (LLM) is the only hope for breaking the ceiling.
+- [15:30] **v225 (LLM) HOLDING: 2.45 at 29 matches — above heuristic ceiling!**
+  - v225 (LLM): 2.45 (29 matches) — 0.25-0.30 above heuristic ceiling
+  - v226 (heuristic): 2.19 (36 matches) — at ceiling
+  - v227 (heuristic): 2.19 (10 matches) — at ceiling
+  - v224 (heuristic): 2.08 (24 matches) — at ceiling
+  THE LLM IS MAKING A DIFFERENCE! +0.25 above heuristic ceiling.
+  Need to amplify this advantage. Consider more aggressive LLM integration.
