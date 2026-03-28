@@ -66,3 +66,11 @@ status: in-progress
   - VT3's idle-explore improvement was specific to AlphaTournament, NOT AlphaCyborg.
 - [15:36] Uploaded v238 (AlphaCyborg idle-mine, current deps) and v239 (old deps).
   v236-v237 have the BAD idle-explore change — those will score worse.
+- [15:40] **REPRODUCIBILITY TEST**: Seed 5, AlphaCyborg, 10k, 3 runs: 15.62, 18.20, 20.80
+  Game IS reproducible (same seed → similar results). Variance ±3, not random.
+  At step 8000-9000: 28-33 friendly junctions (run 3 had 33 = half the map!)
+- [15:41] v235 (V65Pure + old deps) entered COMPETITION pool — being matched vs v11, v13.
+  First results from old deps experiment should be available soon.
+- [15:42] Key insight: the high variance in scores is from SEED differences, not randomness.
+  Seed 5 consistently scores 15-20, Seed 2 consistently scores 1-3.
+  Need to improve worst-case seeds to boost tournament average.
