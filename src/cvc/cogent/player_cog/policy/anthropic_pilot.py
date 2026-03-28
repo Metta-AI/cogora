@@ -665,6 +665,8 @@ class AlphaRealignBoostAgentPolicy(AlphaV65ReplicaAgentPolicy):
         # CRITICAL: V65Replica sets hotspot_weight=0.0, which nullifies our boost.
         # Re-enable it so negative hotspot counts create bonuses.
         self._hotspot_weight = 8.0
+        # Mild network proximity preference (original: 0.5 default, V65Replica: 0.0)
+        self._network_weight = 0.2
 
     def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
         """Return negative hotspot count = BONUS for re-alignment targets.

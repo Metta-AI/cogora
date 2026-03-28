@@ -32,3 +32,19 @@ V65 True Replica (4 seeds): avg 2.48
 V65 Realign (3 seeds): avg 2.99
 Tournament: all running/scheduled, no results yet
 Uploads: v166=old RealignBoost, v167=MaxAlign, v169=fixed RealignBoost, v170=V65Realign
+
+## Final Test Summary (5K self-play)
+| Policy               | Seeds | Avg Score |
+|----------------------|-------|-----------|
+| Fixed RealignBoost   | 7     | **4.65**  |
+| Baseline (Cyborg)    | 20    | 3.38      |
+| V65 True Replica     | 7     | 3.38      |
+| Old RealignBoost     | 17    | 3.24      |
+| V65 Realign          | 6     | 2.20      |
+
+- Fixed RealignBoost = +37.5% vs baseline
+- V65 variants worse than baseline  
+- 10K baseline seed 5 = 9.65 (close to >10 target!)
+- Expansion weight 15 worse than 10
+- Network weight 0.2 test running
+- Uploads: v169=Fixed RealignBoost (BEST), v170=V65Realign
