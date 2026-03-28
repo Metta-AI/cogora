@@ -24,4 +24,13 @@ status: in-progress
 - v131 8-cog (non-wipeout seeds 0-3,5-8): avg 4.61 (up from 3.40 in v130)
 - v131 4-cog: avg ~1.5-2.0 (similar to v130)
 - Scramblers essential even for 4-cog (removing them causes wipeouts)
-- Uploading to tournament
+- Uploaded v125 (v131) to tournament
+
+## v132-v133 Experiments
+- Miner depot-proximity scoring: no clear improvement, reverted
+- Expansion weight boost (5.0→8.0, cap 30→48): mixed results, seed 5: 2.86→9.33
+- Early scrambler (step 200 vs 300): not clearly better, reverted to 300
+- Seeds 4, 9 confirmed broken maps (starter policy also 0.00)
+- Non-determinism makes single-run comparisons unreliable
+- Keeping expansion weight boost (v133), uploading to tournament for real signal
+- v131 upload = v125 in tournament

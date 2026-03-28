@@ -93,7 +93,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         aligner_budget = self._current_aligner_budget
         scrambler_budget = 0
 
-        # Add scrambler at step 300 (need 4+ agents)
+        # Add scrambler at step 300
         if step >= 300 and num_agents >= 4:
             scrambler_budget = 1
 
