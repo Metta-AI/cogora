@@ -15,6 +15,7 @@ status: in-progress
 - [13:12] Tournament: v200 matches running/scheduled vs v34-v54. No completed results yet.
 - [13:12] New tournament versions (v54+) being generated. v200 paired against older versions.
 - [13:14] Key observation: v65 frozen with OLD base class (pre-station-fix, pre-role-fix). Newer versions use updated base.
+<<<<<<< Updated upstream
 - [13:16] CRITICAL DISCOVERY: Tournament uploads use AnthropicCyborgPolicy → AnthropicPilotAgentPolicy which LACKS:
   - idle-aligner-mine (biggest improvement: +89%)
   - hotspot flip (re-alignment boost)
@@ -33,3 +34,10 @@ status: in-progress
   - v203: AlphaTournamentPolicy (v65 targeting + idle-mine + team-aware)
   - v204: AlphaV65OriginalPolicy (v65 replica without team-relative roles)
 - [13:28] Running more 10k tests (seeds 3-8) for broader signal
+=======
+- [13:20] (Worker 2) Created AlphaV65OriginalPolicy — V65 replica WITHOUT shared_team_ids.
+  v65 used global agent IDs for role assignment; all newer versions use team-relative.
+  If v202 scores close to v65, the team-relative role fix is the culprit.
+- [13:22] Uploaded v202 (AlphaV65OriginalPolicy). Waiting for qualifying then competition.
+- [13:30] v200 stable at 2.38 (#62, 71 matches). v202 not yet on leaderboard.
+>>>>>>> Stashed changes
