@@ -44,3 +44,9 @@
   8a avg: 6.08 (7.97, 4.85, 5.55, 2.64, 9.40)
   4a avg: 3.50 (2.99, 2.46, 4.73, 2.20, 5.10)
   Fix mostly helps edge cases. Still no tournament results.
+- [2026-03-28 23:55] Multi-seed 8a comparison (seeds 42/123/777):
+  AdaptiveV3:   avg 5.26 (1.84, 5.13, 8.81)
+  ChainExpand:  avg 4.54 (2.09, 5.99, 5.54)
+  ChainDefense: partial (5.50, 6.21, pending) — defense helps BAD seeds dramatically!
+    seed=42: ChainExpand 2.09 -> ChainDefense 5.50 (+163%)
+  Uploads: v309=AdaptiveV3, v310=Balanced, v311=ChainExpand, v312=ChainDefense
