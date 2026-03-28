@@ -64,3 +64,10 @@ status: in-progress
 - [13:56] Full V4 12-seed avg: 4.73 (5k self-play)
 - [13:57] Uploaded v209 (V4 = idle-mine + hotspot flip + deposit 12 + delayed 2nd scrambler)
 - [13:58] Tournament now has other players: Paz-Bot-9005, slanky:v112. No results yet.
+- [14:10] Discovered parallel worker findings: v65 still #1 (3.59), newer versions 2.0-2.5
+- [14:12] Key insight: local self-play scores DON'T predict tournament performance
+- [14:13] AlphaTournamentPolicy (v65 targeting + idle-mine + team-aware): tested
+  - 8-agent 5k: [0.00(wipe), 1.58, 2.50, 5.24] avg(no-wipe) = 3.11
+  - 4-agent 5k: [3.08, 1.07, 1.36, 2.48] avg = 2.00
+  - Beats V4 at 4-agent (3.08 vs 2.57) — important for tournament
+- [14:15] Uploading AlphaTournamentPolicy to tournament.
