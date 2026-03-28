@@ -11,3 +11,7 @@ status: in-progress
 ## Activity
 - [13:05] Session started. Previous session (121219) was interrupted — recovered.
 - [13:05] Context: idle-aligner-mine +89% local, but tournament scores still lag. v65 (3.59) still #1.
+- [13:10] Local baseline (AlphaCyborgPolicy, 5k): seed1=0.00(wipe), seeds 2-6=[6.60, 3.26, 6.53, 6.40, 2.93] avg=5.14
+- [13:12] Tournament: v200 matches running/scheduled vs v34-v54. No completed results yet.
+- [13:12] New tournament versions (v54+) being generated. v200 paired against older versions.
+- [13:14] Key observation: v65 frozen with OLD base class (pre-station-fix, pre-role-fix). Newer versions use updated base.
