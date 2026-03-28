@@ -17,6 +17,12 @@ status: in-progress
   v216 (vanilla base, no overrides) uploaded as control test.
 - [14:08] Key findings so far:
   - v65 advantage is NOT: team roles, idle-mine, targeting, retreat margin, station fix
-  - ALL new versions (v201-v214) converge to 1.9-2.3 range
-  - v65 at 3.59 with 516 matches is untouchable with current code
-  - v216 (vanilla base) will reveal if ALL customizations are harmful
+  - ALL new versions (v201-v209) converge to 1.9-2.3 range
+  - v65 at 3.59 with 516 matches was untouchable with current code
+  - v216 (vanilla base) uploaded as control test
+- [14:12] BREAKTHROUGH? v210 at #1 with 5.11 (5 matches) — ABOVE v65's 3.59!
+  v210 was uploaded at 13:58 by concurrent worker. If it holds, this is significant.
+  Still very early (5 matches), could drop like v202 (5.30→1.77). Monitoring.
+- [14:12] Studied starter policy: extremely simple, no role assignment, no budgets.
+  Each agent grabs nearest gear and acts. Our complex policy loses to this in PvP.
+  Takeaway: simplicity and speed > complex optimization
