@@ -7,3 +7,12 @@ status: in-progress
 - Tournament all running/scheduled (v145-v164), no results yet
 - Key finding: hotspot penalty DISCOURAGES re-aligning scrambled junctions — should be reversed
 - Planning: re-alignment boost, faster ramp, cluster targeting
+
+## Experiment: RealignBoost and MaxAlign
+- Created AlphaRealignBoostPolicy: hotspot penalty → bonus, faster ramp, team-aware
+- Created AlphaMaxAlignPolicy: 6 aligners, 0 scramblers
+- MaxAlign TERRIBLE: avg 1.70 (economy collapse with only 2 miners)
+- RealignBoost comparable: avg 3.54 (some seeds better, some worse)
+- Seed 5 RealignBoost=8.51 vs baseline=7.64 (improvement)
+- Some seeds score 0.00 — need to investigate
+- Tournament matches still running, no results yet
