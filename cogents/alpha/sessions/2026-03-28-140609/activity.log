@@ -35,5 +35,15 @@ status: in-progress
   - 4v4: 0.08 (barely winning — was 0 before economy-first fix)
   - Overall VOR: 1.46
   4v4 performance is the key weakness. Economy-first helps but not enough.
-- [14:25] v212 (V65+idle-mine+economy-first) entered at #6 with 2.83 (2 matches) — monitoring
+- [14:25] v212 (V65+idle-mine+economy-first) entered at #6 with 2.83 (2 matches) — dropped to 2.02
 - [14:25] v210 settled at 2.07 (57 matches)
+- [14:30] **CRITICAL FINDING**: v216 (vanilla MettagridSemanticPolicy, ZERO customizations) at #17 with 2.68 (10 matches)!
+  - v216 (vanilla, no overrides) = 2.68
+  - v211 (economy-first cyborg) = 2.26
+  - v214 (tournament + economy-first) = 2.08
+  - v212 (v65+idle-mine+economy-first) = 2.02
+  **ALL CUSTOMIZATIONS HURT TOURNAMENT PERFORMANCE.**
+  The more customized, the worse it scores. Base policy > all variants.
+- [14:30] Conclusion: the path forward is LESS customization, not more.
+  v65 was likely uploaded with minimal changes from base. Our improvements
+  (idle-mine, hotspot flip, expand-toward, budget tweaks) all HURT in PvP.
