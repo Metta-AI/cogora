@@ -5,3 +5,26 @@ status: in-progress
 - Analyze what differentiates v65 (3.24) from newer versions
 - Focus: find tournament-winning improvements, not just local improvements
 - Goal: beat v65's 3.24 score
+
+## Tournament Status
+- v65 still #1 at 3.24 (321 matches)
+- v157 at 2.81 (2 matches - unreliable)
+- v155 at 2.33 (15 matches) - best recent version
+- v150-v158 all 1.67-2.33, below v65
+- Lots of new matches running/scheduled against gtlm-reactive and v29
+
+## Key Finding: Exact v65 Code Diff
+Identified the EXACT changes between v65 era and current code in semantic_cog.py:
+1. Targeting: v65 used tiered hub_penalty (steep distance-from-hub costs) vs current network_penalty (mild linear)
+2. Expansion: v65 used 5.0/30.0 vs current 10.0/60.0
+3. Retreat margin: v65 used 15 vs current 20
+4. No hotspot tracking in v65
+
+Created AlphaV65TrueReplicaPolicy that uses EXACT v65 targeting function (hub_penalty).
+
+## 5-seed Local Test (5000 steps)
+Base (current code): avg 3.29 (1.70, 1.31, 2.23, 4.79, 6.42)
+V65 True Replica: avg 3.22 (4.29, 1.70, 1.92, 1.97, 6.24)
+- Nearly identical averages
+- V65 true helps seed 1 a lot (1.70→4.29), hurts seeds 3-4
+- Hub penalty vs network penalty: marginal local difference

@@ -38,6 +38,115 @@ def _least_resource(resources: dict[str, int]) -> str:
     return min(_ELEMENTS, key=lambda r: resources[r])
 
 
+class AlphaV65TrueReplicaAgentPolicy(SemanticCogAgentPolicy):
+    """True v65 replica: uses original hub_penalty targeting, expansion 5/30, retreat_margin=15."""
+
+    def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if safe_target is None:
+            return hp <= _h.retreat_threshold(state, role)
+        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+        margin = 15  # v65 used 15, not 20
+        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            margin += 10
+        margin += int(state.self_state.inventory.get("heart", 0)) * 5
+        margin += min(_h.resource_total(state), 12) // 2
+        if not _h.has_role_gear(state, role):
+            margin += 10
+        if (state.step or 0) >= 2_500:
+            margin += 10 if role in {"aligner", "scrambler"} else 5
+        return hp <= safe_steps + margin
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity
+            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.v65_aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                ),
+                entity.position,
+            ),
+        )
+
+    def _preferred_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        candidate = self._nearest_alignable_neutral_junction(state)
+        sticky = self._sticky_align_target(state)
+        if sticky is None:
+            return candidate
+        if candidate is None:
+            return sticky
+        from cvc.cogent.player_cog.policy.semantic_cog import _TARGET_SWITCH_THRESHOLD
+        current_pos = _h.absolute_position(state)
+        team_id = _h.team_id(state)
+        neutral_junctions = self._world_model.entities(
+            entity_type="junction", predicate=lambda junction: junction.owner in {None, "neutral"},
+        )
+        enemy_junctions = self._world_model.entities(
+            entity_type="junction", predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        sticky_score = _h.v65_aligner_target_score(
+            current_position=current_pos,
+            candidate=sticky,
+            unreachable=[entity for entity in neutral_junctions if entity.position != sticky.position],
+            enemy_junctions=enemy_junctions,
+            claimed_by_other=False,
+            hub_position=hub_pos,
+        )[0]
+        candidate_score = _h.v65_aligner_target_score(
+            current_position=current_pos,
+            candidate=candidate,
+            unreachable=[entity for entity in neutral_junctions if entity.position != candidate.position],
+            enemy_junctions=enemy_junctions,
+            claimed_by_other=_h.is_claimed_by_other(
+                claims=self._shared_claims,
+                candidate=candidate.position,
+                agent_id=self._agent_id,
+                step=self._step_index,
+            ),
+            hub_position=hub_pos,
+        )[0]
+        if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
+            return candidate
+        return sticky
+
+
 class AlphaV65ReplicaAgentPolicy(SemanticCogAgentPolicy):
     """Replica of v65 behavior: base budgets, no network/hotspot penalties, retreat_margin=15."""
 
@@ -497,6 +606,23 @@ class AnthropicCyborgPolicy(PilotCyborgPolicy):
             "anthropic_api_key": kwargs.get("anthropic_api_key"),
             "anthropic_api_key_file": kwargs.get("anthropic_api_key_file"),
         }
+
+
+class AlphaV65TrueReplicaPolicy(MettagridSemanticPolicy):
+    """True v65: uses original hub_penalty targeting with tiered distance costs."""
+    short_names = ["alpha-v65-true"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65TrueReplicaAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
 
 
 class AlphaV65ReplicaPolicy(MettagridSemanticPolicy):

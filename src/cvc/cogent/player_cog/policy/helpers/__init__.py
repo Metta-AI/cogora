@@ -44,6 +44,7 @@ from cvc.cogent.player_cog.policy.helpers.targeting import (
     is_usable_recent_extractor,
     scramble_target_score,
     spawn_relative_station_target,
+    v65_aligner_target_score,
     within_alignment_network,
 )
 from cvc.cogent.player_cog.policy.helpers.types import (

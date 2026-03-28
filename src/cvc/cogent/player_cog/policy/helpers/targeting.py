@@ -119,6 +119,46 @@ def scramble_target_score(
     )
 
 
+def v65_aligner_target_score(
+    *,
+    current_position: tuple[int, int],
+    candidate: KnownEntity,
+    unreachable: list[KnownEntity],
+    enemy_junctions: list[KnownEntity],
+    claimed_by_other: bool,
+    hub_position: tuple[int, int] | None = None,
+) -> tuple[float, float]:
+    """Original v65-era scoring: tiered hub_penalty, expansion 5.0/30.0."""
+    distance = float(manhattan(current_position, candidate.position))
+    expansion = sum(
+        1 for entity in unreachable if manhattan(candidate.position, entity.position) <= _JUNCTION_ALIGN_DISTANCE
+    )
+    enemy_aoe = (
+        1.0
+        if any(manhattan(candidate.position, enemy.position) <= _JUNCTION_AOE_RANGE for enemy in enemy_junctions)
+        else 0.0
+    )
+    hub_penalty = 0.0
+    if hub_position is not None:
+        hub_dist = float(manhattan(hub_position, candidate.position))
+        if hub_dist > 25:
+            hub_penalty = (hub_dist - 25) * 8.0 + 50.0
+        elif hub_dist > 15:
+            hub_penalty = (hub_dist - 15) * 3.0 + 10.0
+        elif hub_dist > 10:
+            hub_penalty = (hub_dist - 10) * 1.5 + 2.0
+        else:
+            hub_penalty = hub_dist * 0.3
+    return (
+        distance
+        - min(expansion * 5.0, 30.0)
+        + enemy_aoe * 8.0
+        + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
+        + hub_penalty,
+        -float(expansion),
+    )
+
+
 def spawn_relative_station_target(agent_id: int, role: str) -> tuple[int, int] | None:
     station_targets = _STATION_TARGETS_BY_AGENT.get(role)
     if station_targets is None:
