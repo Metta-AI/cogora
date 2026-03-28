@@ -1282,8 +1282,11 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             return 0, 0
 
         if num_agents <= 2:
+            # 2 agents: mine first 200 steps, then 1 aligner if economy supports it
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0  # Both mine to build economy
             if objective == "economy_bootstrap":
-                return 1, 0
+                return 0, 0
             return 1, 0
 
         if num_agents <= 4:
@@ -2593,12 +2596,12 @@ class AlphaV65HybridAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
             return 0, 0
 
         if num_agents <= 2:
-            # 2 agents: 1 aligner + 1 miner, no scramblers
-            pressure = 1
-            scrambler = 0
+            # 2 agents: mine first to build economy, then 1 aligner
+            if step < 200 or (min_res < 7 and not _h.team_can_refill_hearts(state)):
+                return 0, 0  # Both mine
             if objective == "economy_bootstrap":
-                return 1, 0
-            return pressure, scrambler
+                return 0, 0
+            return 1, 0
 
         if num_agents <= 4:
             # 4 agents: 2 aligners + 2 miners (v65 ratio: half align, half mine)
