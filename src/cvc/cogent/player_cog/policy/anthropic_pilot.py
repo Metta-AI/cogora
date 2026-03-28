@@ -185,6 +185,18 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             return min(aligner_budget, 2), 0
         return aligner_budget, scrambler_budget
 
+    def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
+        """Miners: retreat if too far from hub."""
+        if super()._should_retreat(state, role, safe_target):
+            return True
+        if role == "miner" and safe_target is not None:
+            pos = _h.absolute_position(state)
+            dist = _h.manhattan(pos, safe_target.position)
+            hp = int(state.self_state.inventory.get("hp", 0))
+            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 10:
+                return True
+        return False
+
 
 class AnthropicCyborgPolicy(PilotCyborgPolicy):
     short_names = ["anthropic-cyborg", "claude-cyborg", "cyborg-anthropic"]
