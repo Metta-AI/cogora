@@ -23,3 +23,16 @@ Bias-only (base+resource_bias): avg 4.87 (seeds: 6.02, 3.47, 2.50, 5.07, 7.30)
 - v145: AlphaBiasOnlyPolicy (base + resource_bias)
 - v146: AlphaDoubleScramblePolicy (base + resource_bias + 2 scramblers from step 100)
 - v147: AlphaSuperAggroPolicy (6 pressure from step 20, 2 scramblers from step 50)
+
+## Additional tournament variants uploaded
+- v148: AlphaScrambleHeavyPolicy (3 scramblers + 3 aligners, heavy disruption)
+- v149: AlphaNoScramblePolicy (5 aligners + 0 scramblers, pure alignment)
+These test whether scramblers help or hurt in tournament play.
+
+## Strategy: Systematic A/B testing
+v145: base + resource_bias
+v146: base + resource_bias + 2 scramblers early
+v147: super aggro (6 pressure from step 20)
+v148: 3 scramblers (heavy disruption)
+v149: 0 scramblers (pure alignment)
+Comparing against v53 and other historical versions.

@@ -117,6 +117,64 @@ class AlphaSuperAggroAgentPolicy(SemanticCogAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaScrambleHeavyAgentPolicy(SemanticCogAgentPolicy):
+    """3 scramblers + 3 aligners + 2 miners. Heavy disruption focus."""
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if step < 30:
+            return 2, 0
+
+        pressure_budget = 6  # 3a + 3s, 2 miners
+        if min_res < 1 and not can_hearts:
+            pressure_budget = 3
+
+        scrambler_budget = min(3, pressure_budget // 2) if step >= 100 else 0
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaNoScrambleAgentPolicy(SemanticCogAgentPolicy):
+    """All aligners, no scramblers. 5 aligners + 3 miners."""
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if step < 30:
+            return 2, 0
+
+        aligner_budget = 5
+        if min_res < 1 and not can_hearts:
+            aligner_budget = 2
+
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, 0
+
+
 class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     """Optimized agent policy: aggressive alignment with scrambler defense."""
 
@@ -337,6 +395,40 @@ class AlphaSuperAggroPolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaSuperAggroAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaScrambleHeavyPolicy(MettagridSemanticPolicy):
+    """3 scramblers + 3 aligners. Heavy disruption."""
+    short_names = ["alpha-scramble-heavy"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaScrambleHeavyAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaNoScramblePolicy(MettagridSemanticPolicy):
+    """All aligners, no scramblers."""
+    short_names = ["alpha-no-scramble"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaNoScrambleAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
