@@ -4758,3 +4758,351 @@ class AlphaBlitzPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaSustainAgentPolicy(AlphaCogAgentPolicy):
+    """Sustain variant: maximize score per heart by conserving silicon.
+
+    Key changes from AlphaCog:
+    1. Silicon-first mining: always bias toward silicon (scarcest extractor, 45 vs 50-58).
+    2. No scrambling at all: save every heart for alignment.
+    3. Late-game conservation: when silicon < 14, reduce aligners to prevent heart waste.
+    4. No early heart skip: go align immediately in first 200 steps.
+    5. Smarter expansion: prefer junction clusters (more junctions unlocked per heart).
+    """
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Always bias toward silicon — the bottleneck resource."""
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        others_min = min(resources[r] for r in _ELEMENTS if r != "silicon")
+        if silicon > others_min * 2 and others_min < 7:
+            least = _least_resource(resources)
+            return MacroDirective(resource_bias=least)
+        return MacroDirective(resource_bias="silicon")
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner that never scrambles — all hearts go to alignment."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        # Early game: go align immediately (no batching for first 200 steps)
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions — prefer clusters
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else current_pos
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+
+            def cluster_score(j):
+                nearby = sum(
+                    1 for other in unreachable
+                    if other is not j and _h.manhattan(j.position, other.position) <= 15
+                )
+                dist = _h.manhattan(current_pos, j.position)
+                return dist - nearby * 5
+            best = min(targets, key=cluster_score)
+            dist = _h.manhattan(current_pos, best.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, best, summary="expand_cluster_junction", vibe="change_vibe_aligner")
+
+        # No expansion target — help economy by mining
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """No scramblers ever. Late-game conservation when silicon depletes."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # Late-game conservation: when silicon critically low, reduce pressure
+        if silicon < 14 and step > 2000:
+            if num_agents <= 2:
+                return 0, 0
+            if num_agents <= 4:
+                return 1, 0
+            return 2, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, 0  # Never scramble
+
+        # 5+ agents
+        if step < 30:
+            return 2, 0
+        if step < 100:
+            return 3, 0
+
+        if min_res < 3 and not can_hearts:
+            pressure = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure = min(4, num_agents - 2)
+        else:
+            pressure = min(5, num_agents - 2)
+
+        if objective == "economy_bootstrap":
+            return min(2, pressure), 0
+        return pressure, 0  # Never scramble
+
+
+class AlphaAdaptiveV2AgentPolicy(AlphaCogAgentPolicy):
+    """Adaptive v2: aggressive early, sustain late. Best of both worlds.
+
+    Phase 1 (step 0-2500): AlphaAggressive behavior — fast alignment, idle scramble
+    Phase 2 (step 2500+ or silicon < 30): Conservation — no scramble, silicon mining, fewer aligners
+    """
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Silicon-first bias when silicon is the bottleneck."""
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        step = state.step or self._step_index
+        # After step 1500 or when silicon is low, bias toward silicon
+        if step > 1500 or silicon < 30:
+            others_min = min(resources[r] for r in _ELEMENTS if r != "silicon")
+            if silicon > others_min * 2 and others_min < 7:
+                return MacroDirective(resource_bias=_least_resource(resources))
+            return MacroDirective(resource_bias="silicon")
+        return MacroDirective(resource_bias=_least_resource(resources))
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner: scramble in early game, pure alignment in late game."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        # Early game: go align immediately
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junction clusters
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+
+            def cluster_score(j):
+                nearby = sum(
+                    1 for other in unreachable
+                    if other is not j and _h.manhattan(j.position, other.position) <= 15
+                )
+                dist = _h.manhattan(current_pos, j.position)
+                return dist - nearby * 5
+            best = min(targets, key=cluster_score)
+            dist = _h.manhattan(current_pos, best.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, best, summary="expand_cluster_junction", vibe="change_vibe_aligner")
+
+        # Early game: idle-scramble when economy healthy
+        in_conservation = step > 2500 or silicon < 30
+        min_res = _h.team_min_resource(state)
+        if not in_conservation and hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if min_res < 14:
+            return self._miner_action(state, summary_prefix="idle_align_")
+
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Aggressive early, conservative late. No dedicated scramblers."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        in_conservation = step > 2500 or silicon < 30
+
+        # Conservation mode: fewer aligners, no scramblers
+        if in_conservation and silicon < 14:
+            if num_agents <= 2:
+                return 0, 0
+            if num_agents <= 4:
+                return 1, 0
+            return 2, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            # Early game: allow 1 scrambler with surplus
+            scrambler_budget = 0
+            if not in_conservation and min_res >= 200 and step >= 1000:
+                scrambler_budget = 1
+                aligner_budget = min(2, num_agents - 1 - scrambler_budget)
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents
+        if step < 30:
+            return 2, 0
+        if step < 100:
+            return 3, 0
+
+        economy_surplus = min_res >= 100
+
+        if economy_surplus and not in_conservation:
+            pressure = min(num_agents - 1, 7)
+        elif min_res < 3 and not can_hearts:
+            pressure = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure = min(4, num_agents - 2)
+        else:
+            pressure = min(5, num_agents - 2)
+
+        # Scramblers only in early/aggressive phase
+        scrambler_budget = 0
+        if not in_conservation:
+            if step >= 200 and min_res >= 7:
+                scrambler_budget = min(1, pressure // 3)
+
+        aligner_budget = max(pressure - scrambler_budget, 1)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaAdaptiveV2Policy(MettagridSemanticPolicy):
+    """Adaptive v2: aggressive early, sustain late. Silicon-first bias."""
+    short_names = ["alpha-adaptive-v2"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAdaptiveV2AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaSustainPolicy(MettagridSemanticPolicy):
+    """Sustain scoring: silicon-first mining, no scrambling, late-game conservation."""
+    short_names = ["alpha-sustain"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaSustainAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

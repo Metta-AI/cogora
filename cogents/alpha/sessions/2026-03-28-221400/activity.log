@@ -4,3 +4,10 @@
 
 - [2026-03-28 22:14] Session started. Context: AlphaAggressive best so far (4a: 2.37, 8a: 3.97).
   Silicon depletion bottleneck. Need to check tournament results and iterate.
+- [2026-03-28 22:18] Tournament matches all running/scheduled, no completed results yet.
+  All matches are alpha.0:vXXX vs v34 opponent.
+- [2026-03-28 22:20] Created AlphaSustainPolicy: silicon-first mining, no scrambling,
+  late-game conservation when silicon < 14. Cluster-based junction expansion.
+- [2026-03-28 22:20] Created AlphaAdaptiveV2Policy: aggressive early (with idle-scramble),
+  conservation after step 2500 or silicon < 30. Silicon-first bias after step 1500.
+- [2026-03-28 22:21] Running 4 local games: Sustain 4a/8a, AdaptiveV2 4a/8a (5000 steps each).
