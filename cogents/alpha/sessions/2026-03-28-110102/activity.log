@@ -21,9 +21,10 @@ status: in-progress
 - [11:25] Updated AlphaCogAgentPolicy: network_weight=0, retreat_margin=15, full _should_retreat override. Testing...
 - [11:30] Updated AlphaCyborg+expansion=15/90: seeds=[6.91,3.06,0.00,0.00,2.58] avg=2.51. Expansion=15 causes wipes!
 - [11:35] Reverted expansion to default 10/60. Seeds 3,4 retested: 6.96, 4.10 (was 0.00, 0.00). Huge fix.
-- [11:37] Running seeds 1,2,5 with final config. Key changes from old code: network_weight=0, retreat_margin=15, re-alignment boost, stable budgets, lower deposit, expand-toward-junction.
-- [11:40] (Second worker) Uploaded v190 (expand-toward + 5-aligner, avg 4.65) and v191 (+ hotspot/deposit, avg 4.01).
-- [11:45] (Second worker) Confirmed expansion=15/90 causes wipes, reverted. Accepted network_weight=0, retreat_margin=15 from first worker.
-- [11:50] Uploaded v192 (network_weight=0, retreat_margin=15, hotspot=8, expand-toward, 5 aligners).
-- [11:55] **10k STEP TEST: SCORE 11.86 on seed 1!** Above > 10 goal. Longer games help network expand.
-- [11:55] Testing seeds 2-5 at 10k steps for validation.
+- [11:37] Running seeds 1,2,5 with final config.
+- [11:40] **RESULTS**: New AlphaCyborg=[4.65,4.62,6.96,4.10,8.31] avg=5.73 vs StableBoost avg=4.31 (+33%) vs Old avg=2.92 (+96%)
+- [11:41] Uploaded v193 (AlphaCyborgPolicy with all fixes). In qualifying pool.
+- [11:42] Other player detected: gtlm-reactiv... — need to study their strategy when match results come in.
+- [11:45] Tested 5a+1s+2m: [3.63,0.00,6.72,2.38,0.00] avg=2.55. Two wipes. Reverted to 4a+1s+3m.
+- [11:50] (Second worker) v190-v192 uploaded. **10k STEP TEST: SCORE 11.86 on seed 1!** Above >10 goal.
+- [11:55] Key insight: tournament runs 10k steps, not 5k. Longer games strongly favor our expand-toward-junction strategy.

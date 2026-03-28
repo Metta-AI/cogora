@@ -1260,7 +1260,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 return min(aligner_budget, 1), 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: stable budgets with high floors
+        # 5+ agents: 4a+1s+3m — stable budgets with high floors
         if step < 10:
             return min(2, num_agents - 1), 0
         if step < 50:
@@ -1268,8 +1268,8 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         elif step < 3000:
             pressure_budget = min(5, num_agents - 2)
             if min_res < 1 and not can_hearts:
-                pressure_budget = max(3, num_agents // 3)  # Floor 3, not 2
-            elif min_res < 2:  # Tighter threshold: only drop at <2, not <3
+                pressure_budget = max(3, num_agents // 3)  # Floor 3
+            elif min_res < 2:
                 pressure_budget = min(4, num_agents - 2)
         else:
             pressure_budget = min(6, num_agents - 2)
