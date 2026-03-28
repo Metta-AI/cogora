@@ -3555,6 +3555,90 @@ class AlphaEconFixAgentPolicy(AlphaCogAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaLateGameAgentPolicy(AlphaEconFixAgentPolicy):
+    """EconFix + late-game sustainability.
+
+    Key changes for 10k step games:
+    - After step 5000, shift to more scramblers (disrupt clips)
+    - Resource-gated budget: fewer aligners when economy is weak
+    - More conservative with hearts in late game
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 30:
+                return 1, 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 300 and min_res >= 7 else 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: phase-based strategy
+        if step < 30:
+            pressure_budget = 2
+        elif step < 5000:
+            # Early/mid: aggressive alignment
+            pressure_budget = min(4, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 2
+            elif min_res < 3:
+                pressure_budget = 3
+        else:
+            # Late game (5000+): shift to defense/economy
+            pressure_budget = min(4, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = 2  # Emergency: mass mine
+            elif min_res < 7:
+                pressure_budget = 3  # Reduced pressure, more mining
+
+        # Scramblers: ramp up in late game to disrupt clips
+        scrambler_budget = 0
+        if step >= 5000 and min_res >= 7:
+            scrambler_budget = min(2, pressure_budget // 2)  # 2 scramblers in late game
+        elif step >= 100 and min_res >= 7:
+            scrambler_budget = 1
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaLateGamePolicy(MettagridSemanticPolicy):
+    """EconFix + late-game sustainability + team-relative roles."""
+    short_names = ["alpha-late-game"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaLateGameAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaEconFixPolicy(MettagridSemanticPolicy):
     """Economy fix: resource-aware miners + v65 aggressive budgets + team-relative roles."""
     short_names = ["alpha-econ-fix"]
