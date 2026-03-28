@@ -2147,6 +2147,192 @@ class AlphaTurboMidPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaHybridAgentPolicy(AlphaCogAgentPolicy):
+    """Hybrid: v65 hub-penalty targeting + AlphaCog economy/budgets + re-alignment bonus.
+
+    Key insight: v65's hub_penalty keeps expansion tight (reduces death risk,
+    travel time) while AlphaCog's economy management prevents starvation.
+    Adding hotspot bonus helps reclaim scrambled territory faster.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = 8.0  # Keep re-alignment bonus
+        self._network_weight = 0.0  # Not used — hub_penalty replaces it
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """Use v65's hub_penalty targeting with hotspot bonus."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity
+            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.v65_aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    hotspot_weight=self._hotspot_weight,
+                ),
+                entity.position,
+            ),
+        )
+
+    def _preferred_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """Sticky target with v65 scoring + hotspot bonus."""
+        candidate = self._nearest_alignable_neutral_junction(state)
+        sticky = self._sticky_align_target(state)
+        if sticky is None:
+            return candidate
+        if candidate is None:
+            return sticky
+        from cvc.cogent.player_cog.policy.semantic_cog import _TARGET_SWITCH_THRESHOLD
+        current_pos = _h.absolute_position(state)
+        team_id = _h.team_id(state)
+        neutral_junctions = self._world_model.entities(
+            entity_type="junction", predicate=lambda junction: junction.owner in {None, "neutral"},
+        )
+        enemy_junctions = self._world_model.entities(
+            entity_type="junction", predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        sticky_score = _h.v65_aligner_target_score(
+            current_position=current_pos,
+            candidate=sticky,
+            unreachable=[entity for entity in neutral_junctions if entity.position != sticky.position],
+            enemy_junctions=enemy_junctions,
+            claimed_by_other=False,
+            hub_position=hub_pos,
+            hotspot_count=self._junction_hotspot_count(sticky, hub),
+            hotspot_weight=self._hotspot_weight,
+        )[0]
+        candidate_score = _h.v65_aligner_target_score(
+            current_position=current_pos,
+            candidate=candidate,
+            unreachable=[entity for entity in neutral_junctions if entity.position != candidate.position],
+            enemy_junctions=enemy_junctions,
+            claimed_by_other=_h.is_claimed_by_other(
+                claims=self._shared_claims,
+                candidate=candidate.position,
+                agent_id=self._agent_id,
+                step=self._step_index,
+            ),
+            hub_position=hub_pos,
+            hotspot_count=self._junction_hotspot_count(candidate, hub),
+            hotspot_weight=self._hotspot_weight,
+        )[0]
+        if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
+            return candidate
+        return sticky
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Tuned for tournament: 75% of games are 2-4 agents. More conservative scrambling."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 80:
+                return 1, 0  # Fast ramp: 1 aligner from step 0
+            if min_res < 7:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            # No scramblers in small teams — all resources to alignment
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, 0
+
+        # 5+ agents
+        if step < 30:
+            return 2, 0
+        elif step < 100:
+            pressure_budget = 3
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            elif min_res < 7:
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+
+        scrambler_budget = 0
+        if step >= 3000 and min_res >= 14:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 500 and min_res >= 14:
+            scrambler_budget = min(1, pressure_budget // 3)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaHybridPolicy(MettagridSemanticPolicy):
+    """Hybrid policy: v65 targeting + AlphaCog economy."""
+    short_names = ["alpha-hybrid"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaHybridAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaCyborgPolicy(MettagridSemanticPolicy):
     """Lightweight policy without LLM dependencies."""
     short_names = ["alpha-cyborg"]
