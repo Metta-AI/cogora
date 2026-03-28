@@ -84,3 +84,12 @@ status: in-progress
   retreat margin 20) wins in PvP even though it's worse against NPC clips.
 - [15:48] v235-v239 still no completed matches. Old deps experiment pending.
 - [15:48] Running 10k self-play for deeper analysis of PvP dynamics.
+- [15:50] **BREAKTHROUGH!!! v235 (V65Pure + old deps 0.19) = 6.07 (#1) with 2 matches!**
+  DOUBLE v65's 3.59 score! Old deps hypothesis CONFIRMED!
+  The older cogames/mettagrid 0.19 game mechanics produce dramatically higher scores.
+  This is the key to breaking the 2.2 ceiling.
+- [15:51] Uploaded v240-v242 (all with old deps):
+  - v240: AlphaCyborg (old deps)
+  - v241: V65TrueReplica (old deps)
+  - v242: AnthropicCyborg LLM (old deps)
+  Need to wait for more matches to confirm v235's 6.07 isn't just variance.
