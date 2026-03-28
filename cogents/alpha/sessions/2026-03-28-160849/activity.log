@@ -46,3 +46,17 @@ Need fundamentally different approach to reach >10.
 - [16:45] Mining optimization needed: sticky targets prevent resource rebalancing.
   Aligner falls back to mining wrong resource when hearts unavailable.
 - [16:45] Running AlphaCyborg comparison at same seeds for fair comparison.
+- [16:52] Head-to-head comparison (5 seeds, 5k steps, self-play):
+  4-agent: SmallTeam avg 1.50 vs AlphaCyborg avg 2.14 — AlphaCyborg wins
+  8-agent: SmallTeam avg 4.71 vs AlphaCyborg avg 5.21 — AlphaCyborg wins  
+  SmallTeam's aggressive alignment causes more wipes.
+- [16:53] Clips PvP comparison (3 seeds, 4 agents):
+  SmallTeam: 3.13, 1.28, 0.54 → avg 1.65
+  AlphaCyborg: 3.05, 0.96, 0.59 → avg 1.53
+  Very close — SmallTeam slightly better in PvP clips mode.
+- [16:54] Uploaded v250 (AlphaCyborg), v251 (SmallTeam), v252 (vanilla base).
+  Tournament will determine which is truly better.
+- [16:54] v247 leading recent versions at 2.41 (36 matches). All converging to 2.0-2.4.
+- [16:55] RL training restarted on 4-agent machina_1 (100M steps). Running in background.
+- [16:55] Key tournament finding confirmed: 75% 4-agent games, 25% 8-agent.
+  Recent versions settling at 2.0-2.4 with 36 matches.
