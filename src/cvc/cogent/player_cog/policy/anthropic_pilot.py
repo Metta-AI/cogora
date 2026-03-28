@@ -3458,6 +3458,32 @@ class AlphaExpanderPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaAdaptivePolicy(MettagridSemanticPolicy):
+    """Adaptive policy: AlphaCyborg for small teams, Expander for large teams.
+
+    Tournament is 75% 4-agent (where AlphaCyborg excels) and 25% 8-agent
+    (where Expander excels). This policy adapts to team size for best overall.
+    """
+    short_names = ["alpha-adaptive"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        num_agents = self.policy_env_info.num_agents
+        if agent_id not in self._agent_policies:
+            # Use Expander for 5+ agents, AlphaCog for small teams
+            policy_cls = AlphaExpanderAgentPolicy if num_agents >= 5 else AlphaCogAgentPolicy
+            self._agent_policies[agent_id] = policy_cls(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaEconFixAgentPolicy(AlphaCogAgentPolicy):
     """Fix miner resource-switching: clear sticky target when resource priority shifts.
 

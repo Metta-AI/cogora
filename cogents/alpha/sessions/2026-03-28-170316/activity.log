@@ -66,3 +66,10 @@ RL training was started but interrupted. Need to continue RL approach.
     Expander better at 8-agent (6.25, 1.75, 2.90, 6.72, 8.77)
 - [18:25] Uploading AlphaExpander as v256 for tournament.
 - [18:25] RL test still running (slow inference, at step ~3000).
+- [18:32] AnthropicCyborgPolicy LLM test failed — API calls retrying endlessly.
+  API key issue or network problem. LLM-enhanced policy not viable locally.
+- [18:35] Created AlphaAdaptivePolicy: uses AlphaCyborg for <=4 agents, 
+  Expander for 5+ agents. Best of both worlds for tournament format.
+- [18:35] RL stateless training also killed (CPU too slow). 
+  Added suggestion for GPU access.
+- [18:35] Testing adaptive policy now (10 runs: 5x 4-agent + 5x 8-agent).
