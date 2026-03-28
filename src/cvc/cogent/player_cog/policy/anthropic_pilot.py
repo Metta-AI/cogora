@@ -1480,10 +1480,15 @@ class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
         # Economy health determines pressure capacity
         economy_surplus = min_res >= 100
         economy_crisis = min_res < 3 and not can_hearts
+        economy_warning = min_res < 30 and step >= 2000
 
-        # Late-game survival mode: if economy collapsed, pull back aggressively
-        if economy_crisis and step >= 2000:
+        # Late-game survival mode: pull back when economy is struggling
+        if economy_crisis and step >= 1500:
             return 1, 0  # 1 aligner holds territory, all others mine
+        if economy_warning and not economy_surplus:
+            # Ease off pressure to rebuild economy
+            pressure_budget = max(2, num_agents // 3)
+            return pressure_budget, 0
 
         if economy_surplus:
             # Only need 1 miner — rest go to pressure
@@ -1493,16 +1498,15 @@ class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
         elif economy_crisis:
             pressure_budget = max(2, num_agents // 3)
         elif min_res < 14:
-            # Moderate resources: careful balance
             pressure_budget = min(4, num_agents - 2)
         else:
             pressure_budget = min(num_agents - 2, 6)
 
-        # Earlier and more scramblers
+        # Scramblers: delay until opponents have junctions to scramble (~step 500+)
         scrambler_budget = 0
-        if step >= 100 and min_res >= 14:
+        if step >= 500 and min_res >= 14:
             scrambler_budget = min(2, max(1, pressure_budget // 3))
-        elif step >= 200 and min_res >= 7:
+        elif step >= 300 and min_res >= 7:
             scrambler_budget = min(1, pressure_budget // 3)
         if economy_surplus and step >= 500:
             scrambler_budget = min(3, pressure_budget // 3)
