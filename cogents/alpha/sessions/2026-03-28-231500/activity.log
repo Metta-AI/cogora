@@ -41,3 +41,12 @@
   Economy stays healthy through step 5000 (silicon 133 vs 15 for Aggressive).
   Late game still declines but much milder (7 junctions vs 5).
   Uploading both Balanced and AdaptiveV3 to tournament for real signal.
+- [2026-03-28 23:38] BREAKTHROUGH: AlphaChainExpandPolicy scores 5.91 on 8a (+132% vs Aggressive!)
+  Key innovations over AdaptiveV3:
+  1. expansion_weight=20 (2x): strongly prefer chain-building junctions
+  2. expansion_cap=120 (2x): distinguish junctions that unlock many others
+  3. Idle aligners alternate explore/scramble by agent_id (not all scramble)
+  Peak: 23 friendly junctions at step 700 (vs 13 for Aggressive!)
+  Still collapses late game (4 friendly at step 5000) but early lead is massive.
+  Uploaded as v311. Running 4a test + multi-seed validation.
+  v309=AdaptiveV3, v310=Balanced, v311=ChainExpand all in qualifying.
