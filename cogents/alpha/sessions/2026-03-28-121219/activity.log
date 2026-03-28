@@ -80,3 +80,7 @@ status: in-progress
 - [14:32] V4 vs clips (8a, 10k): [0.00, 0.00, 4.48] avg=1.49 — TWO WIPES, much worse
 - [14:33] AlphaTournamentPolicy clearly better in PvP mode. V4 overfits to self-play.
 - [14:33] v210 (AlphaTournamentPolicy) already uploaded. Should perform well in tournament.
+- [14:40] VT clips 8a 10k seeds 4-8: [5.09, 8.28, 2.10, 2.04, 6.94]
+- [14:40] Full VT clips 8a 10k avg (8 seeds): 4.29. Best: 8.28.
+- [14:41] High-score analysis (seed 5=8.28): 290 aligned, 221 lost, 141 scrambles by agent 3
+- [14:41] Key to high scores: productive scramblers + strong economy (3000+ resources deposited)
