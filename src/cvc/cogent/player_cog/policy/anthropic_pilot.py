@@ -890,6 +890,68 @@ class AlphaStableBoostAgentPolicy(AlphaRealignBoostAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaAggroBoostAgentPolicy(AlphaStableBoostAgentPolicy):
+    """StableBoost with more aggressive heart batching and faster ramp.
+
+    Changes from StableBoost:
+    - Heart batch target 4 from step 200 (not 500), 5 from step 500 (not 2000)
+    - Even faster ramp: 3 aligners from step 5 (not 10)
+    - 2 scramblers from step 200 for 5+ agents (not just step 3000)
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 20 or (min_res < 1 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 15:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 150 and num_agents >= 4 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: faster ramp, earlier scramblers
+        if step < 5:
+            pressure_budget = 2
+        elif step < 30:
+            pressure_budget = 3
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)
+            elif min_res < 2:
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)
+
+        # Earlier scrambler: 1 from step 50, 2 from step 200
+        scrambler_budget = 0
+        if step >= 200:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 50:
+            scrambler_budget = min(1, pressure_budget // 3)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
 class AlphaV65NoScrambleBoostAgentPolicy(AlphaV65RealignAgentPolicy):
     """V65Realign but with NO scramblers — all hearts go to alignment.
 
@@ -1387,6 +1449,23 @@ class AlphaStableBoostPolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaStableBoostAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaAggroBoostPolicy(MettagridSemanticPolicy):
+    """StableBoost with aggressive heart batching and faster ramp."""
+    short_names = ["alpha-aggro-boost"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAggroBoostAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
