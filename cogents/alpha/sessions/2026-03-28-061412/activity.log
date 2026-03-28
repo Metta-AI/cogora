@@ -1,48 +1,52 @@
 status: in-progress
 
 ## Session Plan
-- Analyze what differentiates v65 (3.24) from newer versions
 - Goal: beat v65's 3.24 score, ultimately > 10
 
 ## Tournament Status (latest)
 - v65 still #1 at 3.24 (321 matches)
 - Best recent: v158/v156/v160 at 2.36 (~80 matches)
-- Team-aware variants (v163-v168): 1.83-2.03 — WORSE than base
-- v168 (clean team-aware): 1.83 (15 matches)
-- All recent versions: 2.0-2.36, none close to v65
+- Team-aware variants (v163-v168): 1.83-2.03 — WORSE than base replicas
+- All recent versions cap at ~2.36
 
-## Key Findings
-1. Exact v65 code diff identified: hub_penalty targeting, expansion 5/30, retreat 15
-2. Tournament uses 2+6, 6+2, 4+4 team sizes (NOT 8v8!)
-3. Team-aware budgets help locally (especially 4 agents: 0.28→1.14)
-4. But team-aware scores WORSE in tournament (2.01 vs 2.36 for base replicas)
-5. Local 10k scores don't predict tournament:
-   - AlphaTeamAware: 4.39 avg locally → 2.01 in tournament
-   - Base: 2.97 locally → 2.36 in tournament (closer match)
+## Key Findings This Session
 
-## Local 10k step averages (8 agents)
-- AlphaTeamAware: 4.39 (5 seeds)
-- RealignBoost: 3.32 (3 seeds)
-- V65 TrueReplica: 3.47 (1 seed)
-- Base: 2.97 (1 seed)
-- Clean TeamAware: 2.65 (3 seeds)
-- MaxAlign: 1.83 (3 seeds)
+### 1. Exact v65 Code Diff
+- Hub_penalty (tiered) → network_penalty (linear mild)
+- Expansion 5/30 → 10/60
+- Retreat margin 15 → 20
+- Added hotspot tracking
+- Deposit threshold 12 → 16
 
-## Uploads this session
-- v162: AlphaV65TrueReplicaPolicy → 2.04 (81 matches)
-- v163: AlphaTeamAwarePolicy → 2.01 (80 matches)
-- v164: AlphaV65TeamAwarePolicy → 2.01 (80 matches)
-- v165: AlphaV65TeamAwarePolicy (updated) → 2.03 (81 matches)
-- v168: AlphaCleanTeamAwarePolicy → 1.83 (15 matches)
+### 2. Tournament Config
+- 10k steps, 8 total agents
+- Team splits: 2+6, 6+2, 4+4 (pairwise matchups)
+- Scored by participation-weighted average
 
-## Key Insight
-Team-aware changes seem to HURT tournament performance despite helping locally.
-The base policy's aggressive 5-pressure budget works well in tournament because
-tournament matches are against OTHER alpha versions that also handle small teams
-poorly. Being more conservative with team-size-aware budgets just means scoring
-less when you have the numbers advantage (6v2).
+### 3. Team-Aware Hurts Tournament
+- Team-aware budgets help locally (4-agent: 0.28→1.14 avg)
+- But score WORSE in tournament (2.01 vs 2.36 for base replicas)
+- Theory: being conservative with small teams means scoring less on 6v2 advantage
 
-## Next Steps
-- Focus on what actually improves tournament: the simple aggressive base strategy
-- Try uploading base + resource bias only (minimal changes from v65)
-- Consider if v65's score is inflated by early weak-opponent matches
+### 4. Pickup Testing (4v4 vs starter)
+- AlphaTeamAware VOR: 1.27
+- 4 of ours: 1.76, 3+1: 1.49, 2+2: 0.31
+- Competitive play significantly reduces scores vs self-play
+
+### 5. Local 10k Averages (8 agents, self-play)
+- AlphaTeamAware: 4.39 (best locally, worst in tournament)
+- RealignBoost: 3.32
+- V65 TrueReplica: 3.47
+- Base: 2.97
+- Clean TeamAware: 2.65 (base targeting + team budgets)
+- MaxAlign: 1.83 (economy collapse)
+
+## Uploads
+- v162-v168 all scoring 1.83-2.04 in tournament
+- None beat v65 (3.24) or even v158/v156/v160 (2.36)
+
+## Working Hypothesis
+- v65's 3.24 may be partially inflated by early weak-opponent matches
+- Simple aggressive policy (5 pressure, 1 scrambler) works well in tournament
+- Being "smarter" (team-aware, hotspot avoidance) makes things worse
+- The base aggressive approach is hard to beat because opponents are also weak
