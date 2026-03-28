@@ -159,3 +159,7 @@ status: in-progress
   - v241 (V65TrueReplica+old_deps, 18m): 2.45 — still settling
   REALISTIC TARGET: get our best version to 2.5-2.8 range (top 20).
   Score >10 is not achievable with current game mechanics.
+- [16:14] Uploaded v248 (V65Pure current), v249 (V65TrueReplica current) for comparison.
+  Comprehensive A/B: V65Pure vs V65TrueReplica, old deps vs current deps (4 versions).
+- [16:14] v241 (V65TrueReplica+old): 2.91→2.66→2.45→2.39 (19m) — still settling.
+  AlphaCyborg self-play 10k: 2.25 — matches expected tournament range.
