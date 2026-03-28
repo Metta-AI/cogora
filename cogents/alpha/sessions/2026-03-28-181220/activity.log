@@ -48,3 +48,9 @@ New opponents: slanky:v112, gtlm-reactive, coglet-v0:v7.
   Team-relative is essential for 2+6/4+4/6+2 team splits.
 - [19:05] Waiting for 10k scrimmage + tournament results. Resource depletion (especially silicon)
   is the late-game bottleneck — only 45 silicon extractors vs 50-58 for other resources.
+- [19:12] 10K SCRIMMAGE (EconFix, 3 episodes): 3.12, **9.48**, 3.88 → avg 5.49!
+  Episode 1 scored 9.48 — nearly target of 10! High variance, map-dependent.
+- [19:13] 2-agent test: 0.88/cog at 5k with 4 agents — not a wipe.
+- [19:14] Tournament: v259 at 2.53 (31 matches), v262 at 2.26 (35 matches, not ours).
+  v264-v266 still in qualifying.
+- [19:14] v266 (LLM-enhanced) uploaded with latest resource fix code.
