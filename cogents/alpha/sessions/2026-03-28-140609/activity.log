@@ -21,10 +21,9 @@ status: in-progress
   that stalls agents at hp=0. Fixed wipe seeds: seed 1 wipe→5.18, seed 4 wipe→3.22.
 - [14:30] (Worker 2) Uploaded v217 (hybrid team-aware), v218 (hybrid global)
 - [14:36] Uploaded v219: AnthropicCyborgPolicy (matches v65's policy class)
-- [14:40] Settled scores (24+ matches): v216 vanilla=2.35 (#67), v211=2.17, v215=2.11
-  All customized versions score worse. More overrides = worse performance.
-- [14:40] v65 gap: 3.59 vs v216 2.35 = 53% gap. Due to base class code or dependency changes.
-- [14:45] v216 (vanilla) settled at 2.15 (30 matches). Not as far ahead as initially seemed.
-  v217 (hybrid) at 2.21 (2 matches — early).
-- [14:45] All new versions converge to 2.0-2.3 regardless of customization level.
-  v65's 3.59 advantage is in the frozen code/dependencies, not in strategy choices.
+- [14:40] Settled scores: v216 vanilla=2.35, v211=2.17, v215=2.11
+  v217 (hybrid) at 2.21 (2 matches — early). All converge to 2.0-2.3.
+- [14:40] v65 gap (3.59) is in frozen code/deps, NOT strategy choices.
+- [14:40] (Worker 2) Clips PvP: AlphaCyborg=4.36, ScrambleHeavy=3.67, SuperAggro=2.85
+- [14:45] Uploaded v220 (fixed hybrid), v222 (fixed hybrid global), v223 (scramble heavy)
+- [14:50] Score plateaus at ~4.0 in clips PvP. To reach >10 need different approach.
