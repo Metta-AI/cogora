@@ -9,3 +9,14 @@ v241 (V65TrueReplica+old_deps) was at 2.45 (#52) with 18 matches, still settling
 Need fundamentally different approach to reach >10.
 
 ## Activity
+- [16:10] Session started. Reviewed context: heuristic ceiling ~2.8, target >10.
+- [16:12] Discovered `cogames tutorial train` command — can train RL agents!
+- [16:14] Local baseline: AlphaCyborg 5k self-play score 1.25.
+- [16:15] Started training LSTM RL agent on machina_1 (50M steps, ~22min expected).
+  At 20K SPS, epoch 200 (meaningful training threshold) takes ~22 min.
+- [16:17] Key insight: game docs say "trained agents will be necessary" for high scores.
+  Heuristic ceiling is structural at ~2.8. RL is the path to >10.
+- [16:22] Training progress: epoch 18/382, ~20K SPS. Rewards emerging: 0.005→0.084.
+  Explained variance 0.80+, value function learning. Full 50M steps ~42 min.
+- [16:22] Upload format: can use `cogames upload -p class=lstm,data=<checkpoint>`.
+  Will upload trained model once it reaches meaningful performance.
