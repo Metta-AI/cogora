@@ -1128,6 +1128,14 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         self._hotspot_weight = 8.0   # Re-alignment boost (flip hotspot to bonus)
         self._network_weight = 0.0   # No network proximity penalty (allows expansion)
 
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        """Flip hotspot count to BONUS — prioritize re-aligning scrambled junctions."""
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        return -min(count, 3)
+
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
         """Less conservative retreat (margin=15) + miner hub-distance check."""
         hp = int(state.self_state.inventory.get("hp", 0))
@@ -1152,6 +1160,22 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 20:
                 return True
         return False
+
+    def _should_deposit_resources(self, state: MettagridState) -> bool:
+        """Lower deposit threshold (12) for faster economy turnover."""
+        cargo = _h.resource_total(state)
+        if cargo <= 0:
+            return False
+        threshold = 12 if _h.has_role_gear(state, "miner") else 4
+        if cargo >= threshold:
+            return True
+        safe_target = self._nearest_friendly_depot(state)
+        if safe_target is None:
+            return cargo >= 4
+        safe_distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
+        if cargo >= 8 and self._should_retreat(state, "miner", safe_target):
+            return True
+        return cargo >= 4 and safe_distance <= 3
 
     def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
         """Extended aligner: when no frontier, walk toward nearest unreachable junction."""
@@ -1248,7 +1272,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Stable role allocation with high floors to prevent gear oscillation."""
+        """Stable role allocation with resource-responsive scaling."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         can_hearts = _h.team_can_refill_hearts(state)
@@ -1273,24 +1297,26 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 return min(aligner_budget, 1), 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: 5a+1s+2m — aggressive for 10k tournament games
+        # 5+ agents: aggressive alignment with resource-responsive fallback
         if step < 10:
             return min(2, num_agents - 1), 0
         if step < 50:
             pressure_budget = 3
+        elif min_res < 1 and not can_hearts:
+            # Critical resource crisis — send most agents to mine
+            pressure_budget = max(2, num_agents // 4)
+        elif min_res < 7:
+            # Low resources — reduce pressure to keep economy running
+            # Hearts cost 7 of each element, so < 7 means can't even make 1 heart
+            pressure_budget = min(4, num_agents - 3)
         elif step < 3000:
             pressure_budget = min(6, num_agents - 2)  # 5a+1s for 8 agents
-            if min_res < 1 and not can_hearts:
-                pressure_budget = max(3, num_agents // 3)  # Floor 3
-            elif min_res < 2:
-                pressure_budget = min(5, num_agents - 2)
         else:
             pressure_budget = min(6, num_agents - 2)
-            if min_res < 1 and not can_hearts:
-                pressure_budget = max(3, num_agents // 3)
 
+        # Scramblers: only 1 until step 5000, then 2 if resources healthy
         scrambler_budget = 0
-        if step >= 3000:
+        if step >= 5000 and min_res >= 30:
             scrambler_budget = min(2, pressure_budget // 3)
         elif step >= 100:
             scrambler_budget = min(1, pressure_budget // 3)
