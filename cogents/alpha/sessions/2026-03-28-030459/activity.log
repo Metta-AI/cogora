@@ -43,3 +43,12 @@
 - Non-wipeout avg: 5.54, Best: 14.85 (seed 21)
 - Starter policy 0.00 on all seeds (even 5000 steps) — our policy works, starter is bad
 - Goal >10 avg requires roughly doubling score
+
+### v141: Testing stable budgets (from other session) + network targeting
+- Stable 4A+1S+3M for 8 agents (no role oscillation)
+- Deposit threshold raised 12→16 (from other session)
+- Results: 3.41, 0.00, 6.46, 5.45, 0.00, 4.63, 5.57, 6.00, 5.55, 6.45
+- Average: 4.35, wipeouts: 2/10 (20%)
+- Non-wipeout avg: 5.44
+- Uploaded as v134 to tournament
+- Starter policy scores 0.00 even at 5000 steps — not useful as baseline comparison
