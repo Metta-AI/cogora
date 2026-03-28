@@ -29,3 +29,19 @@
 - Total deaths: 13 (vs 20) — fewer deaths too
 - Also synced fix to AnthropicPilotAgentPolicy (tournament version)
 - Running 5-seed validation (seeds 1-5)...
+
+### 10-Seed Results: v135 (Stable Budgets)
+- Seeds: 3.19, 3.63, 3.73, 0.00, 3.14, 0.00, 4.06, 3.29, 4.06, 2.95
+- Average: 2.81 (with wipeouts), 3.51 (excluding wipeouts)
+- Wipeout rate: 20% (seeds 4, 6) — agents die before reaching territory
+- Uploaded v135 (AnthropicCyborg) and v136 (AlphaCyborg) to tournament
+
+### Tournament Status
+- v132 at #1 with 3.51 score (5 matches)
+- v65 at #2 with 3.24 (321 matches)
+- v135/v136 in qualifying pool
+
+### Next Steps
+- Wipeout prevention (20% rate is costing ~0.7 points on avg)
+- Try 5 aligners instead of 4 (economy showed headroom)
+- Investigate why v65 era outperformed in tournament
