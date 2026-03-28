@@ -2,3 +2,4 @@ status: in-progress
 2026-03-28 20:23:22 - Created AlphaHybridAgentPolicy: v65 hub-penalty targeting + AlphaCog economy + hotspot re-alignment bonus. Running local tests (8-agent and 4-agent).
 2026-03-28 20:27:44 - Local test results: AlphaCyborg 8-agent 4.68, AlphaHybrid 8-agent 2.72 (v65 hub_penalty too harsh), AlphaHybrid 4-agent 0.83. Created AlphaSoftHub (network_weight=0.5). Uploaded v270 (hybrid), v271 (softhub), v272 (AlphaCyborg control).
 2026-03-28 20:33:58 - CRITICAL FIX: Added miner sticky-target resource fix to AlphaCogAgentPolicy. Was only in EconFix variant. Miners were getting stuck mining abundant resources while critical ones (oxygen) hit 0.
+2026-03-28 20:37:33 - CONFIRMED: Miner fix +86% improvement at 4-agent. Scrimmage avg 1.73 vs 0.93 (same seeds). Episodes: [0.73, 2.89, 3.58, 0.96, 0.50]. v273 (fixed AlphaCyborg) and v274 (fixed Hybrid) in qualifying.
