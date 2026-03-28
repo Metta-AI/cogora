@@ -76,3 +76,17 @@
 - v134-v137: all 1.93-2.15
 - The "improvements" (network targeting, stable budgets, hotspots, retreat margins) all HURT tournament performance
 - Hypothesis: base policy's simpler approach works better in competitive play
+
+### A/B Test: Base vs AlphaCyborg (5 seeds, 5000 steps)
+| Seed | Base | Alpha |
+|------|------|-------|
+| 21   | 2.97 | 3.07  |
+| 22   | 3.13 | 2.67  |
+| 23   | 2.72 | 3.81  |
+| 25   | 2.97 | 4.39  |
+| 27   | 1.61 | 2.33  |
+- Base avg: 2.68, Alpha avg: 3.25
+- Alpha is BETTER locally (+21%), but WORSE in tournament
+- LOCAL self-play does NOT predict tournament performance
+- Uploaded v143 (base policy) to tournament for direct comparison
+- Key: tournament is alpha-vs-alpha (our versions play each other)
