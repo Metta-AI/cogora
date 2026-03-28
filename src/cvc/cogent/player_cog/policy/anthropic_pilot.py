@@ -2468,6 +2468,173 @@ class AlphaV65IdleMinePolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaV65HybridAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """V65 budgets + team-relative roles + idle-mine.
+
+    The key insight: v65's tournament success comes from its aggressive
+    budget (4 aligners from step 0). Previous "improvements" delayed
+    aligners with economy-first budgets, which loses territory in PvP.
+
+    This hybrid keeps v65's proven budgets and targeting, adds:
+    - Team-relative role assignment (works for any team size)
+    - Idle-mine for aligners when no frontier (biggest local gain)
+    - Logging for tournament debugging
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Disable network/hotspot weights like v65
+        self._network_weight = 0.0
+        self._hotspot_weight = 0.0
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """V65 targeting with idle-mine fallback."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # No frontier — mine to help economy instead of wandering
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """V65-style aggressive budgets, adapted for variable team sizes.
+
+        V65 original: pressure=4 from step 0, ramp to 5 when rich, scrambler at 1500+.
+        This adapts that for smaller teams while keeping the same philosophy:
+        get aligners out ASAP, don't delay for economy.
+        """
+        step = state.step or self._step_index
+        num_agents = self.policy_env_info.num_agents
+        min_res = _h.team_min_resource(state)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            # 2 agents: 1 aligner + 1 miner, no scramblers
+            pressure = 1
+            scrambler = 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return pressure, scrambler
+
+        if num_agents <= 4:
+            # 4 agents: 2 aligners + 2 miners (v65 ratio: half align, half mine)
+            pressure = min(2, num_agents - 1)
+            if step >= 40 and min_res >= 14:
+                pressure = min(3, num_agents - 1)
+            scrambler = 1 if step >= 1500 else 0
+            aligner = max(pressure - scrambler, 1)
+            if objective == "economy_bootstrap":
+                return min(aligner, 2), 0
+            return aligner, scrambler
+
+        # 5+ agents: v65 original budgets
+        pressure = 4
+        if step >= 40 and min_res >= 20:
+            pressure = 5
+
+        scrambler = 0
+        if step >= 1500:
+            scrambler = 1
+        if step >= 5000 and _h.team_can_refill_hearts(state):
+            scrambler = 2
+        aligner = pressure - scrambler
+        if objective == "economy_bootstrap":
+            return min(aligner, 2), 0
+        return aligner, scrambler
+
+    def evaluate_state(self, state: MettagridState) -> Action:
+        action = super().evaluate_state(state)
+        step = state.step or self._step_index
+        if step % 500 == 0 or step == 1:
+            pos = _h.absolute_position(state)
+            hp = int(state.self_state.inventory.get("hp", 0))
+            hearts = int(state.self_state.inventory.get("heart", 0))
+            cargo = _h.resource_total(state)
+            role = self._infos.get("role", "?")
+            subtask = self._infos.get("subtask", "?")
+            aligner_b = self._infos.get("aligner_budget", "?")
+            scrambler_b = self._infos.get("scrambler_budget", "?")
+            team_id = _h.team_id(state)
+            friendly = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner == team_id))
+            print(
+                f"[COG] step={step} agent={self._agent_id} pos={pos} role={role} "
+                f"subtask={subtask} hp={hp} hearts={hearts} cargo={cargo} "
+                f"aligners={aligner_b} scramblers={scrambler_b} friendly_j={friendly}",
+                flush=True,
+            )
+        return action
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaV65HybridPolicy(MettagridSemanticPolicy):
+    """V65 hybrid: v65 budgets + team-aware roles + idle-mine."""
+    short_names = ["alpha-v65-hybrid"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65HybridAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaV65HybridGlobalPolicy(MettagridSemanticPolicy):
+    """V65 hybrid with global roles (no team-relative) — closer to original v65."""
+    short_names = ["alpha-v65-hybrid-global"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65HybridAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                # No shared_team_ids → global role priorities like v65
+            )
+        return self._agent_policies[agent_id]
+
+
 # Re-export the ORIGINAL pre-rewrite semantic_cog for pure v65 testing
 from cvc.cogent.player_cog.policy.semantic_cog_v65 import (
     MettagridSemanticPolicy as _V65BasePolicy,
