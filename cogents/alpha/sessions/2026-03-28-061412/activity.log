@@ -1,32 +1,34 @@
 status: in-progress
 
-## CRITICAL FIX IS WORKING! 🎯
+## CRITICAL FIX: Team-Relative Role Assignment
 
-### Tournament Results After Role Fix
-- **v180 (Base+fix): 2.99 (9 matches) — #2 on leaderboard!**
-- **v179 (StableBoost+fix): 2.86 (11 matches) — #3!**
-- **v181 (ZoneBoost+fix): 2.81 (10 matches) — #4!**
+### Bug
+Tournament uses split teams with non-standard agent IDs.
+Role priorities used global IDs → wrong role allocation.
+Fix: shared_team_ids filters priorities to team members.
 
-Compared to pre-fix versions that capped at 2.36, this is a +0.5 to +0.63 improvement!
-v180 at 2.99 is approaching v65's 3.24!
+### Tournament Results (settling)
+| Version | Policy | Score | Matches | Rank |
+|---------|--------|-------|---------|------|
+| v181 | ZoneBoost+fix | 2.48 | 48 | #32 |
+| v179 | StableBoost+fix | 2.37 | 49 | #55 |
+| v178 | AnthropicCyborg | 2.21 | 45 | #95 |
+| v180 | Base+fix | 2.18 | 48 | #106 |
 
-### The Bug That Was Fixed
-Tournament uses split teams (2v2, 3v1, 1v3 in 4-agent; 2v6, 6v2 in 8-agent).
-Role assignment used GLOBAL agent IDs → wrong roles for non-standard ID sets.
-Fix: team-relative role assignment using shared_team_ids.
+Pre-fix versions capped at ~2.2. Fix adds +0.15-0.3.
+ZoneBoost is pulling ahead as the best variant.
+v65 still #1 at 3.24 (321 matches).
 
-### More Uploads with Fix
-- v182: RealignBoost+fix (pending)
-- v183: GentleZone+fix (pending)
-- v184: V65TrueReplica+fix (pending)
+### Uploads This Session
+v162-v185 (24 variants)
 
-### 8-Agent Pickup Results (pre-fix AlphaTeamAware vs starter)
-| Our agents | Score | Notes |
-|-----------|-------|-------|
-| 8 | 5.09 | All ours |
-| 7 | 3.63 | |
-| 6 | 1.68 | Tournament-like (6v2) |
-| 4 | 1.46 | Tournament-like (4v4) |
-| 2 | 0.06 | Tournament-like (2v6) |
-| 1 | 0.00 | BUG: agent became pure scrambler |
-Overall VOR: 2.79
+### Pickup VOR (fixed StableBoost, 8 agents vs starter, 5k steps)
+1-agent: 0.07, 2-agent: 1.20, 3-agent: 0.46, 4-agent: 1.36
+5-agent: 0.88, 6-agent: 1.53, 7-agent: 1.24, 8-agent: 1.66
+Overall VOR: 1.24
+
+### Key Session Insights
+1. Tournament uses 4-agent AND 8-agent games with various team splits
+2. Role assignment bug was the main cause of poor tournament scores
+3. ZoneBoost (sector-based aligner targeting) best in both local and tournament
+4. Local scores still don't perfectly predict tournament but fix closed the gap
