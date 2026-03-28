@@ -27,3 +27,12 @@ status: in-progress
 - [14:40] (Worker 2) Clips PvP: AlphaCyborg=4.36, ScrambleHeavy=3.67, SuperAggro=2.85
 - [14:45] Uploaded v220 (fixed hybrid), v222 (fixed hybrid global), v223 (scramble heavy)
 - [14:50] Score plateaus at ~4.0 in clips PvP. To reach >10 need different approach.
+- [14:52] 5-seed AlphaCyborg vs clips 10k: 8.15, 5.35, 6.39, 3.25, **14.17** → avg **7.46**!
+  Seed 5 at 14.17 — ABOVE 10 TARGET. 27-29 friendly junctions by step 5000.
+- [14:52] Wave (all-mine-then-align) = 1.88, MaxPressure (6 aligners) = 1.63 — FAILED
+  Economy-first doesn't work, opponent grabs territory while you mine.
+- [14:55] Variable team sizes vs clips: 2-agent=0.00(wipe), 4-agent=0.72
+  2-agent games are a HARD loss — not enough economy with 2 agents.
+- [14:58] Uploaded v224 (AlphaCyborg), v225 (AnthropicCyborg LLM-enhanced)
+- [15:00] No tournament matches completed yet — all still running.
+  v218/v219 in competition, v224/v225 qualifying.
