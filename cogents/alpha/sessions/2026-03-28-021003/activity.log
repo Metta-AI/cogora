@@ -62,4 +62,12 @@ status: in-progress
   - Seeds 10-17: no wipeouts, avg 5.04
 - v137 breakthrough: network-distance + safety margin = fewer deaths + better expansion
 - Uploaded v125 (v131), v126 (v133), v127 (v136) to tournament
-- Uploading v137 (retreat margin 20) to tournament now
+- Uploaded v125, v126, v127, v130 to tournament
+
+## v138 (User Config Changes)
+- User modified: scrambler only for 6+ agents, min 2 miners, heart batch 4
+- v138 8-cog (11 non-wipeout seeds): avg 4.98 (seed 6: 10.14!)
+- v138 4-cog (8 seeds): avg 1.12 — WORSE (no scrambler = clips ships free reign)
+- No scrambler for 4-cog is risky but may work better against cogent opponents
+- Tournament will be the real test
+- Uploaded as v130 in tournament
