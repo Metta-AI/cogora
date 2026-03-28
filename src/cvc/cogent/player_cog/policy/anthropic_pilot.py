@@ -1126,6 +1126,9 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
         # Re-enable hotspot weight for re-alignment boost
         self._hotspot_weight = 8.0
+        # Stronger expansion preference: prioritize junctions that open up more network
+        self._expansion_weight = 15.0
+        self._expansion_cap = 90.0
 
     def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
         """Re-alignment boost: prioritize recently scrambled junctions.
