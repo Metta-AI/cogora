@@ -125,3 +125,6 @@ Need fundamentally different approach to reach >10.
   v251: 2.22, v250: 2.17, v252: 2.14
   SmallTeam consistently outperforming vanilla and AlphaCyborg now.
   coglet v6-v8: 2.33-2.37 (stabilizing).
+- [18:23] RL training at 30.9M steps (31%). Hearts: 1.33-1.50/agent, hub withdrawals: 5.0.
+  Agent economy loop is solid. Need junction alignment to improve.
+- [18:23] Tournament stable: v253=2.20, v251=2.20, v250=2.19, v252=2.14 (54 matches each).
