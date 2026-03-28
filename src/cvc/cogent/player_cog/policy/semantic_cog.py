@@ -234,6 +234,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
         self._current_directive = MacroDirective()
         self._network_weight = _DEFAULT_NETWORK_WEIGHT
         self._hotspot_weight = _DEFAULT_HOTSPOT_WEIGHT
+        self._expansion_weight = 10.0
+        self._expansion_cap = 60.0
 
     def step(self, obs: AgentObservation) -> Action:
         self._step_index += 1
@@ -830,6 +832,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     hotspot_count=self._junction_hotspot_count(entity, hub),
                     network_weight=self._network_weight,
                     hotspot_weight=self._hotspot_weight,
+                    expansion_weight=self._expansion_weight,
+                    expansion_cap=self._expansion_cap,
                 ),
                 entity.position,
             ),

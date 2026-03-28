@@ -100,3 +100,16 @@ KEY INSIGHT: Heavy scrambling (3 scramblers) is extremely effective in tournamen
 - v145-v149 all below v65 (1.29-2.04 vs 3.24)
 - v150-v154 still in qualifying
 - Uploaded v156: best v65 replica (no network/hotspot, retreat_margin=15, deposit=16)
+
+## Expansion weight experiment: KEEP higher weights
+- v65 era expansion (5.0/30.0): avg 3.02 on 3 seeds — WORSE
+- Current expansion (10.0/60.0): avg 4.25 on 3 seeds — BETTER
+- Higher expansion bonus helps by prioritizing network-expanding junctions
+- v65 replica should use CURRENT expansion weights (10.0/60.0)
+
+## Tournament update (v150/v151 with 11 matches each)
+- v150 (v65 replica): 2.12 — in line with other recent versions
+- v151 (v65+bias): 1.99
+- v65 at 3.24 with 321 matches — may have inflated score from weaker opponents
+
+## Uploaded v158: clean v65 replica (no network/hotspot, retreat_margin=15, expansion 10/60)

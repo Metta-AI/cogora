@@ -38,6 +38,8 @@ def aligner_target_score(
     hotspot_count: int = 0,
     network_weight: float = 0.5,
     hotspot_weight: float = 8.0,
+    expansion_weight: float = 10.0,
+    expansion_cap: float = 60.0,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     expansion = sum(
@@ -62,7 +64,7 @@ def aligner_target_score(
     hotspot_penalty = min(hotspot_count, 3) * hotspot_weight
     return (
         distance
-        - min(expansion * 10.0, 60.0)
+        - min(expansion * expansion_weight, expansion_cap)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
         + network_penalty
