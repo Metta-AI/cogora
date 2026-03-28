@@ -3488,15 +3488,20 @@ class AlphaEconFixAgentPolicy(AlphaCogAgentPolicy):
         least = _least_resource(resources)
         least_amount = resources[least]
 
-        # If the least resource is critically low AND we're mining something else, switch
         if (
             self._sticky_target_kind is not None
             and self._sticky_target_kind.endswith("_extractor")
-            and least_amount < 7
         ):
             current_resource = self._sticky_target_kind.removesuffix("_extractor")
             if current_resource != least:
-                self._clear_sticky_target()
+                # Critical shortage: switch immediately
+                if least_amount < 7:
+                    self._clear_sticky_target()
+                # Resource imbalance: mining the most abundant while least is < 50% of max
+                elif least_amount > 0:
+                    max_amount = max(resources.values())
+                    if resources[current_resource] > max_amount * 0.8 and least_amount < max_amount * 0.5:
+                        self._clear_sticky_target()
 
         # Also clear if bias changed (different resource became most needed)
         if self._last_bias_resource is not None and self._last_bias_resource != self._resource_bias:
