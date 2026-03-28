@@ -20,3 +20,8 @@
 - [2026-03-28 22:30] Created AlphaExplorerPolicy: wider explore offsets (35 vs 22),
   no hub-distance limit on expansion, bridge-scoring for junction chains.
   Running 4a/8a games.
+- [2026-03-28 22:35] BREAKTHROUGH: Explorer 8a scored 4.58 vs Aggressive 2.43 (+88%!).
+  Explorer maintains 16-19 friendly junctions throughout game (Aggressive declines 18→8).
+  Enemy only reaches 7 junctions (vs 18 for Aggressive).
+  Wider exploration + bridge expansion + no hub-distance limit = key improvements.
+  Running multi-seed validation (seeds 42, 123, 777) for Explorer, Aggressive, 4a/8a.
