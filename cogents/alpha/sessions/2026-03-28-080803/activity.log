@@ -6,3 +6,21 @@ status: in-progress
 - RealignBoost showed promise (seed 5: 8.51), some seeds 0.00
 - Key insight from last sessions: local self-play ≠ tournament performance
 - Plan: check tournament results, investigate 0-score seeds, iterate
+
+## Analysis of baseline game (AlphaCyborgPolicy, seed default, 5000 steps)
+- Score: 3.07
+- 205 junctions aligned, 123 lost to ship scrambling
+- 4 aligners (agents 0,1,2,4): 47+52+44+61 = 204 alignments
+- 1 scrambler (agent 3): 123 scrambles
+- 3 miners (agents 5,6,7): 6 deaths combined
+- Heart economy: 356 total hearts generated, ~386 theoretical max (bottleneck: oxygen at 2704)
+- Each aligner averages ~51 alignments / 5000 steps = 1 alignment per 98 steps (slow!)
+- Theoretical minimum alignment cycle: ~31 steps. Actual is 3x slower.
+- Running 5-seed comparison: AlphaCyborg vs V65TrueReplica
+
+## Key bottleneck analysis
+- Alignment rate: 0.041/step, Scramble rate: 0.0246/step, Net: 0.0164/step
+- To get score >10: need ~10+ avg aligned junctions held throughout
+- Need either more aligners, faster cycle, or less scramble loss
+- Scramblers: 123 hearts used for scrambling = could be 123 more alignments instead
+- Plan: test 5-aligner / 0-scrambler variant (AlphaNoScramblePolicy)
