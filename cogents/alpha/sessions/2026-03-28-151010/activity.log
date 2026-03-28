@@ -93,3 +93,22 @@ status: in-progress
   - v241: V65TrueReplica (old deps)
   - v242: AnthropicCyborg LLM (old deps)
   Need to wait for more matches to confirm v235's 6.07 isn't just variance.
+- [15:52] v235 dropped from 6.07 to 2.33 (14 matches) — early variance, not real.
+  BUT old deps still help: v233 at 2.63 (11 matches) vs v231 at 2.11 (27 matches).
+  That's +0.52 improvement from old deps alone. v233 at rank #26 — near v60-v68 range!
+- [15:53] **Old deps ranking** (higher matches = more reliable):
+  - v233 (AlphaCyborg old): 2.63 (11m)
+  - v234 (AlphaTournament old): 2.39 (10m)
+  - v235 (V65Pure old): 2.33 (14m) — most converged
+  **Current deps ranking**:
+  - v231 (AlphaCyborg): 2.11 (27m)
+  - v232 (AlphaTournament): 1.84 (27m) — dropped from 2.08!
+- [15:54] Installed old deps locally for testing. Running 5-seed clips tests.
+- [15:55] Old deps converging:
+  - v233 (AlphaCyborg old): 2.63→2.38 (16m) — still above current deps (v231: 2.11)
+  - v235 (V65Pure old): 2.33→2.17 (16m) — minimal advantage
+  - v234 (AlphaTournament old): 2.39→1.94 (14m) — WORSE with more matches
+- [15:56] OLD DEPS LOCAL (clips, 5k): 0.66, 0.53, 0.34, 0.23, 0.99 → avg 0.55
+  MUCH WORSE than current deps locally (3.87)! Old engine makes clips harder.
+  But tournament shows old deps slightly better — different PvP dynamics.
+  Game mechanics differ between 0.19 and 0.21 in ways that affect PvP vs NPC.
