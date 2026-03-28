@@ -102,6 +102,15 @@ status: in-progress
 - 8-cog local avg: 4.56 (no wipeouts in 8 seeds)
 - Tournament is the only reliable signal — local testing misleading
 
+## Comprehensive Multi-Size Test (Current Code)
+- 2-cog: 0.00, 1.64, 0.00, 0.18, 1.06 → avg 0.96
+- 4-cog: 2.56, 3.88, 1.12, 0.09, 0.43 → avg 1.61
+- 6-cog: 3.57, 3.35, 1.05, 0.00, 0.00 → avg 2.65
+- 8-cog: 5.96, 5.13, 0.00, 2.42, 0.00 → avg 4.50
+- Cross-team weighted avg: 2.43 (below v65's 3.24 tournament score)
+- Small-team performance is the bottleneck for tournament rating
+- v65 was likely better at small teams (simpler logic, fewer edge cases)
+
 ## v141: Stable Role Allocation (User Redesign)
 - User overhauled pressure_budgets: fixed allocation, no oscillation
   - 2 agents: 1 aligner, 0 scrambler
