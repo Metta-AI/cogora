@@ -10,3 +10,14 @@ New opponents: slanky:v112, gtlm-reactive, coglet-v0:v7.
 
 ## Activity
 - [18:12] Session started. Recovered crashed session 170316.
+- [18:14] Leaderboard check: v65 still #1 at 3.59 (516 matches). All policies 2.0-3.0 range.
+  Nobody close to target of 10. External opponents: slanky 2.75, Paz-Bot 2.72.
+- [18:15] RL training attempted on CPU — 0 SPS, too slow without GPU. Killed.
+- [18:16] Baseline AlphaCyborg: 1.25/cog at 5k steps (clips). Carbon bottleneck severe:
+  carbon=0 at step 1000 while oxygen=747, germanium=624, silicon=560.
+- [18:20] ROOT CAUSE FOUND: Miners use sticky targets that lock them to wrong resources.
+  When carbon hits 0, miner stays on silicon extractor (distance 0) instead of switching
+  to carbon extractor (distance 10+). _TARGET_SWITCH_THRESHOLD=3 prevents switch.
+- [18:25] Created AlphaEconFixPolicy: clears sticky target when critical resource < 7
+  and miner is mining wrong resource. Also uses v65-aggressive budgets (4 aligners from start).
+  Testing locally now.

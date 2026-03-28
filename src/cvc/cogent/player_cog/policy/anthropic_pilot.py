@@ -3467,3 +3467,132 @@ class AlphaAggressivePolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaEconFixAgentPolicy(AlphaCogAgentPolicy):
+    """Fix miner resource-switching: clear sticky target when resource priority shifts.
+
+    Key insight: miners get locked to wrong resources via sticky targets even when
+    a critical resource (like carbon) hits 0. This wastes mining capacity.
+
+    Also uses v65-style budgets (4 aligners early) with earlier scramblers.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_bias_resource: str | None = None
+
+    def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
+        """Override: clear sticky target when resource priority changes significantly."""
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        least_amount = resources[least]
+
+        # If the least resource is critically low AND we're mining something else, switch
+        if (
+            self._sticky_target_kind is not None
+            and self._sticky_target_kind.endswith("_extractor")
+            and least_amount < 7
+        ):
+            current_resource = self._sticky_target_kind.removesuffix("_extractor")
+            if current_resource != least:
+                self._clear_sticky_target()
+
+        # Also clear if bias changed (different resource became most needed)
+        if self._last_bias_resource is not None and self._last_bias_resource != self._resource_bias:
+            if least_amount < 14:
+                self._clear_sticky_target()
+        self._last_bias_resource = self._resource_bias
+
+        return super()._preferred_miner_extractor(state)
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """V65-style aggressive budgets: 4 aligners from the start.
+
+        The key insight from tournament data: v65's aggressive alignment wins territory
+        early, which compounds over the game. Economy-first approaches lose territory
+        that's hard to recapture.
+        """
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            # 4-agent: 2 aligners + 2 miners (balanced)
+            if step < 30:
+                return 1, 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 300 and min_res >= 7 else 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: v65-aggressive — territory wins compound
+        if step < 30:
+            pressure_budget = 2
+        else:
+            pressure_budget = min(4, num_agents - 2)  # 4 aligners like v65
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 2
+            elif min_res < 3:
+                pressure_budget = 3
+
+        # Scramblers: earlier than v65 (step 100 not 1500) for disruption
+        scrambler_budget = 0
+        if step >= 100 and min_res >= 7:
+            scrambler_budget = 1
+        if step >= 2000 and min_res >= 14:
+            scrambler_budget = 2
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaEconFixPolicy(MettagridSemanticPolicy):
+    """Economy fix: resource-aware miners + v65 aggressive budgets + team-relative roles."""
+    short_names = ["alpha-econ-fix"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaEconFixAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaEconFixGlobalPolicy(MettagridSemanticPolicy):
+    """Economy fix + global role assignment (like v65)."""
+    short_names = ["alpha-econ-fix-global"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        # No shared_team_ids — match v65's global role assignment
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaEconFixAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
