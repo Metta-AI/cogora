@@ -1342,16 +1342,32 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
 
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
-        resources = _shared_resources(state)
-        least = _least_resource(resources)
-        directive = MacroDirective(resource_bias=least)
-
-        # Periodic LLM analysis — logs opinions without overriding strategy
-        step = state.step or self._step_index
-        if step > 0 and step % self._LLM_ANALYSIS_INTERVAL == 0:
-            self._run_llm_analysis(state, directive)
-
-        return directive
+        """Use LLM directive when available, fall back to heuristic resource bias."""
+        # Let the pilot session provide the directive (incorporates runtime reviews)
+        try:
+            llm_directive = self._pilot_session.directive_for_state(state, memory=self._memory)
+            # Always override resource_bias with heuristic (LLM can't see economy)
+            resources = _shared_resources(state)
+            least = _least_resource(resources)
+            llm_directive = MacroDirective(
+                resource_bias=least,
+                objective=llm_directive.objective,
+                note=llm_directive.note,
+            )
+            step = state.step or self._step_index
+            if step > 0 and step % self._LLM_ANALYSIS_INTERVAL == 0:
+                print(
+                    f"[LLM] step={step} agent={self._agent_id} "
+                    f"objective={llm_directive.objective} "
+                    f"note={llm_directive.note} "
+                    f"bias={least}",
+                    flush=True,
+                )
+            return llm_directive
+        except Exception as e:
+            resources = _shared_resources(state)
+            least = _least_resource(resources)
+            return MacroDirective(resource_bias=least)
 
     def _run_llm_analysis(self, state: MettagridState, current_directive: MacroDirective) -> None:
         """Ask the LLM to analyze game state and log insights."""
