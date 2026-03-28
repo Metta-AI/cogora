@@ -8,6 +8,7 @@ status: interrupted
 4. Goal: beat v65's 3.59 tournament score, push toward >10
 
 ## Activity
+<<<<<<< Updated upstream
 - [13:05] Session started. Context: v65 at 3.59 (#1), all improvements score worse.
 - [13:10] Local self-play avg=5.14 (5k), 7.09 (10k). Two seeds above 10.
 - [13:17] Uploaded v201-v207 (various strategy variants for A/B testing)
@@ -19,3 +20,16 @@ status: interrupted
 - [14:05] Tournament update: v207 (buggy station) 1.89, v206 (global roles) 2.25
 - [14:06] Uploaded v211-v216 (economy-first variants + vanilla base control)
 - Session interrupted.
+=======
+- [13:05] Session started. Previous session (121219) was interrupted — recovered.
+- [13:05] Context: idle-aligner-mine +89% local, but tournament scores still lag. v65 (3.59) still #1.
+- [13:10] Local baseline (AlphaCyborgPolicy, 5k): seed1=0.00(wipe), seeds 2-6=[6.60, 3.26, 6.53, 6.40, 2.93] avg=5.14
+- [13:12] Tournament: v200 matches running/scheduled vs v34-v54. No completed results yet.
+- [13:12] New tournament versions (v54+) being generated. v200 paired against older versions.
+- [13:14] Key observation: v65 frozen with OLD base class (pre-station-fix, pre-role-fix). Newer versions use updated base.
+- [13:20] (Worker 2) Created AlphaV65OriginalPolicy — V65 replica WITHOUT shared_team_ids.
+  v65 used global agent IDs for role assignment; all newer versions use team-relative.
+  If v202 scores close to v65, the team-relative role fix is the culprit.
+- [13:22] Uploaded v202 (AlphaV65OriginalPolicy). Waiting for qualifying then competition.
+- [13:30] v200 stable at 2.38 (#62, 71 matches). v202 not yet on leaderboard.
+>>>>>>> Stashed changes
