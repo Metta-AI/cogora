@@ -814,7 +814,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
                         step=self._step_index,
                     ),
                     hub_position=hub_pos,
-                    friendly_junctions=friendly_junctions,
                 ),
                 entity.position,
             ),
@@ -840,7 +839,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
         )
         hub = self._nearest_hub(state)
         hub_pos = hub.position if hub is not None else None
-        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
         sticky_score = _h.aligner_target_score(
             current_position=current_pos,
             candidate=sticky,
@@ -848,7 +846,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
             enemy_junctions=enemy_junctions,
             claimed_by_other=False,
             hub_position=hub_pos,
-            friendly_junctions=friendly_junctions,
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -862,7 +859,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 step=self._step_index,
             ),
             hub_position=hub_pos,
-            friendly_junctions=friendly_junctions,
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate
@@ -981,7 +977,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     hub_position=hub_position,
                     candidate=entity,
                     neutral_junctions=neutral_junctions,
-                    friendly_junctions=friendly_junctions,
                 ),
                 entity.position,
             ),
