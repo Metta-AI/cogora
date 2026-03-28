@@ -49,3 +49,25 @@ status: in-progress
 ## 4-Agent Mode
 - 4-cog results (10k steps): Seed 0: 0.84, Seed 1: 3.14, Seed 2: 1.34
 - Economy very constrained with only 1 miner
+
+## Failed Experiments
+- v125: retreat_margin=25 → Seed 0: 3.26, Seed 1: 8.35, Seed 2: 0.00 (MIXED, revert)
+- v126: network-distance scoring → Seed 0: 0.00, Seed 1: 0.00, Seed 2: 1.72 (CATASTROPHIC, revert)
+- v127: 2nd scrambler at step 3000 → Seed 1: 6.11, Seed 5: 2.22 (WORSE on good seeds)
+- v126/v127 also changed priority to (0,1,2,...) which hurt 8-agent performance
+- Reverted all experiments back to v123 base with original priorities extended
+- v123 remains best: avg 4.72, best 10.20
+
+## Current Config (v128)
+- _ALIGNER_PRIORITY = (4,5,6,7,3,2,1,0) — original order, extended for 4-agent
+- _SCRAMBLER_PRIORITY = (7,6,3,2) — extended for 4-agent
+- retreat_margin=15
+- hub-centric scoring (proven)
+- 1 scrambler only
+- adaptive init_budget = min(4, num_agents-1)
+- Testing seed 1 and 5 to verify restoration of original performance
+
+## Tournament Status
+- v115 (AlphaCyborg), v116 (AnthropicCyborg), v117, v118 uploaded
+- v116 competing vs Paz-Bot-9005, slanky:v112, alpha.0:v12/v13
+- No completed matches yet (still running)

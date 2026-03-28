@@ -87,10 +87,8 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         aligner_budget = self._current_aligner_budget
         scrambler_budget = 0
 
-        # Add scramblers: 1 at step 300, 2 at step 3000 (late game defense)
-        if step >= 3000 and num_agents >= 6:
-            scrambler_budget = 2
-        elif step >= 300:
+        # Add scrambler at step 300
+        if step >= 300:
             scrambler_budget = 1
 
         # Cap total pressure to leave at least 1 miner
