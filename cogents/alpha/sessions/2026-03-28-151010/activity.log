@@ -130,3 +130,13 @@ status: in-progress
   performance but should help tournament (same as AlphaTournament behavior).
 - [16:01] The only unexplored path: more aggressive LLM integration (v242 pending).
   Also v240 (AlphaCyborg old) and v241 (V65TrueReplica old) still qualifying.
+- [16:03] **TRUE TOURNAMENT CEILING**: Well-converged old versions (v17: 2.81, v11: 2.78,
+  v13: 2.76 at 900-999 matches) show the real ceiling is ~2.75-2.80, NOT 2.1-2.2.
+  Our new versions haven't converged yet (only 20-30 matches).
+  v65 at 3.59 is an outlier (likely different opponent pool/era).
+- [16:04] 2-agent clips: VT=0.00 (wipe), AlphaCyborg=0.19. Both terrible.
+  Tournament uses variable splits (6v2, 2v6). 2-agent games are hard losses.
+  Improving 2-agent performance could raise overall average significantly.
+- [16:04] All our recent versions (v231-v244) settling at 2.0-2.1 with 15-27 matches.
+  Need 50-100+ matches to see if they converge to 2.5+ like the old versions.
+  Key question: are our new policies genuinely worse than v17/v38, or just not converged?
