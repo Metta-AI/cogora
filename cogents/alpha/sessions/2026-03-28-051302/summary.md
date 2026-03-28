@@ -1,19 +1,21 @@
-# Session 2026-03-28-051302 — Summary (Interrupted)
+# Session 2026-03-28-051302 — Summary
 
-Session was interrupted before completion.
+**Status**: Completed
 
-## Key Findings
-- v65 (base policy) still #1 at 3.24 in tournament — all recent changes net negative
-- Created V65 replica policies removing network/hotspot penalties
-- v148 (scramble-heavy) briefly hit 5.66 but regressed to 1.09
-- V65 replica 10-seed avg 5.03 locally (vs base 3.89) — promising but tournament didn't confirm
-- v150 (v65 replica) at 2.12 with 11 matches, v151 at 1.99
-- Higher expansion weights (10/60) better than v65 era (5/30)
-- Retreat margin 15 kept, deposit threshold 16 kept
-- Uploaded v145-v158 for systematic A/B testing
+## Key Results
+- Discovered tournament uses variable team sizes (2+6, 6+2, 4+4)
+- Created team-aware policy: 4x better at 4 agents (0.55→2.71)
+- Removed bad targeting changes (network/hotspot penalty) — local avg 3.89→5.03
+- v155 (v65 replica + deposit12) leads recent versions at 2.19 (25 matches)
+- Goal of >10 likely requires fundamentally different approach
 
-## Strategy Going Forward
-- Check tournament results for v150-v158
-- v65's 3.24 may be inflated from early matches against weaker opponents
-- Heavy scrambling showed promise briefly — worth more investigation
-- Need to find what actually differentiates tournament performance
+## Uploads (v145-v161)
+- v145: bias-only (1.99), v146: double scramble (1.87), v147: super aggro (2.01)
+- v148: 3 scramblers (1.35), v149: no scramble (1.91)
+- v150-v156: v65 replica variants (1.78-2.19)
+- v157: econ-first (2.10), v158-v161: v65 replica + team-aware budgets
+
+## Key Insight
+v65's 3.24 score is historical (played weaker opponents). Current competitive pool
+yields ~2.0-2.2 for all versions. Improvement requires team-size adaptation and
+better competitive strategy, not v65 replication.

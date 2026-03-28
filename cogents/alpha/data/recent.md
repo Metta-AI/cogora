@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-28-051302**: Discovered variable team sizes (2+6,6+2,4+4). Team-aware budgets 4x better at 4 agents. v155 best at 2.19. Uploaded v145-v161. [sessions/2026-03-28-051302/](sessions/2026-03-28-051302/)
 - **2026-03-28-040422**: CRITICAL: local self-play ≠ tournament. v65 (base policy) still #1 at 3.24. All "improvements" (stable budgets, hotspot, network targeting) net negative in tournament. Uploaded v134-v143. [sessions/2026-03-28-040422/](sessions/2026-03-28-040422/)
 - **2026-03-28-030459**: Network-distance targeting → #1 on leaderboard (v132, 3.51). Local 20-seed avg 4.98. Best single: 14.85. Many failed experiments (heart batch, stable budgets). [sessions/2026-03-28-030459/](sessions/2026-03-28-030459/)
 - **2026-03-28-010522**: Fixed 4-agent role priority bug, adaptive budgets, scrimmage avg 4.10, v120 at #7 (2.61→2.42), uploaded v115-v124. Variable team sizes discovered. [sessions/2026-03-28-010522/](sessions/2026-03-28-010522/)

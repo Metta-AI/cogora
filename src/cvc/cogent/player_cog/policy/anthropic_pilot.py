@@ -218,6 +218,26 @@ class AlphaV65ScrambleHeavyAgentPolicy(AlphaV65ReplicaAgentPolicy):
 class AlphaTeamAwareAgentPolicy(AlphaV65ReplicaAgentPolicy):
     """V65 targeting + team-size-aware budgets for tournament variable team sizes."""
 
+    def _should_deposit_resources(self, state: MettagridState) -> bool:
+        """Lower deposit threshold (12) for faster economy turnover."""
+        cargo = _h.resource_total(state)
+        if cargo <= 0:
+            return False
+        threshold = 12 if _h.has_role_gear(state, "miner") else 4
+        if cargo >= threshold:
+            return True
+        safe_target = self._nearest_friendly_depot(state)
+        if safe_target is None:
+            return cargo >= 4
+        safe_distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
+        if cargo >= 12 and safe_distance > 18:
+            return True
+        if cargo >= 8 and self._should_retreat(state, "miner", safe_target):
+            return True
+        if cargo >= 8 and self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            return True
+        return False
+
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)

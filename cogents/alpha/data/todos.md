@@ -1,16 +1,17 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (current best: v65 at 3.24)
-- [ ] **Understand v65's tournament advantage** — base policy scores 3.24 in tournament vs 2.0-2.6 for newer versions
-- [ ] Find tournament-relevant test methodology (local self-play doesn't predict tournament)
-- [ ] Consider reverting to base policy with minimal, targeted changes
-- [ ] Fix wipeout recovery (10-20% wipeout rate costs ~0.7 on avg score)
-- [ ] Monitor v143 (base policy reupload) tournament results
-- [ ] Investigate if tournament dynamics favor simpler/more defensive play
-- [ ] Try opponent simulation testing (play against own older versions)
-- [x] Hotspot avoidance (ship zone detection) — implemented in v137+
-- [x] A/B test base vs alpha: confirmed local ≠ tournament performance
-- [x] Network-distance targeting (replaced hub-penalty)
-- [x] Extensive testing framework (scrimmage, multi-seed)
-- [x] Fix critical role priority bug (4-agent mode)
-- [x] Upload v134-v143 to tournament
+- [ ] Achieve score > 10 in CogsVsClips (current best: v155 at 2.19, v65 historical at 3.24)
+- [ ] **Monitor v160/v161 (team-aware) tournament results** — key experiment
+- [ ] Optimize 2-agent mode (currently ~0.25, needs fundamentally different approach)
+- [ ] Optimize 4-agent mode (team-aware gets 2.71, base gets 0.55 — big opportunity)
+- [ ] Study opponent strategies from match logs
+- [ ] Try opponent-specific counter-strategies (what beats v65?)
+- [ ] Test with tournament map configurations (machina_1 variants)
+- [ ] Consider LLM-assisted runtime decisions (AnthropicCyborgPolicy unused)
+- [x] Discover tournament variable team sizes (2+6, 6+2, 4+4)
+- [x] Create team-aware budget allocation (v160/v161)
+- [x] Remove bad targeting changes (network/hotspot penalty)
+- [x] Confirmed v65 score inflated from weaker opponent pool
+- [x] Systematic A/B test: budgets, scramblers, targeting (v145-v161)
+- [x] Hotspot avoidance — tested, not beneficial
+- [x] Network-distance targeting — tested, hurts performance
