@@ -8,32 +8,16 @@ status: in-progress
 4. Upload improved versions to tournament
 
 ## Activity
-- [11:01] Session started. Previous session (100301) interrupted — recovered. Priority: check tournament results, continue improving policy.
-- [11:05] All tournament matches (v187/v188/v189 vs v51-v61) still running/scheduled. No completed results yet.
-- [11:08] Analyzed policy architecture: AlphaCogAgentPolicy (used by AlphaCyborgPolicy for tournament) was MISSING re-alignment boost and stable budget floors from StableBoost.
-- [11:10] Applied 3 key improvements to AlphaCogAgentPolicy:
-  1. Re-alignment boost: flip hotspot count to negative (bonus for scrambled junctions)
-  2. Lower deposit threshold (12 for miners) for faster economy
-  3. Stable budget floors (floor 3 not 2 on economy crisis) to prevent gear oscillation
-- [11:12] Running local test to validate changes. PYTHONPATH setup required for cogames.
-- [11:20] 5-seed baseline: AlphaCyborg(old)=[4.46,1.38,2.37,0.00,6.40] avg=2.92, StableBoost=[7.20,3.51,1.56,2.26,7.01] avg=4.31
-- [11:22] Found key differences: AlphaCog had network_weight=0.5 (StableBoost=0.0) and retreat_margin=20 (StableBoost=15). Fixed both.
-- [11:25] Updated AlphaCogAgentPolicy: network_weight=0, retreat_margin=15, full _should_retreat override. Testing...
-- [11:30] Updated AlphaCyborg+expansion=15/90: seeds=[6.91,3.06,0.00,0.00,2.58] avg=2.51. Expansion=15 causes wipes!
-- [11:35] Reverted expansion to default 10/60. Seeds 3,4 retested: 6.96, 4.10 (was 0.00, 0.00). Huge fix.
-- [11:37] Running seeds 1,2,5 with final config.
-- [11:40] **RESULTS**: New AlphaCyborg=[4.65,4.62,6.96,4.10,8.31] avg=5.73 vs StableBoost avg=4.31 (+33%) vs Old avg=2.92 (+96%)
-- [11:41] Uploaded v193 (AlphaCyborgPolicy with all fixes). In qualifying pool.
-- [11:42] Other player detected: gtlm-reactiv... — need to study their strategy when match results come in.
-- [11:45] Tested 5a+1s+2m: [3.63,0.00,6.72,2.38,0.00] avg=2.55. Two wipes. Reverted to 4a+1s+3m.
-<<<<<<< Updated upstream
-- [11:50] v190-v192 uploaded. **10k STEP TEST: SCORE 11.86 on seed 1!** Above >10 goal.
-- [11:55] Key insight: tournament runs 10k steps, not 5k. Longer games strongly favor expand-toward-junction.
-- [12:10] **10k step results: 11.86, 3.09, 5.73, 8.36, 12.47 → avg 8.30**. Two seeds above 10!
-=======
-- [11:50] (Second worker) v190-v192 uploaded. **10k STEP TEST: SCORE 11.86 on seed 1!** Above >10 goal.
-- [11:55] Key insight: tournament runs 10k steps, not 5k. Longer games strongly favor our expand-toward-junction strategy.
-- [12:00] 10k step test: [0.00,1.05,3.69,5.14,11.67] avg=4.31. Seed 5 = 11.67 (>10 goal!). But seed 1 wipes.
-- [12:00] Tournament results: v193 ties vs v30/v31 (self-play). Need matches vs other players.
-- [12:05] Investigating seed 1 wipe at 10k (was 4.65 at 5k). Late-game collapse likely.
->>>>>>> Stashed changes
+- [11:01] Session started. Previous session (100301) interrupted — recovered.
+- [11:05] All tournament matches still running/scheduled.
+- [11:10] Applied re-alignment boost + stable budgets + lower deposit to AlphaCogAgentPolicy.
+- [11:20] 5k baseline: OldAlphaCyborg avg=2.92, StableBoost avg=4.31
+- [11:22] Fixed: network_weight=0 (was 0.5), retreat_margin=15 (was 20).
+- [11:30] expansion=15/90 causes wipes. Reverted to 10/60.
+- [11:40] **5k results: [4.65,4.62,6.96,4.10,8.31] avg=5.73** (+33% over StableBoost)
+- [11:41] Uploaded v193.
+- [11:45] 5a+1s at 5k: avg=2.55 (wipes). Reverted to 4a+1s.
+- [11:50] (Parallel worker) 10k 5a test: [11.86,3.09,5.73,8.36,12.47] avg=8.30
+- [12:00] My 10k 4a test: [0.00,1.05,3.69,5.14,11.67] avg=4.31
+- [12:05] Key finding: 5a is better at 10k (tournament length). 5a avg=8.30 vs 4a avg=4.31.
+- [12:10] Re-testing 5a at 10k with all StableBoost fixes (network_weight=0, retreat_margin=15, re-alignment boost).
