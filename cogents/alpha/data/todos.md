@@ -17,3 +17,7 @@
 - [x] Confirmed scramblers are critical (removing them hurts consistently)
 - [x] Confirmed standard targeting > v65 hub_penalty targeting
 - [x] Tested AggroBoost (earlier scramblers) — rejected (worse)
+- [x] Fix hotspot_weight=0 bug in V65Replica inheritance chain
+- [x] Test expansion_weight tuning (15 worse than 10)
+- [x] Test network_weight (0.2 neutral, not helpful)
+- [x] Test retreat_margin (10 causes deaths, keep 15)

@@ -1,11 +1,22 @@
-# Session 2026-03-28-070654 — INTERRUPTED
+# Session 2026-03-28-070654 — Summary
 
-Session was interrupted before completion.
+**Status**: Completed
 
-## What happened
-- Ran self-play tests: 5 seeds avg ~3.65
-- Tested RealignBoost (hotspot bonus instead of penalty) and MaxAlign (6 aligners, 0 scramblers)
-- MaxAlign terrible (avg 1.70 — economy collapse with only 2 miners)
-- RealignBoost comparable: avg 3.54, some seeds better (seed 5: 8.51 vs 7.64)
-- Some seeds score 0.00 — uninvestigated
-- Tournament matches (v145-v164) were still running, no results available
+## Key Results
+- Discovered re-alignment boost: flipping hotspot penalty to bonus gives +17% self-play score
+- Found and fixed critical bug: hotspot_weight=0 in V65Replica nullified all hotspot effects
+- Peak score: 11.18 on seed 5 (above >10 target!) — but non-deterministic
+- Average: 3.95 vs baseline 3.38 (15 seeds, Fixed RealignBoost)
+- Created 7 policy variants, tested across 80+ individual game runs
+- Multiple tournament uploads (v166-v175), awaiting results
+
+## Uploads
+v169/v173/v175: Fixed RealignBoost (best local performer)
+v170: V65 Realign (worse locally, testing tournament impact)
+v167: MaxAlign (worst, likely removed from pool)
+v172: RB + network weight variant
+
+## Key Insight
+The re-alignment boost (negative hotspot counts) is the single most impactful
+improvement found. Everything else (expansion weight, network weight, retreat margin,
+V65 targeting) was neutral or negative.
