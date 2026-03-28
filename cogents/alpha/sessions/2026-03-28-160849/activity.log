@@ -117,3 +117,11 @@ Need fundamentally different approach to reach >10.
 - [18:13] RL training at 23.9M steps (24%). Entropy dropped to 0.77 — agent specializing.
   Hearts per agent: 0.5-0.75 (temporary dip). Still learning.
   Leaderboard stable: v65 at 3.59 (#1), our v250-253 at 2.18-2.22.
+- [18:18] RL training at 27.4M steps (27%). New checkpoint: model_000400.pt.
+  Entropy back to 0.91, hearts: 0.75-1.25/agent.
+  Hub heart withdrawals improving: 2.75-4.5/episode.
+- [18:18] Tournament (51-54 matches):
+  v253 (SmallTeam): 2.23 (#112) — BEST of our recent versions!
+  v251: 2.22, v250: 2.17, v252: 2.14
+  SmallTeam consistently outperforming vanilla and AlphaCyborg now.
+  coglet v6-v8: 2.33-2.37 (stabilizing).
