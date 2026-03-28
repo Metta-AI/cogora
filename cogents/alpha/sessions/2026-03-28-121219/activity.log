@@ -71,3 +71,7 @@ status: in-progress
   - 4-agent 5k: [3.08, 1.07, 1.36, 2.48] avg = 2.00
   - Beats V4 at 4-agent (3.08 vs 2.57) — important for tournament
 - [14:15] Uploading AlphaTournamentPolicy to tournament.
+- [14:18] Enhanced tournament policy (hotspot flip + deposit) tanked at 4 agents: avg 0.56 vs 2.00
+- [14:19] Reverted — clean AlphaTournamentPolicy is better for tournament.
+- [14:20] Still no tournament match results. All matches running/scheduled.
+- [14:20] v210 (AlphaTournamentPolicy) in qualifying. v209 (AlphaCyborgPolicy) also submitted.
