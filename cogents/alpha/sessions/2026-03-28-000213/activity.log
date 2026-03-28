@@ -1,0 +1,10 @@
+# Activity Log: 2026-03-28-000213
+
+status: in-progress
+
+## Session Start
+- Previous session (231221) crashed — had v115 breakthrough (avg 4.26, best 6.18)
+- v115 is current best: gear churn fix, earlier scrambler, higher hearts, hub proximity
+- v118 (fixed budgets) was being tested at crash — need to check state
+- Goal: score > 10. Currently best avg ~4.26 (v115)
+- Key todos: check tournament results, fix wipeout maps, improve alignment lasting
