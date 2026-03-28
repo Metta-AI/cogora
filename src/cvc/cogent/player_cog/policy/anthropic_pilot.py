@@ -830,6 +830,66 @@ class AlphaMaxAlignAgentPolicy(AlphaV65ReplicaAgentPolicy):
         return pressure_budget, 0  # NO scramblers
 
 
+class AlphaStableBoostAgentPolicy(AlphaRealignBoostAgentPolicy):
+    """RealignBoost with more stable budgets to prevent role oscillation.
+
+    Key change: tighter economy thresholds and higher floors prevent
+    agents from oscillating between aligner and miner roles, which wastes
+    gear and kills performance on marginal-economy seeds.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 30 or (min_res < 1 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 20:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: stable budgets with higher floors
+        if step < 10:
+            pressure_budget = 2
+        elif step < 50:
+            pressure_budget = 3
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)  # Floor 3, not 2
+            elif min_res < 2:  # Tighter threshold: only drop at <2, not <3
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)
+
+        scrambler_budget = 0
+        if step >= 3000:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 100:
+            scrambler_budget = min(1, pressure_budget // 3)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
 class AlphaV65NoScrambleBoostAgentPolicy(AlphaV65RealignAgentPolicy):
     """V65Realign but with NO scramblers — all hearts go to alignment.
 
@@ -1310,6 +1370,23 @@ class AlphaCleanTeamAwarePolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaCleanTeamAwareAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaStableBoostPolicy(MettagridSemanticPolicy):
+    """RealignBoost with stable budgets to prevent role oscillation."""
+    short_names = ["alpha-stable-boost"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaStableBoostAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
