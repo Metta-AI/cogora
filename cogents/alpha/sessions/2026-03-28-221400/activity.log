@@ -39,3 +39,8 @@
   Uploaded v303 (AlphaAggressive with 4a improvement) to tournament.
   CONCLUSION: Seed variance too high for single-seed policy comparison.
   Tournament is the only reliable signal.
+- [2026-03-28 23:00] Activity analysis: agents retreat 26x vs align 19x (too conservative).
+  Added tighter retreat margins (base 10 vs 15, hearts 3 vs 5).
+  Clean test: 4.23 (retreat:17, align:36) — but seed variance makes comparison unreliable.
+  Seed 123 clean: 8a=5.87, 4a=3.40.
+- [2026-03-28 23:03] Uploading v304 with tighter retreat + 4a 3-aligner improvement.

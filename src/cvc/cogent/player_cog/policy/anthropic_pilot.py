@@ -1370,7 +1370,32 @@ class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
     2. Idle aligners become scramblers instead of miners → deny opponent score
     3. More aligners + earlier scramblers → economy surplus is wasted on mining
     4. Economy-aware: only 1 miner needed once hub has 100+ of each resource
+    5. Less conservative retreat: lower margins → more productive time
     """
+
+    def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
+        """Tighter retreat margins — agents spend more time being productive."""
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if safe_target is None:
+            return hp <= _h.retreat_threshold(state, role)
+        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+        margin = 10  # Tighter than parent's 15
+        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            margin += 8
+        margin += int(state.self_state.inventory.get("heart", 0)) * 3  # 3 per heart vs 5
+        margin += min(_h.resource_total(state), 12) // 3  # Less cargo penalty
+        if not _h.has_role_gear(state, role):
+            margin += 8
+        if (state.step or 0) >= 2_500:
+            margin += 5 if role in {"aligner", "scrambler"} else 3
+        if hp <= safe_steps + margin:
+            return True
+        if role == "miner" and safe_target is not None:
+            pos = _h.absolute_position(state)
+            dist = _h.manhattan(pos, safe_target.position)
+            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 15:
+                return True
+        return False
 
     def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
         """Aligner with idle-scramble instead of idle-mine."""
