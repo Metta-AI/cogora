@@ -37,32 +37,17 @@ def aligner_target_score(
     friendly_junctions: list[KnownEntity] | None = None,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
-    # 1-hop expansion: junctions that become directly reachable
-    newly_reachable = [
-        entity for entity in unreachable
-        if manhattan(candidate.position, entity.position) <= _JUNCTION_ALIGN_DISTANCE
-    ]
-    expansion = len(newly_reachable)
-    # 2-hop expansion: junctions reachable through newly-reachable junctions
-    # (counts unique junctions, not double-counting 1-hop ones)
-    two_hop_set: set[tuple[int, int]] = set()
-    for nr in newly_reachable:
-        for entity in unreachable:
-            if entity.position == nr.position:
-                continue
-            if entity.position in two_hop_set:
-                continue
-            if manhattan(candidate.position, entity.position) <= _JUNCTION_ALIGN_DISTANCE:
-                continue  # already counted as 1-hop
-            if manhattan(nr.position, entity.position) <= _JUNCTION_ALIGN_DISTANCE:
-                two_hop_set.add(entity.position)
-    two_hop = len(two_hop_set)
+    expansion = sum(
+        1 for entity in unreachable if manhattan(candidate.position, entity.position) <= _JUNCTION_ALIGN_DISTANCE
+    )
     enemy_aoe = (
         1.0
         if any(manhattan(candidate.position, enemy.position) <= _JUNCTION_AOE_RANGE for enemy in enemy_junctions)
         else 0.0
     )
     # Use network distance: min distance to any hub or friendly junction.
+    # This encourages network expansion by chaining through friendly junctions
+    # while still preferring targets near the existing network.
     network_dist = 999.0
     if hub_position is not None:
         network_dist = min(network_dist, float(manhattan(hub_position, candidate.position)))
@@ -75,11 +60,10 @@ def aligner_target_score(
     return (
         distance
         - min(expansion * 10.0, 60.0)
-        - min(two_hop * 3.0, 30.0)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
         + network_penalty,
-        -float(expansion + two_hop),
+        -float(expansion),
     )
 
 
