@@ -20,3 +20,13 @@ Need fundamentally different approach to reach >10.
   Explained variance 0.80+, value function learning. Full 50M steps ~42 min.
 - [16:22] Upload format: can use `cogames upload -p class=lstm,data=<checkpoint>`.
   Will upload trained model once it reaches meaningful performance.
+- [16:30] **CRITICAL DISCOVERY**: Tournament uses MOSTLY 4-agent games!
+  - 75% games: cogsguard_4agents (4 agents, splits: 2v2, 1v3, 3v1)
+  - 25% games: cogsguard_machina_1_8agents (8 agents, various splits)
+  - We've been optimizing for 8-agent machina_1 self-play, but tournament is 4-agent heavy!
+  - Assignment splits: [0,0,1,1] (2v2), [0,1,1,1] (1v3), [0,0,0,1] (3v1)
+  - 1v3 games: we control ONLY 1 agent vs 3 opponents — economy impossible
+  - This explains why local 8-agent scores don't translate to tournament!
+- [16:31] Action: train RL on 4-agent machina_1. Also optimize heuristic for small teams.
+- [16:31] RL training on machina_1 (8-agent) got 0 reward after 31 epochs — sparse reward.
+  Killed that run. Started 4-agent training instead.
