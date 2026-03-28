@@ -38,6 +38,15 @@ def _least_resource(resources: dict[str, int]) -> str:
     return min(_ELEMENTS, key=lambda r: resources[r])
 
 
+class AlphaBiasOnlyAgentPolicy(SemanticCogAgentPolicy):
+    """Base policy + resource bias only. No budget/retreat changes."""
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+
 class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     """Optimized agent policy: aggressive alignment with scrambler defense."""
 
@@ -215,6 +224,23 @@ class AnthropicCyborgPolicy(PilotCyborgPolicy):
             "anthropic_api_key": kwargs.get("anthropic_api_key"),
             "anthropic_api_key_file": kwargs.get("anthropic_api_key_file"),
         }
+
+
+class AlphaBiasOnlyPolicy(MettagridSemanticPolicy):
+    """Base policy + resource bias. Uses base budgets (aggressive like v65)."""
+    short_names = ["alpha-bias-only"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaBiasOnlyAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
 
 
 class AlphaCyborgPolicy(MettagridSemanticPolicy):

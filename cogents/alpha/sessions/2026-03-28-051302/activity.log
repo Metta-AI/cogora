@@ -1,1 +1,14 @@
 status: in-progress
+
+## Session Plan
+- Previous finding: v65 (base SemanticPolicy) is #1 at 3.24 in tournament
+- All "improvements" (conservative budgets, hotspot, network targeting) net negative
+- Strategy: Start from base, add ONE improvement at a time, test in tournament
+
+## Actions
+- Analyzed base vs alpha policy differences:
+  - Base: aggressive 5-pressure from step 30 (4 aligners + 1 scrambler)
+  - Alpha: conservative (max 4+1 from step 200), miner retreat, resource bias
+- Created AlphaBiasOnlyPolicy: base budgets + resource_bias (mine least resource)
+- Running 5-seed comparison: base vs bias-only
+- Single seed results: base 2.92 vs alpha 2.37 (base wins locally too!)
