@@ -40,3 +40,12 @@ status: in-progress
 - Need 20+ runs to get meaningful averages
 - TurboMid's 9.60 on seed 4 was luck, not policy improvement
 - Running 20-seed MidExpansion 10k baseline for reliable measurement
+
+## 20-seed MidExpansion 10k baseline (DEFINITIVE)
+- Avg: 4.11 (4.56 excl wipes)
+- Wipe rate: 10% (2 of 20)
+- Best: 8.21, worst non-wipe: 1.30
+- Distribution: mostly 2.5-6.5, few outliers
+- This is the TRUE performance level — need 2.5x improvement for >10
+- Key: at 10k steps, scores are higher than 5k (network grows over time)
+- Wipes are random (same policy, same seed can wipe or not)
