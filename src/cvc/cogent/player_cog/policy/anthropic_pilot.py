@@ -56,15 +56,16 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         """Economy-responsive with hysteresis. Adapts to team size.
 
-        Ensure at least 2 miners for teams >= 4 (economy sustainability).
         Scrambler only for teams >= 6 (small teams can't spare the agent).
         """
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         num_agents = self.policy_env_info.num_agents
-        # Reserve at least 2 miners for teams >= 4, else 1 miner
-        min_miners = 2 if num_agents >= 4 else 1
-        max_pressure = max(num_agents - min_miners, 1)
+        # Small teams need more miners; large teams can afford all-in pressure
+        if num_agents <= 4:
+            max_pressure = max(num_agents - 2, 1)  # e.g., 4 agents → 2 aligners, 2 miners
+        else:
+            max_pressure = max(num_agents - 1, 1)  # e.g., 8 agents → 7 pressure slots
 
         # Phase 1: Economy bootstrap
         if step < 10:
@@ -164,8 +165,10 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         num_agents = self.policy_env_info.num_agents
-        min_miners = 2 if num_agents >= 4 else 1
-        max_pressure = max(num_agents - min_miners, 1)
+        if num_agents <= 4:
+            max_pressure = max(num_agents - 2, 1)
+        else:
+            max_pressure = max(num_agents - 1, 1)
 
         if step < 10:
             return min(2, max_pressure), 0
