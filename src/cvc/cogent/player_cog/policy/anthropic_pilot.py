@@ -1409,25 +1409,26 @@ class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
             if depot is not None:
                 return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
-        # No frontier junctions — try to expand toward known unreachable junctions
+        # No frontier junctions — expand toward known unreachable junctions
         team_id = _h.team_id(state)
         current_pos = _h.absolute_position(state)
         hp = int(state.self_state.inventory.get("hp", 0))
         hub = self._nearest_hub(state)
         hub_pos = hub.position if hub is not None else current_pos
+        # Check both neutral AND enemy junctions as expansion targets
+        # (enemy junctions near our network can be scrambled then re-aligned)
         unreachable = self._known_junctions(
             state, predicate=lambda j: j.owner in {None, "neutral"}
         )
         if unreachable:
             safe_unreachable = [
                 j for j in unreachable
-                if _h.manhattan(current_pos, j.position) < hp - 30
-                and _h.manhattan(hub_pos, j.position) < 40
+                if _h.manhattan(current_pos, j.position) < hp - 20  # Less conservative
             ]
             targets = safe_unreachable if safe_unreachable else unreachable
             nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
             dist = _h.manhattan(current_pos, nearest.position)
-            if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
+            if dist < hp - 20:
                 return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
         # Idle aligners: scramble if economy healthy, mine if economy tight, explore if both fail
@@ -1473,43 +1474,31 @@ class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
                 aligner_budget = min(2, num_agents - 1 - scrambler_budget)
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: push harder for territory + denial
+        # 5+ agents: match AlphaCog budgets + economy surplus boost
         if step < 30:
             return 2, 0
 
-        # Economy health determines pressure capacity
         economy_surplus = min_res >= 100
         economy_crisis = min_res < 3 and not can_hearts
-        economy_warning = min_res < 30 and step >= 2000
-
-        # Late-game survival mode: pull back when economy is struggling
-        if economy_crisis and step >= 1500:
-            return 1, 0  # 1 aligner holds territory, all others mine
-        if economy_warning and not economy_surplus:
-            # Ease off pressure to rebuild economy
-            pressure_budget = max(2, num_agents // 3)
-            return pressure_budget, 0
 
         if economy_surplus:
-            # Only need 1 miner — rest go to pressure
-            pressure_budget = num_agents - 1
+            # Surplus: shift to max pressure, only 1-2 miners needed
+            pressure_budget = min(num_agents - 1, 7)
         elif step < 100:
             pressure_budget = 3
         elif economy_crisis:
             pressure_budget = max(2, num_agents // 3)
-        elif min_res < 14:
+        elif min_res < 7:
             pressure_budget = min(4, num_agents - 2)
         else:
-            pressure_budget = min(num_agents - 2, 6)
+            pressure_budget = min(5, num_agents - 2)
 
-        # Scramblers: delay until opponents have junctions to scramble (~step 500+)
+        # Scramblers: start at step 200 like AlphaCog
         scrambler_budget = 0
-        if step >= 500 and min_res >= 14:
-            scrambler_budget = min(2, max(1, pressure_budget // 3))
-        elif step >= 300 and min_res >= 7:
+        if step >= 3000 and min_res >= 14:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 200 and min_res >= 7:
             scrambler_budget = min(1, pressure_budget // 3)
-        if economy_surplus and step >= 500:
-            scrambler_budget = min(3, pressure_budget // 3)
 
         aligner_budget = max(pressure_budget - scrambler_budget, 1)
         if objective == "economy_bootstrap":
