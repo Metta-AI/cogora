@@ -101,3 +101,8 @@ Need fundamentally different approach to reach >10.
 - [17:45] RL training at 16M steps. Still learning basics (1-2 alignments/episode).
   Needs 100M+ steps for meaningful policy. ~1.5h remaining at current SPS.
 - [17:45] Updated suggestions.md for user action items.
+- [18:00] coglet-v0:v8 regressed from 3.02 to 2.37 — classic early variance.
+  All alpha v250-253 at 2.19-2.22 (45-47 matches). Convergence confirmed.
+- [18:00] RL eval too slow for meaningful testing (LSTM inference at ~14 steps/sec).
+  Need to continue training to get a better model, then test with GPU.
+- [18:00] RL training continuing in background (~17M/100M steps).
