@@ -14,3 +14,14 @@
   - 4a 3-aligner (min_res>=50 step>=500): Added
   Current performance: 8a avg 5.87, 4a avg 4.29, estimated tournament ~4.69
   v303/v304/v305 uploaded, all matches still running.
+- [2026-03-28 23:17] Analyzed AlphaAggressive 8a game (score: 2.55):
+  - Peak at step 1000-1300: 12-14 friendly junctions
+  - Collapse step 2000+: economy fails, silicon/oxygen hit 0
+  - By step 5000: 5 friendly vs 14 enemy junctions
+  - Root cause: 6 aligners burn hearts faster than 1-2 miners produce silicon
+- [2026-03-28 23:20] Created AlphaBalancedPolicy: economy-first approach
+  - Max 3-4 aligners (always 3+ miners for 8-agent games)
+  - Economy-gated: min_res < 30 → 2 aligners, < 10 → 1 aligner
+  - Silicon-priority mining when silicon is scarce
+  - Idle-scramble only when min_res >= 50 (not 14)
+  - Running 8a + 4a tests (5000 steps each)
