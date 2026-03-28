@@ -36,3 +36,15 @@ started: 2026-03-28T19:12:35Z
 - MASSIVE seed variance (1.44 to 14.72 on same policy!)
 - Map layout is the dominant factor in score
 - Running more seeds for reliable comparison
+
+## Tournament Uploads
+- v280: AlphaCyborgPolicy (baseline)
+- v281: AlphaAlignMaxPolicy (more aligners)
+- v282: AlphaDefenseWallPolicy (early scramblers)
+- v283: AlphaBlitzPolicy (early blitz)
+
+## AlignMax vs Baseline (7 seeds)
+Baseline avg: 6.56, AlignMax avg: 4.07
+AlignMax WORSE overall — too many aligners starve economy
+On high-scoring maps (seeds 44,45), baseline much better (14.72, 11.82 vs 3.68, 5.67)
+Running comprehensive 5-seed comparison of Baseline vs AlignMax vs V65
