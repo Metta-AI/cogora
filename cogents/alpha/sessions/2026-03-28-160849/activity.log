@@ -150,3 +150,9 @@ Need fundamentally different approach to reach >10.
 - [18:49] RL at 45.8M steps (46%). Entropy healthy at 1.31-1.35.
   v255 settled to 2.21 (#118, 60m) — same ceiling as everything else.
   Uploaded v257 (RL epoch 600). v256/v257 still qualifying.
+- [18:54] RL at 49.2M steps (49%). Entropy healthy at 1.39.
+- [18:54] v256/v257 (RL) NOT on leaderboard — likely failed qualifying!
+  RL LSTM inference is too slow (~14 steps/sec locally). Tournament probably timed out.
+  Need a faster RL architecture or inference optimization for tournament upload.
+- [18:54] All heuristic versions at 2.17-2.21 with 60+ matches. Confirmed ceiling.
+  Best non-alpha: coglet 2.29-2.33, slanky 2.75, Paz-Bot 2.73.
