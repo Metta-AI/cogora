@@ -1,2 +1,4 @@
 status: in-progress
-2026-03-28 21:21:37 - Analyzing game logs: identified key bottlenecks (heart batching delay, idle-mining, economy surplus waste). Creating AlphaAggressivePolicy with faster early game, idle-scramble, economy-aware budgets.
+2026-03-28 21:15:00 - Analyzed local game logs. Key bottleneck: frontier=0 (aligners idle-mine for 60%+ of game). Hub has 500+ resources (massive surplus). Created AlphaAggressivePolicy with: no early heart batching, idle-scramble, economy-aware budgets.
+2026-03-28 21:22:00 - Local test: AlphaAggressive 8-agent 2.57 vs baseline 1.15 (+2.2x!). But 4-agent 0.45 vs 0.56 (worse). Fixed 4-agent: removed early scrambler, kept 2 aligners + 2 miners.
+2026-03-28 21:28:00 - Running 3-seed comparison (4a + 8a × 2 policies × 3 seeds = 12 games, 5000 steps each).

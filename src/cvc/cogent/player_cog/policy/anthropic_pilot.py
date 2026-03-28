@@ -1456,13 +1456,16 @@ class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
             return 1, 0
 
         if num_agents <= 4:
-            if step < 50:
-                return 1, 0
+            if step < 100:
+                return 1, 0  # Economy-first: 1 aligner, rest mine
             if min_res < 7 and not can_hearts:
                 return 1, 0
-            # 4 agents: 2 aligners + 1 scrambler + 1 miner once economy can support it
-            scrambler_budget = 1 if step >= 300 and min_res >= 7 else 0
-            aligner_budget = min(2, num_agents - 1 - scrambler_budget)
+            # 4 agents: prioritize 2 aligners + 2 miners. Scrambler only with huge surplus.
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 0
+            if min_res >= 200 and step >= 1000:
+                scrambler_budget = 1
+                aligner_budget = min(2, num_agents - 1 - scrambler_budget)
             return aligner_budget, scrambler_budget
 
         # 5+ agents: push harder for territory + denial
