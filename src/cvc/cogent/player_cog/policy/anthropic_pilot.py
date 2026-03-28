@@ -1116,7 +1116,7 @@ class AlphaNoScrambleAgentPolicy(SemanticCogAgentPolicy):
 
 
 class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
-    """Optimized agent policy: v65 targeting + re-alignment boost + stable budgets."""
+    """Optimized agent policy: aggressive alignment with scrambler defense."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1125,84 +1125,14 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         num_agents = self.policy_env_info.num_agents
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
 
-    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
-        """V65 hub_penalty targeting with re-alignment boost for scrambled junctions."""
-        team_id = _h.team_id(state)
-        current_pos = _h.absolute_position(state)
-        hub = self._nearest_hub(state)
-        hub_pos = hub.position if hub is not None else None
-        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
-        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
-        network_sources = [*hubs, *friendly_junctions]
-        candidates = []
-        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
-            if not _h.within_alignment_network(entity.position, network_sources):
-                continue
-            candidates.append(entity)
-        if not candidates:
-            return None
-        directed_candidate = self._directive_target_candidate(candidates)
-        if directed_candidate is not None:
-            return directed_candidate
-        enemy_junctions = self._known_junctions(
-            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
-        )
-        unreachable = [
-            entity
-            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
-            if entity not in candidates
-        ]
-        return min(
-            candidates,
-            key=lambda entity: (
-                _h.v65_aligner_target_score(
-                    current_position=current_pos,
-                    candidate=entity,
-                    unreachable=unreachable,
-                    enemy_junctions=enemy_junctions,
-                    claimed_by_other=_h.is_claimed_by_other(
-                        claims=self._shared_claims,
-                        candidate=entity.position,
-                        agent_id=self._agent_id,
-                        step=self._step_index,
-                    ),
-                    hub_position=hub_pos,
-                    hotspot_count=self._junction_hotspot_count(entity, hub),
-                    hotspot_weight=8.0,
-                ),
-                entity.position,
-            ),
-        )
-
-    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
-        """Negative count = re-alignment bonus for recently scrambled junctions."""
-        if hub is None:
-            return 0
-        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
-        count = self._shared_hotspots.get(rel, 0)
-        return -min(count, 3)
-
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
-        """V65 retreat margin (15) + miner distance safety."""
-        hp = int(state.self_state.inventory.get("hp", 0))
-        if safe_target is None:
-            return hp <= _h.retreat_threshold(state, role)
-        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
-        margin = 15  # v65 used 15
-        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
-            margin += 10
-        margin += int(state.self_state.inventory.get("heart", 0)) * 5
-        margin += min(_h.resource_total(state), 12) // 2
-        if not _h.has_role_gear(state, role):
-            margin += 10
-        if (state.step or 0) >= 2_500:
-            margin += 10 if role in {"aligner", "scrambler"} else 5
-        if hp <= safe_steps + margin:
+        """Miners: retreat if too far from hub (prevent deaths in dangerous territory)."""
+        if super()._should_retreat(state, role, safe_target):
             return True
-        # Extra safety for miners: don't wander too far from hub
         if role == "miner" and safe_target is not None:
             pos = _h.absolute_position(state)
             dist = _h.manhattan(pos, safe_target.position)
+            hp = int(state.self_state.inventory.get("hp", 0))
             if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 20:
                 return True
         return False
@@ -1275,11 +1205,11 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 return min(aligner_budget, 2), 0
             return aligner_budget, 0
 
-        aligner_budget = min(4, num_agents - 2)
+        aligner_budget = min(5, num_agents - 2)
         scrambler_budget = 1 if step >= 200 else 0
 
         if min_res < 1 and not _h.team_can_refill_hearts(state):
-            aligner_budget = max(aligner_budget - 1, 1)
+            aligner_budget = max(aligner_budget - 1, 2)
 
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0

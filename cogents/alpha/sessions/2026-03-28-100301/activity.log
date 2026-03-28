@@ -13,3 +13,8 @@ status: in-progress
 - [10:10] Ran self-play 5k steps: score 2.98. 199 aligned, 109 lost. 4a+1s+3m.
 - [10:12] Added COG logging to AlphaCogAgentPolicy. Found CRITICAL BUG: agent 1 stuck for ENTIRE game at wrong position searching for aligner station.
 - [10:20] **CRITICAL FIX**: `_acquire_role_gear` passed spawn-relative station targets as absolute positions. Agent sent to (-3,6) instead of (hub.x-3, hub.y+6). Fixed by adding hub offset. This bug wasted 12.5% of team capacity every game.
+- [10:30] 5-seed test with station fix: 5.00, 1.73, 0.00, 3.70, 6.56 → avg 3.40 (4.25 excl wipe)
+- [10:40] v65 hub_penalty targeting test: 3.43, 0.94, 2.84, 4.87, 6.39 → avg 3.69 — WORSE than base targeting. Reverted.
+- [10:42] Uploaded v186 (station fix). Now testing 5-aligner variant (5a+1s+2m instead of 4a+1s+3m).
+- [10:42] Seed 2 analysis: aligners retreat frequently with low HP. Map layout drives high variance.
+- [10:42] Seed 5 analysis: aligners stay at hp=100, 11-16 friendly junctions by step 500.
