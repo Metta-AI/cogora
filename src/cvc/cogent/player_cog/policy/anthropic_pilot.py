@@ -1430,15 +1430,20 @@ class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
             if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
                 return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
-        # KEY CHANGE: Idle aligners scramble instead of mining
-        # This denies opponent score and creates new alignment opportunities
-        if int(state.self_state.inventory.get("heart", 0)) > 0:
+        # Idle aligners: scramble if economy healthy, mine if economy tight, explore if both fail
+        min_res = _h.team_min_resource(state)
+        if int(state.self_state.inventory.get("heart", 0)) > 0 and min_res >= 14:
+            # Economy healthy: scramble to deny opponent score
             scramble_target = self._preferred_scramble_target(state)
             if scramble_target is not None:
                 return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
 
-        # Only mine as absolute last resort
-        return self._miner_action(state, summary_prefix="idle_align_")
+        if min_res < 14:
+            # Economy needs help: mine to rebuild
+            return self._miner_action(state, summary_prefix="idle_align_")
+
+        # Explore to discover new junction clusters
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         """More aggressive: more aligners, earlier scramblers, fewer miners."""
