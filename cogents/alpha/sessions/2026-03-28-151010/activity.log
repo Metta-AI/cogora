@@ -121,3 +121,12 @@ status: in-progress
   - v235 (V65Pure old): 2.17 (16m) — middle ground
   All old deps versions settling in 2.0-2.4 range. Improvement over current deps (~2.1)
   but not the dramatic improvement v235's initial 6.07 suggested.
+- [16:00] **Old deps advantage EVAPORATED** with more matches:
+  - v233 (AlphaCyborg old): 2.63→2.38→2.10 (23m) — NOW EQUAL to v231 (2.11)
+  - v235 (V65Pure old): 2.33→2.21 (23m) — slightly better, insignificant
+  The tournament ceiling of ~2.1-2.2 is STRUCTURAL. No amount of tweaking
+  (heuristics, deps, budgets, strategies) breaks it.
+- [16:01] Hybrid local: 2.04 clips, 2.10 self-play. Conservative budgets limit local
+  performance but should help tournament (same as AlphaTournament behavior).
+- [16:01] The only unexplored path: more aggressive LLM integration (v242 pending).
+  Also v240 (AlphaCyborg old) and v241 (V65TrueReplica old) still qualifying.
