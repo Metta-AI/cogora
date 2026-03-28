@@ -90,3 +90,6 @@ status: in-progress
 - [15:03] **SEED 5 HIT 10.29!** First PvP score above 10!
 - [15:03] VT3 beats VT: avg 4.66 vs 4.05 on same seeds
 - [15:04] Uploaded v228 (AlphaTournamentPolicy with idle-explore).
+- [15:10] VT3 clips 10-seed: [5.13, 2.19, 2.51, 10.29, 3.19, 2.30, 0.00(wipe), 3.73, 3.67, 2.71]
+- [15:10] Avg (all): 3.57, avg (no wipe): 3.97. Close to v65 tournament (3.59)!
+- [15:11] Best: seed 5 = 10.29 (above goal of 10)
