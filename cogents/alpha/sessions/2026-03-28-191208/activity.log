@@ -25,3 +25,14 @@ started: 2026-03-28T19:12:35Z
 - AlphaDefenseWall: early 2 scramblers to suppress clips
 - AlphaBlitz: all-in alignment with free hearts in early game
 - Running 5-episode scrimmages on all + baseline + v65
+
+## Local Testing Results (10k steps, per-cog score)
+| Seed | Baseline | AlignMax | V65  |
+|------|----------|----------|------|
+| 42   | 2.59     | 2.77     | 3.24 |
+| 43   | 7.51     | 7.14     | 6.64 |
+| 44   | 14.72    | 3.68     | 1.44 |
+
+- MASSIVE seed variance (1.44 to 14.72 on same policy!)
+- Map layout is the dominant factor in score
+- Running more seeds for reliable comparison
