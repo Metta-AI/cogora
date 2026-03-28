@@ -374,20 +374,21 @@ class SemanticCogAgentPolicy(AgentPolicy):
         step = state.step or self._step_index
 
         # Stay at hub until HP reaches 100. Territory heals +100/tick when in range.
-        # Timeout after 20 steps to avoid infinite waiting if territory never activates.
+        # Short timeout: if healed to 100+ by step 20, move on. Otherwise extend wait.
         if hp < 100 and hp > 0 and safe_target is not None and safe_distance <= 3 and step <= 20:
             return self._hold(summary="hub_camp_heal", vibe="change_vibe_default")
 
-        # If far from territory in early game, rush back before dying.
-        if step < 150 and safe_target is not None and safe_distance > 8:
-            if hp < 40 or (hp < 50 and safe_distance > 15):
+        # If HP dropping in early game, rush to hub immediately.
+        if step < 150 and safe_target is not None and hp > 0 and hp < 40:
+            if safe_distance > 2:
                 return self._move_to_known(state, safe_target, summary="survival_retreat")
+            return self._hold(summary="survival_hold", vibe="change_vibe_default")
 
-        # WIPEOUT RECOVERY: If hp=0, move around near hub to try to trigger healing.
+        # WIPEOUT RECOVERY: If hp=0, stay near hub to try to trigger healing.
         if hp == 0 and safe_target is not None:
-            if safe_distance > 5:
+            if safe_distance > 3:
                 return self._move_to_known(state, safe_target, summary="wipeout_return_hub")
-            return self._miner_action(state, summary_prefix="wipeout_mine_")
+            return self._hold(summary="wipeout_hub_hold", vibe="change_vibe_default")
 
         if self._should_retreat(state, role, safe_target):
             self._clear_target_claim()
