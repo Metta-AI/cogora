@@ -24,3 +24,17 @@ status: in-progress
 - Need either more aligners, faster cycle, or less scramble loss
 - Scramblers: 123 hearts used for scrambling = could be 123 more alignments instead
 - Plan: test 5-aligner / 0-scrambler variant (AlphaNoScramblePolicy)
+
+## 5-seed comparison results (5000 steps each)
+- RealignBoost: avg 3.84 (1.73, 2.05, 1.96, 5.49, 7.98) — BEST
+- V65True: avg 3.37 (4.11, 2.10, 1.92, 3.43, 5.30)
+- AlphaCyborg: avg 2.04 (4.40, 2.84, 1.12, 0.00, 1.86)
+- NoScramble: avg 1.42 (1.91, 0.98, 1.40, 0.00, 2.83) — WORST
+
+## Key findings
+- RealignBoost (re-alignment bonus) is best, confirming the approach
+- V65 targeting outperforms AlphaCyborg (hub_penalty > stable budgets)
+- NoScramble (removing scramblers with base targeting) actually HURTS performance
+- Seed 4 causes AlphaCyborg/NoScramble to score 0.00 (all agents die). V65True/RealignBoost handle it fine.
+- Created AlphaV65NoScrambleBoostPolicy: V65Realign + no scramblers
+- Running tests: V65NoScrambleBoost and V65Realign

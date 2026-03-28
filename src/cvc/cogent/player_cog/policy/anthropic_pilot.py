@@ -828,6 +828,51 @@ class AlphaMaxAlignAgentPolicy(AlphaV65ReplicaAgentPolicy):
         return pressure_budget, 0  # NO scramblers
 
 
+class AlphaV65NoScrambleBoostAgentPolicy(AlphaV65RealignAgentPolicy):
+    """V65Realign but with NO scramblers — all hearts go to alignment.
+
+    Inherits V65 targeting + re-alignment boost + lower deposit threshold.
+    Overrides budgets to remove scramblers entirely.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Team-aware budgets with NO scramblers."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 30 or (min_res < 1 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 20:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, 0
+
+        # 5+ agents: all pressure to alignment, keep 3 miners
+        if step < 30:
+            return 2, 0
+        aligner_budget = min(5, num_agents - 3)
+        if min_res < 1 and not can_hearts:
+            aligner_budget = max(2, num_agents // 4)
+        elif min_res < 3:
+            aligner_budget = min(4, num_agents - 3)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, 0
+
+
 class AlphaNoScrambleAgentPolicy(SemanticCogAgentPolicy):
     """All aligners, no scramblers. 5 aligners + 3 miners."""
 
@@ -1263,6 +1308,23 @@ class AlphaCleanTeamAwarePolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaCleanTeamAwareAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaV65NoScrambleBoostPolicy(MettagridSemanticPolicy):
+    """V65 targeting + re-alignment boost + no scramblers."""
+    short_names = ["alpha-v65-noscramble-boost"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65NoScrambleBoostAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
