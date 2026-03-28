@@ -26,3 +26,7 @@ status: in-progress
 - [14:12] Studied starter policy: extremely simple, no role assignment, no budgets.
   Each agent grabs nearest gear and acts. Our complex policy loses to this in PvP.
   Takeaway: simplicity and speed > complex optimization
+- [14:18] v210 dropped to 1.93 (37 matches) — same pattern as v202. Early scores unreliable.
+  v65 back at #1 (3.59). All new versions converge to 1.9-2.3.
+- [14:20] Running pickup tests: economy-first cyborg vs starter, vanilla base vs starter
+  Waiting for results to compare PvP performance.
