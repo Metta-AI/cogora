@@ -147,3 +147,6 @@ Need fundamentally different approach to reach >10.
   v253 at 2.19, v254 at 2.17.
   coglet v6-v8 at 2.29-2.33 (60 matches).
   v256 (RL) still qualifying.
+- [18:49] RL at 45.8M steps (46%). Entropy healthy at 1.31-1.35.
+  v255 settled to 2.21 (#118, 60m) — same ceiling as everything else.
+  Uploaded v257 (RL epoch 600). v256/v257 still qualifying.
