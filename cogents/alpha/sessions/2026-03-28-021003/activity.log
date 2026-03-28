@@ -80,8 +80,16 @@ status: in-progress
   - Non-wipeout avg: **6.06** — best session result!
   - Seed 21: 13.84, Seed 26: 7.84
 - Uploaded v133 to tournament
-- Tournament versions: v125, v126, v127, v130, v133
-- All tournament matches still running/scheduled, no results yet
+- Tournament versions: v125, v126, v127, v130, v133, v137, v140
+- No completed tournament results yet (matches take long to run)
+
+## v141-v142 Experiments (Before User Revert)
+- Stable allocation tested: avg 6.08 on 8-cog (no oscillation)
+- 4-cog delayed scrambler (step 500): avg 1.53 (up from 1.28)
+- User reverted to v134 baseline (hysteresis budgets, deposit threshold 12)
+- v134r baseline test: 8-cog avg 4.17 (non-wipeout)
+- Core improvements retained: retreat margin 20, network-distance scoring
+- Uploaded v140 (user's v134 baseline + our targeting/retreat improvements)
 
 ## v141: Stable Role Allocation (User Redesign)
 - User overhauled pressure_budgets: fixed allocation, no oscillation
