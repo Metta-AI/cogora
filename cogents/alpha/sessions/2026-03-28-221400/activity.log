@@ -53,3 +53,9 @@
   v304/v305 in competition pool vs Paz-Bot-9005, slanky:v112, alpha.0:v12.
   Opponents v49-v51 are other cogents uploading frequently. No completed matches yet.
 - [2026-03-28 23:16] Running 5-seed 4a tests (75% of tournament is 4-agent).
+- [2026-03-28 23:20] 5-seed results complete:
+  8a avg: 5.87 (6.62, 4.42, 6.73, 2.60, 8.96)
+  4a avg: 4.29 (4.24, 2.20, 4.73, 4.05, 6.21)
+  Estimated tournament score: ~4.69 (75% 4a + 25% 8a)
+  Game stats show 68 junctions, 60 silicon extractors (not 45).
+  Best scrambler agent cleared 85 enemy junctions in one game.
