@@ -2466,3 +2466,18 @@ class AlphaV65IdleMinePolicy(MettagridSemanticPolicy):
                 # No shared_team_ids → global role priorities like v65
             )
         return self._agent_policies[agent_id]
+
+
+# Re-export the ORIGINAL pre-rewrite semantic_cog for pure v65 testing
+from cvc.cogent.player_cog.policy.semantic_cog_v65 import (
+    MettagridSemanticPolicy as _V65BasePolicy,
+)
+
+
+class AlphaV65PurePolicy(_V65BasePolicy):
+    """Pure v65: uses the ORIGINAL semantic_cog.py from before any modifications.
+
+    This bypasses ALL changes made in the rewrite (b882dbf) and later commits.
+    If this matches v65's 3.59, the rewrite itself is the problem.
+    """
+    short_names = ["alpha-v65-pure"]
