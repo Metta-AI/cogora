@@ -1,0 +1,10 @@
+# Activity Log — 2026-03-28-040422
+
+## Status: in-progress
+
+### Session Start
+- Previous session (030459) interrupted during 20-seed v134 validation
+- v134 (network-distance targeting) avg 5.89 over 10 seeds, +44% over baseline
+- Current leaderboard position: ~#19 (v120 at 2.42)
+- Goal: > 10 score. Best local single-seed: 9.95
+- Plan: check tournament results, run more v134 validation, iterate improvements
