@@ -93,3 +93,6 @@ status: in-progress
 - [15:10] VT3 clips 10-seed: [5.13, 2.19, 2.51, 10.29, 3.19, 2.30, 0.00(wipe), 3.73, 3.67, 2.71]
 - [15:10] Avg (all): 3.57, avg (no wipe): 3.97. Close to v65 tournament (3.59)!
 - [15:11] Best: seed 5 = 10.29 (above goal of 10)
+- [15:20] VT4 (aggressive budgets): [5.66, 0.00(wipe), 1.54, 8.51, 2.30] avg=3.60 — WORSE than VT3
+- [15:21] More aggressive budgets hurt — fewer miners means weaker economy → resource crises
+- [15:21] Reverted to VT3 budgets. VT3 (v228) remains best version.
