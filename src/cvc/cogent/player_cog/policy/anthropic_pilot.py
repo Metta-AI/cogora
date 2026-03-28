@@ -665,8 +665,6 @@ class AlphaRealignBoostAgentPolicy(AlphaV65ReplicaAgentPolicy):
         # CRITICAL: V65Replica sets hotspot_weight=0.0, which nullifies our boost.
         # Re-enable it so negative hotspot counts create bonuses.
         self._hotspot_weight = 8.0
-        # Mild network proximity preference (original: 0.5 default, V65Replica: 0.0)
-        self._network_weight = 0.2
 
     def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
         """Return negative hotspot count = BONUS for re-alignment targets.
@@ -717,17 +715,16 @@ class AlphaRealignBoostAgentPolicy(AlphaV65ReplicaAgentPolicy):
                 return 0, 0
             return 1, 0
 
-        # 3-4 agents: fast ramp to 2 aligners
+        # 3-4 agents: 2 aligners + rest miners, NO scrambler (economy too tight)
         if num_agents <= 4:
             if step < 20:
                 return 1, 0
             aligner_budget = min(2, num_agents - 1)
-            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
             if min_res < 1 and not can_hearts:
                 return 1, 0
             if objective == "economy_bootstrap":
                 return min(aligner_budget, 1), 0
-            return aligner_budget, scrambler_budget
+            return aligner_budget, 0  # No scramblers for small teams
 
         # 5+ agents: aggressive ramp, 5 aligners at peak
         if step < 10:
