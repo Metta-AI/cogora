@@ -1921,6 +1921,94 @@ class AlphaMidExpansionPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaDoubleScrambleMidAgentPolicy(AlphaMidExpansionAgentPolicy):
+    """MidExpansion with 2 scramblers from step 100 (instead of 1).
+
+    Hypothesis: more scrambling reduces junction losses, improving net score.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        aligner_budget, scrambler_budget = super()._pressure_budgets(state, objective=objective)
+        step = state.step or self._step_index
+        num_agents = self.policy_env_info.num_agents
+        if num_agents >= 5 and step >= 100 and aligner_budget >= 2:
+            # Use 2 scramblers instead of 1, taking from aligners
+            scrambler_budget = 2
+            aligner_budget = max(aligner_budget - 1, 2)
+        return aligner_budget, scrambler_budget
+
+
+class AlphaDoubleScrambleMidPolicy(MettagridSemanticPolicy):
+    """MidExpansion with 2 scramblers."""
+    short_names = ["alpha-double-scramble-mid"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaDoubleScrambleMidAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaMidZoneAgentPolicy(AlphaZoneBoostAgentPolicy):
+    """ZoneBoost with reduced expansion and stronger re-alignment."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._expansion_weight = 3.0
+        self._expansion_cap = 20.0
+        self._hotspot_weight = 12.0
+
+
+class AlphaMidZonePolicy(MettagridSemanticPolicy):
+    """ZoneBoost with reduced expansion and stronger re-alignment."""
+    short_names = ["alpha-mid-zone"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaMidZoneAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaExp5AgentPolicy(AlphaStableBoostAgentPolicy):
+    """StableBoost with expansion_weight=5 and hotspot=12."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._expansion_weight = 5.0
+        self._expansion_cap = 30.0
+        self._hotspot_weight = 12.0
+
+
+class AlphaExp5Policy(MettagridSemanticPolicy):
+    """StableBoost with expansion_weight=5."""
+    short_names = ["alpha-exp5"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaExp5AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaCyborgPolicy(MettagridSemanticPolicy):
     """Lightweight policy without LLM dependencies."""
     short_names = ["alpha-cyborg"]
