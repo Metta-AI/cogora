@@ -1,2 +1,13 @@
 status: in-progress
 started: 2026-03-28T19:12:35Z
+
+## Session Progress
+- Set up environment, checked leaderboard
+- v65 still #1 at 3.59 (516 matches), all others at 2.2-2.9
+- CRITICAL FINDING: Both players in a match get the SAME score
+  - Score is per-match average (both teams contribute)
+  - 6v2 avg=5.38, 4v4 avg=1.26, 2v6 avg=1.24
+  - When you have 6 agents, you dominate the score
+  - Top 6-agent matches: 7.33 (v11-v17)
+- Tournament uses clips (enemy ships that scramble junctions)
+- Running local experiments: 6-agent cyborg, clips variant
