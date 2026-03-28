@@ -51,9 +51,15 @@ status: in-progress
   - Higher batch = longer hub waits, economy can't sustain 4 hearts/aligner
   - Reverted to 3 hearts base
 
-## Key Insights
-- Non-determinism makes single-run comparisons unreliable (need 10+ seeds)
-- Seeds 4, 9 are broken maps (even starter policy scores 0.00)
-- Miner deaths are a huge economy drain (agent 6 died 9x)
-- Expansion weight boost (5→8) may help network chaining
-- Current config: v131 base + expansion weight 8.0 (v133)
+## v136-v137 Network-Distance Scoring + Retreat Margin
+- User modified targeting.py: replaced hub-centric penalty with network-distance
+  - Uses min distance to ANY hub or friendly junction (enables chaining)
+  - Expansion weight: 10.0 (cap 60), network penalty: dist * 0.5
+- v136 8-cog (7 non-wipeout seeds): avg 3.85 — slight regression from hub-centric
+- v137: increased retreat margin 15→20 to reduce deaths
+- v137 8-cog (14 non-wipeout seeds): avg **5.12** — BEST EVER!
+  - Seed 5: 13.24 (ABOVE TARGET!), seed 6: 6.72 (1 death!)
+  - Seeds 10-17: no wipeouts, avg 5.04
+- v137 breakthrough: network-distance + safety margin = fewer deaths + better expansion
+- Uploaded v125 (v131), v126 (v133), v127 (v136) to tournament
+- Uploading v137 (retreat margin 20) to tournament now
