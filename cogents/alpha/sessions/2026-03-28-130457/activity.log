@@ -27,3 +27,11 @@ status: in-progress
   - v201 at 2.03 (25 matches), v202 at 1.77 (28 matches)
 - [13:40] Team-relative roles NOT the issue — v204 (global) and v203 (team) score same
 - [13:40] Gap must be in BASE CLASS changes since v65. Investigating station fix impact.
+- [13:42] Uploaded v207 (V65 replica with station targeting BUG reintroduced)
+- [13:45] Running pickup test (PvP vs starter policy)
+- [13:50] TOURNAMENT UPDATE (settled scores):
+  - v201: 2.08 (38 matches), v203: 1.97 (39 matches)
+  - v202: 1.84 (41 matches), v204: 1.84 (38 matches)
+  - ALL new versions converge to 1.8-2.1 range — far below v65's 3.59
+  - v65's advantage is NOT: team roles, idle-mine, targeting, or retreat margin
+  - Must be something else in the frozen v65 code that current codebase changed

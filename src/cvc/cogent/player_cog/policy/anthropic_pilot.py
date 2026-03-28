@@ -2163,6 +2163,45 @@ class AlphaCyborgGlobalRolesPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaV65BuggyStationAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """V65 replica with original station targeting bug (pre-fix behavior)."""
+
+    def _acquire_role_gear(self, state: MettagridState, role: str) -> tuple[Action, str]:
+        """Replicate pre-fix station targeting: use raw spawn-relative coords."""
+        station_type = f"{role}_station"
+        current_pos = _h.absolute_position(state)
+        station = self._world_model.nearest(position=current_pos, entity_type=station_type)
+        if station is not None:
+            return self._move_to_known(state, station, summary=f"get_{role}_gear", vibe="change_vibe_gear")
+        # OLD BUG: use spawn-relative coords as absolute (sends agents to wrong position)
+        target = _h.spawn_relative_station_target(self._agent_id, role)
+        if target is None:
+            hub = self._nearest_hub(state)
+            if hub is None:
+                return self._explore_action(state, role=role, summary=f"find_{role}_station")
+            from cvc.cogent.player_cog.policy.semantic_cog import _STATION_OFFSETS
+            dx, dy = _STATION_OFFSETS[role]
+            target = (hub.global_x + dx, hub.global_y + dy)
+        return self._move_to_position(state, target, summary=f"search_{role}_station", vibe="change_vibe_gear")
+
+
+class AlphaV65BuggyStationPolicy(MettagridSemanticPolicy):
+    """V65 replica with station targeting bug + global roles."""
+    short_names = ["alpha-v65-buggy-station"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65BuggyStationAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaV65OriginalPolicy(MettagridSemanticPolicy):
     """True v65 replica WITHOUT team-relative role assignment.
 
