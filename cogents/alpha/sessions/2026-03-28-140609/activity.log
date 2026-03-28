@@ -60,3 +60,11 @@ status: in-progress
   Earlier finding "all customizations hurt" may have been wrong — AlphaCyborg
   IS heavily customized but outperforms vanilla (2.14) at 2.58 so far.
   Need more matches to confirm.
+- [15:18] v224 trajectory: 3.35→2.82→2.58→3.04→2.83→2.08 (24 matches)
+  Settled at same 2.0-2.2 range as everything else. HEURISTIC CEILING CONFIRMED.
+- [15:20] v225 (LLM-enhanced) at 3.40 (#2, 3 matches) — too early to tell.
+  v226 at 2.14 (#134, 3 matches) — already at ceiling.
+- [15:25] ALL heuristic versions converge to 2.0-2.2 with 20+ matches.
+  The 2.89-3.59 range of v60-v65 was with older game engine version.
+  Current mettagrid 0.21.1 has different characteristics.
+  v225 (LLM) is the only hope for breaking the ceiling.
