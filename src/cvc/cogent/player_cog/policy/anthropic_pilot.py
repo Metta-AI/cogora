@@ -215,6 +215,17 @@ class AlphaV65ScrambleHeavyAgentPolicy(AlphaV65ReplicaAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaEconFirstAgentPolicy(AlphaV65ReplicaAgentPolicy):
+    """Economy-first: everyone mines until step 200, then normal budgets."""
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        if step < 200:
+            return 0, 0  # All agents mine
+        # After step 200, use base aggressive budgets
+        return super()._pressure_budgets(state, objective=objective)
+
+
 class AlphaNoScrambleAgentPolicy(SemanticCogAgentPolicy):
     """All aligners, no scramblers. 5 aligners + 3 miners."""
 
@@ -531,6 +542,23 @@ class AlphaV65ScrambleHeavyPolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaV65ScrambleHeavyAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaEconFirstPolicy(MettagridSemanticPolicy):
+    """Economy-first: all mine until step 200, then aggressive alignment."""
+    short_names = ["alpha-econ-first"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaEconFirstAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
