@@ -30,3 +30,19 @@ status: in-progress
 - Alpha seed 0: 0.00 (wipeout — all agents died). Wipeout issue persists.
 - Game constants: hub_align=25, junction_align=15, junction_aoe=10
 - Heart cost: 7×4=28 resources per heart
+- Linter changed _current_aligner_budget init from 2→4 (match Phase 2 exit). Applied same to Anthropic.
+
+## Baseline Results (AlphaCyborg with init budget fix)
+- Seed 0: 0.00 (wipeout — all agents died, no resources mined)
+- Seed 1: **8.31** — best single score EVER! (prev best 6.18)
+  - 281 alignments, 172 lost to clips
+  - Scrambler: 172 scrambles (matched losses!)
+  - 455 hearts withdrawn, 0 deaths
+  - Agent 6: 86 alignments, Agent 5: 70, Agent 4: 63, Agent 3: 61
+- Seed 2: 3.22
+- Avg: 3.84 (non-wipeout avg: 5.77)
+
+## Tournament Upload
+- v107: AnthropicCyborgPolicy (LLM) with v121 improvements → qualifying
+- v108: AlphaCyborgPolicy (no LLM) with v121 improvements → qualifying
+- Waiting for Anthropic seed tests (slow due to LLM calls)

@@ -118,7 +118,7 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_budget_change_step = 0
-        self._current_aligner_budget = 2  # Start conservative
+        self._current_aligner_budget = 4  # Match Phase 2 exit (conservative)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         """Economy-responsive with hysteresis to prevent gear churn — v120."""
