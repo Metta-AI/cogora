@@ -1216,9 +1216,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
             return cargo >= 4
 
         safe_distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
-        # Opportunistic deposit: if very close to depot with any cargo, deposit on the way
-        if cargo >= 4 and safe_distance <= 2:
-            return True
         if cargo >= 16 and safe_distance > 18:
             return True
         if cargo >= 8 and self._should_retreat(state, "miner", safe_target):
