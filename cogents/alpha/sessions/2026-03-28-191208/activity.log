@@ -48,3 +48,20 @@ Baseline avg: 6.56, AlignMax avg: 4.07
 AlignMax WORSE overall — too many aligners starve economy
 On high-scoring maps (seeds 44,45), baseline much better (14.72, 11.82 vs 3.68, 5.67)
 Running comprehensive 5-seed comparison of Baseline vs AlignMax vs V65
+
+## AlphaOptimal Created
+- V65 hub_penalty targeting + idle-mine + team-aware budgets + resource bias
+- Local scores (10k steps): seed 42=1.81, seed 43=4.28, seed 44=14.39
+- Slightly worse than AlphaCyborg locally (expected: v65 targeting more conservative)
+- Key hypothesis: tournament benefit comes from cooperation with other alpha versions
+
+## Tournament Uploads (v280-v292)
+- v280: AlphaCyborg (baseline)
+- v281: AlignMax (more aligners)
+- v282: DefenseWall (early scramblers)
+- v283: Blitz (early alignment with free hearts)
+- v284: FlashRush (all-mine 50 steps, then mass-align)
+- v285: V65TrueReplica (exact v65 behavior)
+- v286: SoftHub (mild hub preference)
+- v291: AlphaOptimal (v65 targeting + AlphaCog improvements)
+- v292: V65Exact (exact v65 constants/budgets)

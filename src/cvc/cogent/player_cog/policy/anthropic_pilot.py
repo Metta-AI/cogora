@@ -4407,6 +4407,164 @@ class AlphaAlignMaxAgentPolicy(AlphaCogAgentPolicy):
             return aligner_budget, scrambler_budget
 
 
+# ---------------------------------------------------------------------------
+# AlphaOptimal: V65 hub-centric targeting + team-aware budgets + idle-mine +
+# resource bias + re-alignment bonus. Best of all worlds.
+# ---------------------------------------------------------------------------
+
+class AlphaOptimalAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """V65 targeting (hub_penalty) + AlphaCog improvements (idle-mine, resource bias, team budgets)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_budget_change_step = 0
+        num_agents = self.policy_env_info.num_agents
+        self._current_aligner_budget = min(4, max(num_agents - 1, 1))
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """V65 targeting with idle-mine (proven 89% better than idle-explore)."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Idle-mine: proven better than idle-explore (8.05 vs 3.54 in A/B tests)
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Team-size-aware budgets (critical for 2v6/6v2 tournament matches)."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 500 and num_agents >= 4 and min_res >= 14 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: v65-like budgets with team awareness
+        if step < 30:
+            return 2, 0
+        elif step < 3000:
+            pressure_budget = 5
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 2
+            elif min_res < 3:
+                pressure_budget = 4
+        else:
+            pressure_budget = 6
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 3
+
+        scrambler_budget = 0
+        if step >= 3000:
+            scrambler_budget = 2
+        elif step >= 100:
+            scrambler_budget = 1
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+    def evaluate_state(self, state: MettagridState) -> Action:
+        action = super().evaluate_state(state)
+        step = state.step or self._step_index
+        role = self._infos.get("role", "?")
+        subtask = self._infos.get("subtask", "?")
+        if step % 500 == 0 or step == 1 or (step % 100 == 0 and self._agent_id == 0):
+            pos = _h.absolute_position(state)
+            hp = int(state.self_state.inventory.get("hp", 0))
+            hearts = int(state.self_state.inventory.get("heart", 0))
+            cargo = _h.resource_total(state)
+            aligner_b = self._infos.get("aligner_budget", "?")
+            scrambler_b = self._infos.get("scrambler_budget", "?")
+            frontier = self._infos.get("frontier_neutral_junctions", "?")
+            team_id = _h.team_id(state)
+            friendly = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner == team_id))
+            enemy = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+            shared = _shared_resources(state)
+            hub = self._nearest_hub(state)
+            hub_pos = (hub.global_x, hub.global_y) if hub else None
+            print(
+                f"[COG] step={step} agent={self._agent_id} pos={pos} hub={hub_pos} role={role} "
+                f"subtask={subtask} hp={hp} hearts={hearts} cargo={cargo} "
+                f"aligners={aligner_b} scramblers={scrambler_b} "
+                f"friendly_j={friendly} enemy_j={enemy} frontier={frontier} "
+                f"hub_res={shared}",
+                flush=True,
+            )
+        return action
+
+
+class AlphaOptimalPolicy(MettagridSemanticPolicy):
+    """V65 targeting + idle-mine + team-aware budgets + resource bias."""
+    short_names = ["alpha-optimal"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaOptimalAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaAlignMaxPolicy(MettagridSemanticPolicy):
     """Maximum aligners, minimal scramblers."""
     short_names = ["alpha-align-max"]
