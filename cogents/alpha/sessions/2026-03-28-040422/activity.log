@@ -20,3 +20,12 @@
 - Fix: stable 4-aligner + 1-scrambler + 3-miner allocation (no oscillation)
 - Also increased miner deposit threshold from 12 → 16 (fewer trips)
 - Testing now...
+
+### v135: Stable Budgets + Deposit 16 — Single Seed Result
+- Score: 5.09 (vs 3.79 baseline, +34%)
+- 513 hearts (vs 369), 329 alignments gained (vs 245)
+- 176 scrambles (vs 109) — scrambler much more effective
+- Agent 4 gear changes: 1 (vs 17 in baseline!) — oscillation fixed
+- Total deaths: 13 (vs 20) — fewer deaths too
+- Also synced fix to AnthropicPilotAgentPolicy (tournament version)
+- Running 5-seed validation (seeds 1-5)...
