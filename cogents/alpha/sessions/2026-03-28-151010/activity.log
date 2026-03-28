@@ -23,3 +23,16 @@ status: in-progress
   while slowly building own network. Testing vs clips and self-play.
 - [15:19] Running 5-seed batch tests for FlashRush and AlphaTournament for reliable comparison.
 - [15:20] v47 appeared in tournament — likely from another worker. New matches being scheduled.
+- [15:22] 5-seed clips results (5k steps):
+  - AlphaCyborg vs clips: 6.42, 2.48, 2.44, 7.99, 0.00 → avg 3.87
+  - AlphaTournament vs clips: 2.87, 1.33, 2.08, 3.41, 6.23 → avg 3.18
+  - FlashRush vs clips: 3.03, 0.54, 1.00, 1.36, 2.65 → avg 1.72 (FAILED)
+  - ScrambleDominance vs clips: 1.67 (single seed) (FAILED)
+  - ScrambleDominance self-play: 2.12 (FAILED)
+  - EconDominance vs clips: 0.00 (WIPE, FAILED)
+- [15:22] **AlphaCyborg BEST local policy** (3.87 avg), beating AlphaTournament (3.18).
+  Seed 4: 7.99, Seed 1: 6.42. Seed 5 wipes (0.00).
+- [15:23] Running 10k step VT tests to match tournament conditions. Still waiting.
+- [15:23] All radical new strategies (FlashRush, EconDominance, ScrambleDominance) WORSE.
+  The existing AlphaCyborg policy is well-tuned for local play.
+  Problem: local improvements don't translate to tournament (all converge 2.0-2.3).
