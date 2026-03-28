@@ -29,4 +29,11 @@ status: in-progress
 - [14:18] v210 dropped to 1.93 (37 matches) — same pattern as v202. Early scores unreliable.
   v65 back at #1 (3.59). All new versions converge to 1.9-2.3.
 - [14:20] Running pickup tests: economy-first cyborg vs starter, vanilla base vs starter
-  Waiting for results to compare PvP performance.
+- [14:25] Pickup results (economy-first AlphaCyborgPolicy vs starter, 5k):
+  - 8v0 (self-play): 5.07
+  - 7v1: 0.74
+  - 4v4: 0.08 (barely winning — was 0 before economy-first fix)
+  - Overall VOR: 1.46
+  4v4 performance is the key weakness. Economy-first helps but not enough.
+- [14:25] v212 (V65+idle-mine+economy-first) entered at #6 with 2.83 (2 matches) — monitoring
+- [14:25] v210 settled at 2.07 (57 matches)
