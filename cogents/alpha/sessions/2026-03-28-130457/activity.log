@@ -1,0 +1,13 @@
+# Session 2026-03-28-130457 Activity Log
+status: in-progress
+
+## Plan
+1. Check latest tournament results (v196-v200+)
+2. Understand why local improvements don't translate to tournament wins
+3. Focus on what makes v65 work in tournament that newer versions break
+4. Run targeted experiments and upload improvements
+5. Goal: beat v65's 3.59 tournament score, push toward >10
+
+## Activity
+- [13:05] Session started. Previous session (121219) was interrupted — recovered.
+- [13:05] Context: idle-aligner-mine +89% local, but tournament scores still lag. v65 (3.59) still #1.
