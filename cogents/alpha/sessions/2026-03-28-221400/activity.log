@@ -33,3 +33,9 @@
   Reverted to original nearest-junction expansion.
 - [2026-03-28 22:45] Trying lower economy_surplus threshold (100→50) for earlier max-pressure.
   Also 4a improvement: 3 aligners when economy healthy (step>500, min_res>=50).
+- [2026-03-28 22:55] Lower surplus (50) hurts 8a (seed 777: 7.95→3.83). Reverted to 100.
+  Kept 4a 3-aligner improvement. Parallel test results unreliable due to resource contention.
+  Clean sequential test: 8a seed 42 → 2.10, 4a seed 42 → 1.67.
+  Uploaded v303 (AlphaAggressive with 4a improvement) to tournament.
+  CONCLUSION: Seed variance too high for single-seed policy comparison.
+  Tournament is the only reliable signal.
