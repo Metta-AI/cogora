@@ -51,3 +51,12 @@ status: in-progress
   The base class rewrite degraded EVERYTHING by ~0.7 points. Code/deps issue.
 - [15:10] Key open question: can v226/v227 (improved 2-agent + AlphaCyborg budgets)
   close the gap? Or is the base class itself the problem?
+- [15:12] v224 (AlphaCyborg) initially at 3.35 (4 matches) → 2.82 → 2.58 (6 matches)
+  Still #30 — BEST of ALL recent versions! Survival bypass variants much worse.
+  v220 (hybrid bypass) at 1.99 (#159), v222 at 1.61 (#176).
+  CONFIRMED: hub_camp_heal HELPS tournament. Survival code is beneficial.
+- [15:15] AlphaCyborg uniquely combines: re-alignment boost + stable budgets +
+  scrambler defense + idle-mine + expand-toward + logging.
+  Earlier finding "all customizations hurt" may have been wrong — AlphaCyborg
+  IS heavily customized but outperforms vanilla (2.14) at 2.58 so far.
+  Need more matches to confirm.
