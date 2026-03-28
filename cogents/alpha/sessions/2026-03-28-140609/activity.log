@@ -2,30 +2,25 @@
 status: in-progress
 
 ## Plan
-1. Check tournament results — how did v201-v207 and v202 (v65 replica) perform?
-2. Study v65 match logs to understand what it does differently
-3. Focus on economy-first budgets (from last session's discovery)
-4. Test locally with variable team sizes (4v4, 2v6) — not just 8v8
-5. Upload improved policy, target >3.59 tournament score
-6. Goal: beat v65, push toward >10
+1. Understand v65 gap and improve tournament performance
+2. Economy-first budgets for 4-agent teams
+3. Upload and test multiple variants
+4. Goal: beat v65's 3.59 tournament score, push toward >10
 
 ## Activity
 - [14:06] Session started. Previous session (130457) was interrupted — recovered.
 - [14:06] From last session: economy-first budgets fix 4-agent PvP economy collapse.
 - [14:08] v65 advantage NOT: team roles, idle-mine, targeting, retreat margin, station fix
-- [14:12] v210: 5.11 (5 matches) → dropped to 1.93 (37). Early scores unreliable.
-- [14:25] Pickup: AlphaCyborg vs starter 4v4=0.08 — nearly losing to simple policy.
-- [14:30] **CRITICAL**: v216 (vanilla, ZERO customizations) at 2.68 > all customized!
+- [14:12] v210: 5.11→1.93 (57 matches). Early scores always drop.
+- [14:25] Pickup: AlphaCyborg vs starter 4v4=0.08 — barely beating simple policy.
+- [14:30] **CRITICAL**: v216 (vanilla, ZERO customizations) at 2.68 → 2.35 > all customized!
   ALL CUSTOMIZATIONS HURT TOURNAMENT PERFORMANCE.
-  The more customized, the worse it scores. Base policy > all variants.
-- [14:30] Conclusion: path forward is LESS customization, not more.
-- [14:35] v216 dropped to 2.45 (16 matches). v219 (AnthropicCyborgPolicy) uploaded.
-- [14:10] (Worker 2) Local 5k: AlphaCyborg=4.81, V65Pure=4.31, Tournament=2.10
-- [14:15] ROOT CAUSE: AlphaTournament starts 1-2 aligners. V65 starts with 4.
-- [14:18] Created AlphaV65HybridPolicy: v65 budgets + idle-mine + team-aware
-- [14:20] Uploaded v217 (hybrid team-aware), v218 (hybrid global)
-- [14:25] FIX: Override _choose_action to skip survival code (hub_camp_heal,
-  wipeout_hub_hold). Survival code stalls agents permanently at hp=0.
-- [14:30] Fixed hybrid seed 1: wipe → 5.18! Seed 4 wipe → 3.22!
-- [14:35] NEW STRATEGY: Since all customizations hurt tournament, try minimalist approach.
-  Upload vanilla base variants. Test what v65 actually looked like.
+- [14:30] (Worker 2) Local 5k: AlphaCyborg=4.81, V65Pure=4.31, Tournament=2.10
+  ROOT CAUSE: AlphaTournament starts 1-2 aligners. V65 starts with 4.
+- [14:25] (Worker 2) FIX: Skip survival code (hub_camp_heal, wipeout_hub_hold)
+  that stalls agents at hp=0. Fixed wipe seeds: seed 1 wipe→5.18, seed 4 wipe→3.22.
+- [14:30] (Worker 2) Uploaded v217 (hybrid team-aware), v218 (hybrid global)
+- [14:36] Uploaded v219: AnthropicCyborgPolicy (matches v65's policy class)
+- [14:40] Settled scores (24+ matches): v216 vanilla=2.35 (#67), v211=2.17, v215=2.11
+  All customized versions score worse. More overrides = worse performance.
+- [14:40] v65 gap: 3.59 vs v216 2.35 = 53% gap. Due to base class code or dependency changes.
