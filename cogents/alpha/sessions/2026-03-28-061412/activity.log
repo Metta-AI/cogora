@@ -1,36 +1,34 @@
 status: in-progress
 
-## Session Summary
+## CRITICAL BUG FIX: Team-relative role assignment
 
-### Tournament Status
-- v65 still #1 at 3.24 (321 matches) — nobody beats it
-- All recent versions (v162-v178) score 1.83-2.36 in tournament
-- Best recent: v158/v156/v160 at 2.36 (simple base replicas)
-- Complex improvements (team-aware, zones, realign) score LOWER (~2.0-2.2)
+### The Bug
+Tournament uses 4-agent and 8-agent maps with split teams:
+- 4 agents: [0,0,1,1] (2v2), [0,0,0,1] (3v1), [0,1,1,1] (1v3)
+- 8 agents: [0,0,1,1,1,1,1,1] (2v6), [0,0,0,0,0,0,1,1] (6v2)
 
-### Local Testing Results
+Role assignment used GLOBAL agent IDs with fixed priorities:
+- _SCRAMBLER_PRIORITY = (3, 7, 6, 2)
+- _ALIGNER_PRIORITY = (0, 1, 2, 3, 4, 5, 6, 7)
 
-#### 5-seed comparison (5000 steps, 8 agents)
-| Policy       | S1   | S2   | S3   | S4   | S5   | Avg  |
-|-------------|------|------|------|------|------|------|
-| ZoneBoost   | 1.98 | 2.22 | 2.04 | 6.15 | 5.78 | 3.63 |
-| GentleZone  | 2.23 | 1.65 | 2.26 | 3.43 | 1.60 | 2.23 |
-| StableBoost | 0.00 | 1.34 | 3.20 | 3.81 | 1.33 | 1.94 |
+With 3 agents (IDs 0,1,2): agent 3 not on team → no scrambler assigned correctly
+  but ALL 3 become aligners → NO MINERS → economy collapse!
+With 1 agent (ID 3): becomes pure scrambler → 0 alignment score!
 
-#### 10k steps, 8 agents (partial)
-| Policy      | S1   | S2   | S3   | Avg  |
-|------------|------|------|------|------|
-| ZoneBoost  | 5.54 | 2.27 | 4.08 | 3.96 |
-
-### Key Findings
-1. V65 code diff: hub_penalty→network_penalty, expansion 5/30→10/60, retreat 15→20
-2. Tournament uses 2+6/6+2/4+4 team splits (8 total agents, 10k steps)
-3. Team-aware policies help locally but HURT in tournament
-4. Zone targeting (sector assignment) best locally (3.63 avg) but scores 2.06 in tournament
-5. Simple aggressive policies score better in tournament than sophisticated ones
-6. Local self-play is NOT predictive of tournament performance
+### The Fix
+- Added shared_team_ids set to track which agent IDs are on our team
+- _desired_role now filters priority lists to team members only
+- Ensures proper role distribution regardless of which global IDs we control
 
 ### Uploads
-v162: V65TrueReplica → 2.04 | v163: TeamAware → 2.01 | v164: V65TeamAware → 2.01
-v165: V65TeamAware v2 → 2.02 | v168: CleanTeamAware → 2.18 | v177: GentleZone → 2.19
-v178: AnthropicCyborg (LLM) → pending
+- v179: StableBoost + role fix
+- v180: Base policy + role fix
+- v181: ZoneBoost + role fix
+- v177: GentleZone (pre-fix)
+- v178: AnthropicCyborg (LLM, pre-fix)
+
+### Previous Session Findings
+- v65 still #1 at 3.24 (321 matches)
+- All recent versions score 2.0-2.36 in tournament
+- Local scores don't predict tournament
+- ZoneBoost best locally (3.63 avg at 5k, 3.96 at 10k)

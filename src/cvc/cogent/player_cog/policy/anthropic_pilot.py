@@ -1299,6 +1299,7 @@ class AlphaV65TrueReplicaPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-v65-true"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaV65TrueReplicaAgentPolicy(
                 self.policy_env_info,
@@ -1307,6 +1308,7 @@ class AlphaV65TrueReplicaPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1316,6 +1318,7 @@ class AlphaV65ReplicaPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-v65-replica"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaV65ReplicaAgentPolicy(
                 self.policy_env_info,
@@ -1324,6 +1327,7 @@ class AlphaV65ReplicaPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1333,6 +1337,7 @@ class AlphaV65PlusBiasPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-v65-bias"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaV65PlusBiasAgentPolicy(
                 self.policy_env_info,
@@ -1341,6 +1346,7 @@ class AlphaV65PlusBiasPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1350,6 +1356,7 @@ class AlphaBiasOnlyPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-bias-only"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaBiasOnlyAgentPolicy(
                 self.policy_env_info,
@@ -1358,6 +1365,7 @@ class AlphaBiasOnlyPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1367,6 +1375,7 @@ class AlphaDoubleScramblePolicy(MettagridSemanticPolicy):
     short_names = ["alpha-double-scramble"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaDoubleScrambleAgentPolicy(
                 self.policy_env_info,
@@ -1375,6 +1384,7 @@ class AlphaDoubleScramblePolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1384,6 +1394,7 @@ class AlphaSuperAggroPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-super-aggro"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaSuperAggroAgentPolicy(
                 self.policy_env_info,
@@ -1392,6 +1403,7 @@ class AlphaSuperAggroPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1401,6 +1413,7 @@ class AlphaScrambleHeavyPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-scramble-heavy"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaScrambleHeavyAgentPolicy(
                 self.policy_env_info,
@@ -1409,6 +1422,7 @@ class AlphaScrambleHeavyPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1418,6 +1432,7 @@ class AlphaV65ScrambleHeavyPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-v65-scramble"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaV65ScrambleHeavyAgentPolicy(
                 self.policy_env_info,
@@ -1426,6 +1441,7 @@ class AlphaV65ScrambleHeavyPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1435,6 +1451,7 @@ class AlphaTeamAwarePolicy(MettagridSemanticPolicy):
     short_names = ["alpha-team-aware"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTeamAwareAgentPolicy(
                 self.policy_env_info,
@@ -1443,6 +1460,7 @@ class AlphaTeamAwarePolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1452,6 +1470,7 @@ class AlphaV65RealignPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-v65-realign"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaV65RealignAgentPolicy(
                 self.policy_env_info,
@@ -1460,6 +1479,7 @@ class AlphaV65RealignPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1469,6 +1489,7 @@ class AlphaV65TeamAwarePolicy(MettagridSemanticPolicy):
     short_names = ["alpha-v65-team-aware"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaV65TeamAwareAgentPolicy(
                 self.policy_env_info,
@@ -1477,6 +1498,7 @@ class AlphaV65TeamAwarePolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1486,6 +1508,7 @@ class AlphaRealignBoostPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-realign-boost"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaRealignBoostAgentPolicy(
                 self.policy_env_info,
@@ -1494,6 +1517,7 @@ class AlphaRealignBoostPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1503,6 +1527,7 @@ class AlphaMaxAlignPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-max-align"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaMaxAlignAgentPolicy(
                 self.policy_env_info,
@@ -1511,6 +1536,7 @@ class AlphaMaxAlignPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1520,6 +1546,7 @@ class AlphaCleanTeamAwarePolicy(MettagridSemanticPolicy):
     short_names = ["alpha-clean-team-aware"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaCleanTeamAwareAgentPolicy(
                 self.policy_env_info,
@@ -1528,6 +1555,7 @@ class AlphaCleanTeamAwarePolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1537,6 +1565,7 @@ class AlphaStableBoostPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-stable-boost"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaStableBoostAgentPolicy(
                 self.policy_env_info,
@@ -1545,6 +1574,7 @@ class AlphaStableBoostPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1554,6 +1584,7 @@ class AlphaZoneBoostPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-zone-boost"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaZoneBoostAgentPolicy(
                 self.policy_env_info,
@@ -1562,6 +1593,7 @@ class AlphaZoneBoostPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1653,6 +1685,7 @@ class AlphaGentleZonePolicy(MettagridSemanticPolicy):
     short_names = ["alpha-gentle-zone"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaGentleZoneAgentPolicy(
                 self.policy_env_info,
@@ -1661,6 +1694,7 @@ class AlphaGentleZonePolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1670,6 +1704,7 @@ class AlphaAggroBoostPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-aggro-boost"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaAggroBoostAgentPolicy(
                 self.policy_env_info,
@@ -1678,6 +1713,7 @@ class AlphaAggroBoostPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1687,6 +1723,7 @@ class AlphaV65NoScrambleBoostPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-v65-noscramble-boost"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaV65NoScrambleBoostAgentPolicy(
                 self.policy_env_info,
@@ -1695,6 +1732,7 @@ class AlphaV65NoScrambleBoostPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1704,6 +1742,7 @@ class AlphaNoScramblePolicy(MettagridSemanticPolicy):
     short_names = ["alpha-no-scramble"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaNoScrambleAgentPolicy(
                 self.policy_env_info,
@@ -1712,6 +1751,7 @@ class AlphaNoScramblePolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
@@ -1721,6 +1761,7 @@ class AlphaCyborgPolicy(MettagridSemanticPolicy):
     short_names = ["alpha-cyborg"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaCogAgentPolicy(
                 self.policy_env_info,
@@ -1729,5 +1770,6 @@ class AlphaCyborgPolicy(MettagridSemanticPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]

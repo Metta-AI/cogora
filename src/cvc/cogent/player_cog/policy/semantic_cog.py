@@ -203,6 +203,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
         shared_claims: dict[tuple[int, int], tuple[int, int]],
         shared_junctions: dict[tuple[int, int], tuple[str | None, int]],
         shared_hotspots: dict[tuple[int, int], int] | None = None,
+        shared_team_ids: set[int] | None = None,
     ) -> None:
         super().__init__(policy_env_info)
         self._agent_id = agent_id
@@ -210,6 +211,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
         self._shared_claims = shared_claims
         self._shared_junctions = shared_junctions
         self._shared_hotspots = shared_hotspots if shared_hotspots is not None else {}
+        self._shared_team_ids = shared_team_ids if shared_team_ids is not None else set()
         self._memory = MemoryStore()
         self._previous_state: MettagridState | None = None
         self._last_global_pos: tuple[int, int] | None = None
@@ -349,14 +351,29 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
     def _desired_role(self, state: MettagridState, *, objective: str | None = None) -> str:
         aligner_budget, scrambler_budget = self._pressure_budgets(state, objective=objective)
-        scrambler_ids = set(_SCRAMBLER_PRIORITY[:scrambler_budget])
-        aligner_ids = []
-        for agent_id in _ALIGNER_PRIORITY:
-            if agent_id in scrambler_ids:
-                continue
-            if len(aligner_ids) == aligner_budget:
-                break
-            aligner_ids.append(agent_id)
+        team_ids = self._shared_team_ids
+        if team_ids:
+            # Use team-relative role assignment: filter priorities to agents we control
+            team_scrambler_priority = [aid for aid in _SCRAMBLER_PRIORITY if aid in team_ids]
+            team_aligner_priority = [aid for aid in _ALIGNER_PRIORITY if aid in team_ids]
+            scrambler_ids = set(team_scrambler_priority[:scrambler_budget])
+            aligner_ids = []
+            for agent_id in team_aligner_priority:
+                if agent_id in scrambler_ids:
+                    continue
+                if len(aligner_ids) == aligner_budget:
+                    break
+                aligner_ids.append(agent_id)
+        else:
+            # Fallback: original global priority behavior
+            scrambler_ids = set(_SCRAMBLER_PRIORITY[:scrambler_budget])
+            aligner_ids = []
+            for agent_id in _ALIGNER_PRIORITY:
+                if agent_id in scrambler_ids:
+                    continue
+                if len(aligner_ids) == aligner_budget:
+                    break
+                aligner_ids.append(agent_id)
         if self._agent_id in scrambler_ids:
             return "scrambler"
         if self._agent_id in aligner_ids:
@@ -1345,8 +1362,10 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
         self._shared_claims: dict[tuple[int, int], tuple[int, int]] = {}
         self._shared_junctions: dict[tuple[int, int], tuple[str | None, int]] = {}
         self._shared_hotspots: dict[tuple[int, int], int] = {}
+        self._shared_team_ids: set[int] = set()
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = SemanticCogAgentPolicy(
                 self.policy_env_info,
@@ -1355,6 +1374,7 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
