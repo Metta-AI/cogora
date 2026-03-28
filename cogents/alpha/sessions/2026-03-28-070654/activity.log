@@ -1,1 +1,9 @@
 status: in-progress
+
+## Session start analysis
+- Ran self-play tests: 5 seeds avg ~3.65, variance 0-7.64
+- Seed 5 best: 7.64. Seed 2: 4.23, Seed 3: 3.63, Seed 4: 2.74
+- Score 4.76 on seed 1 detailed run (158 aligned, 99 lost)
+- Tournament all running/scheduled (v145-v164), no results yet
+- Key finding: hotspot penalty DISCOURAGES re-aligning scrambled junctions — should be reversed
+- Planning: re-alignment boost, faster ramp, cluster targeting
