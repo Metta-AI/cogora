@@ -127,8 +127,14 @@ def v65_aligner_target_score(
     enemy_junctions: list[KnownEntity],
     claimed_by_other: bool,
     hub_position: tuple[int, int] | None = None,
+    hotspot_count: int = 0,
+    hotspot_weight: float = 0.0,
 ) -> tuple[float, float]:
-    """Original v65-era scoring: tiered hub_penalty, expansion 5.0/30.0."""
+    """Original v65-era scoring: tiered hub_penalty, expansion 5.0/30.0.
+
+    Optional hotspot_count/hotspot_weight: negative hotspot_count creates a
+    re-alignment bonus for recently scrambled junctions.
+    """
     distance = float(manhattan(current_position, candidate.position))
     expansion = sum(
         1 for entity in unreachable if manhattan(candidate.position, entity.position) <= _JUNCTION_ALIGN_DISTANCE
@@ -149,12 +155,14 @@ def v65_aligner_target_score(
             hub_penalty = (hub_dist - 10) * 1.5 + 2.0
         else:
             hub_penalty = hub_dist * 0.3
+    hotspot_penalty = min(hotspot_count, 3) * hotspot_weight
     return (
         distance
         - min(expansion * 5.0, 30.0)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
-        + hub_penalty,
+        + hub_penalty
+        + hotspot_penalty,
         -float(expansion),
     )
 

@@ -401,6 +401,140 @@ class AlphaTeamAwareAgentPolicy(AlphaV65ReplicaAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaV65RealignAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """V65 targeting + re-alignment boost + team-aware budgets + lower deposit.
+
+    Best known targeting (hub_penalty) + prioritize re-aligning scrambled
+    junctions + adapt to variable team sizes.
+    """
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """V65 targeting with hotspot re-alignment boost."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity
+            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.v65_aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    hotspot_weight=8.0,
+                ),
+                entity.position,
+            ),
+        )
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        """Negative count = re-alignment bonus for recently scrambled junctions."""
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        return -min(count, 3)
+
+    def _should_deposit_resources(self, state: MettagridState) -> bool:
+        """Lower deposit threshold (12)."""
+        cargo = _h.resource_total(state)
+        if cargo <= 0:
+            return False
+        threshold = 12 if _h.has_role_gear(state, "miner") else 4
+        if cargo >= threshold:
+            return True
+        safe_target = self._nearest_friendly_depot(state)
+        if safe_target is None:
+            return cargo >= 4
+        safe_distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
+        if cargo >= 12 and safe_distance > 18:
+            return True
+        if cargo >= 8 and self._should_retreat(state, "miner", safe_target):
+            return True
+        if cargo >= 8 and self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            return True
+        return False
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 30 or (min_res < 1 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 20:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 1), 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: v65-style budgets
+        if step < 30:
+            pressure_budget = 2
+        elif step < 3000:
+            pressure_budget = 5
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 2
+            elif min_res < 3:
+                pressure_budget = 4
+        else:
+            pressure_budget = 6
+            if min_res < 1 and not can_hearts:
+                pressure_budget = 3
+
+        scrambler_budget = 0
+        if step >= 3000:
+            scrambler_budget = 2
+        elif step >= 100:
+            scrambler_budget = 1
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
 class AlphaV65TeamAwareAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
     """V65 true targeting (hub_penalty) + team-size-aware budgets."""
 
@@ -1044,6 +1178,23 @@ class AlphaTeamAwarePolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTeamAwareAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaV65RealignPolicy(MettagridSemanticPolicy):
+    """V65 targeting + re-alignment boost + team-aware budgets."""
+    short_names = ["alpha-v65-realign"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65RealignAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
