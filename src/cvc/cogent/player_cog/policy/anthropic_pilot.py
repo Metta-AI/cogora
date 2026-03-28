@@ -41,31 +41,61 @@ def _least_resource(resources: dict[str, int]) -> str:
 class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     """Optimized agent policy: aggressive alignment with scrambler defense."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_budget_change_step = 0
+        self._current_aligner_budget = 2  # Start conservative
+
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         resources = _shared_resources(state)
         least = _least_resource(resources)
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Fixed pressure budgets — no oscillation, v118."""
+        """Economy-responsive with hysteresis to prevent gear churn — v120."""
         step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
 
-        # Phase 1: First 10 steps — all mine to build economy
+        # Phase 1: Economy bootstrap
         if step < 10:
             return 2, 0
 
-        # Phase 2: Steps 10-300 — 5 aligners, 0 scramblers, 3 miners
-        # No economy-based scaling to prevent gear churn
-        if step < 300:
-            return 5, 0
+        # Phase 2: Early ramp
+        if step < 50:
+            aligner_budget = 4 if min_res >= 3 else 3
+            return aligner_budget, 0
 
-        # Phase 3: Steps 300+ — 4 aligners, 1 scrambler, 3 miners
-        # Fixed budgets: aligners mine in emergency without gear switching
+        # Phase 3: Steady state with hysteresis
+        # Scale UP to 5 only when economy is strong (min_res >= 5)
+        # Scale DOWN to 4 only when economy is dire (min_res < 1)
+        # This wide hysteresis band [1, 5] prevents oscillation
+        desired = self._current_aligner_budget
+        if min_res >= 5:
+            desired = 5
+        elif min_res < 1 and not _h.team_can_refill_hearts(state):
+            desired = 3
+        elif min_res < 1:
+            desired = 4
+
+        # Only change if enough time has passed (200 step cooldown)
+        if desired != self._current_aligner_budget:
+            if step - self._last_budget_change_step >= 200 or desired < self._current_aligner_budget:
+                self._current_aligner_budget = desired
+                self._last_budget_change_step = step
+
+        aligner_budget = self._current_aligner_budget
+        scrambler_budget = 0
+
+        # Add scrambler at step 300 (takes 1 slot from aligners)
+        if step >= 300:
+            scrambler_budget = 1
+            aligner_budget = min(aligner_budget, 4)  # Cap at 4 when scrambler active
+
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":
-            return 2, 0
-        return 4, 1
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
         """Miners: retreat if too far from hub (prevent deaths in dangerous territory)."""
