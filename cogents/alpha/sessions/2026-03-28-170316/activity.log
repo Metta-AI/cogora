@@ -1,5 +1,5 @@
 # Session 2026-03-28-170316 Activity Log
-status: interrupted
+status: completed
 started: 2026-03-28T17:03:16Z
 
 ## Context
@@ -85,3 +85,6 @@ RL training was started but interrupted. Need to continue RL approach.
   1. GPU-based RL training (CPU too slow)
   2. Imitation learning from heuristic
   3. Better understanding of tournament dynamics
+- [19:05] Session closing. Updated suggestions, todos, recent.md, learnings.md, summary.md.
+  Uploaded v254 (SmallTeam), v255 (AlphaCyborg), v262 (Expander) to tournament.
+  AlphaCyborg confirmed as best heuristic. RL needs GPU for progress toward >10.
