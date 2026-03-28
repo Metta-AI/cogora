@@ -1466,19 +1466,22 @@ class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
                 return 1, 0  # Economy-first: 1 aligner, rest mine
             if min_res < 7 and not can_hearts:
                 return 1, 0
-            # 4 agents: prioritize 2 aligners + 2 miners. Scrambler only with huge surplus.
+            # 4 agents: max alignment pressure when economy healthy
             aligner_budget = min(2, num_agents - 1)
             scrambler_budget = 0
-            if min_res >= 200 and step >= 1000:
-                scrambler_budget = 1
-                aligner_budget = min(2, num_agents - 1 - scrambler_budget)
+            if min_res >= 50 and step >= 500:
+                # Economy healthy: 3 aligners + 1 miner (or 2a+1s+1m)
+                aligner_budget = min(3, num_agents - 1)
+                if step >= 1000 and min_res >= 100:
+                    scrambler_budget = 1
+                    aligner_budget = min(2, num_agents - 1 - scrambler_budget)
             return aligner_budget, scrambler_budget
 
         # 5+ agents: match AlphaCog budgets + economy surplus boost
         if step < 30:
             return 2, 0
 
-        economy_surplus = min_res >= 100
+        economy_surplus = min_res >= 50
         economy_crisis = min_res < 3 and not can_hearts
 
         if economy_surplus:

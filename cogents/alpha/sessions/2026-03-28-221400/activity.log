@@ -25,3 +25,11 @@
   Enemy only reaches 7 junctions (vs 18 for Aggressive).
   Wider exploration + bridge expansion + no hub-distance limit = key improvements.
   Running multi-seed validation (seeds 42, 123, 777) for Explorer, Aggressive, 4a/8a.
+- [2026-03-28 22:42] Multi-seed results DEBUNK initial Explorer result:
+  Explorer 8a: avg 3.85 (2.15, 4.53, 4.87) vs Aggressive 8a: avg 5.86 (4.09, 5.53, 7.95)
+  Aggressive wins ALL 3 seeds. Wider exploration sends agents too far → slower start.
+  Initial result was misleading due to seed variance.
+- [2026-03-28 22:43] Bridge scoring also WORSE: avg 3.66 vs 5.86 (sends agents to distant clusters).
+  Reverted to original nearest-junction expansion.
+- [2026-03-28 22:45] Trying lower economy_surplus threshold (100→50) for earlier max-pressure.
+  Also 4a improvement: 3 aligners when economy healthy (step>500, min_res>=50).
