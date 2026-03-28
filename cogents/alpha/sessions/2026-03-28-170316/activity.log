@@ -45,3 +45,14 @@ RL training was started but interrupted. Need to continue RL approach.
   gtlm-reactive, coglet-v0:v7. Leaderboard requires auth.
 - [17:55] Key insight: heuristic ceiling confirmed at ~3-5 for clips self-play.
   Best seed (5) hit 8.54 — map-dependent. RL is still the path to >10.
+- [18:08] Killed main RL training (SPS collapsed to 1.2K, 7h remaining).
+  Found checkpoint at epoch 200 (18.8M steps): model_000200.pt
+- [18:10] Testing RL checkpoint in clips mode — extremely slow inference, zero rewards.
+  RL only trained 200 epochs, not enough to learn scoring behavior.
+- [18:10] Uploaded v255 (AlphaCyborg) to tournament.
+- [18:10] Arena training killed too (CPU competition). Single training job on CPU is impractical.
+- [18:10] KEY REALIZATION: RL training needs GPU or much more time. On CPU:
+  - 50M steps takes ~7h (after 18M steps)
+  - 200 epochs isn't enough (need 1000+ for meaningful game behavior)  
+  - CPU-only SPS degrades as policy grows (1.2K vs initial 14K)
+  Heuristic improvements are the pragmatic path for now.
