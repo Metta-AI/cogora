@@ -60,3 +60,9 @@ Need fundamentally different approach to reach >10.
 - [16:55] RL training restarted on 4-agent machina_1 (100M steps). Running in background.
 - [16:55] Key tournament finding confirmed: 75% 4-agent games, 25% 8-agent.
   Recent versions settling at 2.0-2.4 with 36 matches.
+- [17:00] **10k comparison on seed 5, 4 agents: SmallTeam 6.47 vs AlphaCyborg 3.70!**
+  SmallTeam is 75% better at longer games! Early alignment pays off over 10k steps.
+  Tournament uses 10k steps, so SmallTeam may be significantly better.
+- [17:00] Running broader 10k comparison (5 seeds, 4 agents) for confirmation.
+- [17:00] RL training at 3.1M steps, entropy ~1.3. Will take ~2.8h total for 100M.
+- [17:00] 4-agent wipe test (10 seeds): 1/10 wipes. Average excluding wipe: 1.44.
