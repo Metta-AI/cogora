@@ -36,3 +36,15 @@ status: in-progress
 - [15:23] All radical new strategies (FlashRush, EconDominance, ScrambleDominance) WORSE.
   The existing AlphaCyborg policy is well-tuned for local play.
   Problem: local improvements don't translate to tournament (all converge 2.0-2.3).
+- [15:26] VT 10k clips results: 4.16, 1.97, 1.36, 2.35, 7.91 → avg 3.55 (better than 5k's 3.18)
+- [15:27] **LEADERBOARD**: v65 at 3.59 (#1), all recent v200+ at 2.0-2.2. Gap is fundamental.
+  slanky:v112=2.67, Paz-Bot=2.64, swoopy=2.43. Nobody near 10.
+- [15:28] **KEY EXPERIMENT**: Pinning old deps (cogames/mettagrid 0.19.x) in setup_policy.py
+  to test if v65's advantage is from older game engine mechanics.
+- [15:29] Uploaded v231-v235:
+  - v231: AlphaCyborg (current deps)
+  - v232: AlphaTournament (current deps)
+  - v233: AlphaCyborg (old deps 0.19)
+  - v234: AlphaTournament (old deps 0.19)
+  - v235: V65PurePolicy (old deps 0.19)
+  If old deps hypothesis correct, v233-v235 should score >> v231-v232.
