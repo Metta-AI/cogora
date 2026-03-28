@@ -1121,6 +1121,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_budget_change_step = 0
+        self._last_bias_resource: str | None = None
         # Init budget adapts to team size, capped to leave 1 miner
         num_agents = self.policy_env_info.num_agents
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
@@ -1135,6 +1136,36 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
         count = self._shared_hotspots.get(rel, 0)
         return -min(count, 3)
+
+    def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
+        """Clear sticky target when resource priority changes significantly.
+
+        Fixes: miners get locked to wrong resources via sticky targets even when
+        a critical resource hits 0. This wastes mining capacity.
+        """
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        least_amount = resources[least]
+
+        if (
+            self._sticky_target_kind is not None
+            and self._sticky_target_kind.endswith("_extractor")
+        ):
+            current_resource = self._sticky_target_kind.removesuffix("_extractor")
+            if current_resource != least:
+                if least_amount < 7:
+                    self._clear_sticky_target()
+                elif least_amount > 0:
+                    max_amount = max(resources.values())
+                    if resources[current_resource] > max_amount * 0.8 and least_amount < max_amount * 0.5:
+                        self._clear_sticky_target()
+
+        if self._last_bias_resource is not None and self._last_bias_resource != self._resource_bias:
+            if least_amount < 14:
+                self._clear_sticky_target()
+        self._last_bias_resource = self._resource_bias
+
+        return super()._preferred_miner_extractor(state)
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
         """Less conservative retreat (margin=15) + miner hub-distance check."""
