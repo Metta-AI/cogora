@@ -97,7 +97,17 @@ status: interrupted
 - Matches running against Paz-Bot, slanky, swoopy, and older alpha versions
 - Score goal >10 seems very ambitious (leader is 2.99)
 
+## v130: Conservative Budget for Small Teams
+- Hypothesis: v65 (rank #1, 2.99) used 1 aligner + 3 miners in 4-agent mode
+- More miners = more resources = more hearts = more alignment time
+- v130: max_pressure = num//2 for <=4 agents, num-2 for 5+ agents
+- v130 4-cog seed 1: 3.50 (up from 3.14 in v123, 1.38 in v124!)
+- Also: v120 appeared at rank #2 (2.92, 7 matches) — from concurrent session!
+- Uploaded v122 (base policy), v123 (v129 AlphaCyborg), v124 (v130 AlphaCyborg)
+- Running more 4-cog tests with v130
+
 ## Strategy Going Forward
-- Focus on climbing leaderboard (currently #9 with v110)
-- The v65-v75 era had higher scores — investigate why
-- Key: variable team sizes require robust budget logic
+- v130 conservative budgets showing promise for small teams
+- Need to verify it doesn't hurt 8-agent performance (8-agent max_pressure=6, still good)
+- Monitor leaderboard: v120 at #2 (2.92), our v110 at #10 (2.52)
+- Keep uploading, tournament signal is most valuable
