@@ -2,67 +2,22 @@
 status: in-progress
 
 ## Plan
-1. Check tournament results for v179-v193
-2. Run free-play to validate current policy  
-3. Iterate based on findings — focus on 5-aligner config
-4. Upload improvements to tournament
+1. Understand tournament scoring vs local scoring gap
+2. Make v65-beating policy for tournament
+3. Upload and iterate based on tournament results
 
 ## Activity
-- [12:12] Session started. Previous session (110102) was interrupted — recovered.
-- [12:18] Environment setup: fixed missing packages (anthropic, openai).
-- [12:20] Baseline 5k test: [6.11, 2.01, 1.98, 5.77, 2.62] avg=3.70
-<<<<<<< Updated upstream
-- [12:25] Analyzed seed 2 (low scorer): germanium bottleneck → hearts collapse → all aligners become miners
-- [12:28] BUG FOUND: AlphaCogAgentPolicy has hotspot_weight=8.0 but doesn't flip count → penalizes re-alignment instead of boosting it!
-- [12:30] Improvements applied:
-  1. Fixed hotspot count flip (re-alignment boost was broken)
-  2. Resource-responsive budget: < 7 min_res → reduce pressure, < 1 → emergency mining
-  3. Late-game 2nd scrambler delayed to step 5000 (was 3000) and requires min_res >= 30
-  4. Lower deposit threshold (12 vs 16) for faster economy turnover
-- [12:31] Running v2 tests with fixes.
-- [12:40] V3 5k results: [6.43, 3.07, 1.21, 0.00(wipe), 5.90] avg(no-wipe)=4.15 vs baseline 3.70
-- [12:42] Seed 4 wipe confirmed deterministic (known bug, ~7% seeds)
-- [12:43] 10k games crashed at step 5-6k (killed by system). Mid-run reward ~6.68.
-- [12:44] Key improvement: hotspot flip from penalty→bonus, lower deposit threshold (12)
-- [12:44] Reverted resource-responsive budget (caused death spiral on seed 3)
-- [12:45] Late 2nd scrambler delayed to step 5000 w/ min_res >= 30 (was 3000)
-- [12:46] Uploading v3 to tournament for competitive evaluation.
-- [12:50] (Second worker) Safer expand-toward-junction: 10k results 8.76, 2.61, 15.04, 3.93, 16.57 → avg 9.38
-- [12:55] Uploaded v196 (safer expansion + all fixes). Two seeds above 15!
-- [12:50] V4 results: [8.52, 6.25, 6.10, 3.21] avg=6.02 (+89% over baseline 3.18!)
-- [12:50] KEY FIX: idle aligners mine instead of explore → massive economy boost
-- [12:51] Uploaded v197 to tournament.
-- [13:00] 10k single seed: seed 6 = 6.39
-- [13:01] Wipe bug investigation: HP drops to 0 despite hub proximity. Map/engine issue, not fixable in policy.
-- [13:01] 5-game 10k runs killed by system (OOM?) — running 1-2 at a time instead.
-- [13:02] Idle-aligner-mine is the biggest improvement: seed 2 went from 2.01→6.25, seed 3 from 1.98→6.10.
-- [13:00] 10k single seed: seed 6 = 6.39
-- [13:01] Wipe bug investigation: HP drops to 0 despite hub proximity. Map/engine issue, not fixable in policy.
-- [13:01] 5-game 10k runs killed by system (OOM?) — running 1-2 at a time instead.
-- [13:02] Idle-aligner-mine is the biggest improvement: seed 2 went from 2.01→6.25, seed 3 from 1.98→6.10.
-- [13:15] 10k results (v4 = v197): seed 6=6.39, seed 7=2.38, seed 8=13.27, seed 9=4.58, seed 10=0.00(wipe)
-- [13:15] 10k avg (no-wipe): 6.66. Best: 13.27 (seed 8). High variance.
-- [13:15] 10k results (v4 = v197): seed 6=6.39, seed 7=2.38, seed 8=13.27, seed 9=4.58, seed 10=0.00(wipe)
-- [13:15] 10k avg (no-wipe): 6.66. Best: 13.27 (seed 8). High variance.
-=======
-- [12:28] BUG: hotspot_weight=8 without count flip → penalizes re-alignment.
-- [12:30] Fixes: hotspot flip, resource-responsive budget, late 2nd scrambler, lower deposit.
-- [12:40] V3 5k results: avg(no-wipe)=4.15 vs baseline 3.70
-- [12:44] Reverted resource-responsive budget (death spiral on seed 3).
-- [12:50] KEY FIX: idle aligners mine instead of explore → seed 2: 2.01→6.25, seed 3: 1.98→6.10
-- [12:55] v196 (safer expansion): 10k avg=9.38, two seeds above 15!
-- [12:55] v197 uploaded (idle-mine + all fixes).
-- [13:00] Worker 2: 10-seed 10k avg=5.84 (old code). v194 uploaded.
-- [13:05] Worker 2: 10k seed 1=12.68 (with idle-mine+hotspot flip). Uploaded v199.
-- [13:05] Tournament: Paz-Bot-9005, slanky:v112 matches still running. Waiting for results.
-- [13:10] **LEADERBOARD CHECK — CRITICAL FINDING:**
-  - #1: v65 at 3.59 (516 matches) — old simple policy still winning!
-  - v193: 2.41 (#57), v197: 2.21 (#108), v194: 1.90 (#147)
+- [12:12] Session started.
+- [12:20] Baseline 5k test: avg=3.70
+- [12:28] BUG: hotspot_weight=8 without count flip.
+- [12:30] Fixes: hotspot flip, idle-mine, late scrambler, lower deposit.
+- [12:50] KEY FIX: idle aligners mine → +89% improvement locally
+- [12:55] v196/v197 uploaded with all fixes.
+- [13:00] 10k results with fixes: avg 5-9 locally, high variance.
+- [13:10] **LEADERBOARD — v65 still #1 at 3.59 (516 matches)**
+  - All "improvements" (v193=2.41, v197=2.21) score WORSE than v65
   - slanky: 2.57 (#24), Paz-Bot: 2.53 (#28)
-  - All "improvements" (hotspot flip, stable budgets, expand-toward, idle-mine) score WORSE in tournament
-- [13:12] **STRATEGY PIVOT**: Local self-play gains don't translate to tournament.
-  v65's simple approach (default targeting, basic budgets) handles variable tournament conditions better.
-- [13:15] Uploaded v200 (AlphaV65TrueReplicaPolicy) to try to match v65's tournament performance.
-- [13:15] Key difference: tournament has variable team sizes (2v6, 4v4, 6v2) and opponent strategies.
-  Our "improvements" may over-fit to 8v8 self-play.
->>>>>>> Stashed changes
+  - Local self-play avg=5-9 but tournament avg=2-3
+- [13:12] Strategy pivot: local gains don't translate to tournament.
+- [13:15] Uploaded v200 (V65TrueReplica) to match v65's proven approach.
+- [13:15] Need to understand: what makes v65 work in tournament that newer versions don't?
