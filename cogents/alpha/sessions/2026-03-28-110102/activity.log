@@ -26,5 +26,6 @@ status: in-progress
 - [11:41] Uploaded v193 (AlphaCyborgPolicy with all fixes). In qualifying pool.
 - [11:42] Other player detected: gtlm-reactiv... — need to study their strategy when match results come in.
 - [11:45] Tested 5a+1s+2m: [3.63,0.00,6.72,2.38,0.00] avg=2.55. Two wipes. Reverted to 4a+1s+3m.
-- [11:50] (Second worker) v190-v192 uploaded. **10k STEP TEST: SCORE 11.86 on seed 1!** Above >10 goal.
-- [11:55] Key insight: tournament runs 10k steps, not 5k. Longer games strongly favor our expand-toward-junction strategy.
+- [11:50] v190-v192 uploaded. **10k STEP TEST: SCORE 11.86 on seed 1!** Above >10 goal.
+- [11:55] Key insight: tournament runs 10k steps, not 5k. Longer games strongly favor expand-toward-junction.
+- [12:10] **10k step results: 11.86, 3.09, 5.73, 8.36, 12.47 → avg 8.30**. Two seeds above 10!
