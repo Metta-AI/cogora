@@ -114,60 +114,66 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
 
 # Keep these for backwards compatibility with tournament uploads
 class AnthropicPilotAgentPolicy(PilotAgentPolicy):
-    _LLM_ANALYSIS_INTERVAL = 500  # Run LLM analysis every N steps
 
-    def _macro_directive(self, state: MettagridState) -> MacroDirective:
-        resources = _shared_resources(state)
-        least = _least_resource(resources)
-        directive = MacroDirective(resource_bias=least)
-
-        # Periodic LLM analysis — logs opinions without overriding strategy
-        step = state.step or self._step_index
-        if step > 0 and step % self._LLM_ANALYSIS_INTERVAL == 0:
-            self._run_llm_analysis(state, directive)
-
-        return directive
-
-    def _run_llm_analysis(self, state: MettagridState, current_directive: MacroDirective) -> None:
-        """Ask the LLM to analyze game state and log insights."""
-        try:
-            llm_directive = self._pilot_session.directive_for_state(state, memory=self._memory)
-            print(
-                f"[LLM] step={state.step} agent={self._agent_id} "
-                f"llm_objective={llm_directive.objective} "
-                f"llm_bias={llm_directive.resource_bias} "
-                f"llm_note={llm_directive.note} "
-                f"heuristic_bias={current_directive.resource_bias}",
-                flush=True,
-            )
-        except Exception as e:
-            print(f"[LLM] step={state.step} agent={self._agent_id} error={e}", flush=True)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_budget_change_step = 0
+        self._current_aligner_budget = 2  # Start conservative
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Economy-responsive with hysteresis to prevent gear churn — v120."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
 
+        # Phase 1: Economy bootstrap
         if step < 10:
             return 2, 0
-        if step < 50:
-            aligner_budget = 4 if min_res >= 5 else 3
-            return aligner_budget, 0
-        if min_res < 1 and not _h.team_can_refill_hearts(state):
-            return 3, 0
 
-        aligner_budget = 5
+        # Phase 2: Early ramp
+        if step < 50:
+            aligner_budget = 4 if min_res >= 3 else 3
+            return aligner_budget, 0
+
+        # Phase 3: Steady state with hysteresis
+        desired = self._current_aligner_budget
+        if min_res >= 5:
+            desired = 5
+        elif min_res < 1 and not _h.team_can_refill_hearts(state):
+            desired = 3
+        elif min_res < 1:
+            desired = 4
+
+        # Only change if enough time has passed (200 step cooldown)
+        if desired != self._current_aligner_budget:
+            if step - self._last_budget_change_step >= 200 or desired < self._current_aligner_budget:
+                self._current_aligner_budget = desired
+                self._last_budget_change_step = step
+
+        aligner_budget = self._current_aligner_budget
         scrambler_budget = 0
-        if min_res < 5:
-            aligner_budget = 4
-        if step >= 400 and min_res >= 5:
+
+        # Add scrambler at step 300 (takes 1 slot from aligners)
+        if step >= 300:
             scrambler_budget = 1
-            aligner_budget = min(aligner_budget, 4)
+            aligner_budget = min(aligner_budget, 4)  # Cap at 4 when scrambler active
 
         if objective == "resource_coverage":
             return 0, 0
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
         return aligner_budget, scrambler_budget
+
+    def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
+        """Miners: retreat if too far from hub."""
+        if super()._should_retreat(state, role, safe_target):
+            return True
+        if role == "miner" and safe_target is not None:
+            pos = _h.absolute_position(state)
+            dist = _h.manhattan(pos, safe_target.position)
+            hp = int(state.self_state.inventory.get("hp", 0))
+            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 10:
+                return True
+        return False
 
 
 class AnthropicCyborgPolicy(PilotCyborgPolicy):

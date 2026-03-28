@@ -20,3 +20,13 @@ status: in-progress
   - No current_aligner_budget tracking
 - Tournament: all matches still running/scheduled, v106 qualifying, v110+ competing
 - Need to: update AnthropicPilotAgentPolicy pressure_budgets to match v120 improvements
+
+## v121: Updated AnthropicPilotAgentPolicy
+- Synced AnthropicPilotAgentPolicy with v120 hysteresis budgets from AlphaCogAgentPolicy
+- Added miner retreat safety (hub distance limit)
+- Scrambler now at step 300 (was 400)
+- Early ramp threshold: min_res >= 3 (was >= 5)
+- Running 5-seed comparison: Alpha vs Anthropic
+- Alpha seed 0: 0.00 (wipeout — all agents died). Wipeout issue persists.
+- Game constants: hub_align=25, junction_align=15, junction_aoe=10
+- Heart cost: 7×4=28 resources per heart
