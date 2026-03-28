@@ -50,8 +50,22 @@ status: interrupted
 - Expansion bonus 8.0/cap 50, faster heart ramp, tighter explore
 - Scores: 5.17, 2.20, 1.74, 3.48, 4.09
 
-## v118 Changes (testing)
-- FIXED budgets: no economy-based oscillation
-- Steps 0-10: 2A, 0S; Steps 10-300: 5A, 0S; Steps 300+: 4A, 1S
-- Reduced miner hub distance: 15 (was 18)
-- Seed 3 root cause: 17 deaths, agent 3 had 18 gear switches from oscillation
+## v118: Fixed budgets — WORSE (avg 1.56), too aggressive early
+## v119: Time-based phases — avg 3.82, good on bad maps but hurt good maps
+
+## v120 Results — NEW BEST (avg 4.67, uploaded as v106)
+- Hysteresis pressure budgets: scale UP at min_res >= 5, DOWN at < 1
+- 200-step cooldown prevents oscillation
+- Miner hub distance: 15 (was 18) — prevents deaths
+- Scores: 4.99, 3.55, 3.02, 5.22, 6.59 → avg 4.67
+
+## Experiment Summary
+| Version | Avg | Best | Key Change |
+|---------|-----|------|-----------|
+| v112 (old baseline) | 2.38 | 3.46 | |
+| v115 | 4.26 | 6.18 | Gear churn fix + hub proximity |
+| v116 | 1.79 | 2.60 | 2 scramblers (worse) |
+| v117 | 3.34 | 5.17 | Expansion bonus (mixed) |
+| v118 | ~1.56 | 1.75 | Fixed budgets (too aggressive) |
+| v119 | 3.82 | 6.09 | Time-based (hurt good maps) |
+| v120 | **4.67** | **6.59** | Hysteresis (BEST) |
