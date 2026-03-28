@@ -1231,8 +1231,8 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
                 return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
-        # No expansion target — explore to find new junctions (avoid gear churn from mining)
-        return self._explore_action(state, role="aligner", summary="idle_explore")
+        # No expansion target — help economy by mining (idle-mine >> idle-explore in practice)
+        return self._miner_action(state, summary_prefix="idle_align_")
 
     def evaluate_state(self, state: MettagridState) -> Action:
         action = super().evaluate_state(state)

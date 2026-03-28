@@ -59,3 +59,10 @@ status: in-progress
   V65Pure, with old vs new deps.
 - [15:33] 4-agent clips: AlphaCyborg=0.65, VT=0.74 — both weak at small teams.
 - [15:33] auto_clips mode doesn't exist. clips mode is the correct PvP test.
+- [15:35] **CRITICAL: idle-explore WORSE than idle-mine for AlphaCyborg!**
+  - CyborgV2 (idle-explore) 10k: 3.77, 4.93, 2.20, 6.80, 0.00 → avg 3.54
+  - Original Cyborg (idle-mine) 10k: 11.01, 1.68, 3.52, 8.53, 15.51 → avg 8.05
+  - Reverted to idle-mine. Idle-mine keeps economy running, offsetting gear churn.
+  - VT3's idle-explore improvement was specific to AlphaTournament, NOT AlphaCyborg.
+- [15:36] Uploaded v238 (AlphaCyborg idle-mine, current deps) and v239 (old deps).
+  v236-v237 have the BAD idle-explore change — those will score worse.
