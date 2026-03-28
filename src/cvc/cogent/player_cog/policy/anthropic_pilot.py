@@ -1313,11 +1313,11 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if min_res < 1 and not can_hearts:
                 pressure_budget = max(3, num_agents // 3)
 
-        # Scramblers: 1 from step 100 if resources stable, 2 only at step 5000+ with healthy resources
+        # Scramblers: 1 scrambler from step 100, 2nd only at step 5000+ with healthy resources
         scrambler_budget = 0
         if step >= 5000 and min_res >= 30:
             scrambler_budget = min(2, pressure_budget // 3)
-        elif step >= 100 and (can_hearts or min_res >= 3):
+        elif step >= 100:
             scrambler_budget = min(1, pressure_budget // 3)
         aligner_budget = max(pressure_budget - scrambler_budget, 0)
         if objective == "economy_bootstrap":

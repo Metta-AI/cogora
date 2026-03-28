@@ -59,3 +59,8 @@ status: in-progress
 - [13:42] V5 reverted. V4 idle-mine is clearly better.
 - [13:45] V6 test (scrambler suppression when resources < 3): avg 5.69 — mixed results, high variance.
 - [13:46] Running 8 more seeds to get better stats for V6.
+- [13:55] V6 scrambler suppression reverted — too noisy to tell if it helps.
+- [13:56] V4b on seeds 6-17: [2.11, 1.53, 7.82, 2.30, 5.41, 6.03, 1.82, 5.69] avg=4.09
+- [13:56] Full V4 12-seed avg: 4.73 (5k self-play)
+- [13:57] Uploaded v209 (V4 = idle-mine + hotspot flip + deposit 12 + delayed 2nd scrambler)
+- [13:58] Tournament now has other players: Paz-Bot-9005, slanky:v112. No results yet.
