@@ -2,6 +2,12 @@
 
 ## Status: completed
 
+### v142: 5 aligners (stable budgets) — 10-seed avg 4.50
+- Config: 5A+1S+2M with stable budgets + deposit 16
+- Results: 3.75, 5.39, 3.25, 3.87, 8.81, 3.30, 3.84, 7.30, 0.00, 5.46
+- Average: 4.50 (between v141's 4.35 and v134's 4.98)
+- Conclusion: hysteresis budgets (v134) still best at 4.98 avg
+
 ### Session Start
 - Reviewed recent.md: v120 at #19 (2.42), local avg 4.10, many interrupted sessions
 - Key todos: investigate v65 era outperformance, optimize for variable team sizes, reduce wipeouts
