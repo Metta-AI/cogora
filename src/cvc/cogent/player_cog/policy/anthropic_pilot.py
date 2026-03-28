@@ -2487,6 +2487,63 @@ class AlphaV65HybridAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
         self._network_weight = 0.0
         self._hotspot_weight = 0.0
 
+    def _choose_action(self, state: MettagridState, role: str) -> tuple[Action, str]:
+        """Override to skip early-game survival code (hub_camp_heal, wipeout_hub_hold).
+
+        V65 doesn't have these — agents play immediately. The survival code
+        wastes early steps and causes permanent stalls at hp=0.
+        """
+        if role not in {"aligner", "miner"}:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+        elif role == "aligner" and self._sticky_target_kind not in {None, "junction"}:
+            self._clear_sticky_target()
+        elif role == "miner" and (
+            self._sticky_target_kind is not None and not self._sticky_target_kind.endswith("_extractor")
+        ):
+            self._clear_sticky_target()
+
+        safe_target = self._nearest_hub(state)
+
+        # Skip early-game survival code — go straight to retreat like v65
+        if self._should_retreat(state, role, safe_target):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if safe_target is not None:
+                safe_distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
+                if safe_distance > 2:
+                    return self._move_to_known(state, safe_target, summary="retreat_to_hub")
+            if _h.has_role_gear(state, role):
+                return self._hold(summary="retreat_hold", vibe="change_vibe_default")
+
+        if self._oscillation_steps >= 4:
+            return self._unstick_action(state, role)
+
+        if self._stalled_steps >= 12:
+            return self._unstick_action(state, role)
+
+        if role != "miner" and _h.needs_emergency_mining(state):
+            return self._miner_action(state, summary_prefix="emergency_")
+
+        if self._should_deposit_resources(state):
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_resources")
+
+        if not _h.has_role_gear(state, role):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_afford_gear(state, role):
+                return self._miner_action(state, summary_prefix=f"fund_{role}_gear_")
+            return self._acquire_role_gear(state, role)
+
+        if role == "aligner":
+            return self._aligner_action(state)
+        elif role == "scrambler":
+            return self._scrambler_action(state)
+        else:
+            return self._miner_action(state)
+
     def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
         """V65 targeting with idle-mine fallback."""
         hearts = int(state.self_state.inventory.get("heart", 0))

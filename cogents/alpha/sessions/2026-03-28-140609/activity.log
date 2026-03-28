@@ -12,41 +12,20 @@ status: in-progress
 ## Activity
 - [14:06] Session started. Previous session (130457) was interrupted — recovered.
 - [14:06] From last session: economy-first budgets fix 4-agent PvP economy collapse.
-  Pickup test with fix: episode 1 = 20 friendly junctions (WIN), ep 2-3 lost (germanium).
-  v207 (buggy station) = 1.89 → confirms station fix NOT the v65 gap.
-  v216 (vanilla base, no overrides) uploaded as control test.
-- [14:08] Key findings so far:
-  - v65 advantage is NOT: team roles, idle-mine, targeting, retreat margin, station fix
-  - ALL new versions (v201-v209) converge to 1.9-2.3 range
-  - v65 at 3.59 with 516 matches was untouchable with current code
-  - v216 (vanilla base) uploaded as control test
-- [14:12] BREAKTHROUGH? v210 at #1 with 5.11 (5 matches) — ABOVE v65's 3.59!
-  v210 was uploaded at 13:58 by concurrent worker. If it holds, this is significant.
-  Still very early (5 matches), could drop like v202 (5.30→1.77). Monitoring.
-- [14:12] Studied starter policy: extremely simple, no role assignment, no budgets.
-  Each agent grabs nearest gear and acts. Our complex policy loses to this in PvP.
-  Takeaway: simplicity and speed > complex optimization
-- [14:18] v210 dropped to 1.93 (37 matches) — same pattern as v202. Early scores unreliable.
-  v65 back at #1 (3.59). All new versions converge to 1.9-2.3.
-- [14:20] Running pickup tests: economy-first cyborg vs starter, vanilla base vs starter
-- [14:25] Pickup results (economy-first AlphaCyborgPolicy vs starter, 5k):
-  - 8v0 (self-play): 5.07
-  - 7v1: 0.74
-  - 4v4: 0.08 (barely winning — was 0 before economy-first fix)
-  - Overall VOR: 1.46
-  4v4 performance is the key weakness. Economy-first helps but not enough.
-- [14:25] v212 (V65+idle-mine+economy-first) entered at #6 with 2.83 (2 matches) — dropped to 2.02
-- [14:25] v210 settled at 2.07 (57 matches)
-- [14:30] **CRITICAL FINDING**: v216 (vanilla MettagridSemanticPolicy, ZERO customizations) at #17 with 2.68 (10 matches)!
-  - v216 (vanilla, no overrides) = 2.68
-  - v211 (economy-first cyborg) = 2.26
-  - v214 (tournament + economy-first) = 2.08
-  - v212 (v65+idle-mine+economy-first) = 2.02
-  **ALL CUSTOMIZATIONS HURT TOURNAMENT PERFORMANCE.**
+- [14:08] v65 advantage NOT: team roles, idle-mine, targeting, retreat margin, station fix
+- [14:12] v210: 5.11 (5 matches) → dropped to 1.93 (37). Early scores unreliable.
+- [14:25] Pickup: AlphaCyborg vs starter 4v4=0.08 — nearly losing to simple policy.
+- [14:30] **CRITICAL**: v216 (vanilla, ZERO customizations) at 2.68 > all customized!
+  ALL CUSTOMIZATIONS HURT TOURNAMENT PERFORMANCE.
   The more customized, the worse it scores. Base policy > all variants.
-- [14:30] Conclusion: the path forward is LESS customization, not more.
-  v65 was likely uploaded with minimal changes from base. Our improvements
-  (idle-mine, hotspot flip, expand-toward, budget tweaks) all HURT in PvP.
-- [14:35] v216 (vanilla) dropped to 2.45 (16 matches) — still settling but still best new version
-- [14:36] Uploaded v219: AnthropicCyborgPolicy (matches v65's policy class) with current code
-  This is the closest match to v65's upload method — same class, same LLM integration
+- [14:30] Conclusion: path forward is LESS customization, not more.
+- [14:35] v216 dropped to 2.45 (16 matches). v219 (AnthropicCyborgPolicy) uploaded.
+- [14:10] (Worker 2) Local 5k: AlphaCyborg=4.81, V65Pure=4.31, Tournament=2.10
+- [14:15] ROOT CAUSE: AlphaTournament starts 1-2 aligners. V65 starts with 4.
+- [14:18] Created AlphaV65HybridPolicy: v65 budgets + idle-mine + team-aware
+- [14:20] Uploaded v217 (hybrid team-aware), v218 (hybrid global)
+- [14:25] FIX: Override _choose_action to skip survival code (hub_camp_heal,
+  wipeout_hub_hold). Survival code stalls agents permanently at hp=0.
+- [14:30] Fixed hybrid seed 1: wipe → 5.18! Seed 4 wipe → 3.22!
+- [14:35] NEW STRATEGY: Since all customizations hurt tournament, try minimalist approach.
+  Upload vanilla base variants. Test what v65 actually looked like.
