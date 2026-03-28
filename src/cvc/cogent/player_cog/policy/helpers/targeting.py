@@ -34,6 +34,7 @@ def aligner_target_score(
     enemy_junctions: list[KnownEntity],
     claimed_by_other: bool,
     hub_position: tuple[int, int] | None = None,
+    friendly_junctions: list[KnownEntity] | None = None,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     expansion = sum(
@@ -56,12 +57,20 @@ def aligner_target_score(
             hub_penalty = (hub_dist - 10) * 1.5 + 2.0  # Moderate cost mid-ring
         else:
             hub_penalty = hub_dist * 0.3  # Mild preference for closer junctions
+    # Bonus for adjacency to friendly network: denser clusters are more defensible
+    adjacency_bonus = 0.0
+    if friendly_junctions:
+        adjacent = sum(
+            1 for f in friendly_junctions if manhattan(candidate.position, f.position) <= _JUNCTION_AOE_RANGE
+        )
+        adjacency_bonus = min(adjacent * 3.0, 15.0)  # Up to 15 point bonus for well-connected positions
     return (
         distance
         - min(expansion * 5.0, 30.0)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
-        + hub_penalty,
+        + hub_penalty
+        - adjacency_bonus,
         -float(expansion),
     )
 
