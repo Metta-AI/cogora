@@ -1,19 +1,20 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (heuristic ceiling ~2.8, need trained RL)
+- [ ] Achieve score > 10 in CogsVsClips (heuristic ceiling ~4 avg, need trained RL)
 - [ ] **GPU-accelerated RL training** — CPU too slow. Need 1000+ epochs for scoring behavior.
-- [ ] **Monitor v291/v292/v285 tournament convergence** — AlphaOptimal, V65Exact, V65Replica
-- [ ] **Reduce agent deaths** — Miner agent 6 died 7 times in one game. Tighter retreat + hub distance.
-- [ ] **Anti-clips positioning** — Prioritize junctions far from clips ships (radius 15 spread)
+- [ ] **Monitor v287/v295/v299/v301 tournament results** — AlphaAggressive variants vs opponents
+- [ ] **Solve silicon depletion** — Only 45 silicon extractors. Economy collapses step 3500+.
+  Junction count drops 25→7. Need proactive silicon mining or resource conservation.
+- [ ] **Better junction discovery** — Only reaching ~32/65 junctions. Network plateau at 50% coverage.
+  Need smarter exploration patterns to find distant junction clusters.
 - [ ] **Fix LLM API access** — AnthropicCyborgPolicy API calls fail locally.
 - [ ] **Curriculum training** — Start on tutorial.aligner/miner, transfer to machina_1.
 - [ ] **Shaped rewards** — Intermediate rewards for resource collection, hearts, gear, alignment.
 - [ ] **Imitation learning** — Use heuristic as teacher, fine-tune with RL.
-- [ ] **Late-game silicon depletion** — Only 45 silicon extractors vs 50-58 others.
-- [x] CONFIRMED: Both players get same score (cooperative, all agents on same team)
-- [x] CONFIRMED: Clips = 4 ships, 70-tick cycle, radius 15 network spread
-- [x] CONFIRMED: AlignMax (more aligners) = economy starvation, WORSE than baseline
-- [x] CONFIRMED: V65 hub_penalty targeting better in tournament (compact networks)
-- [x] CONFIRMED: Heuristic ceiling at ~2.8 across all variants tested
-- [x] CONFIRMED: Massive seed variance (1.5-14.7 on same policy) dominates
-- [x] CONFIRMED: Scrambler hearts are significant cost (87 hearts for 84 scrambles)
+- [x] CREATED: AlphaAggressivePolicy — 4a +112% (2.37 vs 1.12), 8a +14% (3.97 vs 3.47)
+- [x] CONFIRMED: Idle-mining wastes 60%+ of aligner time when frontier=0
+- [x] CONFIRMED: Early heart batching (3 hearts) delays first alignment by ~50 steps
+- [x] CONFIRMED: Hub accumulates 500+ resources while only 14 junctions aligned
+- [x] CONFIRMED: Economy warning modes hurt 4-agent (too aggressive pullback)
+- [x] CONFIRMED: Heuristic ceiling at ~4 avg, ~5 peak (single seed)
+- [x] CONFIRMED: Seed variance 2-3x (1.48 vs 2.98 on same policy, same agent count)

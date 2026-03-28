@@ -2,5 +2,7 @@ status: in-progress
 2026-03-28 21:15:00 - Created AlphaAggressivePolicy (no early heart batch, idle-scramble, economy-aware).
 2026-03-28 21:28:00 - Uploaded v287-v301 to tournament.
 2026-03-28 21:45:00 - First comparison: Aggressive avg 3.12, Cyborg avg 2.29. +36% improvement.
-2026-03-28 21:55:00 - Simplified budgets (v7/v301). Partial v7 comparison: 4a avg 2.37 (2.98, 1.48, 2.65), 8a seed1=3.13.
-2026-03-28 22:00:00 - Running v7 8a seeds 2-3. Tournament matches still running (~20 active).
+2026-03-28 21:55:00 - Simplified budgets (v7/v301).
+2026-03-28 22:05:00 - v7 comparison: 4a avg 2.37 (2.98, 1.48, 2.65), 8a avg 3.97 (3.13, 4.88, 3.90).
+2026-03-28 22:10:00 - Tournament matches still running (~20 active). No results yet.
+status: completed
