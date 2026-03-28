@@ -85,3 +85,11 @@ status: in-progress
 - Wipe fix: too complex, ~7% rate, marginal impact
 - Created AggroBoostPolicy but it's inferior to StableBoost
 - Tournament: v171 + v174 running, all against v30-v46 opponents, no results yet
+
+## ZoneBoost results — SEED 5 BROKE 10!
+- Zone-based aligner targeting: each aligner prefers junctions in their N/E/S/W sector
+- Seed 5 = 10.63 (ABOVE >10 TARGET!)
+- Full results: 1.74, 1.44, 4.21, 3.06, 10.63 → avg 4.22
+- Hurts seed 1 badly (4.90→1.74) but boosts seed 5 (9.23→10.63)
+- Zone bonus = 6.0 might be too strong — try tuning
+- Uploaded ZoneBoost as v176

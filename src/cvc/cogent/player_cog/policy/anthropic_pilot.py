@@ -887,6 +887,99 @@ class AlphaStableBoostAgentPolicy(AlphaRealignBoostAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaZoneBoostAgentPolicy(AlphaStableBoostAgentPolicy):
+    """StableBoost with zone-based aligner targeting.
+
+    Each aligner prefers junctions in their assigned sector (N/E/S/W),
+    reducing travel time, target conflicts, and enabling faster re-alignment
+    of recently scrambled junctions in their patrol area.
+    """
+
+    # Zone assignment by agent_id (angles in degrees, 0=North, clockwise)
+    _ZONE_ANGLES = {
+        0: 0,    # N
+        1: 90,   # E
+        2: 180,  # S
+        4: 270,  # W
+        5: 45,   # NE (5th aligner)
+    }
+    _ZONE_BONUS = 6.0  # Score bonus for junctions in agent's zone
+
+    def _zone_score_bonus(self, entity: KnownEntity, hub: KnownEntity | None) -> float:
+        """Return negative bonus (lower score = better) for junctions in agent's zone."""
+        if hub is None or self._agent_id not in self._ZONE_ANGLES:
+            return 0.0
+        import math
+        dx = entity.global_x - hub.global_x
+        dy = entity.global_y - hub.global_y
+        if dx == 0 and dy == 0:
+            return 0.0
+        # Angle from hub to junction (0=North, clockwise)
+        angle = math.degrees(math.atan2(dx, -dy)) % 360
+        zone_angle = self._ZONE_ANGLES[self._agent_id]
+        # Angular distance (0-180)
+        diff = abs(angle - zone_angle)
+        if diff > 180:
+            diff = 360 - diff
+        # Bonus scales with proximity to zone center: full bonus at 0°, none at 90°+
+        if diff >= 90:
+            return 0.0
+        return -self._ZONE_BONUS * (1.0 - diff / 90.0)
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """Standard targeting + zone preference bonus."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity
+            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
+                    expansion_weight=self._expansion_weight,
+                    expansion_cap=self._expansion_cap,
+                )[0] + self._zone_score_bonus(entity, hub),
+                entity.position,
+            ),
+        )
+
+
 class AlphaAggroBoostAgentPolicy(AlphaStableBoostAgentPolicy):
     """StableBoost with more aggressive heart batching and faster ramp.
 
@@ -1446,6 +1539,23 @@ class AlphaStableBoostPolicy(MettagridSemanticPolicy):
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaStableBoostAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaZoneBoostPolicy(MettagridSemanticPolicy):
+    """StableBoost with zone-based aligner targeting."""
+    short_names = ["alpha-zone-boost"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaZoneBoostAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
