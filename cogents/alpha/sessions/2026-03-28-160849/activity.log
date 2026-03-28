@@ -128,3 +128,10 @@ Need fundamentally different approach to reach >10.
 - [18:23] RL training at 30.9M steps (31%). Hearts: 1.33-1.50/agent, hub withdrawals: 5.0.
   Agent economy loop is solid. Need junction alignment to improve.
 - [18:23] Tournament stable: v253=2.20, v251=2.20, v250=2.19, v252=2.14 (54 matches each).
+- [18:28] RL training at 34.5M steps (35%). **CONCERN: entropy collapsed to 0.46.**
+  Agent may have premature convergence to local optimum (mining/surviving only).
+  Junction alignments: still 1-2/episode — no improvement from 16M.
+  Hearts: variable 0.25-1.5/agent. Economy learning but not translating to scoring.
+  Env time 83% of total — simulation is bottleneck.
+- [18:28] May need: higher entropy coefficient, curriculum learning, or shaped rewards
+  to break the local optimum and learn to align junctions.
