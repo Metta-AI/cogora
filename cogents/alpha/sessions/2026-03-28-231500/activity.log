@@ -43,7 +43,18 @@
 - [2026-03-28 23:50] v308 (extractor fix) 5-seed results:
   8a avg: 6.08 (7.97, 4.85, 5.55, 2.64, 9.40)
   4a avg: 3.50 (2.99, 2.46, 4.73, 2.20, 5.10)
-  Fix mostly helps edge cases. Still no tournament results.
+  Fix mostly helps edge cases.
+- [2026-03-28 23:58] LEADERBOARD CHECK:
+  #1 v290 (Aggressive): 6.54 (67 matches)
+  #2 v309 (AdaptiveV3): 5.95 (21 matches)
+  #3 v287 (Aggressive): 5.86 (68 matches)
+  #5 v310 (Balanced): 4.27 (16 matches)
+  v311/v312 still qualifying, not on board yet.
+  Best non-alpha: slanky:v112 at 2.90. We dominate but need >10.
+  Tournament scores higher than local (6.54 tournament vs 2.55 local for Aggressive)
+  because real opponents are weaker than clips AI.
+  ChainDefense multi-seed: avg 4.91 (5.50, 6.21, 3.00) — consistent on hard seeds.
+  ChainExpand multi-seed: avg 4.54 (2.09, 5.99, 5.54).
 - [2026-03-28 23:55] Multi-seed 8a comparison (seeds 42/123/777):
   AdaptiveV3:   avg 5.26 (1.84, 5.13, 8.81)
   ChainExpand:  avg 4.54 (2.09, 5.99, 5.54)
