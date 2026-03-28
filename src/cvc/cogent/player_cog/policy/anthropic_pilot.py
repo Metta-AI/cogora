@@ -1124,11 +1124,9 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         # Init budget adapts to team size, capped to leave 1 miner
         num_agents = self.policy_env_info.num_agents
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
-        # Match StableBoost + stronger expansion
+        # Match StableBoost proven config
         self._hotspot_weight = 8.0   # Re-alignment boost (flip hotspot to bonus)
         self._network_weight = 0.0   # No network proximity penalty (allows expansion)
-        self._expansion_weight = 15.0  # Stronger expansion preference
-        self._expansion_cap = 90.0     # Higher expansion bonus cap
 
     def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
         """Re-alignment boost: prioritize recently scrambled junctions.

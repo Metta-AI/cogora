@@ -19,3 +19,6 @@ status: in-progress
 - [11:20] 5-seed baseline: AlphaCyborg(old)=[4.46,1.38,2.37,0.00,6.40] avg=2.92, StableBoost=[7.20,3.51,1.56,2.26,7.01] avg=4.31
 - [11:22] Found key differences: AlphaCog had network_weight=0.5 (StableBoost=0.0) and retreat_margin=20 (StableBoost=15). Fixed both.
 - [11:25] Updated AlphaCogAgentPolicy: network_weight=0, retreat_margin=15, full _should_retreat override. Testing...
+- [11:30] Updated AlphaCyborg+expansion=15/90: seeds=[6.91,3.06,0.00,0.00,2.58] avg=2.51. Expansion=15 causes wipes!
+- [11:35] Reverted expansion to default 10/60. Seeds 3,4 retested: 6.96, 4.10 (was 0.00, 0.00). Huge fix.
+- [11:37] Running seeds 1,2,5 with final config. Key changes from old code: network_weight=0, retreat_margin=15, re-alignment boost, stable budgets, lower deposit, expand-toward-junction.
