@@ -135,3 +135,6 @@ Need fundamentally different approach to reach >10.
   Env time 83% of total — simulation is bottleneck.
 - [18:28] May need: higher entropy coefficient, curriculum learning, or shaped rewards
   to break the local optimum and learn to align junctions.
+- [18:33] Uploaded RL model (epoch 400, 34.5M steps) as v256.
+  Expected to score low (1-2 alignments/episode). Testing in tournament.
+  RL training continuing in background for more epochs.
