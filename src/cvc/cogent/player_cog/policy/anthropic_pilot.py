@@ -1124,11 +1124,11 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         # Init budget adapts to team size, capped to leave 1 miner
         num_agents = self.policy_env_info.num_agents
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
-        # Re-enable hotspot weight for re-alignment boost
-        self._hotspot_weight = 8.0
-        # Stronger expansion preference: prioritize junctions that open up more network
-        self._expansion_weight = 15.0
-        self._expansion_cap = 90.0
+        # Match StableBoost + stronger expansion
+        self._hotspot_weight = 8.0   # Re-alignment boost (flip hotspot to bonus)
+        self._network_weight = 0.0   # No network proximity penalty (allows expansion)
+        self._expansion_weight = 15.0  # Stronger expansion preference
+        self._expansion_cap = 90.0     # Higher expansion bonus cap
 
     def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
         """Re-alignment boost: prioritize recently scrambled junctions.
@@ -1163,13 +1163,26 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return False
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
-        """Miners: retreat if too far from hub (prevent deaths in dangerous territory)."""
-        if super()._should_retreat(state, role, safe_target):
+        """Less conservative retreat (margin=15) + miner hub-distance check."""
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if safe_target is None:
+            return hp <= _h.retreat_threshold(state, role)
+        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+        margin = 15  # Less conservative than default 20
+        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            margin += 10
+        margin += int(state.self_state.inventory.get("heart", 0)) * 5
+        margin += min(_h.resource_total(state), 12) // 2
+        if not _h.has_role_gear(state, role):
+            margin += 10
+        if (state.step or 0) >= 2_500:
+            margin += 10 if role in {"aligner", "scrambler"} else 5
+        if hp <= safe_steps + margin:
             return True
+        # Miners: retreat if too far from hub
         if role == "miner" and safe_target is not None:
             pos = _h.absolute_position(state)
             dist = _h.manhattan(pos, safe_target.position)
-            hp = int(state.self_state.inventory.get("hp", 0))
             if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 20:
                 return True
         return False
