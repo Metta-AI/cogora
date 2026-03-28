@@ -1208,8 +1208,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if depot is not None:
                 return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
-        # No frontier junctions — walk toward nearest reachable unreachable neutral junction
-        # to expand the network chain. Only go if we have enough HP.
+        # No frontier junctions — try to expand, or mine to help economy
         team_id = _h.team_id(state)
         current_pos = _h.absolute_position(state)
         hp = int(state.self_state.inventory.get("hp", 0))
@@ -1232,7 +1231,8 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
                 return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
-        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        # No expansion target — help economy by mining (keeps aligner gear)
+        return self._miner_action(state, summary_prefix="idle_align_")
 
     def evaluate_state(self, state: MettagridState) -> Action:
         action = super().evaluate_state(state)

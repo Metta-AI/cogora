@@ -28,3 +28,6 @@ status: in-progress
 - [12:46] Uploading v3 to tournament for competitive evaluation.
 - [12:50] (Second worker) Safer expand-toward-junction: 10k results 8.76, 2.61, 15.04, 3.93, 16.57 → avg 9.38
 - [12:55] Uploaded v196 (safer expansion + all fixes). Two seeds above 15!
+- [12:50] V4 results: [8.52, 6.25, 6.10, 3.21] avg=6.02 (+89% over baseline 3.18!)
+- [12:50] KEY FIX: idle aligners mine instead of explore → massive economy boost
+- [12:51] Uploaded v197 to tournament.
