@@ -10,3 +10,7 @@ status: in-progress
 ## Activity
 - [15:10] Session started. Previous session (140609) was interrupted — recovered.
 - [15:10] Context: ALL heuristic policies converge to 2.0-2.2. v225 LLM was at 3.40 (3 matches).
+- [15:12] Local self-play AlphaCyborg 8a 5k: 2.88 (208 aligned, 116 lost). Consistent with ceiling.
+- [15:13] AlphaTournament vs clips 8a 5k: 1.47 — lower than previous VT tests (3.30+).
+- [15:14] Created two new strategies: FlashRush (all-mine 50 steps then mass-align) and EconDominance (5 miners, 2 efficient aligners). Testing vs clips.
+- [15:15] Tournament matches still running (v224-v228). No completed results yet.

@@ -2823,6 +2823,219 @@ class AlphaMaxPressurePolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaFlashRushAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """Flash Rush: all-mine first 50 steps, then mass-align with 6 aligners + 1 scrambler.
+
+    Theory: front-load economy to sustain maximum territorial pressure.
+    Instead of gradual scaling, we burst with maximum force after building reserves.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 50 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 50:
+                return 0, 0  # All mine
+            if min_res < 3 and not can_hearts:
+                return 1, 0
+            return min(3, num_agents - 1), 0
+
+        # 5+ agents: ALL mine for 50 steps, then flash rush
+        if step < 50:
+            return 0, 0  # ALL mine — build economy reserves
+
+        # After step 50: maximum pressure
+        if min_res < 3 and not can_hearts:
+            # Economy emergency — pull back
+            return 2, 0
+
+        # Normal: 6 aligners + 1 scrambler (1 miner)
+        if step < 200:
+            # Pure alignment rush — no scramblers yet
+            aligner_budget = min(num_agents - 1, 7)  # Leave just 1 miner
+            if objective == "economy_bootstrap":
+                return min(aligner_budget, 3), 0
+            return aligner_budget, 0
+
+        # After step 200: add scrambler
+        scrambler_budget = 1
+        aligner_budget = min(num_agents - 2, 6)  # 6 aligners + 1 scrambler + 1 miner
+        if step >= 3000:
+            scrambler_budget = 2
+            aligner_budget = min(num_agents - 3, 5)
+
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 3), 0
+        return aligner_budget, scrambler_budget
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """V65 targeting with idle-explore (avoid gear churn)."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # No frontier — explore to find new junctions (avoid gear churn)
+        return self._explore_action(state, role="aligner", summary="idle_explore")
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaFlashRushPolicy(MettagridSemanticPolicy):
+    """Flash Rush: all-mine 50 steps, then mass-align."""
+    short_names = ["alpha-flash-rush"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaFlashRushAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaEconDominanceAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
+    """Economic Dominance: keep 5 miners throughout, but use 2 very efficient aligners.
+
+    Theory: with massive economy, aligners always have hearts and can work non-stop.
+    Fewer aligners but they never idle waiting for hearts.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 100:
+                return 0, 0  # Both mine
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 0, 0  # All mine first
+            return 1, 1 if step >= 500 else 0  # Just 1 aligner + maybe 1 scrambler
+
+        # 5+ agents: economy-heavy — only 2 aligners, 1 scrambler, 5 miners
+        if step < 100:
+            return 1, 0  # 1 aligner to start exploring while miners build economy
+        if step < 500:
+            return 2, 0  # 2 aligners, 6 miners
+
+        # After 500: 2 aligners + 1 scrambler + 5 miners
+        scrambler_budget = 1
+        if min_res < 3 and not can_hearts:
+            return 1, 0  # Economy crisis
+        if objective == "economy_bootstrap":
+            return 1, 0
+        return 2, scrambler_budget
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Idle-explore for aligners."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        return self._explore_action(state, role="aligner", summary="idle_explore")
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaEconDominancePolicy(MettagridSemanticPolicy):
+    """Economic Dominance: heavy mining, few but efficient aligners."""
+    short_names = ["alpha-econ-dominance"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaEconDominanceAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 # Re-export the ORIGINAL pre-rewrite semantic_cog for pure v65 testing
 from cvc.cogent.player_cog.policy.semantic_cog_v65 import (
     MettagridSemanticPolicy as _V65BasePolicy,
