@@ -1,9 +1,6 @@
 status: in-progress
-2026-03-28 21:15:00 - Analyzed game logs. Created AlphaAggressivePolicy (no early heart batch, idle-scramble, economy-aware).
+2026-03-28 21:15:00 - Created AlphaAggressivePolicy with: no early heart batch, idle-scramble, economy-aware budgets.
 2026-03-28 21:28:00 - Uploaded v287 (Aggressive), v288 (Cyborg baseline), v290 (economy fix), v295 (resource-aware).
-2026-03-28 21:45:00 - COMPARISON COMPLETE (5000 steps, 3 seeds each):
-  AlphaAggressive: 4a avg 2.35, 8a avg 3.88 → overall 3.12
-  AlphaCyborg: 4a avg 1.12, 8a avg 3.47 → overall 2.29
-  Result: Aggressive 36% better overall, 2x better at 4-agent.
-  Late-game economy collapse (silicon depletion step 3500+) causes junction count to drop from 25→7.
-2026-03-28 21:47:00 - v287 in competition against slanky:v112 (5 matches running). Other opponents: Paz-Bot-9005.
+2026-03-28 21:45:00 - COMPARISON (5000 steps, 3 seeds): Aggressive avg 3.12, Cyborg avg 2.29. +36% improvement.
+2026-03-28 21:50:00 - Tested economy warning, relaxed expansion, simplified budgets. Economy warning hurt 4-agent. Hit a bad seed with agents dying (0 score). Simplified budget version (v301) uploaded.
+2026-03-28 21:55:00 - Running v7 comparison (3 seeds × 2 agent counts). Tournament matches still running (v287-v301).
