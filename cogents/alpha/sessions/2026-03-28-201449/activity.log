@@ -4,3 +4,4 @@ status: in-progress
 2026-03-28 20:33:58 - CRITICAL FIX: Added miner sticky-target resource fix to AlphaCogAgentPolicy. Was only in EconFix variant. Miners were getting stuck mining abundant resources while critical ones (oxygen) hit 0.
 2026-03-28 20:37:33 - CONFIRMED: Miner fix +86% improvement at 4-agent. Scrimmage avg 1.73 vs 0.93 (same seeds). Episodes: [0.73, 2.89, 3.58, 0.96, 0.50]. v273 (fixed AlphaCyborg) and v274 (fixed Hybrid) in qualifying.
 2026-03-28 20:40:42 - Added shared WorldModel across agents (previously each had separate). Miners can now find extractors discovered by any teammate. Also running scrimmage comparison.
+2026-03-28 20:43:39 - REVERTED shared WorldModel — caused pathfinding deadlock (occupied_cells too large). v275/v276 are broken. v277 = miner fix only (reverted shared model). The miner fix alone is the key improvement.

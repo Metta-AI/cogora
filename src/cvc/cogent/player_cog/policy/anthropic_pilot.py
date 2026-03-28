@@ -2349,27 +2349,19 @@ class AlphaHybridPolicy(MettagridSemanticPolicy):
     """Hybrid policy: v65 targeting + AlphaCog economy."""
     short_names = ["alpha-hybrid"]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._shared_world_model = SharedWorldModel()
-
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaHybridAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
-                world_model=self._shared_world_model,
+                world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
-
-    def reset(self) -> None:
-        self._shared_world_model.reset()
-        super().reset()
 
 
 class AlphaSoftHubAgentPolicy(AlphaCogAgentPolicy):
@@ -2389,17 +2381,13 @@ class AlphaSoftHubPolicy(MettagridSemanticPolicy):
     """AlphaCog with mild hub proximity preference."""
     short_names = ["alpha-softhub"]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._shared_world_model = SharedWorldModel()
-
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaSoftHubAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
-                world_model=self._shared_world_model,
+                world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
@@ -2407,18 +2395,10 @@ class AlphaSoftHubPolicy(MettagridSemanticPolicy):
             )
         return self._agent_policies[agent_id]
 
-    def reset(self) -> None:
-        self._shared_world_model.reset()
-        super().reset()
-
 
 class AlphaCyborgPolicy(MettagridSemanticPolicy):
     """Lightweight policy without LLM dependencies."""
     short_names = ["alpha-cyborg"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._shared_world_model = SharedWorldModel()
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         self._shared_team_ids.add(agent_id)
@@ -2426,17 +2406,13 @@ class AlphaCyborgPolicy(MettagridSemanticPolicy):
             self._agent_policies[agent_id] = AlphaCogAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
-                world_model=self._shared_world_model,
+                world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
-
-    def reset(self) -> None:
-        self._shared_world_model.reset()
-        super().reset()
 
 
 class AlphaCyborgGlobalRolesPolicy(MettagridSemanticPolicy):
