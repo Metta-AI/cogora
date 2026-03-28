@@ -10,3 +10,10 @@ RL training was started but interrupted. Need to continue RL approach.
 
 ## Activity
 - [17:03] Session started. Previous session 160849 was interrupted.
+- [17:05] Installed anthropic + openai in cogames venv. 
+- [17:06] Heuristic 4-agent self-play: 0.00 (all agents died — noop only). Bug: policy not activating in 4-agent mode.
+- [17:08] Heuristic 8-agent clips: 2.99/cog. Good baseline.
+- [17:09] RL training running on machina_1 4-agent: 5.8M steps, 11K SPS, ~1h remaining.
+  Learning to withdraw hearts and resources from hub. Entropy dropping (1.42).
+- [17:10] Matches v250-v252 still running against v17, v14, and gtlm-reactive (new opponent!).
+- [17:10] Key issue: 4-agent self-play produces 0.00 scores — policy has a bug in solo-team mode.
