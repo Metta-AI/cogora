@@ -82,3 +82,17 @@ status: in-progress
 - Uploaded v133 to tournament
 - Tournament versions: v125, v126, v127, v130, v133
 - All tournament matches still running/scheduled, no results yet
+
+## v141: Stable Role Allocation (User Redesign)
+- User overhauled pressure_budgets: fixed allocation, no oscillation
+  - 2 agents: 1 aligner, 0 scrambler
+  - 4 agents: 2 aligners, 1 scrambler (step 200+), 1 miner
+  - 8 agents: 4 aligners + 1 scrambler (step 200+) + 3 miners
+  - Only reduce 1 aligner if economy totally broken
+- v141 8-cog (10 seeds): avg **6.08** (no wipeouts on tested seeds!)
+  - Best: 13.40 (seed 21), 8.66 (seed 5), 8.35 (seed 1)
+- v141 4-cog: avg 1.28 (tight economy with 1 miner)
+- Synced AnthropicPilot with same allocation
+- Uploaded as v137 to tournament
+- Faster ramp experiment (skip phase 1): avg 4.68 — WORSE, economy needs bootstrap
+- Tournament versions: v125, v126, v127, v130, v133, v137
