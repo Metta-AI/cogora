@@ -1137,16 +1137,61 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 return True
         return False
 
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Extended aligner: when no frontier, walk toward nearest unreachable junction."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # No frontier junctions — walk toward nearest unreachable neutral junction
+        # to expand the network chain
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            nearest = min(unreachable, key=lambda j: _h.manhattan(current_pos, j.position))
+            return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
     def evaluate_state(self, state: MettagridState) -> Action:
         action = super().evaluate_state(state)
         step = state.step or self._step_index
-        if step % 500 == 0 or step == 1:
+        role = self._infos.get("role", "?")
+        subtask = self._infos.get("subtask", "?")
+        # Log every 100 steps for agent 0 (detailed), every 500 for all
+        if step % 500 == 0 or step == 1 or (step % 100 == 0 and self._agent_id == 0):
             pos = _h.absolute_position(state)
             hp = int(state.self_state.inventory.get("hp", 0))
             hearts = int(state.self_state.inventory.get("heart", 0))
             cargo = _h.resource_total(state)
-            role = self._infos.get("role", "?")
-            subtask = self._infos.get("subtask", "?")
             aligner_b = self._infos.get("aligner_budget", "?")
             scrambler_b = self._infos.get("scrambler_budget", "?")
             frontier = self._infos.get("frontier_neutral_junctions", "?")

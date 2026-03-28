@@ -18,3 +18,8 @@ status: interrupted
 - [10:42] Uploaded v186 (station fix). Now testing 5-aligner variant (5a+1s+2m instead of 4a+1s+3m).
 - [10:42] Seed 2 analysis: aligners retreat frequently with low HP. Map layout drives high variance.
 - [10:42] Seed 5 analysis: aligners stay at hp=100, 11-16 friendly junctions by step 500.
+- [10:55] 5-aligner results: 5.51, 2.13, 1.93, 4.35, 6.18 → avg 4.02 (vs 3.40 baseline). IMPROVEMENT!
+- [10:58] 6-aligner results: 1.56, 1.49, 3.07, 1.87, 0.00 → avg 1.60. Economy collapses with only 2 miners.
+- [11:00] Uploaded v189 (5a+1s+2m with station fix).
+- [11:05] Detailed analysis: aligners only align 45% of time. Main sinks: acquire_heart (20%), find_neutral_junction (20%). Network saturates at ~20 junctions (of 65).
+- [11:10] Testing "expand toward junction" — when frontier=0, walk toward nearest unreachable neutral junction instead of random exploration.
