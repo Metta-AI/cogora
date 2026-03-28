@@ -1116,7 +1116,7 @@ class AlphaNoScrambleAgentPolicy(SemanticCogAgentPolicy):
 
 
 class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
-    """Optimized agent policy: aggressive alignment with scrambler defense."""
+    """Optimized agent policy: re-alignment boost + stable budgets + scrambler defense."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1124,6 +1124,40 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         # Init budget adapts to team size, capped to leave 1 miner
         num_agents = self.policy_env_info.num_agents
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
+        # Re-enable hotspot weight for re-alignment boost
+        self._hotspot_weight = 8.0
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        """Re-alignment boost: prioritize recently scrambled junctions.
+
+        Flips hotspot count to negative so scrambled junctions get a BONUS
+        (lower score = better target). Cap at -3 to avoid over-prioritizing.
+        """
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        return -min(count, 3)
+
+    def _should_deposit_resources(self, state: MettagridState) -> bool:
+        """Lower deposit threshold (12) for faster economy turnover."""
+        cargo = _h.resource_total(state)
+        if cargo <= 0:
+            return False
+        threshold = 12 if _h.has_role_gear(state, "miner") else 4
+        if cargo >= threshold:
+            return True
+        safe_target = self._nearest_friendly_depot(state)
+        if safe_target is None:
+            return cargo >= 4
+        safe_distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
+        if cargo >= 12 and safe_distance > 18:
+            return True
+        if cargo >= 8 and self._should_retreat(state, "miner", safe_target):
+            return True
+        if cargo >= 8 and self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            return True
+        return False
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
         """Miners: retreat if too far from hub (prevent deaths in dangerous territory)."""
@@ -1219,9 +1253,10 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Stable role allocation. Avoids role oscillation that wastes gear."""
+        """Stable role allocation with high floors to prevent gear oscillation."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
         num_agents = self.policy_env_info.num_agents
 
         if objective == "resource_coverage":
@@ -1237,25 +1272,34 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 return 1, 0
             aligner_budget = 2
             scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
             if objective == "economy_bootstrap":
                 return min(aligner_budget, 1), 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents
+        # 5+ agents: stable budgets with high floors
         if step < 10:
             return min(2, num_agents - 1), 0
-        if step < 100:
-            aligner_budget = min(3, num_agents - 2)
-            if objective == "economy_bootstrap":
-                return min(aligner_budget, 2), 0
-            return aligner_budget, 0
+        if step < 50:
+            pressure_budget = 3
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)  # Floor 3, not 2
+            elif min_res < 2:  # Tighter threshold: only drop at <2, not <3
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 1 and not can_hearts:
+                pressure_budget = max(3, num_agents // 3)
 
-        aligner_budget = min(5, num_agents - 2)
-        scrambler_budget = 1 if step >= 200 else 0
-
-        if min_res < 1 and not _h.team_can_refill_hearts(state):
-            aligner_budget = max(aligner_budget - 1, 2)
-
+        scrambler_budget = 0
+        if step >= 3000:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 100:
+            scrambler_budget = min(1, pressure_budget // 3)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
         return aligner_budget, scrambler_budget
