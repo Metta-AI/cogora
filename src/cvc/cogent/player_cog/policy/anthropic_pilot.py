@@ -5628,3 +5628,67 @@ class AlphaChainExpandPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaChainDefenseAgentPolicy(AlphaChainExpandAgentPolicy):
+    """ChainExpand + late-game defense: more scramblers when losing.
+
+    When enemy junctions exceed ours, shift to scrambling to deny their score.
+    Score = avg aligned junctions per tick (both teams same), so denying
+    enemy junctions is as valuable as gaining our own.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Add late-game scramble defense when enemy is winning."""
+        aligner_budget, scrambler_budget = super()._pressure_budgets(state, objective=objective)
+        if objective in {"resource_coverage", "economy_bootstrap"}:
+            return aligner_budget, scrambler_budget
+
+        step = state.step or self._step_index
+        if step < 1000:
+            return aligner_budget, scrambler_budget
+
+        num_agents = self.policy_env_info.num_agents
+        # Small teams: no defense shift (scramblers too expensive)
+        if num_agents <= 4:
+            return aligner_budget, scrambler_budget
+
+        # Count friendly vs enemy junctions
+        team_id = _h.team_id(state)
+        friendly = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner == team_id))
+        enemy = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+
+        min_res = _h.team_min_resource(state)
+
+        # When losing: shift aligners to scramblers
+        if enemy > friendly + 3 and min_res >= 14:
+            extra_scramblers = min(2, max(0, aligner_budget - 1))
+            scrambler_budget += extra_scramblers
+            aligner_budget -= extra_scramblers
+        elif enemy > friendly and min_res >= 14:
+            if aligner_budget > 1:
+                scrambler_budget += 1
+                aligner_budget -= 1
+
+        return aligner_budget, scrambler_budget
+
+
+class AlphaChainDefensePolicy(MettagridSemanticPolicy):
+    """Chain expansion + late-game defense scrambling."""
+    short_names = ["alpha-chain-defense"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaChainDefenseAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

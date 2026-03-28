@@ -21,36 +21,26 @@
   - Root cause: 6 aligners burn hearts faster than 1-2 miners produce silicon
 - [2026-03-28 23:20] Created AlphaBalancedPolicy: economy-first approach
   - Max 3-4 aligners (always 3+ miners for 8-agent games)
-  - Economy-gated: min_res < 30 → 2 aligners, < 10 → 1 aligner
+  - Economy-gated: min_res < 30 -> 2 aligners, < 10 -> 1 aligner
   - Silicon-priority mining when silicon is scarce
   - Idle-scramble only when min_res >= 50 (not 14)
-  - Running 8a + 4a tests (5000 steps each)
 - [2026-03-28 23:30] Found critical bug: miners ignore undiscovered extractor types.
-  2a game: oxygen stays at 4 while other resources reach 300+. Hearts blocked.
   Fix: when bottleneck resource < 7 with 10x imbalance and no known extractors,
   force exploration to discover them.
-  Results: 2a 0.65→1.66 (+155%), 8a 6.62→8.09 (+22%)!
-  Running 5-seed 8a validation. Uploaded v306 (early scrambler — reverted), v307.
+  Results: 2a 0.65->1.66 (+155%), 8a 6.62->8.09 (+22%)!
+  Uploaded v306 (early scrambler reverted), v307.
 - [2026-03-28 23:33] Early scrambler for 4a: avg 3.34 vs 4.29 without. WORSE. Reverted.
 - [2026-03-28 23:30] Local test results (single seed):
-  Aggressive 8a: 2.55, 4a: (not tested this seed)
-  Balanced 8a: 3.16 (+24%), 4a: 2.62
-  AdaptiveV3 8a: 3.77 (+48%), 4a: 2.11 (worse — junction discovery bottleneck)
-
-  Key: AdaptiveV3 peaks at 16-17 friendly junctions (vs 13 for Aggressive).
-  Economy stays healthy through step 5000 (silicon 133 vs 15 for Aggressive).
-  Late game still declines but much milder (7 junctions vs 5).
-  Uploading both Balanced and AdaptiveV3 to tournament for real signal.
-- [2026-03-28 23:38] BREAKTHROUGH: AlphaChainExpandPolicy scores 5.91 on 8a (+132% vs Aggressive!)
-  Key innovations over AdaptiveV3:
-  1. expansion_weight=20 (2x): strongly prefer chain-building junctions
-  2. expansion_cap=120 (2x): distinguish junctions that unlock many others
-  3. Idle aligners alternate explore/scramble by agent_id (not all scramble)
-  Peak: 23 friendly junctions at step 700 (vs 13 for Aggressive!)
-  Still collapses late game (4 friendly at step 5000) but early lead is massive.
-  Uploaded as v311. Running 4a test + multi-seed validation.
-  v309=AdaptiveV3, v310=Balanced, v311=ChainExpand all in qualifying.
+  Aggressive 8a: 2.55, Balanced 8a: 3.16, AdaptiveV3 8a: 3.77
+- [2026-03-28 23:38] BREAKTHROUGH: AlphaChainExpandPolicy scores 5.91 on 8a (+132%)
+  expansion_weight=20, expansion_cap=120, idle explore/scramble alternation.
+  Peak: 23 friendly junctions at step 700. Uploaded as v311.
+- [2026-03-28 23:45] ChainExpand 4a: 3.27 (best for 4a too!)
+  AdaptiveV3 multi-seed 8a: avg 5.26 (1.84, 5.13, 8.81)
+- [2026-03-28 23:48] AlphaChainDefensePolicy: ChainExpand + late-game scramble defense
+  8a: 6.49 (+10%). Late game: 14vs14 at step 5000 (vs 4vs20 for ChainExpand).
+  4a fix: skip defense shift for num_agents <= 4. Uploaded as v312.
 - [2026-03-28 23:50] v308 (extractor fix) 5-seed results:
-  8a avg: 6.08 (7.97, 4.85, 5.55, 2.64, 9.40) — modest improvement vs 5.87
-  4a avg: 3.50 (2.99, 2.46, 4.73, 2.20, 5.10) — lower but within noise
-  Fix mostly helps edge cases (2a: 0.65→1.66). Still no tournament results.
+  8a avg: 6.08 (7.97, 4.85, 5.55, 2.64, 9.40)
+  4a avg: 3.50 (2.99, 2.46, 4.73, 2.20, 5.10)
+  Fix mostly helps edge cases. Still no tournament results.
