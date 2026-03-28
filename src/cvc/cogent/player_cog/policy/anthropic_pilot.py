@@ -54,12 +54,22 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Economy-responsive with hysteresis — v123. Adapts to team size."""
+        """Economy-responsive with hysteresis — v130. Adapts to team size.
+
+        For small teams (<=4), use conservative budget:
+        - Fewer aligners, more miners (economy is the bottleneck)
+        - Scrambler only with 4+ agents
+        For large teams (5+), use aggressive budget:
+        - More aligners (economy can sustain them)
+        """
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
-        # Ensure at least 1 miner: max pressure = team_size - 1
         num_agents = self.policy_env_info.num_agents
-        max_pressure = max(num_agents - 1, 1)
+        # Reserve at least half the team for mining in small teams
+        if num_agents <= 4:
+            max_pressure = max(num_agents // 2, 1)
+        else:
+            max_pressure = max(num_agents - 2, 1)
 
         # Phase 1: Economy bootstrap
         if step < 10:
@@ -87,11 +97,11 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         aligner_budget = self._current_aligner_budget
         scrambler_budget = 0
 
-        # Add scrambler at step 300 (only if team has 3+ agents to spare)
-        if step >= 300 and num_agents >= 3:
+        # Add scrambler at step 300 (need 4+ agents: aligner + scrambler + 2 miners min)
+        if step >= 300 and num_agents >= 4:
             scrambler_budget = 1
 
-        # Cap total pressure to leave at least 1 miner
+        # Cap total pressure
         total = aligner_budget + scrambler_budget
         if total > max_pressure:
             aligner_budget = max(max_pressure - scrambler_budget, 0)
