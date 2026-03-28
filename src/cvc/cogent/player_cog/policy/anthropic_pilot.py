@@ -1362,6 +1362,160 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
+    """Aggressive variant: faster early game, idle aligners scramble, more pressure.
+
+    Key changes from AlphaCog:
+    1. Lower early heart batch target (1 for steps 0-200) → faster first alignments
+    2. Idle aligners become scramblers instead of miners → deny opponent score
+    3. More aligners + earlier scramblers → economy surplus is wasted on mining
+    4. Economy-aware: only 1 miner needed once hub has 100+ of each resource
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner with idle-scramble instead of idle-mine."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        # Early game: don't batch, go align immediately with whatever hearts we have
+        if step < 200:
+            pass  # Skip batching check entirely
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # No frontier junctions — try to expand toward known unreachable junctions
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else current_pos
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 30
+                and _h.manhattan(hub_pos, j.position) < 40
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # KEY CHANGE: Idle aligners scramble instead of mining
+        # This denies opponent score and creates new alignment opportunities
+        if int(state.self_state.inventory.get("heart", 0)) > 0:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        # Only mine as absolute last resort
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """More aggressive: more aligners, earlier scramblers, fewer miners."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            # 4 agents: 2 aligners + 1 scrambler + 1 miner once economy can support it
+            scrambler_budget = 1 if step >= 300 and min_res >= 7 else 0
+            aligner_budget = min(2, num_agents - 1 - scrambler_budget)
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: push harder for territory + denial
+        if step < 30:
+            return 2, 0
+
+        # Calculate economy surplus — if hub is overflowing, shift to all-pressure
+        economy_surplus = min_res >= 100
+
+        if economy_surplus:
+            # Only need 1 miner — rest go to pressure
+            pressure_budget = num_agents - 1
+        elif step < 100:
+            pressure_budget = 3
+        elif min_res < 3 and not can_hearts:
+            pressure_budget = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(num_agents - 2, 6)
+
+        # Earlier and more scramblers
+        scrambler_budget = 0
+        if step >= 100 and min_res >= 7:
+            scrambler_budget = min(2, max(1, pressure_budget // 3))
+        if economy_surplus and step >= 500:
+            scrambler_budget = min(3, pressure_budget // 3)
+
+        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaAggressivePolicy(MettagridSemanticPolicy):
+    """Aggressive scoring: fast early game, idle-scramble, economy-aware budgets."""
+    short_names = ["alpha-aggressive"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAggressiveAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 # Keep these for backwards compatibility with tournament uploads
 class AnthropicPilotAgentPolicy(PilotAgentPolicy):
     _LLM_ANALYSIS_INTERVAL = 500  # Run LLM analysis every N steps

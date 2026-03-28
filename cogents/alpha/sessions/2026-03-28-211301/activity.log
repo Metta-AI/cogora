@@ -1,1 +1,2 @@
 status: in-progress
+2026-03-28 21:21:37 - Analyzing game logs: identified key bottlenecks (heart batching delay, idle-mining, economy surplus waste). Creating AlphaAggressivePolicy with faster early game, idle-scramble, economy-aware budgets.
