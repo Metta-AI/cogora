@@ -32,3 +32,11 @@ New opponents: slanky:v112, gtlm-reactive, coglet-v0:v7.
   Uses v65 budgets (4 aligners, scrambler at 1500), no hotspot/network weights.
   Uploaded v261.
 - [18:38] Tournament: v258-v261 in qualifying pool, waiting for matches.
+- [18:40] SCRIMMAGE (5 episodes, clips, 5k): EconFixGlobal avg 4.38 vs AlphaCyborg 4.25.
+  Modest improvement. Resources balanced (not just one seed).
+- [18:42] Created AlphaV65PlusFixPolicy: minimal v65 + resource fix + idle-mine. v261.
+- [18:45] PICKUP vs starter: 59/65 junctions at step 4500! Score potential is huge vs weak opponents.
+- [18:50] 10k SCRIMMAGE: CRITICAL late-game collapse! By step 9500: only 9 friendly vs 21 enemy
+  junctions, silicon=10, oxygen=35. Clips overwhelm after step 5000. Tournament uses 10k steps!
+  Need: better late-game economy, more scramblers to slow clips, resource conservation.
+- [18:52] v258-v261 uploaded: EconFixGlobal, EconFix, EconFixGlobal v2, V65PlusFix.
