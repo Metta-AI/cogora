@@ -79,7 +79,25 @@ status: in-progress
 - Restored v123 priorities (0,1,2,...) as baseline
 - The real question is average across many runs, not single seeds
 
+## DISCOVERY: Variable Team Sizes in Tournament
+- Tournament uses variable team sizes! Found 2v6, 4v4 matchups
+- This means our policy must handle 2, 4, 6, 8 agents properly
+- v129: skip scrambler with <3 agents, cap pressure to leave 1 miner
+
+## Leaderboard (beta-cvc)
+- #1: alpha.0:v65 = 2.99 (249 matches)
+- #9: alpha.0:v110 = 2.53 (63 matches) — our best!
+- #13: swoopy-v0:v2 = 2.46 (62 matches) — main competitor
+- #14: alpha.0:v111 = 2.45 (64 matches)
+- Our recent: v115=2.18, v116=2.17, v117=2.14, v118=2.20
+- Uploaded v121 and v122 with variable-size fixes
+
 ## Tournament Status
-- v115, v116, v117, v118, v121 uploaded
-- v116 competing vs Paz-Bot-9005, slanky:v112, alpha.0:v12/v13
-- No completed matches yet (still running)
+- v115-v118, v121-v122 uploaded
+- Matches running against Paz-Bot, slanky, swoopy, and older alpha versions
+- Score goal >10 seems very ambitious (leader is 2.99)
+
+## Strategy Going Forward
+- Focus on climbing leaderboard (currently #9 with v110)
+- The v65-v75 era had higher scores — investigate why
+- Key: variable team sizes require robust budget logic
