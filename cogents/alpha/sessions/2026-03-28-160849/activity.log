@@ -114,3 +114,6 @@ Need fundamentally different approach to reach >10.
   v252 (vanilla): 2.18 (#140)
   SmallTeam slightly beating vanilla and AlphaCyborg now!
   coglet-v0:v6-v8 at 2.33-2.38. All settling.
+- [18:13] RL training at 23.9M steps (24%). Entropy dropped to 0.77 — agent specializing.
+  Hearts per agent: 0.5-0.75 (temporary dip). Still learning.
+  Leaderboard stable: v65 at 3.59 (#1), our v250-253 at 2.18-2.22.
