@@ -142,3 +142,8 @@ Need fundamentally different approach to reach >10.
   Hearts steady at 1.5/agent. Training still learning.
   v253 at 2.18 (#138, 58m). v254 appeared (from another worker).
   v256 (RL) still qualifying.
+- [18:43] RL at 42.1M steps (42%). Entropy healthy at 1.30. New checkpoint: epoch 600.
+- [18:43] **v255 at 2.36 (#70, 24m)** — best recent version! (Uploaded by another worker?)
+  v253 at 2.19, v254 at 2.17.
+  coglet v6-v8 at 2.29-2.33 (60 matches).
+  v256 (RL) still qualifying.
