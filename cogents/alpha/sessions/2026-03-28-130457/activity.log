@@ -12,11 +12,18 @@ status: in-progress
 - [13:05] Session started. Previous session (121219) was interrupted — recovered.
 - [13:05] Context: idle-aligner-mine +89% local, but tournament scores still lag. v65 (3.59) still #1.
 - [13:10] Local baseline (AlphaCyborgPolicy, 5k): seed1=0.00(wipe), seeds 2-6=[6.60, 3.26, 6.53, 6.40, 2.93] avg=5.14
-- [13:12] Tournament: v200 matches running/scheduled vs v34-v54. No completed results yet.
-- [13:12] New tournament versions (v54+) being generated. v200 paired against older versions.
-- [13:14] Key observation: v65 frozen with OLD base class (pre-station-fix, pre-role-fix). Newer versions use updated base.
-- [13:20] (Worker 2) Created AlphaV65OriginalPolicy — V65 replica WITHOUT shared_team_ids.
-  v65 used global agent IDs for role assignment; all newer versions use team-relative.
-  If v202 scores close to v65, the team-relative role fix is the culprit.
-- [13:22] Uploaded v202 (AlphaV65OriginalPolicy). Waiting for qualifying then competition.
-- [13:30] v200 stable at 2.38 (#62, 71 matches). v202 not yet on leaderboard.
+- [13:14] Key observation: v65 frozen with OLD base class (pre-station-fix, pre-role-fix).
+- [13:16] CRITICAL DISCOVERY: Tournament uploads used AnthropicCyborgPolicy which LACKS idle-mine.
+- [13:17] Uploaded v201 (AlphaCyborgPolicy with all improvements) directly to tournament
+- [13:20] Created AlphaTournamentPolicy and AlphaV65OriginalPolicy
+- [13:22] Uploaded v201-v206 (various strategy variants for A/B testing)
+- [13:25] Local results (5k): AlphaCyborgPolicy avg=5.14, AlphaTournamentPolicy avg(no-wipe)=4.45
+- [13:32] 10k results (AlphaCyborgPolicy self-play):
+  - [7.00, 3.48, 11.88, 9.67, 5.18, 4.17, 8.24] avg=7.09
+- [13:33] v202 initially #1 at 5.30 (1 match) — dropped to 1.77 (28 matches). Early scores unreliable.
+- [13:40] TOURNAMENT UPDATE:
+  - v203 (TournamentPolicy) at #9, 2.73 (2 matches)
+  - v204 (V65OriginalPolicy) at #10, 2.72 (2 matches)
+  - v201 at 2.03 (25 matches), v202 at 1.77 (28 matches)
+- [13:40] Team-relative roles NOT the issue — v204 (global) and v203 (team) score same
+- [13:40] Gap must be in BASE CLASS changes since v65. Investigating station fix impact.
