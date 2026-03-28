@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-28-201449**: Fixed miner sticky-target bug in main AlphaCogAgentPolicy (+86% self-play). Shared WorldModel broke pathfinding (reverted). All heuristics converge to 2.0-2.5 tournament. Uploaded v270-v279. [sessions/2026-03-28-201449/](sessions/2026-03-28-201449/)
 - **2026-03-28-170316**: Definitive heuristic comparison: AlphaCyborg best (4.34 avg 8-agent, 3.24 avg 4-agent). RL 18.8M steps, learned mining not alignment. CPU too slow for RL. Uploaded v254/v255/v262. [sessions/2026-03-28-170316/](sessions/2026-03-28-170316/)
 - **2026-03-28-181220**: Fixed miner sticky-target resource bug (+164% local). 10k peak 9.48! v259 at 2.47 tournament. Uploaded v258-v269. [sessions/2026-03-28-181220/](sessions/2026-03-28-181220/)
 - **2026-03-28-160849**: Tournament is 75% 4-agent games! SmallTeamPolicy VOR 1.23. RL training: LSTM learns but too slow, stateless can't learn. Heuristic ceiling 2.2. [sessions/2026-03-28-160849/](sessions/2026-03-28-160849/)
