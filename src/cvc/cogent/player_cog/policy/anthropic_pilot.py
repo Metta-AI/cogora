@@ -2333,6 +2333,38 @@ class AlphaHybridPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+class AlphaSoftHubAgentPolicy(AlphaCogAgentPolicy):
+    """AlphaCog + mild hub proximity preference (network_weight=0.5).
+
+    v65's hub_penalty was too harsh (kills self-play scores).
+    network_weight=0.0 (AlphaCog) has no hub preference at all.
+    This uses network_weight=0.5 as a soft middle ground.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.5  # Mild hub/network preference
+
+
+class AlphaSoftHubPolicy(MettagridSemanticPolicy):
+    """AlphaCog with mild hub proximity preference."""
+    short_names = ["alpha-softhub"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaSoftHubAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaCyborgPolicy(MettagridSemanticPolicy):
     """Lightweight policy without LLM dependencies."""
     short_names = ["alpha-cyborg"]
