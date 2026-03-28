@@ -114,7 +114,8 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             dist = _h.manhattan(pos, safe_target.position)
             hp = int(state.self_state.inventory.get("hp", 0))
             # Retreat if far from hub with low-ish HP
-            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 10:
+            # Need enough HP to walk back + safety margin
+            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 20:
                 return True
         return False
 
@@ -206,7 +207,7 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             pos = _h.absolute_position(state)
             dist = _h.manhattan(pos, safe_target.position)
             hp = int(state.self_state.inventory.get("hp", 0))
-            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 10:
+            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 20:
                 return True
         return False
 
@@ -238,5 +239,6 @@ class AlphaCyborgPolicy(MettagridSemanticPolicy):
                 world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
             )
         return self._agent_policies[agent_id]

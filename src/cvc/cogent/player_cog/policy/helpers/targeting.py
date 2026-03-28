@@ -35,6 +35,7 @@ def aligner_target_score(
     claimed_by_other: bool,
     hub_position: tuple[int, int] | None = None,
     friendly_junctions: list[KnownEntity] | None = None,
+    hotspot_count: int = 0,
 ) -> tuple[float, float]:
     distance = float(manhattan(current_position, candidate.position))
     expansion = sum(
@@ -45,9 +46,6 @@ def aligner_target_score(
         if any(manhattan(candidate.position, enemy.position) <= _JUNCTION_AOE_RANGE for enemy in enemy_junctions)
         else 0.0
     )
-    # Use network distance: min distance to any hub or friendly junction.
-    # This encourages network expansion by chaining through friendly junctions
-    # while still preferring targets near the existing network.
     network_dist = 999.0
     if hub_position is not None:
         network_dist = min(network_dist, float(manhattan(hub_position, candidate.position)))
@@ -57,12 +55,16 @@ def aligner_target_score(
             if d < network_dist:
                 network_dist = d
     network_penalty = network_dist * 0.5
+    # Penalize junctions near enemy ships (repeatedly scrambled).
+    # Each observed scramble adds 8.0 penalty, capped at 3 scrambles.
+    hotspot_penalty = min(hotspot_count, 3) * 8.0
     return (
         distance
         - min(expansion * 10.0, 60.0)
         + enemy_aoe * 8.0
         + (_CLAIMED_TARGET_PENALTY if claimed_by_other else 0.0)
-        + network_penalty,
+        + network_penalty
+        + hotspot_penalty,
         -float(expansion),
     )
 

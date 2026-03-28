@@ -41,7 +41,21 @@
 - v65 at #2 with 3.24 (321 matches)
 - v135/v136 in qualifying pool
 
-### Next Steps
-- Wipeout prevention (20% rate is costing ~0.7 points on avg)
-- Try 5 aligners instead of 4 (economy showed headroom)
-- Investigate why v65 era outperformed in tournament
+### v135 Stable Budgets: Worse on Multi-Seed
+- Seeds 11-15 with stable budgets: 0.00, 3.29, 3.96, 3.99, 1.70 (avg 2.59)
+- v134 seeds 11-15 from prev session: 5.15, 0.00, 5.36, 7.38, 4.00 (avg 4.38)
+- Reverted to v134 baseline (oscillating budgets were better in aggregate)
+
+### Tournament Leaderboard Update
+- v65 still #1 at 3.24 (321 matches) — very stable
+- v132 dropped to #4 at 2.72 (42 matches) — early high was noise
+- v131 at #7, v133 at #15
+
+### v137: Hotspot Avoidance (Ship Zone Detection)
+- Key discovery: clips ships auto-scramble junctions within 15 tiles every 70 ticks
+- Junctions outside ship zones persist once aligned → much more valuable
+- Implemented: track when our junctions get scrambled back
+- Each scramble adds +8.0 penalty to junction's alignment score (max 24.0 at 3+)
+- This should reduce wasted hearts on junctions near ships
+- Also increased miner retreat safety margin (dist+10 → dist+20)
+- Testing...

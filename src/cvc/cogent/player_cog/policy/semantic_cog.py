@@ -200,12 +200,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
         world_model: SharedWorldModel,
         shared_claims: dict[tuple[int, int], tuple[int, int]],
         shared_junctions: dict[tuple[int, int], tuple[str | None, int]],
+        shared_hotspots: dict[tuple[int, int], int] | None = None,
     ) -> None:
         super().__init__(policy_env_info)
         self._agent_id = agent_id
         self._world_model = world_model
         self._shared_claims = shared_claims
         self._shared_junctions = shared_junctions
+        self._shared_hotspots = shared_hotspots if shared_hotspots is not None else {}
         self._memory = MemoryStore()
         self._previous_state: MettagridState | None = None
         self._last_global_pos: tuple[int, int] | None = None
@@ -718,6 +720,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
         hub = self._nearest_hub(state)
         if hub is None:
             return
+        team_id = _h.team_id(state)
         for entity in state.visible_entities:
             if entity.entity_type != "junction":
                 continue
@@ -726,10 +729,14 @@ class SemanticCogAgentPolicy(AgentPolicy):
                 int(entity.attributes["global_y"]) - hub.global_y,
             )
             owner = entity.attributes.get("owner")
-            self._shared_junctions[rel_position] = (
-                None if owner in {None, "neutral"} else str(owner),
-                state.step or self._step_index,
-            )
+            new_owner = None if owner in {None, "neutral"} else str(owner)
+            # Detect scramble: junction was ours, now it's not
+            old = self._shared_junctions.get(rel_position)
+            if old is not None:
+                old_owner, _ = old
+                if old_owner == team_id and new_owner != team_id:
+                    self._shared_hotspots[rel_position] = self._shared_hotspots.get(rel_position, 0) + 1
+            self._shared_junctions[rel_position] = (new_owner, state.step or self._step_index)
 
     def _shared_junction_entities(
         self,
@@ -816,6 +823,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
                     ),
                     hub_position=hub_pos,
                     friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
                 ),
                 entity.position,
             ),
@@ -853,6 +861,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             claimed_by_other=False,
             hub_position=hub_pos,
             friendly_junctions=friendly_junctions,
+            hotspot_count=self._junction_hotspot_count(sticky, hub),
         )[0]
         candidate_score = _h.aligner_target_score(
             current_position=current_pos,
@@ -867,6 +876,7 @@ class SemanticCogAgentPolicy(AgentPolicy):
             ),
             hub_position=hub_pos,
             friendly_junctions=friendly_junctions,
+            hotspot_count=self._junction_hotspot_count(candidate, hub),
         )[0]
         if candidate.position != sticky.position and candidate_score + _TARGET_SWITCH_THRESHOLD < sticky_score:
             return candidate
@@ -1177,6 +1187,13 @@ class SemanticCogAgentPolicy(AgentPolicy):
             return min(aligner_budget, _ECONOMY_BOOTSTRAP_ALIGNER_BUDGET), 0
         return aligner_budget, scrambler_budget
 
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        """Return how many times this junction has been scrambled (observed)."""
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        return self._shared_hotspots.get(rel, 0)
+
     def _in_enemy_aoe(self, state: MettagridState, position: tuple[int, int], *, team_id: str) -> bool:
         enemies = self._known_junctions(
             state,
@@ -1313,6 +1330,7 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
         self._agent_policies: dict[int, SemanticCogAgentPolicy] = {}
         self._shared_claims: dict[tuple[int, int], tuple[int, int]] = {}
         self._shared_junctions: dict[tuple[int, int], tuple[str | None, int]] = {}
+        self._shared_hotspots: dict[tuple[int, int], int] = {}
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         if agent_id not in self._agent_policies:
@@ -1322,11 +1340,13 @@ class MettagridSemanticPolicy(MultiAgentPolicy):
                 world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
             )
         return self._agent_policies[agent_id]
 
     def reset(self) -> None:
         self._shared_claims.clear()
         self._shared_junctions.clear()
+        self._shared_hotspots.clear()
         for policy in self._agent_policies.values():
             policy.reset()
