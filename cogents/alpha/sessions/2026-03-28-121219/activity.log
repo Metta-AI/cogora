@@ -35,9 +35,27 @@ status: in-progress
 - [13:01] Wipe bug investigation: HP drops to 0 despite hub proximity. Map/engine issue, not fixable in policy.
 - [13:01] 5-game 10k runs killed by system (OOM?) — running 1-2 at a time instead.
 - [13:02] Idle-aligner-mine is the biggest improvement: seed 2 went from 2.01→6.25, seed 3 from 1.98→6.10.
-- [13:10] v197 tournament: 2.30 (4v4), 6.64 (6a). v198 qualifying.
-- [13:15] 10k results: seed 6=6.39, seed 7=2.38, seed 8=13.27, seed 9=4.58, seed 10=0.00(wipe). Avg(no-wipe): 6.66.
-- [13:30] More 5k results: seeds 14-18 = [4.31, 4.98, 1.57, 2.02, 2.79]. Combined avg: 4.42.
-- [13:30] **LEADERBOARD — v65 still #1 at 3.59 (516 matches)**. All "improvements" score WORSE.
-- [13:35] Strategy pivot: local gains don't translate to tournament. v65's simplicity wins.
-- [13:40] Uploaded v200 (V65TrueReplica). Session interrupted before results.
+- [13:00] 10k single seed: seed 6 = 6.39
+- [13:01] Wipe bug investigation: HP drops to 0 despite hub proximity. Map/engine issue, not fixable in policy.
+- [13:01] 5-game 10k runs killed by system (OOM?) — running 1-2 at a time instead.
+- [13:02] Idle-aligner-mine is the biggest improvement: seed 2 went from 2.01→6.25, seed 3 from 1.98→6.10.
+- [13:15] 10k results (v4 = v197): seed 6=6.39, seed 7=2.38, seed 8=13.27, seed 9=4.58, seed 10=0.00(wipe)
+- [13:15] 10k avg (no-wipe): 6.66. Best: 13.27 (seed 8). High variance.
+- [13:15] 10k results (v4 = v197): seed 6=6.39, seed 7=2.38, seed 8=13.27, seed 9=4.58, seed 10=0.00(wipe)
+- [13:15] 10k avg (no-wipe): 6.66. Best: 13.27 (seed 8). High variance.
+- [13:30] More 5k results: seeds 14-18 = [4.31, 4.98, 1.57, 2.02, 2.79]
+- [13:30] Combined 5k avg across 9 seeds: 4.42 (high variance: 1.57-8.52)
+- [13:30] 10k avg (non-wipe, 4 seeds): 6.66. Wipe rate ~25% (seeds 10,11 wiped).
+- [13:31] Germanium bottleneck remains a key issue on low-scoring seeds.
+- [13:30] More 5k results: seeds 14-18 = [4.31, 4.98, 1.57, 2.02, 2.79]
+- [13:30] Combined 5k avg across 9 seeds: 4.42 (high variance: 1.57-8.52)
+- [13:30] 10k avg (non-wipe, 4 seeds): 6.66. Wipe rate ~25% (seeds 10,11 wiped).
+- [13:31] Germanium bottleneck remains a key issue on low-scoring seeds.
+- [13:40] V5 test (explore with hearts): avg 4.12 — WORSE than V4. Exploring wastes hearts.
+- [13:42] V5 reverted. V4 idle-mine is clearly better.
+- [13:45] V6 test (scrambler suppression when resources < 3): avg 5.69 — mixed results, high variance.
+- [13:46] Running 8 more seeds to get better stats for V6.
+- [13:40] V5 test (explore with hearts): avg 4.12 — WORSE than V4. Exploring wastes hearts.
+- [13:42] V5 reverted. V4 idle-mine is clearly better.
+- [13:45] V6 test (scrambler suppression when resources < 3): avg 5.69 — mixed results, high variance.
+- [13:46] Running 8 more seeds to get better stats for V6.
