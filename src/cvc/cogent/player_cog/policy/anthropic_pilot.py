@@ -2142,3 +2142,25 @@ class AlphaCyborgPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaV65OriginalPolicy(MettagridSemanticPolicy):
+    """True v65 replica WITHOUT team-relative role assignment.
+
+    v65 was uploaded before the shared_team_ids fix, so it uses global agent IDs
+    for role assignment. This replicates that exact behavior.
+    """
+    short_names = ["alpha-v65-original"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        # Do NOT pass shared_team_ids — v65 used global role assignment
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaV65TrueReplicaAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+            )
+        return self._agent_policies[agent_id]
