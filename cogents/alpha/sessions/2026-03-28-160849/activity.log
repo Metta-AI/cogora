@@ -80,3 +80,10 @@ Need fundamentally different approach to reach >10.
 - [17:18] Tournament early results: v251 (SmallTeam) at 2.51 (#40, 7m), v252 (vanilla) at 2.61 (#31, 4m).
   Need more matches to converge.
 - [17:18] RL training progressing in background (~3M steps).
+- [17:30] **Pickup VOR evaluation** (vs starter pool, 4 agents, 5k steps):
+  SmallTeam VOR = 1.23 (4 agents: 1.89, 3: 1.34, 2: 0.28, 1: 0.10)
+  Vanilla VOR = 0.32 (4 agents: 0.57, 3: 0.30, 2: 0.02, 1: 0.00)
+  **SmallTeam is 4x better than vanilla on pickup evaluation!**
+  Tournament results may just be early variance (only 25 matches).
+- [17:30] RL training at ~6.5M steps, learning to get hearts (0.875/episode).
+  Aligning 1-1.5 junctions/episode. Still very early but progressing.
