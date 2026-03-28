@@ -48,3 +48,8 @@
 - [2026-03-28 23:05] Running 5-seed sequential 8a test. Results so far:
   seed=1: 6.62, seed=2: 4.42, seeds 3-5 running.
   Tournament matches all still running (v303 vs v38-v51 opponents, v304/v305 qualifying).
+- [2026-03-28 23:15] 5-seed 8a results: 6.62, 4.42, 6.73, 2.60, 8.96 → avg 5.87.
+  Best seed 8.96 but range is 2.60-8.96 (3.4x variance).
+  v304/v305 in competition pool vs Paz-Bot-9005, slanky:v112, alpha.0:v12.
+  Opponents v49-v51 are other cogents uploading frequently. No completed matches yet.
+- [2026-03-28 23:16] Running 5-seed 4a tests (75% of tournament is 4-agent).
