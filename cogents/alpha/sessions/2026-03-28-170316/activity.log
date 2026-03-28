@@ -56,3 +56,13 @@ RL training was started but interrupted. Need to continue RL approach.
   - 200 epochs isn't enough (need 1000+ for meaningful game behavior)  
   - CPU-only SPS degrades as policy grows (1.2K vs initial 14K)
   Heuristic improvements are the pragmatic path for now.
+- [18:20] Created AlphaExpanderPolicy: aggressive expansion when frontier=0.
+  Wider expansion range (50 vs 40 from hub, hp-20 vs hp-30 safety).
+  Prioritizes junctions closest to friendly junctions for faster network growth.
+- [18:25] Expander vs AlphaCyborg comparison:
+  4-agent 10k (5 seeds): Expander avg 2.11 vs AlphaCyborg avg 3.24 — AlphaCyborg wins
+    Expander more consistent (1.63-2.65) but lower peak (seed 5: 2.05 vs 8.54)
+  8-agent 5k (5 seeds): Expander avg 5.28 vs AlphaCyborg avg 4.89 — Expander wins!
+    Expander better at 8-agent (6.25, 1.75, 2.90, 6.72, 8.77)
+- [18:25] Uploading AlphaExpander as v256 for tournament.
+- [18:25] RL test still running (slow inference, at step ~3000).

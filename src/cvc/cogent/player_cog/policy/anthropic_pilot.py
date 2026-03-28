@@ -3362,102 +3362,91 @@ class AlphaSmallTeamPolicy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
-class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
-    """More aggressive alignment with tighter retreat and faster economy cycle.
+class AlphaExpanderAgentPolicy(AlphaCogAgentPolicy):
+    """Better network expansion when frontier stalls (frontier=0).
 
-    Key changes from AlphaCog:
-    - Tighter retreat margin (12 vs 15) — less time wasted retreating
-    - Aggressive alignment budgets across all team sizes
-    - Faster economy cycle: mine briefly then align
-    - Reduced scrambler allocation (focus on alignment over disruption)
+    Key change: more aggressive expansion toward unreachable junctions.
+    When no frontier exists, walk toward unreachable junctions to bring them
+    into alignment range, rather than idle-mining.
     """
 
-    def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
-        """Tighter retreat margin (12) — spend more time aligned, less retreating."""
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Extended aligner with aggressive expansion when frontier stalls."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # AGGRESSIVE EXPANSION: walk toward unreachable junctions to bring them into range
+        current_pos = _h.absolute_position(state)
         hp = int(state.self_state.inventory.get("hp", 0))
-        if safe_target is None:
-            return hp <= _h.retreat_threshold(state, role)
-        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
-        margin = 12  # Tighter than 15: less conservative
-        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
-            margin += 8  # Less panic in enemy territory
-        margin += int(state.self_state.inventory.get("heart", 0)) * 4
-        margin += min(_h.resource_total(state), 12) // 3
-        if not _h.has_role_gear(state, role):
-            margin += 8
-        if (state.step or 0) >= 3_000:
-            margin += 8 if role in {"aligner", "scrambler"} else 4
-        if hp <= safe_steps + margin:
-            return True
-        if role == "miner" and safe_target is not None:
-            pos = _h.absolute_position(state)
-            dist = _h.manhattan(pos, safe_target.position)
-            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 15:
-                return True
-        return False
+        hub_pos = hub.position if hub is not None else current_pos
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable and hp > 20:
+            # Find the closest unreachable junction that's between us and the frontier edge
+            # More aggressive: allow expansion up to 50 tiles from hub (was 40)
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20  # Less safety margin (was 30)
+                and _h.manhattan(hub_pos, j.position) < 50  # Wider range (was 40)
+            ]
+            if safe_unreachable:
+                # Prefer junctions that are closest to an existing friendly junction
+                # (most likely to become alignable when we walk near them)
+                team_id = _h.team_id(state)
+                friendly = self._known_junctions(state, predicate=lambda j: j.owner == team_id)
+                if friendly:
+                    nearest = min(safe_unreachable, key=lambda j: min(
+                        _h.manhattan(j.position, f.position) for f in friendly
+                    ))
+                else:
+                    nearest = min(safe_unreachable, key=lambda j: _h.manhattan(current_pos, j.position))
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
-    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Aggressive alignment budgets: maximize aligners, minimize scramblers."""
-        step = state.step or self._step_index
-        min_res = _h.team_min_resource(state)
-        can_hearts = _h.team_can_refill_hearts(state)
-        num_agents = self.policy_env_info.num_agents
+            # If no safe targets, try the nearest unreachable anyway if HP allows
+            nearest = min(unreachable, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_risky", vibe="change_vibe_aligner")
 
-        if objective == "resource_coverage":
-            return 0, 0
-
-        # For small teams, use SmallTeam logic (proven better at 4-agent)
-        if num_agents <= 1:
-            if objective == "economy_bootstrap":
-                return 0, 0
-            return 1, 0
-
-        if num_agents <= 2:
-            # Aggressive: start aligning at step 100 instead of 200
-            if step < 100 or (min_res < 5 and not can_hearts):
-                return 0, 0
-            if objective == "economy_bootstrap":
-                return 0, 0
-            return 1, 0
-
-        if num_agents <= 4:
-            # Aggressive from step 0 with free hearts
-            if step < 50:
-                return min(2, num_agents - 1), 0
-            if min_res < 3 and not can_hearts:
-                return 1, 0
-            aligner_budget = min(num_agents - 1, 3)  # Max aligners
-            # No scramblers for small teams — focus on alignment
-            if objective == "economy_bootstrap":
-                return 1, 0
-            return aligner_budget, 0
-
-        # 5+ agents: aggressive alignment, minimal scramblers
-        if step < 20:
-            return min(3, num_agents - 2), 0
-        elif step < 100:
-            return min(4, num_agents - 2), 0
-        elif step < 3000:
-            if min_res < 3 and not can_hearts:
-                return max(2, num_agents // 3), 0
-            return min(num_agents - 2, 5), 0
-        else:
-            if min_res < 3 and not can_hearts:
-                return max(2, num_agents // 3), 0
-            aligner_budget = min(num_agents - 2, 5)
-            # Only scramble when economy is strong
-            scrambler_budget = 1 if min_res >= 14 else 0
-            return aligner_budget, scrambler_budget
+        # Fallback: mine while waiting
+        return self._miner_action(state, summary_prefix="idle_align_")
 
 
-class AlphaAggressivePolicy(MettagridSemanticPolicy):
-    """Aggressive alignment policy for tournament play."""
-    short_names = ["alpha-aggressive"]
+class AlphaExpanderPolicy(MettagridSemanticPolicy):
+    """AlphaCyborg + aggressive network expansion."""
+    short_names = ["alpha-expander"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
-            self._agent_policies[agent_id] = AlphaAggressiveAgentPolicy(
+            self._agent_policies[agent_id] = AlphaExpanderAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
