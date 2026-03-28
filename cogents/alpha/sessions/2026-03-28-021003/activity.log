@@ -91,6 +91,17 @@ status: in-progress
 - Core improvements retained: retreat margin 20, network-distance scoring
 - Uploaded v140 (user's v134 baseline + our targeting/retreat improvements)
 
+## CRITICAL TOURNAMENT FINDING
+- v65 base policy: 3.24 avg (#1, 321 matches) — outperforms ALL newer versions
+- All v132-v141 score 1.93-2.60 in tournament (WORSE despite higher local scores)
+- Local self-play avg 4-6 does NOT predict tournament success
+- Hypothesis: newer policy over-optimizes for self-play, loses generality vs opponents
+- User reverted to stable allocation + simpler logic
+- Current code: stable budgets, network-distance targeting, retreat margin 20
+- v143/v144 uploaded to test against tournament
+- 8-cog local avg: 4.56 (no wipeouts in 8 seeds)
+- Tournament is the only reliable signal — local testing misleading
+
 ## v141: Stable Role Allocation (User Redesign)
 - User overhauled pressure_budgets: fixed allocation, no oscillation
   - 2 agents: 1 aligner, 0 scrambler
