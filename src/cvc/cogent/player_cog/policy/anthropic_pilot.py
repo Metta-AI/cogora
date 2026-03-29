@@ -21398,3 +21398,214 @@ class AlphaTournamentV105Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV106: TV104 (explore-first) + dual aligner (TV102 budget) ────────────────
+
+class AlphaTournamentV106AgentPolicy(AlphaTournamentV104AgentPolicy):
+    """TournamentV106: TV104 (explore-first) + TV102 (dual aligner budget).
+
+    TV104 (explore-first) is the best at 14.51. TV102 (dual aligner) helped
+    2vX to 12.98. Combine: dual aligner with explore-first behavior.
+    TV105 was similar but also removed heart batching — that hurt.
+    TV106 keeps heart batching but adds explore-first + dual budget.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if min_res >= 20:
+                return 2, 0
+            if min_res >= 7:
+                return 1, 0
+            return 0, 0
+
+        return AlphaTournamentV82AgentPolicy._pressure_budgets(self, state, objective=objective)
+
+
+class AlphaTournamentV106Policy(MettagridSemanticPolicy):
+    """TournamentV106: TV104 explore-first + TV102 dual aligner."""
+    short_names = ["alpha-tournament-v106"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV106AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV107: TV104 + wider explore for 2-agent aligner ─────────────────────────
+
+class AlphaTournamentV107AgentPolicy(AlphaTournamentV104AgentPolicy):
+    """TournamentV107: TV104 + wider explore pattern for 2-agent aligner.
+
+    The default aligner explore radius is 22. In 2-agent games, the aligner
+    may exhaust nearby junctions quickly. Use wider explore offsets (r=30)
+    to cover more of the 88x88 map and find distant neutral junctions.
+    """
+
+    _WIDE_EXPLORE_OFFSETS = (
+        (0, -30), (21, -21), (30, 0), (21, 21),
+        (0, 30), (-21, 21), (-30, 0), (-21, -21),
+        (0, -15), (11, -11), (15, 0), (11, 11),
+        (0, 15), (-11, 11), (-15, 0), (-11, -11),
+    )
+
+    def _explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
+        num_agents = self.policy_env_info.num_agents
+        if num_agents <= 2 and role == "aligner":
+            current_pos = _h.absolute_position(state)
+            hub = self._nearest_hub(state)
+            center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+            offsets = self._WIDE_EXPLORE_OFFSETS
+            offset_index = (self._explore_index + self._agent_id) % len(offsets)
+            target = offsets[offset_index]
+            absolute_target = (center[0] + target[0], center[1] + target[1])
+            if _h.manhattan(current_pos, absolute_target) <= 2:
+                self._explore_index += 1
+                offset_index = (self._explore_index + self._agent_id) % len(offsets)
+                target = offsets[offset_index]
+                absolute_target = (center[0] + target[0], center[1] + target[1])
+            return self._move_to_position(state, absolute_target, summary=summary, vibe=_h.role_vibe(role))
+        return super()._explore_action(state, role=role, summary=summary)
+
+
+class AlphaTournamentV107Policy(MettagridSemanticPolicy):
+    """TournamentV107: TV104 + wider explore for 2-agent."""
+    short_names = ["alpha-tournament-v107"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV107AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV108: TV104 explore-first for ALL team sizes (not just 2-agent) ──────────
+
+class AlphaTournamentV108AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV108: explore-first for ALL team sizes.
+
+    TV104 showed explore-first dramatically helps 2v6 (14.40 vs 11.80).
+    Apply the same approach to all configs: when the aligner has no reachable
+    junctions, explore instead of scrambling. This should help in 4v4 too
+    since scrambling hurts the shared game score.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        return AlphaTournamentV90AgentPolicy._pressure_budgets(self, state, objective=objective)
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        elif (self._peak_junction_count >= 5
+              and step - self._last_junction_growth_step > 300
+              and step > 500):
+            self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        num_agents = self.policy_env_info.num_agents
+        if num_agents > 2 and _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Explore-first for ALL team sizes — no idle scramble
+        if self._stagnation_mode and hp > 50:
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV108Policy(MettagridSemanticPolicy):
+    """TournamentV108: explore-first for ALL team sizes."""
+    short_names = ["alpha-tournament-v108"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV108AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
