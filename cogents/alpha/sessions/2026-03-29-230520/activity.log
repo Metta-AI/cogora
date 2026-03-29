@@ -31,3 +31,10 @@ started: 2026-03-29T23:05:20Z
   - v486 (TV125): TV123 + dual aligner for 2-agent teams
   - v487 (TV126): all combined (TV123 + TV124 + TV125)
 - All passed quick validation (100-step test). Full self-play running for TV126.
+- TV126 self-play: 2.67 (vs TV82 2.59, +3%). stag_bridge_scramble working. Budget ramp not triggered (silicon bottleneck at 90).
+- NEW RESULTS: v483 (TV122) = 13.14 avg (39m) — best with solid data! 2a=11.7, 4a=13.9, 6a=13.6.
+  v482 (TV121) = 18.24 qualifying (1m, noise). Paz-Bot = 13.25. We're close!
+- Created TV127-128 to test 2-agent role mixes:
+  - v488 (TV127): 1 scrambler + 1 miner for 2-agent (opposite of TV122 dual-aligner)
+  - v489 (TV128): 1 aligner + 1 scrambler for 2-agent (hybrid)
+- Waiting for tournament results on v484-v489.

@@ -23233,3 +23233,94 @@ class AlphaTournamentV126Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV127: TV82 + 2-agent scramble specialist ──────────────────────────────
+
+class AlphaTournamentV127AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV127: TV82 + 1 scrambler for 2-agent teams.
+
+    Hypothesis: in 2v6, partner's 6 agents handle alignment. Our 2 agents
+    should focus on: 1 miner (sustain economy) + 1 scrambler (disrupt clips'
+    network near team edge to create re-alignment opportunities for partner).
+    This is the opposite of TV122's dual-aligner approach.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        aligner, scrambler = AlphaTournamentV82AgentPolicy._pressure_budgets(self, state, objective=objective)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if team_size <= 2:
+            step = state.step or self._step_index
+            min_res = _h.team_min_resource(state)
+            can_hearts = _h.team_can_refill_hearts(state)
+            if step < 300 or (min_res < 7 and not can_hearts):
+                return 0, 0  # Both mine early
+            # 1 scrambler to disrupt clips, 0 aligners (partner handles alignment)
+            if min_res >= 14:
+                return 0, 1
+            return 0, 0
+        return aligner, scrambler
+
+
+class AlphaTournamentV127Policy(MettagridSemanticPolicy):
+    """TournamentV127: TV82 + 2-agent scramble specialist."""
+    short_names = ["alpha-tournament-v127"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV127AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV128: TV82 + 2-agent hybrid (1 aligner + 1 scrambler) ─────────────────
+
+class AlphaTournamentV128AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV128: TV82 + mixed roles for 2-agent teams.
+
+    1 aligner + 1 scrambler for 2-agent teams when economy is healthy.
+    Aligner expands from our side, scrambler disrupts clips near network edge.
+    This tests whether the optimal 2-agent mix is align+scramble rather than
+    2x align (TV122) or mine+scramble (TV127).
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        aligner, scrambler = AlphaTournamentV82AgentPolicy._pressure_budgets(self, state, objective=objective)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if team_size <= 2:
+            step = state.step or self._step_index
+            min_res = _h.team_min_resource(state)
+            can_hearts = _h.team_can_refill_hearts(state)
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if min_res >= 14:
+                return 1, 1  # 1 aligner + 1 scrambler
+            return 1, 0  # Just aligner
+        return aligner, scrambler
+
+
+class AlphaTournamentV128Policy(MettagridSemanticPolicy):
+    """TournamentV128: TV82 + 2-agent hybrid (aligner + scrambler)."""
+    short_names = ["alpha-tournament-v128"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV128AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
