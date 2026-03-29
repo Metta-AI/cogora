@@ -84,3 +84,6 @@
   v309 (AdaptiveV3) at 5.55 (43 matches) — best of new policies.
   Uploaded v313: Aggressive + silicon-priority mining (no other changes).
   Hypothesis: silicon-priority might be the specific "economy fix" in v290.
+- [2026-03-29 00:20] Uploaded fresh versions with all bug fixes (incl. extractor discovery):
+  v313: Aggressive + silicon mining, v314: Aggressive, v315: AdaptiveV3, v316: ChainExpand
+  All include the extractor discovery fix. Will compare vs old versions to see if fix matters.
