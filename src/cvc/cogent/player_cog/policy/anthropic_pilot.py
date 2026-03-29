@@ -12489,3 +12489,76 @@ class AlphaTournamentV15Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV16: Tournament economy fix + TV12 stagnation ─────────────────────────
+
+class AlphaTournamentV16AgentPolicy(AlphaTournamentV12AgentPolicy):
+    """TournamentV16: TV12 stagnation + tournament-aware economy budgets.
+
+    Key insight from tournament logs: with 4 of 8 agents, running 3 aligners
+    + 1 miner causes silicon depletion by step 1500, crashing the economy.
+
+    Fixes:
+    1. Detect tournament (num_agents != our team size) → conservative budgets
+    2. Cap aligners at 2 for 4-agent sub-team (ensures 2 miners)
+    3. Silicon priority mining in tournament when silicon < 100
+    4. TV9's 2-agent fix
+    5. TV12's stagnation exploration for idle aligners
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        in_tournament = team_size < num_agents
+
+        if in_tournament:
+            max_aligners = max(team_size - 2, 1)
+            if step < 100 or (min_res < 10 and not can_hearts) or min_res < 50:
+                return min(1, max_aligners), 0
+            return min(2, max_aligners), 0
+
+        return super()._pressure_budgets(state, objective=objective)
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+        resources = _shared_resources(state)
+
+        if team_size < num_agents:
+            silicon = resources.get("silicon", 0)
+            if silicon < 100:
+                return MacroDirective(resource_bias="silicon")
+
+        return MacroDirective(resource_bias=_least_resource(resources))
+
+
+class AlphaTournamentV16Policy(MettagridSemanticPolicy):
+    """TournamentV16: TV12 stagnation + tournament economy fix."""
+    short_names = ["alpha-tournament-v16"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV16AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

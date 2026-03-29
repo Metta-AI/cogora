@@ -79,7 +79,27 @@ Combined best features:
 Parallel session created TV13 with TV12 + TV11 explorer + chain push.
 My version renamed to TV14 (TV12 + TV9 2-agent + silicon priority).
 
+## CRITICAL FINDING: Tournament Economy
+Downloaded tournament match logs (v65 vs v364, 4a each).
+- `num_agents=8` in tournament (total env), each player controls 4
+- With 4 agents: 3 aligners + 1 miner → silicon depletes to 5 by step 1500!
+- Economy collapse → only 1 aligner, Clips takes over
+
+## TV15 Design (Tournament Economy Fix)
+- Detect tournament: `team_size < num_agents`
+- Cap at 2 aligners for 4-agent sub-team (ensures 2 miners)
+- Silicon priority mining only in tournament mode (when < 100)
+- TV12 stagnation exploration base
+- TV9 2-agent fix
+
+Self-play 10K: 10.59, 14.29, 5.79 → avg 10.22 (slightly lower than TV12 due to variance)
+
+## Uploads
+- v370 (TV14): TV12 stagnation + TV9 2-agent fix + silicon priority
+- v371 (TV15): TV12 stagnation + tournament economy fix + silicon priority
+
 ## Current Tournament Versions
 - v367 (TV9): 8.61 avg — current leader
 - v368 (TV12): stagnation exploration — qualifying
 - v370 (TV14): TV12 + 2-agent fix + silicon — qualifying
+- v371 (TV15): TV12 + tournament economy fix — qualifying
