@@ -1,17 +1,17 @@
 # Todos
 
-- [ ] Achieve score > 10 in tournament (self-play: 10.85 avg, need tournament confirmation)
-- [ ] **Monitor v362 (AdaptiveScout) tournament results** — especially 6-agent matches
-- [ ] **Validate v362 in 6-agent tournament matches** — expect 9-17 based on self-play
-- [ ] **Optimize 2-agent performance** — AdaptiveScout reverts to TV2 at <6 agents
-- [ ] **Improve scout exploration pattern** — current wide offsets work, but maybe even wider?
-- [ ] **Study opponent strategies** — gtlm-reactive, coglet-v0 are real competitors
-- [ ] **GPU-accelerated RL training** — could push beyond heuristic+scout ceiling
-- [x] BREAKTHROUGH: Dedicated scout agent (+28% at 5K, +253% at 10K!)
-- [x] ScoutExplore avg 10.85 at 10K steps (self-play, seeds 0-3)
-- [x] CONFIRMED: 1 scout optimal, 2+ scouts hurts
-- [x] CONFIRMED: Scout only beneficial with 6+ agents (25% overhead at 4a kills economy)
-- [x] CONFIRMED: Scout advantage GROWS over time (5K vs 10K)
-- [x] CONFIRMED: Cooperative scoring already implemented (team_id='cogs' shared)
-- [x] CONFIRMED: Dense spiral worse than wide pattern for scouts
-- [x] CONFIRMED: Scout multitasking hurts (should only scout, not align)
+- [ ] Achieve score > 10 in tournament (current best: 8.63, v363)
+- [ ] **Monitor v367 (TV9) tournament results** — fixes TV7's 2-agent timing
+- [ ] **Study v363 strategy** — it's #1, understand what it does differently
+- [ ] **Try LLM wrapper + TV7** — v348's LLM adds ~0.2 points; could push to ~9
+- [ ] **Improve 2-agent performance** — biggest drag on average (6.41 avg)
+- [ ] **Study Clips faction behavior** — understand scramble patterns for defense
+- [ ] **Multi-seed tournament variance** — scores vary 2x between maps
+- [x] v364 (TV7) leaderboard #2 at 8.54 — beats v348 by +12%
+- [x] v366 (TV8-multi) leaderboard #3 at 8.32 — phase-based strategy works
+- [x] v365 (raw TV2) at 7.59 — confirms LLM wrapper adds ~0.2 points
+- [x] CONFIRMED: Scout architecture hurts tournament (v362 at 6.85 vs v348 at 7.60)
+- [x] CONFIRMED: Game is cooperative — both players same Cogs team
+- [x] CONFIRMED: Silicon is structural bottleneck (fewest extractors)
+- [x] CONFIRMED: Idle-scramble critical differentiator
+- [x] CONFIRMED: TV7's explore-idle helps on hard maps (+92% seed 0)
