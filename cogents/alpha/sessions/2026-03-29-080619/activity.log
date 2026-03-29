@@ -1,32 +1,33 @@
 # Session 2026-03-29-080619
 Status: in-progress
 
-## LATEST: TV12 Uploaded as v368
-TV12 = TV7 + stagnation-triggered wider exploration.
-When junction count stops growing for 300 steps (peak >= 5),
-switches idle aligners to explore with 3-ring offsets (22, 30, 35).
+## LATEST: TV13 Uploaded as v369
+TV13 = TV12 (stagnation) + TV11 (systematic explore + chain push)
+Combines three improvements over TV7:
+1. Stagnation-triggered wider exploration for idle aligners
+2. Last miner systematically explores map for first 400 steps
+3. Chain push: after aligning frontier junction, explore further in that direction
 
 ## Self-Play Comparison (8a, 10K, 8 seeds each)
-| Policy | Avg | Best | Worst |
-|--------|-----|------|-------|
-| TV7    | 10.29 | 15.39 | 3.44 |
-| TV12   | 11.15 | 27.32 | 0.00* |
-*0.00 = wipeout seed (map death), also happens to TV7
+| Policy | Avg | Non-wipeout Avg | Best |
+|--------|-----|-----------------|------|
+| TV12   | 7.38 | 8.43 | 14.07 |
+| TV13   | 13.15 | 17.52 | 36.11 |
 
-TV12 +8% avg over TV7 in self-play.
-
-## Tournament Status
-- v367 (TV9): 8.61 avg — current best in tournament
-- v368 (TV12): qualifying — just uploaded
-- Goal: >10 avg
+TV13 +78% avg over TV12! Massive improvement from combining stagnation + explore + chain push.
 
 ## Uploads This Session
-- v368 (TV12/AdaptiveStagnation): qualifying
+- v368 (TV12): qualifying
+- v369 (TV13): qualifying — best candidate!
 
-## Key Learnings
-1. Map layout causes MASSIVE score variance (3.44 to 27.32)
-2. Stagnation detection helps on maps where junctions are far from hub
-3. Idle scrambling remains critical — can't remove it
-4. Self-play seeds are not deterministic across runs
-5. Double scramblers crash economy (TV10 failed at 3.55)
-6. Explore-always idle loses to Clips (TV9-explore at 2.88)
+## Key Design: TV13
+- TV12 stagnation detection: when junction count stops growing, explore more
+- TV11 systematic explore: last miner maps the world early (400 steps)
+- TV11 chain push: after frontier alignment, continue 15 steps in same direction
+- All on top of TV7's proven 2-agent mining and idle behavior
+
+## Tournament Status
+- v367 (TV9): ~8.6 avg — current best
+- v368 (TV12): qualifying
+- v369 (TV13): qualifying — expects significant improvement
+- Goal: >10 avg

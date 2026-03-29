@@ -12146,3 +12146,124 @@ class AlphaTournamentV12Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV13: TV12 stagnation + TV11 systematic explore + chain push ─────────
+
+class AlphaTournamentV13AgentPolicy(AlphaTournamentV12AgentPolicy):
+    """TournamentV13: TV12 stagnation detection + TV11 systematic exploration.
+
+    Combines two orthogonal improvements:
+    1. TV12: stagnation-triggered wider exploration for idle aligners
+    2. TV11: last miner systematically explores map for first 400 steps
+    3. TV11: chain push after aligning frontier junctions
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._explore_waypoint_idx = 0
+        self._chain_push_steps = 0
+        self._chain_push_direction: tuple[int, int] | None = None
+
+    def _miner_action(self, state: MettagridState, summary_prefix: str = "") -> tuple[Action, str]:
+        """Last agent: systematic map exploration for first 400 steps."""
+        step = state.step or self._step_index
+        num_agents = self.policy_env_info.num_agents
+        explorer_id = max(self._shared_team_ids) if self._shared_team_ids else num_agents - 1
+
+        if self._agent_id == explorer_id and step < 400 and num_agents >= 4:
+            hp = int(state.self_state.inventory.get("hp", 0))
+
+            if hp < 30:
+                hub = self._nearest_hub(state)
+                if hub is not None:
+                    return self._move_to_known(state, hub, summary="explorer_retreat", vibe="change_vibe_miner")
+
+            if self._should_deposit_resources(state):
+                depot = self._nearest_friendly_depot(state)
+                if depot is not None:
+                    return self._move_to_known(state, depot, summary="explorer_deposit", vibe="change_vibe_miner")
+
+            current_pos = _h.absolute_position(state)
+            hub = self._nearest_hub(state)
+            center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+
+            waypoint = _SYSTEMATIC_EXPLORE_GRID[self._explore_waypoint_idx % len(_SYSTEMATIC_EXPLORE_GRID)]
+            target = (center[0] + waypoint[0], center[1] + waypoint[1])
+            target = (max(2, min(85, target[0])), max(2, min(85, target[1])))
+
+            if _h.manhattan(current_pos, target) <= 3:
+                self._explore_waypoint_idx += 1
+                waypoint = _SYSTEMATIC_EXPLORE_GRID[self._explore_waypoint_idx % len(_SYSTEMATIC_EXPLORE_GRID)]
+                target = (center[0] + waypoint[0], center[1] + waypoint[1])
+                target = (max(2, min(85, target[0])), max(2, min(85, target[1])))
+
+            return self._move_to_position(state, target, summary="systematic_explore", vibe="change_vibe_miner")
+
+        return super()._miner_action(state, summary_prefix=summary_prefix)
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """TV12 aligner + chain push after frontier alignment."""
+        hub = self._nearest_hub(state)
+        current_pos = _h.absolute_position(state)
+
+        # Chain push mode: continue exploring toward frontier
+        if self._chain_push_steps > 0:
+            self._chain_push_steps -= 1
+            hp = int(state.self_state.inventory.get("hp", 0))
+
+            if hp < 25 or self._chain_push_direction is None:
+                self._chain_push_steps = 0
+                self._chain_push_direction = None
+            else:
+                new_target = self._preferred_alignable_neutral_junction(state)
+                if new_target is not None:
+                    self._chain_push_steps = 0
+                    self._chain_push_direction = None
+                    self._claim_target(new_target.position)
+                    self._set_sticky_target(new_target.position, new_target.entity_type)
+                    return self._move_to_known(state, new_target, summary="chain_align_junction", vibe="change_vibe_aligner")
+
+                push_target = (
+                    current_pos[0] + self._chain_push_direction[0] * 5,
+                    current_pos[1] + self._chain_push_direction[1] * 5,
+                )
+                push_target = (max(2, min(85, push_target[0])), max(2, min(85, push_target[1])))
+                return self._move_to_position(state, push_target, summary="chain_push_explore", vibe="change_vibe_aligner")
+
+        # Get TV12 parent's aligner action (with stagnation)
+        action, summary = super()._aligner_action(state)
+
+        # After aligning, initiate chain push toward frontier
+        if summary == "align_junction" and self._current_target_position is not None:
+            target_pos = self._current_target_position
+            hub_pos = (hub.global_x, hub.global_y) if hub is not None else current_pos
+            dx = target_pos[0] - hub_pos[0]
+            dy = target_pos[1] - hub_pos[1]
+            dist = max(abs(dx) + abs(dy), 1)
+            norm_dx = 1 if dx > 0 else (-1 if dx < 0 else 0)
+            norm_dy = 1 if dy > 0 else (-1 if dy < 0 else 0)
+            if dist >= 15:
+                self._chain_push_steps = 15  # Shorter than TV11's 20
+                self._chain_push_direction = (norm_dx, norm_dy)
+
+        return action, summary
+
+
+class AlphaTournamentV13Policy(MettagridSemanticPolicy):
+    """TournamentV13: TV12 stagnation + TV11 systematic explore + chain push."""
+    short_names = ["alpha-tournament-v13"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV13AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
