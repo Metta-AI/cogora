@@ -1,44 +1,34 @@
 # Session 2026-03-29-111020
 Status: in-progress
 
-## Context
-Previous session (100801) interrupted mid-TV13 design.
-Current best: v368 (TV12) at 8.69, #1 on leaderboard.
-Goal: score > 10 in tournament.
+## Goal: score > 10 in tournament — ACHIEVED by v378 (10.13)
 
-## CRITICAL BUG FIX: Early-game wipeout
-Removed hub_camp_heal/survival_hold code that killed agents in ~50 steps.
-Agents now start moving immediately, territory healing kicks in.
+## Leaderboard Progress (latest)
+1. v378 (TV18) = 10.13 (78 matches) — **ABOVE >10 GOAL**
+2. v374 = 9.40 (79)
+3. v379 (TV19) = 8.97 (66)
+4. v381 = 8.84 (65)
+5. v380 = 8.70 (66)
+6. v368 (TV12) = 8.69 (96)
+10. v382 (TV12+bugfix) = 8.55 (63) — climbing steadily
+88. v383 (TV20) = 3.09 (11) — bad
+v384 (TV18+bugfix) — not ranked yet
+v385 (TV21) — not ranked yet
 
-## GOAL ACHIEVED: v378 (TV18) at 10.13 on leaderboard!
-Leaderboard as of now:
-1. v378 (TV18) = 10.13 (78 matches) — ABOVE >10 GOAL
-2. v374 = 9.40 (79 matches)
-3. v379 (TV19) = 9.14 (48 matches)
-4. v381 (TV19+fix) = 8.95 (44 matches)
-5. v380 (TV19+LLM) = 8.73 (50 matches)
-6. v368 (TV12) = 8.69 (96 matches)
+## Bug Fix Impact
+v382 (TV12+bugfix) at 8.55 vs v368 (TV12) at 8.69 — slightly LOWER.
+The bug fix may not help in tournament (different healing mechanics?).
+Alternatively v382 is still climbing and may stabilize higher.
 
-v382 (TV12+bugfix) = 3.70 (only 2 matches, too early)
-v383 (TV20) not scored yet
+## Uploads This Session
+- v382: TV12 + early-game bug fix → 8.55 (63 matches, climbing)
+- v383: TV20 (TV12+fullmap+silicon) → 3.09 (bad!)
+- v384: TV18 + early-game bug fix → pending
+- v385: TV21 (TV12+silicon+explorer+bugfix) → pending
 
-## Self-play Results (10K steps, fixed base)
-- TV12: avg 10.23 (seeds: 8.93, 13.76, 7.99)
-- TV20: avg 6.03 (worse! silicon+explore hurt locally)
-- TV18: 0.09 on seed 0 (silicon priority kills locally)
-- TV15: 4.91 on seed 0 (full-map explore hurts locally)
-
-Key insight: what works in tournament vs self-play can be very different.
-Tournament has opponents who create dynamics self-play doesn't capture.
-
-## Key Findings
-- Silicon priority HELPS in tournament (v378=10.13 vs v368=8.69) but HURTS locally
-- Full-map exploration neutral/slightly positive in tournament (v379=9.14)
-- Budget changes always hurt
-- The early-game bug fix may or may not affect tournament (different env?)
-- v382 needs more matches to determine impact
-
-## Next Steps
-- Monitor v382 and v383 tournament performance
-- If bug fix helps: could push further improvements
-- If bug fix doesn't help: focus on other tournament-proven strategies
+## Key Insights
+1. v378 (TV18) is #1 at 10.13 — silicon priority HELPS in tournament
+2. TV20 (aggressive changes) HURTS both locally and tournament
+3. Early-game bug fix: unclear tournament impact, strong local impact
+4. Self-play ≠ tournament: silicon hurts locally but helps in tournament
+5. Best strategy: minimal changes on proven base (TV12+silicon only)
