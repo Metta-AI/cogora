@@ -2,37 +2,42 @@
 Status: in-progress
 
 ## Context
-- Previous session interrupted. v348 at #1 with 7.53.
-- Goal: score > 10. Gap: ~2.5 points.
-- Strategy: build on TournamentV2 (AdaptiveV3 + idle scramble) base.
+- v348 was #1 with 7.53. Goal: >10.
+- TournamentV2 base: AdaptiveV3 + team cap + idle scramble.
 
-## Analysis
-- TournamentV2 self-play: 4a=3.85, 8a=2.57 (per cog, total is double)
-- In 4a, agents found only 14 of ~65 junctions. frontier=0 by step 1500.
-- First alignment at step 200 (4a) or step 1500 (8a)!
-- After frontier=0, agents just idle-scramble back and forth.
-- Explore offsets radius ~22 on 88x88 map = insufficient coverage.
-- Key bottleneck: ALIGNMENT THROUGHPUT, not junction discovery.
+## Tournament Leaderboard (78 matches)
+| Policy | Score |
+|--------|-------|
+| v351 (TV3) | 7.51 |
+| v348 (TV2) | 7.50 |
+| v352 (TV4) | 7.50 |
+| v290 (Aggressive) | 6.50 |
 
-## ExplorerV2 Created
-- Based on TournamentV2 (v348, #1)
-- Adds wide exploration (radius 36) when frontier=0
-- Result: ExplorerV2 WORSE (0.99 4a vs TV2's 3.85)
-- More junctions discovered (9 vs 6) but less alignment throughput (42 vs 105)
-- Exploration takes agents away from scramble-realign cycle
+## Experiments Run
+| Policy | 4a self-play | 10k self-play | Key Finding |
+|--------|-------------|---------------|-------------|
+| TV2 (baseline) | 3.85 | 4.43 | Best overall |
+| ExplorerV2 | 0.99 | — | Exploration hurts throughput |
+| Capture | 3.85 | — | Same as TV2 in self-play |
+| CapturePlus | 2.12 | — | Faster hearts hurts |
+| TV5 | 3.26 | — | Fast ramp crashes economy |
+| Patrol | 3.58 | — | Passive defense fails |
+| MaxPressure4a | 1.44 | 3.07 | 0-miner phase starves economy |
 
-## Key Insight: Scramble-Realign Cycle
-- 72% of aligner time is idle_align_scramble (no alignable targets)
-- Only 7% is actual align_junction
-- Bottleneck: many scrambled enemy junctions NOT within our alignment range
-- Solution: prioritize scrambling enemy junctions within our network range
+## Multi-Seed Self-Play (TV2, 4a, 5000 steps)
+- Seed 1: 4.33, Seed 2: 1.28, Seed 3: 2.16, Seed 4: 1.99, Seed 5: 2.32
+- Map variance is HUGE — dominant factor in score
 
-## Capture Policy Created
-- AlphaCapturePolicy: scramble targeting with -50 bonus for capturable junctions
-- AlphaCapturePlusPolicy: + faster heart cycle (batch to 2 instead of 3-6)
-- Testing both locally now
+## Key Insights
+1. TV2's balance is hard to beat — deviating in ANY direction hurts self-play
+2. All top3 (v348,v351,v352) converge to ~7.5 in tournament
+3. 72% of aligner time is idle-scrambling (frontier=0)
+4. Junction discovery limited to ~14/65 per team
+5. Capture targeting makes no difference in self-play (symmetric)
+6. Tournament ceiling may be ~7.5 with current architecture
 
-## TV2 10k Self-Play
-- Score: 4.43 (vs 3.85 at 5k) — longer games dilute early 0-score period
-- Friendly junctions stabilize at 8-9
-- Tournament opponents: Paz-Bot, slanky:v112, alpha.0:v11-v14, alpha.0:v49
+## Uploads This Session
+- v353: Capture (pure heuristic)
+- v354: TV2 (pure heuristic)
+- v355: TV5 (capture + fast ramp + lower scramble)
+- v356: MaxPressure4a
