@@ -6434,3 +6434,299 @@ class AlphaUltraPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaUltraV2 — Ultra chain expansion + light defense (1 scrambler)
+# Insight: Ultra peaks at 20j but collapses to 0. Adding 1 scrambler
+# should slow Clips' scrambling enough to sustain high junction counts.
+# ---------------------------------------------------------------------------
+
+class AlphaUltraV2AgentPolicy(AlphaUltraAgentPolicy):
+    """Ultra V2: chain expansion + light defense.
+
+    Ultra peaks at 20 junctions but collapses because Clips scrambles
+    everything. V2 adds 1 scrambler to slow Clips' advance while keeping
+    near-max alignment pressure and chain expansion.
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner: align > expand > idle-scramble-if-rich > explore."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 15
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 15:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Idle: scramble if economy healthy (hearts + resources), else explore
+        min_res = _h.team_min_resource(state)
+        if hearts > 0 and min_res >= 20:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+        if min_res < 10:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Chain expansion + light defense: 1 scrambler after step 200."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            # 4 agents: scale with economy, add scrambler when rich
+            if min_res >= 100:
+                return 2, 1  # 2 align + 1 scramble + 1 mine
+            if min_res >= 30:
+                return 2, 0
+            return 1, 0
+
+        # 5+ agents: max alignment + 1 scrambler
+        if step < 20:
+            return 2, 0
+
+        economy_crisis = min_res < 3 and not can_hearts
+        if economy_crisis:
+            return max(1, num_agents // 4), 0
+
+        # 1 scrambler once economy supports it (step 200+)
+        scrambler = 1 if step >= 200 and min_res >= 7 else 0
+
+        if min_res >= 200:
+            return min(num_agents - 1 - scrambler, 6), scrambler
+        elif min_res >= 100:
+            return min(num_agents - 2 - scrambler, 5), scrambler
+        elif min_res >= 50:
+            return min(num_agents - 2 - scrambler, 4), scrambler
+        elif min_res >= 20:
+            return 3, scrambler
+        elif min_res >= 7:
+            return 2, scrambler
+        else:
+            return 2, 0
+
+
+class AlphaUltraV2Policy(MettagridSemanticPolicy):
+    """Ultra V2: chain expansion + light defense (1 scrambler)."""
+    short_names = ["alpha-ultra-v2"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaUltraV2AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaUltraV3 — Ultra chain expansion + aggressive idle-scramble by ALL aligners
+# Insight: Aggressive sustains 8-9j through idle-scramble. Ultra peaks at 20j
+# but collapses. V3: chain expansion + idle-scramble to sustain high junctions.
+# ---------------------------------------------------------------------------
+
+class AlphaUltraV3AgentPolicy(AlphaUltraAgentPolicy):
+    """Ultra V3: chain expansion + Aggressive-style idle-scramble.
+
+    Keeps Ultra's chain expansion and fast start but uses Aggressive's
+    idle behavior: when no junctions to align, scramble enemy junctions
+    to slow Clips. This should sustain the 20j peak much longer.
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner with Aggressive-style idle-scramble."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 15
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 15:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Idle: scramble if economy healthy (like Aggressive), mine if tight, explore if neither
+        min_res = _h.team_min_resource(state)
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+        if min_res < 14:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Max aligners + early scrambler like Aggressive, but with chain expansion."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res >= 50 and step >= 500:
+                return min(3, num_agents - 1), 0
+            return 2, 0
+
+        # 5+ agents: match Aggressive budgets (which get 6.54 in tournament)
+        if step < 30:
+            return 2, 0
+
+        economy_surplus = min_res >= 100
+        economy_crisis = min_res < 3 and not can_hearts
+
+        if economy_surplus:
+            pressure_budget = min(num_agents - 1, 7)
+        elif step < 100:
+            pressure_budget = 3
+        elif economy_crisis:
+            pressure_budget = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(5, num_agents - 2)
+
+        scrambler_budget = 0
+        if step >= 3000 and min_res >= 14:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 200 and min_res >= 7:
+            scrambler_budget = min(1, pressure_budget // 3)
+
+        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+        return aligner_budget, scrambler_budget
+
+
+class AlphaUltraV3Policy(MettagridSemanticPolicy):
+    """Ultra V3: chain expansion + Aggressive budgets + idle-scramble."""
+    short_names = ["alpha-ultra-v3"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaUltraV3AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

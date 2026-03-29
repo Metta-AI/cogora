@@ -8,3 +8,8 @@ status: in-progress
 - 01:15:00 KEY INSIGHT: Defense/scrambling wastes hearts vs weak opponents — zero benefit
 - 01:16:00 Created AlphaUltraPolicy: combines Aggressive fast start + ChainExpand expansion weights + zero scramblers + explore-heavy idle + economy-responsive scaling
 - 01:16:00 Running 6 local games: Aggressive 8a/4a, EconSurge 8a/4a, Fortress 8a, Ultra 8a/4a
+- 01:22:00 Local results: Ultra 8a=2.04 (peak 20j, collapse to 0), Ultra 4a=0.53, Aggressive 8a=3.61, Aggressive 4a=3.51
+- 01:22:00 KEY INSIGHT: Ultra peaks at 20j (step 700) vs Aggressive 9j — chain expansion gives +122% peak. But zero scramblers = total collapse vs Clips.
+- 01:23:00 Created AlphaUltraV2 (chain expand + 1 scrambler + idle-scramble if rich) and AlphaUltraV3 (chain expand + Aggressive budgets + idle-scramble)
+- 01:24:00 Uploaded: v319=Ultra, v320=UltraV2, v321=UltraV3 to tournament
+- 01:24:00 Running local tests: UltraV2 8a, UltraV3 8a/4a
