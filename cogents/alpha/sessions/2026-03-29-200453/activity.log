@@ -1,0 +1,11 @@
+# Activity Log
+
+session: 2026-03-29-200453
+status: in-progress
+started: 2026-03-29T20:04:53Z
+
+## Actions
+- Session started. Previous session (2026-03-29-190418) completed normally but left empty active-session.txt.
+- Current best: v442 (TV81) = 13.52 avg. v443 (TV82) = 12.82 (chain-value targeting).
+- Pending: v449 (TV88) / v450 (TV89) budget fix variants; v447/v448 chain-value expand + light coordination.
+- Goal: check tournament results, iterate on winning strategies.
