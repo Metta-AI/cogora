@@ -279,9 +279,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
         )
         role = directive.role or self._desired_role(state, objective=directive.objective)
         action, summary = self._choose_action(state, role)
-        if self._step_index <= 3 and self._agent_id == 0:
-            print(f"[COG_DEBUG] agent={self._agent_id} step={self._step_index} role={role} summary={summary} action={action}")
-            print(f"[COG_DEBUG] hp={state.self_state.inventory.get('hp', '?')} pos={_h.absolute_position(state)}")
         self._record_navigation_observation(current_pos, summary)
         macro_snapshot = self._macro_snapshot(state, role)
         self._infos = {
@@ -1266,8 +1263,6 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
     def _action(self, name: str, *, vibe: str | None = None) -> Action:
         action_name = name if name in self._action_names else self._fallback_action
-        if action_name != name and self._step_index <= 5:
-            print(f"[COG_DEBUG] agent={self._agent_id} step={self._step_index} action '{name}' NOT in action_names={sorted(self._action_names)}, falling back to '{action_name}'")
         vibe_name = vibe if vibe in self._vibe_actions else None
         return Action(name=action_name, vibe=vibe_name)
 
