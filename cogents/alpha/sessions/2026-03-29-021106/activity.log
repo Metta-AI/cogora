@@ -43,3 +43,16 @@ Previous session (010815) crashed. Key state:
   - In 75% of tournament (4-agent), Aggressive uses 8-agent budgets → too many aligners
   - AlphaTeamFix already exists to fix this
 - 02:46:00 Created AlphaTeamCarbonPolicy: TeamFix + CarbonBoost. Testing now.
+- 02:55:00 RESULTS summary (seed 1):
+  - TeamFix 4a: 8.82 (BEST 4a result!)
+  - TeamCarbon 4a: 7.89 (carbon bias hurts small teams)
+  - TeamCarbon 8a: 5.89
+  - CarbonBoost 4a: 8.82
+  - Aggressive 4a: ~3.51
+- 02:55:00 KEY INSIGHT: TeamFix (proper per-team budgets) is the #1 improvement for 4a.
+  Carbon bias helps 8a on some seeds but hurts 4a (too few miners to diversify).
+- 02:58:00 Uploaded v333=TeamFix, v334=TeamCarbon to tournament.
+- 03:00:00 TeamFix multi-seed 4a: 8.82, 7.04, 8.43 → avg 8.10 (consistent!)
+  TeamFix 8a seed 42: 1.72 (bad seed)
+- 03:00:00 CONCLUSION: TeamFix is the best tournament policy for 4a (75% of games).
+  Need to investigate 8a performance on bad seeds.
