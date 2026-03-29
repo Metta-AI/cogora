@@ -3,3 +3,8 @@ status: in-progress
 
 ## Actions
 - 01:08:15 Session started. Goal: >10 score. Current best #1 at 6.54. Last session interrupted — created Fortress (4.94) and EconSurge (5.15) policies, uploaded v317/v318.
+- 01:15:00 Reviewed all policy code: Aggressive (best tournament 6.54), ChainExpand (best local 5.91), Fortress (4.94), EconSurge (5.15)
+- 01:15:00 KEY INSIGHT: Tournament opponents are v56 (starter). Aggressive wins because max alignment pressure matters most vs weak opponents.
+- 01:15:00 KEY INSIGHT: Defense/scrambling wastes hearts vs weak opponents — zero benefit
+- 01:16:00 Created AlphaUltraPolicy: combines Aggressive fast start + ChainExpand expansion weights + zero scramblers + explore-heavy idle + economy-responsive scaling
+- 01:16:00 Running 6 local games: Aggressive 8a/4a, EconSurge 8a/4a, Fortress 8a, Ultra 8a/4a
