@@ -29,3 +29,13 @@ started: 2026-03-29T18:08:13Z
 - Reference: v422 (TV61) competition scores: 14.65 (4v4), 12.24 (6v2), 14.97 (2v6)
 - Uploaded v442 (TV81: TV79 bridge scramble + TV70 2-agent improvement)
 - All variants now in competition pipeline. Waiting for more results.
+- v437 (TV76) competition results (8 matches): avg ~11.91
+  - vs slanky: 15.32 (6v2), 13.03 (2v6)  
+  - vs v13: 8.58 (4v4), 11.90 (6v2), 13.02 (2v6)
+  - vs v11: 8.58 (4v4), 11.90 (6v2), 13.02 (2v6)
+- v438 (TV77) = 11.98 (1 match)
+- v439 (TV78) = avg 11.17 (3 matches)
+- Scores are per-game (both teams get same score) — map-dependent
+- 4v4 scores always 8.58 against v11/v13 (same map seed?)
+- Slanky matches score highest (weaker opponent)
+- Need more matches to compare reliably with TV61's historical 12.83
