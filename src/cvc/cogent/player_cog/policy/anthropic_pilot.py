@@ -7048,3 +7048,308 @@ class AlphaEconMaxPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaFocusedPolicy — Hub-proximal junctions + economy sustain + fast ramp
+# Hypothesis: concentrate alignment near hub for defensibility and fast re-align.
+# Sustain economy longer by keeping miners focused on carbon bottleneck.
+# ---------------------------------------------------------------------------
+
+class AlphaFocusedAgentPolicy(AlphaAggressiveAgentPolicy):
+    """Focused variant: hub-proximal junctions, carbon-biased mining, sustained economy.
+
+    Key changes from Aggressive:
+    1. Network weight 0.5 — prefer junctions near hub/network (shorter trips, easier re-align)
+    2. More aligners from step 0 (3 instead of 2) for faster initial coverage
+    3. Carbon-biased mining: more miners prioritize carbon (3x consumed by aligner gear)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Prefer hub-proximal junctions
+        self._network_weight = 0.5
+        # Force carbon bias for even-numbered agents (50% carbon miners)
+        if self._agent_id % 2 == 0:
+            self._default_resource_bias = "carbon"
+            self._resource_bias = "carbon"
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Faster ramp: 3 aligners from step 0, otherwise same as Aggressive."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 50:
+                return 2, 0  # Faster: 2 aligners from step 0 (was 1)
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 0
+            if min_res >= 50 and step >= 500:
+                aligner_budget = min(3, num_agents - 1)
+            if min_res >= 200 and step >= 1000:
+                scrambler_budget = 1
+                aligner_budget = min(2, num_agents - 1 - scrambler_budget)
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: same as Aggressive (2 at step 0 — 3 burns too much carbon)
+        if step < 30:
+            return 2, 0
+
+        economy_surplus = min_res >= 100
+        economy_crisis = min_res < 3 and not can_hearts
+
+        if economy_surplus:
+            pressure_budget = min(num_agents - 1, 7)
+        elif step < 100:
+            pressure_budget = 3
+        elif economy_crisis:
+            pressure_budget = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(5, num_agents - 2)
+
+        scrambler_budget = 0
+        if step >= 3000 and min_res >= 14:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 200 and min_res >= 7:
+            scrambler_budget = min(1, pressure_budget // 3)
+
+        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaFocusedPolicy(MettagridSemanticPolicy):
+    """Focused: hub-proximal junctions, carbon mining, sustained economy."""
+    short_names = ["alpha-focused"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaFocusedAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaSustainV2Policy — Maximum economy sustain with Aggressive base.
+# Key idea: keep 3+ miners always, scale alignment to economy health.
+# Late-game idle aligners mine instead of scramble.
+# ---------------------------------------------------------------------------
+
+class AlphaSustainV2AgentPolicy(AlphaAggressiveAgentPolicy):
+    """Sustain V2: tighter economy-responsive alignment that never over-extends.
+
+    Key changes from Aggressive:
+    1. Aligner budget STRICTLY capped by economy health
+    2. More miners at all times — never fewer than 3 (for 8-agent)
+    3. Idle aligners mine (not scramble) in late game to sustain economy
+    4. Carbon-biased mining for all agents
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # All agents carbon-biased (carbon is the bottleneck)
+        self._default_resource_bias = "carbon"
+        self._resource_bias = "carbon"
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner: align > expand > mine. In late game, idle mine instead of scramble."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Late game: idle mine to sustain economy (don't scramble)
+        min_res = _h.team_min_resource(state)
+        if step >= 3000 or min_res < 20:
+            return self._miner_action(state, summary_prefix="idle_align_")
+
+        # Early game: scramble if economy healthy
+        if int(state.self_state.inventory.get("heart", 0)) > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Economy-gated alignment: never more aligners than economy can sustain."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        # Minimum 2 miners always
+        min_miners = max(2, num_agents // 3)
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            max_aligners = num_agents - min_miners
+            if min_res >= 50:
+                return min(max_aligners, 2), 0
+            return min(max_aligners, 1), 0
+
+        # 5+ agents: economy-gated
+        if step < 30:
+            return 2, 0
+
+        max_pressure = num_agents - min_miners
+
+        if min_res < 3 and not can_hearts:
+            return 1, 0
+        elif min_res < 7:
+            aligner_budget = min(2, max_pressure)
+        elif min_res < 20:
+            aligner_budget = min(3, max_pressure)
+        elif min_res < 50:
+            aligner_budget = min(4, max_pressure)
+        elif min_res < 100:
+            aligner_budget = min(5, max_pressure)
+        else:
+            aligner_budget = max_pressure
+
+        # Scramblers only with surplus economy, early game only
+        scrambler_budget = 0
+        if step < 3000 and step >= 200 and min_res >= 14:
+            scrambler_budget = min(1, aligner_budget // 3)
+            aligner_budget = max(aligner_budget - scrambler_budget, 1)
+
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaSustainV2Policy(MettagridSemanticPolicy):
+    """SustainV2: economy-gated alignment, carbon-biased mining, late-game mining."""
+    short_names = ["alpha-sustain-v2"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaSustainV2AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaCarbonBoostPolicy — Aggressive + carbon-biased mining.
+# Simplest possible fix for carbon depletion bottleneck.
+# ---------------------------------------------------------------------------
+
+class AlphaCarbonBoostAgentPolicy(AlphaAggressiveAgentPolicy):
+    """Aggressive but 50% of miners prioritize carbon (the #1 bottleneck).
+
+    Carbon is consumed 3x by aligner gear. Default bias only gives 25% carbon miners.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Even-numbered agents: carbon bias (50% vs default 25%)
+        if self._agent_id % 2 == 0:
+            self._default_resource_bias = "carbon"
+            self._resource_bias = "carbon"
+
+
+class AlphaCarbonBoostPolicy(MettagridSemanticPolicy):
+    """CarbonBoost: Aggressive + 50% carbon-biased miners."""
+    short_names = ["alpha-carbon-boost"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaCarbonBoostAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
