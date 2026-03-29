@@ -68,3 +68,12 @@ Previous session (010815) crashed. Key state:
   Main driver of score variance is map extractor layout.
 - 03:15:00 Uploaded v336=SmartHybrid(fixed). All tournament matches still running.
 - 03:15:00 Key versions in tournament: v333(TeamFix), v334(TeamCarbon), v335(SmartHybrid-buggy), v336(SmartHybrid-fixed)
+- 03:20:00 **CRITICAL REALIZATION**: `-c 8` = 4v4 (main tournament format), `-c 4` = 2v2 (minority)!
+  - All my 4a (2v2) results are only relevant for ~25% of tournament
+  - 8a (4v4) results are what matters for 75% of tournament
+- 03:20:00 TeamFix HURTS 4v4 — correct team-size (4) gives conservative budgets
+  The "buggy" num_agents=8 in Aggressive actually gives BETTER 4v4 budgets (more aligners)
+- 03:20:00 BEST POLICY FOR TOURNAMENT: **CarbonBoost** (Aggressive budgets + carbon bias)
+  - 8a: avg 7.62 across 2 seeds (5.89, 9.35) — best overall
+  - Carbon bias prevents death spirals on bad seeds
+  - Already uploaded as v328
