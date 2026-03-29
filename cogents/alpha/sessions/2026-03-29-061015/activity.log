@@ -2,52 +2,64 @@
 Status: in-progress
 
 ## Context
-- v348 is #1 at 7.57 (81 matches). Goal: >10.
+- v348 was #1 at 7.57 (81 matches). Goal: >10.
 - Heuristic ceiling ~7.5. Need new approach.
-- Previous session tested 7 variants, none beat TV2.
 
-## Key Discoveries
+## BREAKTHROUGH: Scout Agent Discovery
 
-### 1. Cooperative Scrambling Already Implemented
-- Junction owners: team_id='cogs' for BOTH Cogs sub-teams
-- Base _best_scramble_target already excludes cogs → only scrambles Clips
-- CoopV2's "cooperative fix" was redundant (no-op)
+### The Problem
+- Only 14/65 junctions discovered per team in self-play (88x88 map, 13x13 obs)
+- 72% of aligner time spent idle-scrambling (no frontier junctions)
+- Aligner explore pattern only reaches 22 tiles from hub
 
-### 2. Tournament Match Structure
-- Matches have VARIABLE agent counts: 2v6, 4v4, or 6v2
-- Cooperative scoring confirmed: both teams get identical scores
-- With 6 agents, v348 scored 9.61! With 4: 6.31. With 2: 5.23.
-- Current competition pool: v59/v60 vs various alpha versions
+### The Solution: Dedicated Scout Agent
+Allocating 1 agent to permanently explore the map discovers far more junctions,
+which the remaining agents can then align.
 
-### 3. BREAKTHROUGH: Scouts Dramatically Improve Score
-| Policy | Score (8a, 5k, seed 0) | vs TV2 |
-|--------|----------------------|--------|
+### Results (seed 0, 8 agents, 5000 steps)
+| Policy | Score | vs TV2 |
+|--------|-------|--------|
 | TV2 baseline | 5.03 | — |
-| WideExplore | 4.74 | -6% |
-| ChainBuilder | 4.30 | -14% |
-| ExploreFirst | 3.75 | -25% |
 | **ScoutExplore (1 scout)** | **6.42** | **+28%** |
+| TwoScouts | 7.36 | +46% |
+| ThreeScouts | 5.08 | +1% |
+| SmartScout (scouts align) | 4.27 | -15% |
 | ScoutV2 (dense spiral) | 4.43 | -12% |
 | ScoutChain | 4.42 | -12% |
-| **TwoScouts** | **7.36** | **+46%** |
+| ScoutPlus (phase transition) | 3.50 | -30% |
+| AdaptiveScout | 5.19 | +3% |
 
-### 4. Multi-Seed ScoutExplore vs TV2
-| Seed | ScoutExplore | TV2 |
-|------|-------------|-----|
-| 0 | 6.42 | 5.03 |
-| 1 | 6.43 | 5.98 |
-| 2 | 5.36 | 0.00 |
-| 3 | 5.53 | 6.66 |
-| 4 | 6.07 | 7.25 |
-| Avg | 5.96 | 4.98 |
+### Multi-Seed Averages (seeds 0-4)
+| Policy | Avg Score |
+|--------|-----------|
+| TV2 | 4.98 |
+| **ScoutExplore** | **5.96** |
+| TwoScouts | 5.28 |
 
-Scout helps most on bad seeds (seed 2: 5.36 vs 0.00!)
+### 4-Agent Mode
+| Policy | 4a Score |
+|--------|---------|
+| TV2 | 3.06 |
+| ScoutExplore | 3.55 (+16%) |
+
+### Key Learnings
+1. 1 scout is optimal. 2 scouts has higher variance, 3 scouts = diminishing returns.
+2. Dense spiral pattern is WORSE than wide pattern — spacing matters.
+3. Scouts should ONLY scout. Multitasking (align, scramble) hurts exploration.
+4. Scout phase transition (explore→aligner) is terrible. Permanent scouting best.
+5. Both Cogs sub-teams share team_id='cogs' → scramble already only hits Clips.
+
+### Tournament Status
+- v359 (ScoutExplore): in competition matches vs v11, v13, v30, v31
+- v360 (TwoScouts): uploaded, awaiting matches
+- v361 (AdaptiveScout): qualifying
+- Waiting for competition results...
+
+## Tournament Match Analysis (prev round)
+- Variable agent counts: 2v6, 4v4, 6v2
+- Cooperative scoring confirmed (identical scores both teams)
+- v348 with 6 agents scored 9.61 (best single match)
+- Average across all configs ~6-7
 
 ## Uploads
-- v359: ScoutExplore (1 dedicated scout, +28%)
-- v360: TwoScouts (2 dedicated scouts, +46%)
-
-## Testing In Progress
-- TwoScouts multi-seed validation (seeds 1-4)
-- SmartScout (scouts that align junctions they find)
-- ThreeScouts (3 dedicated scouts)
+v359 (ScoutExplore), v360 (TwoScouts), v361 (AdaptiveScout)
