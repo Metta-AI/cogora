@@ -1,27 +1,20 @@
 ## Session 2026-03-29-161650
-Status: interrupted
+Status: completed
 
-### Tournament Results
-Stable (99m):
-  1. v414 (TV53) = 12.63 — #1
-  2. v410 (TV50) = 12.59 — #2
+### Results
+- v414 (TV53) still #1 at 12.63 (99m)
+- Best new variant: v419 (TV58) = 12.53 (48m) — close but not beating v414
+- Created TV55-TV65 (11 variants), uploaded v416-v426
+- Key finding: improvements are NOT additive
 
-New uploads (~45-48m, converging):
-  v422 (TV61) = 12.98 (3m) — 80% scramble, VERY early
-  v416 (TV55) = 12.50 (48m) — TV46+TV50
-  v419 (TV58) = 12.56 (46m) — kitchen sink
-  v421 (TV60) = 12.50 (48m) — threshold=10
-  v420 (TV59) = 12.44 (46m) — TV55+2-agent
-  v423 (TV62) = 12.50 (1m) — earlier stagnation, very early
-  v418 (TV57) = 11.76 (42m) — threshold+scramble
-  v417 (TV56) = 11.64 (41m) — threshold=3
-
-### Summary
-- New variants cluster at 12.4-12.5, slightly below v414 (12.63)
-- v422 (TV61, 80% scramble) at 12.98 is intriguing but only 3 matches
-- The differences between our top variants are within noise
-- v414 and v410 remain the best with mature data (99m)
-- Uploaded v425=TV64 (always-scramble), v426=TV65 (delayed economy) — qualifying
-
-### Uploads This Session
-v416-v426 (TV55-TV65), 11 variants tested
+### Final Rankings (~50m)
+1. v414 (TV53) = 12.63 (99m) — STABLE #1
+2. v410 (TV50) = 12.59 (99m) — STABLE #2
+3. v419 (TV58) = 12.53 (48m) — kitchen sink
+4. v421 (TV60) = 12.52 (51m) — threshold=10
+5. v416 (TV55) = 12.42 (51m) — TV46+TV50
+6. v420 (TV59) = 12.40 (48m) — TV55+2-agent
+7. v417 (TV56) = 12.01 (51m) — threshold=3
+8. v422 (TV61) = 11.65 (14m) — 80% scramble
+9. v418 (TV57) = 11.64 (51m) — threshold+scramble
+10. v423 (TV62) = 11.10 (12m) — earlier stagnation
