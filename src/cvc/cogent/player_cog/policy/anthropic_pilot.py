@@ -8470,38 +8470,102 @@ class AlphaSustainV3Policy(MettagridSemanticPolicy):
 # ---------------------------------------------------------------------------
 
 class AlphaAdaptiveTeamAgentPolicy(AlphaAggressiveAgentPolicy):
-    """AdaptiveTeam: switches between Aggressive and Sustainable based on team size.
+    """AdaptiveTeam: Aggressive base but caps budget for small teams.
 
-    Team size is detected via shared_team_ids (populated as agents register).
-    For the first few steps, team size may be underestimated; we default to
-    Aggressive and switch to Sustainable once team size stabilizes.
+    For large teams (4+): pure Aggressive (no cap, bug helps)
+    For small teams (2-3): cap budget to team_size-1 (guarantee miner)
+    Also: idle aligners mine instead of scramble when economy < 20
     """
 
-    def _get_team_size(self) -> int:
-        """Get actual team size (may be underestimated in first few steps)."""
-        return len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
-
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Adaptive: Aggressive for large teams, Sustainable for small teams."""
-        team_size = self._get_team_size()
+        """Aggressive budgets, capped for small teams."""
+        # Get base Aggressive budgets
+        aligner, scrambler = super()._pressure_budgets(state, objective=objective)
 
-        if team_size >= 4:
-            # Large team: use pure Aggressive (no cap)
-            return AlphaAggressiveAgentPolicy._pressure_budgets(self, state, objective=objective)
-        else:
-            # Small team: use Sustainable (with miner guarantee)
-            return AlphaSustainableAgentPolicy._pressure_budgets(self, state, objective=objective)
+        # For small teams, cap to ensure at least 1 miner
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if team_size <= 3:
+            max_roles = max(team_size - 1, 1)
+            total = aligner + scrambler
+            if total > max_roles:
+                scrambler = min(scrambler, max(0, max_roles - 1))
+                aligner = min(aligner, max_roles - scrambler)
+
+        return aligner, scrambler
 
     def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
-        """Adaptive: Aggressive idle behavior for large teams, conservative for small."""
-        team_size = self._get_team_size()
+        """For small teams, idle-mine instead of idle-scramble."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Idle: check team size for behavior
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        min_res = _h.team_min_resource(state)
 
         if team_size >= 4:
-            # Large team: use Aggressive's idle-scramble
-            return AlphaAggressiveAgentPolicy._aligner_action(self, state)
+            # Large team: scramble when economy healthy (Aggressive behavior)
+            if hearts > 0 and min_res >= 14:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+            if min_res < 14:
+                return self._miner_action(state, summary_prefix="idle_align_")
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
         else:
-            # Small team: more conservative idle behavior
-            return AlphaSustainableAgentPolicy._aligner_action(self, state)
+            # Small team: only scramble when economy very healthy, otherwise mine
+            if hearts > 0 and min_res >= 30:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+            return self._miner_action(state, summary_prefix="idle_align_")
 
 
 class AlphaAdaptiveTeamPolicy(MettagridSemanticPolicy):
