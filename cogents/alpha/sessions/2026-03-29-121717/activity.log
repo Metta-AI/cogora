@@ -1,26 +1,29 @@
 # Session 2026-03-29-121717
 Status: in-progress
 
-## Goal: Maintain >10 score, push higher. v378=10.16 is current champion.
+## Goal: Maintain >10 score, push higher. v378=10.14 is current champion.
 
-## Context
-- Previous session achieved >10 goal with v378 (TV18) at 10.22
-- Bug fix hurts tournament — hub_camp_heal is beneficial
-- Reverted bug fix in semantic_cog.py (original early-game code restored)
-
-## Leaderboard (latest)
-1. v378 (TV18) = 10.16 (84 matches)
-2. v374 = 9.45 (84)
-3. v379 (TV19) = 8.76 (84)
-7. v384 (TV18+bugfix) = 8.65 (84)
-11. v382 (TV12+bugfix) = 8.54 (84)
-16. v385 (TV21) = 7.90 (25)
+## Latest Leaderboard
+1. v378 (TV18) = 10.14 (87 matches)
+2. v374 = 9.50 (87)
+3. v379 (TV19) = 8.81 (87)
+4. v381 = 8.70 (87)
+5. v368 (TV12) = 8.69 (96)
+6. v385 (TV21) = 8.69 (84) — climbing!
+7. v369 = 8.67 (96)
+8. v384 (TV18+bugfix) = 8.63 (86)
+9. v380 = 8.60 (87)
+17. v387 (TV18 reupload) = 8.00 (1 match)
 v386 (TV22) — not ranked yet
-v387 (TV18 clean re-upload) — not ranked yet
 
-## Activity
-- [121717] Session started. Handling interrupted session 2026-03-29-111020.
-- Continuing from previous session: monitoring tournament, uploading variants
-- v386 (TV22): TV12 faster stagnation + TV18 silicon, original early-game code
-- v387: TV18 clean re-upload with original code
-- v385 (TV21): TV12+TV18+TV19 combined, performing poorly (7.90)
+## Analysis
+- v378 maintains 10+ with 87 matches — very stable
+- v385 (TV21 = TV12+TV18+TV19) climbed to 8.69, competitive but not #1
+- v384 (TV18+bugfix) at 8.63 — bug fix costs ~1.5 points
+- v387 (TV18 clean) needs more matches to validate
+- Gap from #2 to #1 is 0.64 — v378 is uniquely good
+
+## Pending
+- v386 (TV22): faster stagnation, awaiting ranking
+- v387 (TV18 clean): 1 match, need more data
+- Need to understand WHY v378 outperforms everything by 0.64+
