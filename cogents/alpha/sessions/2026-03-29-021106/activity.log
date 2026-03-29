@@ -62,3 +62,9 @@ Previous session (010815) crashed. Key state:
 - 03:08:00 Aggressive 4a seed 123 = 6.43 vs TeamFix 4a seed 123 = 8.43 → **31% improvement**
 - 03:08:00 Uploaded: v335=SmartHybrid(buggy), v336=SmartHybrid(fixed)
 - 03:08:00 Tournament matches still all running. No completed results yet.
+- 03:12:00 SmartHybrid(fixed) 4a clean run = 7.29. Close to TeamFix avg (8.10).
+  Variance makes single-seed unreliable.
+- 03:12:00 Economy comparison: high-score seeds have 3x more resources at step 3000.
+  Main driver of score variance is map extractor layout.
+- 03:15:00 Uploaded v336=SmartHybrid(fixed). All tournament matches still running.
+- 03:15:00 Key versions in tournament: v333(TeamFix), v334(TeamCarbon), v335(SmartHybrid-buggy), v336(SmartHybrid-fixed)
