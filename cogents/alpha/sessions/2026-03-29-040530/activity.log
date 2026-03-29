@@ -1,32 +1,35 @@
 status: in-progress
 started: 2026-03-29-040530
 
-## Context
-- Continuing from previous session (030152) which created AdaptiveTeam v342-v343
-- AdaptiveTeam scored 19.18 on 8a seed 1 (previous session)
-- Tournament matches v339-v343 all running/scheduled, no results yet
-
 ## Local Testing: AdaptiveTeam v343
-- 8a seed 1: 10.62 (10k steps) — above target of >10!
-- 4a seed 1: 7.54
-- Note: previous session reported 19.18 for AdaptiveTeam, I got 10.62 — different seed?
+| Config | Score |
+|---|---|
+| 8a seed 1 | 10.62 |
+| 8a seed 42 | 6.77 |
+| 8a seed 7 | 5.12 |
+| 4a seed 1 | 7.54 |
+| 4a seed 42 | 7.92 |
+| 8a avg (3 seeds) | ~7.50 |
 
-## Economy Analysis (8a game)
-- Steps 0-1000: Ramp to 22 friendly junctions, economy 100-300 each
-- Steps 1000-2500: Peak 20-22j, stable economy
-- Steps 2500-5000: Decline 20→10j, economy draining
-- Steps 5000-7500: Collapse to 5-7j, economy barely surviving
-- Steps 7500-10000: Dead at 4j, carbon=0 permanently from step 8300
-- Late game (steps 8300-10000): ZERO productivity, economy frozen
+## AdaptiveTeamV2 Results
+- V2a (aggressive crisis mode): 5.58 — WORSE, crisis mode too aggressive
+- V2b (gentle late-game scaling): 8.82 — still worse than V1's 10.62
+- Conclusion: V2 doesn't improve over V1. Stick with AdaptiveTeam.
 
-## Key Issues Found
-1. Miners die 6-16 times each → dead time = no income
-2. Budget keeps assigning aligners even with dead economy
-3. Carbon=0 lock: once carbon hits 0, no gear/hearts possible
-4. 1700 steps of zero productivity at end
+## Economy Analysis (8a seed 1)
+- Peak: 22 friendly junctions at step 1000 (economy ~200 each)
+- Mid-game: 10-20j from step 2000-5000 (economy declining)
+- Late game: 4j from step 7500+, carbon=0 permanently
+- Score: dominated by early-mid game performance
+- 5000 steps of late-game collapse costs ~6 points
 
-## Improvement: AdaptiveTeamV2
-- Economy crisis mode: total_res < 28 or min_res=0 → full mining
-- Late-game miner retreat: more conservative after step 5000
-- Budget scaling: reduce pressure proportionally in mid-late game
-- Testing locally now...
+## Key Insight: Economy crisis mode is counterproductive
+- Dropping aligners when min_res=0 hurts more than it helps
+- Carbon=0 is temporary (recovers in 100-200 steps)
+- Each step without aligners reduces running average permanently
+- Better to keep aligners and let idle-mine handle recovery
+
+## Tournament Uploads
+- v344: AdaptiveTeam (current best)
+- v345: Aggressive (for comparison — might work well if partner policy has miners)
+- v339-v343 still running, no results yet
