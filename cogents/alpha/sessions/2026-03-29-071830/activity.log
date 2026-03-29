@@ -1,46 +1,43 @@
 # Session 2026-03-29-071830
 Status: in-progress
 
-## Key Findings (merged with session 071423)
+## Leaderboard Status
+#1: alpha.0:v348 at 7.60 (87 matches)
+#2: alpha.0:v352 at 7.53
+#3: alpha.0:v351 at 7.49
+Target: >10 (need +32% improvement)
 
-### Tournament Reality Check
-- ScoutExplore (v359) avg ~5.19 in tournament — WORSE than v348 (~7.5)
-- Scout hurts at 2-4 agents due to economy overhead
-- Both sub-teams share the same hub → scout takes from shared pool
-- v348 (TournamentV2) remains best at avg ~9.09 for 6-agent matches
-- Best single tournament match: 13.86 (v348 4v4)
+No policy in the tournament has ever scored >10 average.
 
-### v348 Full Analysis (87 matches, avg 7.28)
+## v348 Analysis (87 matches, avg 7.38)
+By configuration:
 - us=2a_opp=6a: avg=6.04 (range 3.91-8.83)
 - us=4a_opp=4a: avg=7.87 (range 3.95-13.86)
 - us=6a_opp=2a: avg=7.95 (range 2.86-9.61)
 
-v362 (AdaptiveScout) overall avg: 6.90 (50 matches)
-- 6-agent: consistently 7.03 (vs TV2's 9.09!) - SCOUT HURTS
+10 individual matches scored >10 (11% hit rate)
 
-Other opponents: coglet-v0:v12, gtlm-reactive-v3:v1, Paz-Bot-9005:v1, slanky:v112
+## Self-Play Testing (5K steps, 8a)
+| Policy | Seed 0 | Seed 1 | Seed 2 | Seed 3 | Avg |
+|--------|--------|--------|--------|--------|-----|
+| TV2    | 3.63   | 5.98   | 5.30   | 5.73   | 5.16 |
+| TV7    | 6.96   | 5.84   | 4.05   | 5.78   | 5.66 |
 
-### CRITICAL: Game is COOPERATIVE
-Both players on same Cogs team. Score = shared metric against Clips AI.
+TV7 +10% over TV2 in self-play.
 
-### Self-Play Free-Play (10K steps, 8a)
-| Policy | Seed 0 | Seed 1 | Seed 2 | Avg |
-|--------|--------|--------|--------|-----|
-| TV2    | 9.17   | 16.60  | 8.65   | 11.47 |
-| TV6    | 7.13   | 16.35  | 10.18  | 11.22 |
-| SV4    | 8.60   | 10.20  | —      | 9.40 |
-| TV7    | running | running | running | — |
-
-### Policies Created This Session
+## Policies Created
 - SustainV4: Always-silicon bias — TOO CONSERVATIVE
 - TournamentV6: Silicon-aware budget — marginal
-- TournamentV7: 2-agent cooperation + explore idle — testing
+- TournamentV7: 2-agent cooperation + explore idle — +10% in self-play
 
-## Uploads
-v359 (ScoutExplore), v360 (TwoScouts), v361 (AdaptiveScout v1), v362 (AdaptiveScout v2)
+## Uploads This Session
+- v364 (TournamentV7) — in qualifying
+
+## Key Insight: Cooperative Scoring
+Both players on same Cogs team. Score = avg aligned junctions against Clips.
+High scores come when both policies cooperate well (especially 4v4).
 
 ## Next Steps
-1. Wait for TV7 results
-2. Upload best new policy to tournament
-3. If TV7 doesn't help, try pure economy support at 2 agents
-4. Consider fundamentally different approach for >10 goal
+- Monitor v364 tournament results
+- Consider major architecture changes to break 7.60 ceiling
+- Ideas: multi-phase strategy, opponent-adaptive, better exploration
