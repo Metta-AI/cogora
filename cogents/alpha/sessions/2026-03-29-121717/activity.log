@@ -1,54 +1,42 @@
 # Session 2026-03-29-121717
 Status: in-progress
 
-## Goal: Maintain >10 score, push higher. v378=10.14 is champion.
+## Goal: Maintain >10 score, push higher. v378=10.07 is champion.
 
 ## Latest Leaderboard
-1. v378 (TV18) = 10.14 (87 matches)
-2. v374 = 9.51 (89)
-3. v387 (TV18 reupload) = 9.23 (41) — climbing fast!
+1. v378 (TV18) = 10.07 (89 matches)
+2. v387 (TV18 reupload) = 9.89 (66) — climbing, code identical to v378
+3. v374 = 9.51 (89)
 4. v379 (TV19) = 8.81 (87)
 5. v381 = 8.70 (87)
 6. v368 (TV12) = 8.69 (96)
 8. v385 (TV21) = 8.67 (87)
 9. v384 (TV18+bugfix) = 8.63 (87)
-18. v386 (TV22 faster stag) = 7.72 (40) — faster stagnation hurts
+18. v386 (TV22 faster stag) = 7.69 — faster stagnation hurts
 
 ## Key Findings
-1. v387 (TV18 reupload) = 9.23 and climbing. Code identical to v378.
-   Gap was due to small sample + opponent pool. TV18 is genuinely ~9-10 tier.
-2. v386 (TV22): faster stagnation (200 vs 300) = 7.72 — HURTS. Don't change.
-3. All variants cluster 8.5-8.8 except TV18 (9-10 tier).
-4. TV18's silicon priority is the single best improvement.
+1. TV18 is genuinely ~9-10 tier. v387 reupload confirms (9.89).
+2. v386 (TV22): faster stagnation (200 vs 300) = 7.69 — HURTS.
+3. TV18's far stagnation explore IS the key feature — don't change.
+4. Self-play at 5K and 10K tell DIFFERENT stories — always test 10K.
+5. Budget changes, silicon threshold changes, stagnation timing changes all hurt.
 
 ## Activity
 - [121717] Session started. Handling interrupted session 2026-03-29-111020.
-- [121800] Leaderboard: v378=10.16 (#1, 84 matches), v374=9.45 (#2), v385=7.97 (#16)
+- [121800] Leaderboard: v378=10.16 (#1, 84 matches), v374=9.45 (#2)
 - [121900] Analyzed match logs for v378 4v4 low-score game (7.47 vs v59).
-  Key finding: when enemy scrambles our junctions, stagnation mode kicks in
-  and agents explore FAR from hub instead of fighting for nearby territory.
-  Friendly junctions drop from 8 → 0 over 2000 steps.
-- [122000] Designed TV23: territory loss recovery mode.
-  When friendly count drops >50% from peak, enter "recovery mode":
-  - Scramble enemy junctions aggressively (lower min_res threshold: 7 vs 14)
-  - Explore close to hub (within 20) instead of far stagnation offsets (22-35)
-  - Stay in fight range instead of wandering far and retreating
-- [122000] Running TV23 local test (5000 steps, 8 agents).
+  Finding: stagnation mode sends agents far when they should fight locally.
+- [122000] Designed TV23-TV25: three stagnation variants.
 - [122500] Self-play 5K results:
-  TV18 (baseline): 5.24 | TV23 (loss recovery): 3.27 | TV24 (tighter stag): 5.40 | TV25 (scramble stag): 6.48
-  TV23 is WORSE — aggressive scramble (min_res=7) burns hearts when economy weak.
-  TV25 is promising! Replaces far stagnation explore with more scramble + regular explore.
-  TV25 key change: 50% scramble in stagnation (vs 33%) and use regular explore (not far offsets).
-  TV18 10K: 10.96 self-play. Running TV24/TV25 at 10K to confirm.
-- [122700] TV24 and TV25 also written. 3 variants tested:
-  TV23: territory loss + close explore — FAILED (3.27 vs 5.24)
-  TV24: tighter stagnation radius (15-22 vs 22-35) — marginal (+3%)
-  TV25: scramble-focused stagnation (no far explore) — BEST (+24%)
+  TV18=5.24 | TV23=3.27 | TV24=5.40 | TV25=6.48
+- [122900] 10K self-play results:
+  TV18: 10.96 | TV24: 0.00 (BROKEN!) | TV25: 9.38 (worse at 10K!)
+  CRITICAL: TV18's far stagnation explore compounds over time.
+  Shorter explore radius limits junction discovery.
+- [123000] Tournament update:
+  v378=10.07 (#1), v387=9.89 (#2), v386=7.69 (TV22 WORSE)
+  Uploaded v388 (TV25) and v389 (TV24) for tournament signal.
 
-## Tournament Uploads (this session + previous)
-- v382 (TV12+bugfix) = 8.54 (87) — similar to TV12 (8.69)
-- v383 (TV20) = bad
-- v384 (TV18+bugfix) = 8.63 (87) — bug fix costs ~0.5-1.5 points
-- v385 (TV21) = 8.67 (87) — competitive
-- v386 (TV22) = 7.72 (40) — faster stagnation hurts
-- v387 (TV18 reupload) = 9.23 (41) — climbing, converging toward v378
+## Tournament Uploads
+- v388 (TV25): scramble-focused stagnation — pending
+- v389 (TV24): tighter stagnation radius — pending
