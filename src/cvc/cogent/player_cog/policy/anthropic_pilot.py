@@ -6730,3 +6730,121 @@ class AlphaUltraV3Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaUltraV4 — V3 with expansion_weight=25 (5% higher than V3's 20)
+# ---------------------------------------------------------------------------
+
+class AlphaUltraV4AgentPolicy(AlphaUltraV3AgentPolicy):
+    """V4: expansion_weight=25 to push chain expansion harder."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._expansion_weight = 25.0
+        self._expansion_cap = 150.0
+
+
+class AlphaUltraV4Policy(MettagridSemanticPolicy):
+    """Ultra V4: expansion_weight=25."""
+    short_names = ["alpha-ultra-v4"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaUltraV4AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaUltraV5 — V3 + economy surge: heavier mining first 500 steps,
+# then surge to max aligners when reserves are high
+# ---------------------------------------------------------------------------
+
+class AlphaUltraV5AgentPolicy(AlphaUltraV3AgentPolicy):
+    """V5: V3 base + economy surge. Mine hard early, then max align when reserves peak."""
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Economy surge: mine first 300 steps, then scale aggressively."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 300 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 150:
+                return 1, 0  # Economy-first
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res >= 100:
+                return min(3, num_agents - 1), 0
+            if min_res >= 30:
+                return 2, 0
+            return 1, 0
+
+        # 5+ agents: economy surge
+        if step < 30:
+            return 1, 0  # All mine at start
+
+        economy_crisis = min_res < 3 and not can_hearts
+        if economy_crisis:
+            return max(1, num_agents // 4), 0
+
+        if step < 200:
+            # Light pressure, heavy mining
+            return 2, 0
+
+        # Post-200: scale based on reserves (like Aggressive but with chain expansion)
+        scrambler_budget = 0
+        if step >= 3000 and min_res >= 14:
+            scrambler_budget = min(2, num_agents // 4)
+        elif step >= 200 and min_res >= 7:
+            scrambler_budget = 1
+
+        if min_res >= 200:
+            return min(num_agents - 1 - scrambler_budget, 6), scrambler_budget
+        elif min_res >= 100:
+            return min(num_agents - 1 - scrambler_budget, 5), scrambler_budget
+        elif min_res >= 50:
+            return min(num_agents - 2 - scrambler_budget, 4), scrambler_budget
+        elif min_res >= 20:
+            return 3, scrambler_budget
+        elif min_res >= 7:
+            return 2, scrambler_budget
+        else:
+            return 2, 0
+
+
+class AlphaUltraV5Policy(MettagridSemanticPolicy):
+    """Ultra V5: chain expansion + economy surge + Aggressive idle-scramble."""
+    short_names = ["alpha-ultra-v5"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaUltraV5AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

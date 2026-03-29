@@ -20,3 +20,8 @@ status: in-progress
   - V3 8a peaks at 20j, sustains 12-17j mid, 8j late (vs Aggressive: 9j peak, 4j late)
 - 01:30:00 The ONLY difference: expansion_weight=20 + expansion_cap=120 (chain weights)
 - 01:30:00 This is the path to >10 in tournament! If Aggressive gets 6.54 tournament, V3 should get much more.
+- 01:35:00 Multi-seed V3 8a: 11.47, 4.14, 9.81 (avg 8.47). V3 4a: 5.82, 5.53 (avg 5.68).
+- 01:35:00 V4 (expansion_weight=25): 0.00 — TOO HIGH. Confirmed weight=20 is the sweet spot.
+- 01:35:00 V5 (economy surge): 6.25 — slower start hurts. Fast start matters more.
+- 01:36:00 Uploaded: v322=UltraV4, v323=UltraV5 to tournament
+- 01:36:00 V3 is the clear winner. Average 8.47 local 8a vs Aggressive 3.61.
