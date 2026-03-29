@@ -31,3 +31,9 @@ started: 2026-03-29T14:03:57Z
   - v403 = TV41 (TV40+TV38 combined)
   - v404 = TV38 (enemy-directed explore)
 - [1428] Still no completed tournament matches for v392-v401.
+- [1432] TV42 (zero hub penalty): 4.77 — close to TV40 but slightly worse.
+  TV43 (higher expansion weight): 3.53 — worse, expansion bonus doesn't help.
+  TV40 at 10K steps: 8.39 — solid long game.
+- [1433] Uploaded: v402=TV40, v403=TV41, v404=TV38, v405=TV42.
+- [1434] Analysis: mid-game stagnation is main bottleneck. frontier=0 from step 2300+.
+  Opponent out-aligns us on favorable map positions. Need better stagnation response.
