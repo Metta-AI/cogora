@@ -31,8 +31,14 @@ started: 2026-03-29T22:06:07Z
 - Self-play TV109 8-agent: ~4.2 score (expected mirror). Late-game retreat overhead high.
 - Uploaded: v475 (TV114), v476 (TV115), v477 (TV116) to qualifying.
 - All v475-477 passed qualifying, entered competition.
-- v473 (TV112) in competition against Paz-Bot, gtlm-reactive, older alphas.
-- v474 (TV113) in competition against gtlm-reactive, older alphas.
 - TV112 self-play 5K = 4.87 (vs TV109 = 4.47). TV112 better due to default budgets.
-- TV114 quick test: runs correctly, 100 steps = 0.01 (normal for short test).
-- Waiting for competition results to complete (~5-10 min per match).
+- COMPETITION RESULTS:
+  - v473 (TV112, no-scramble 2-agent): avg=10.76 (25) — 2vX=5.39, 4vX=13.20, 6vX=13.41
+  - v474 (TV113, no-scramble all): avg=3.03 (30) — catastrophically bad
+- **CRITICAL FINDING**: No-scramble approach HURTS even in 2-agent mode.
+  2vX dropped from ~12 to 5.39. Opponents scramble our junctions and we can't defend.
+  The "shared score" observation only applies in self-play. Against real opponents,
+  scramble defense is essential in ALL configs.
+- Conclusion: scramble behavior should NOT be removed. It's defensive, not offensive.
+- TV112/TV113 are failures. TV82 baseline remains the best approach.
+- Need to find other improvements to break the ~13 ceiling.
