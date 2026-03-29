@@ -70,8 +70,15 @@ Dramatic drop at 6+2: 2.39. The starter policy is hurting the shared score.
 This means the path to >10 is: pair with a strong partner OR dominate the
 agent allocation.
 
+## Path to >10: Summary
+1. TV2 with 8 agents scores 13.95 → policy CAN score >10 with full control
+2. Cooperative scoring means both teams contribute to shared score
+3. Weak partner (starter) drops 6+2 from 9.11 to 2.39
+4. Tournament average ~7.5 is limited by opponent quality and agent splits
+5. To push past 7.5: either improve 2-agent performance or get better opponents
+
 ## Suggestions for Future Work
-- Analyze tournament match logs to understand per-map dynamics
+- Optimize for 2-agent games (huge impact on tournament average)
 - Study Clips ship behavior and optimize scramble targeting for Clips
 - Consider RL training with GPU access to break heuristic ceiling
-- Test with tournament-specific configurations (vs starter, vs real opponents)
+- Test pickup VOR against actual tournament opponents (not starter)
