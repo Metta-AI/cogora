@@ -56,3 +56,9 @@ Previous session (010815) crashed. Key state:
   TeamFix 8a seed 42: 1.72 (bad seed)
 - 03:00:00 CONCLUSION: TeamFix is the best tournament policy for 4a (75% of games).
   Need to investigate 8a performance on bad seeds.
+- 03:05:00 HighEff (no scramble + high deposit) = 0.00/0.96 — confirmed scramblers needed.
+- 03:05:00 SmartHybrid v1 had same num_agents bug — fixed with lazy team-size check.
+- 03:05:00 SmartHybrid v2 (fixed) 4a=7.04 — different from TeamFix 8.82 (possible concurrency/seed variance)
+- 03:08:00 Aggressive 4a seed 123 = 6.43 vs TeamFix 4a seed 123 = 8.43 → **31% improvement**
+- 03:08:00 Uploaded: v335=SmartHybrid(buggy), v336=SmartHybrid(fixed)
+- 03:08:00 Tournament matches still all running. No completed results yet.
