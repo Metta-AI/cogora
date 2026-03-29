@@ -59,3 +59,11 @@ started: 2026-03-29T19:04:18Z
 - Created TV88: TV82 + TV70's pressure_budgets fix (min_res >= 14 for 2-agent)
 - Created TV89: TV88 + chain-value expand-toward (full kitchen sink with budget fix)
 - Uploaded v449 (TV88), v450 (TV89) to qualifying.
+- v447/v448 completed qualifying (11.17 avg each), now in competition vs v12, v14, v17.
+- v449/v450 in qualifying.
+- Self-play results (unreliable but directional): TV82=5.38, TV84=3.36 — matches tournament ranking.
+- Updated averages (more matches):
+  - v443 (TV82): 12.82 (10 matches)
+  - v444 (TV83): 12.38 (17 matches)
+  - v446 (TV85): ~12.6 (7 matches)
+  - v445 (TV84): ~12.2 (14 matches)
