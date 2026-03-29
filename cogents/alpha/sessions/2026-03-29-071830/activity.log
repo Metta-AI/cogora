@@ -1,0 +1,8 @@
+# Session 2026-03-29-071830
+Status: in-progress
+
+## Context (continuing from 061015)
+- ScoutExplore avg 10.85 at 10K steps (self-play, seeds 0-3)
+- AdaptiveScout (6+ scout threshold) = v362, in competition
+- v360 (TwoScouts) hurts at 4 agents (2.31)
+- Waiting for v362 competition results
