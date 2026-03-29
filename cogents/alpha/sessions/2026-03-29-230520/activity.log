@@ -8,3 +8,20 @@ started: 2026-03-29T23:05:20Z
 - Session started. Previous session (2026-03-29-224427) was interrupted.
 - Context: TV82 baseline (v451) avg=12.98. TV117-119 all worse. TV120-122 (v481-v483) results pending.
 - Todos: check v481-v483 results, reduce retreat/healing overhead, study opponents, improve 2v6.
+- TOURNAMENT RESULTS (200 match window):
+  - Paz-Bot-9005:v1 = 13.25 avg (9m) — top competitor! 2a=12.6, 4a=11.9, 6a=15.3
+  - slanky:v112 = 11.61 avg (9m) — 2a=12.3, 4a=11.6, 6a=11.0
+  - v478 (TV117) = 11.81 (30m) — below baseline
+  - v479 (TV118) = 10.90 (55m) — confirmed worse
+  - v480 (TV119) = 11.55 (55m) — confirmed worse
+  - v481 (TV120) = 12.47 (2m qualifying) — too few
+  - v482 (TV121) = 7.46 (1m) — bad
+  - v483 (TV122) = not yet scored
+- KEY INSIGHT: All match scores are COOPERATIVE (both teams identical score).
+  Both policies are on the same "cogs" team vs NPC "clips".
+  Leaderboard ranking = avg score across all your matches.
+- ANALYSIS: 2v6 match logs show our aligner stagnates at step 1500 with 5 junctions,
+  spends 8500 steps in stag_find/stag_scramble loop. Hub resources pile to 1500+.
+  Massive waste — miner overproducing, aligner unproductive.
+- Planning TV123: increase aligner budgets when rich, earlier 2-agent alignment,
+  better stagnation behavior.
