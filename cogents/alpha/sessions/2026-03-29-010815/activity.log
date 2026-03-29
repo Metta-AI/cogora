@@ -44,3 +44,10 @@ status: interrupted
   v325 = AlphaCoopPolicy (Aggressive, zero scramble, idle-mine)
   v326 = AlphaEconMaxPolicy (conservative alignment, 50%+ miners)
 - 02:10:00 Qualifying results (solo vs Clips): v324=1.61/3.04, v325=1.49, v326=1.55. Waiting for competition matches.
+- 02:20:00 v325 (Coop, no scramble) 6a = 1.16 — TERRIBLE! Scrambling is essential for network expansion.
+- 02:20:00 v326 (EconMax) 6a = 1.02 — also terrible. Conservative alignment doesn't work.
+- 02:20:00 KEY INSIGHT: num_agents is TOTAL (8 in 4v4), not per-team (4). This causes budget overflow:
+  - With 8 total, budget allocates 4+ aligners but team only has 4 agents → all become aligners, none mine
+  - v290 WORKS despite this bug because the game mechanics favor all-alignment in some way
+- 02:20:00 Best v290 match was 8.52 (2a format where our 2 agents both became scramblers due to budget overflow)
+- 02:20:00 Hypothesis: v290's accidental over-alignment works because opponent handles most scoring
