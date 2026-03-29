@@ -11,7 +11,7 @@ started: 2026-03-29T22:06:07Z
 - Critical bug found last session: num_agents was always 8, 2-agent code was dead. Now fixed.
 - Goal: Check v470-v472 results, iterate on fixed 2-agent strategy.
 - Continuing from interrupted session: v470-472 already in tournament.
-- v470 (TV109, fixed explore-first): 2vX=5.54 (1 match) — WORSE! The budget fix (1,0) broke things.
+- v470 (TV109, fixed explore-first): 2vX=5.36 (15 matches) — WORSE! The budget fix (1,0) broke things.
   The default 8-agent budget accidentally gave both 2-agent members aligner role.
   "Fixing" to (1,0) actually reduces alignment capacity.
 - v472 (TV111, all-team explore): 2.62 avg — terrible. No scramble kills larger teams.
@@ -19,11 +19,15 @@ started: 2026-03-29T22:06:07Z
   - v473 (TV112): no idle scramble for 2-agent teams only
   - v474 (TV113): no idle scramble for ALL team sizes
 - All unfixed TV90-TV108 versions are equivalent to TV82 (dead 2-agent code).
-- Waiting for v473/v474 qualifying + competition results.
+- v474 (TV113) passed qualifying, v473 (TV112) just entered competition.
+- v470 (TV109) confirmed terrible: 2vX=5.36 (15 matches). Budget fix was the problem.
+- Overall leaderboard: v451 = 13.31 (#1, 27 matches). External best: slanky at 10.43.
+- Goal >10 already achieved. Pushing for higher ceiling.
+- v473/v474 now running in competition (21-24 matches each).
 - Created TV114-TV116 (new variants):
   - TV114: TV112 + defensive re-alignment (stop scramble when losing >20% territory)
   - TV115: TV112 + delayed heart batching (skip until step 500, more early alignment)
   - TV116: TV113 (no scramble) + delayed batching combo
 - Self-play TV109 8-agent: ~4.2 score (expected mirror). Late-game retreat overhead high.
-- All v469-v472 matches still running/scheduled — tournament queue slow.
 - Uploaded: v475 (TV114), v476 (TV115), v477 (TV116) to qualifying.
+- Waiting for v473-v477 competition results.
