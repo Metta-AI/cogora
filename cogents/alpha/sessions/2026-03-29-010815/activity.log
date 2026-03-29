@@ -27,3 +27,16 @@ status: in-progress
 - 01:36:00 V3 is the clear winner. Average 8.47 local 8a vs Aggressive 3.61.
 - 01:40:00 Tournament matches running: v319-v323 matched against alpha.0 (internal), Paz-Bot-9005, slanky:v112, gtlm-reactiv. No results yet.
 - 01:40:00 Real opponents now appearing — stronger competition means economy management matters more.
+- 01:56:00 TOURNAMENT RESULTS - CRITICAL FINDING:
+  v290 (Aggressive): avg 6.84, max 8.52 across 30 matches
+  v321 (UltraV3): avg ~1.0 in 4v4, ~5.3 in 2a — WORSE than Aggressive!
+  v319 (Ultra): ~1.2-2.9 in 4v4, ~5.0-5.9 in 2a
+  v320 (UltraV2): ~0.8-6.0 variable
+- 01:56:00 KEY INSIGHT: Chain expansion (expansion_weight=20) HURTS in tournament!
+  - Local 8a: V3 11.47 vs Aggressive 3.61 — V3 is 3x better locally
+  - Tournament 4v4: V3 1.0 vs Aggressive 7.0 — V3 is 7x WORSE!
+  - Chain expansion makes agents burn resources faster → earlier economy collapse
+  - Tournament scoring is cooperative (both teams same score)
+  - v290 also collapses to 0j by step 2500 but opponent (v56) sustains → high score
+- 01:56:00 Uploaded v324 = Aggressive (baseline to confirm) to tournament
+- 01:56:00 Strategy pivot: abandon chain expansion for tournament. Focus on incremental Aggressive improvements.
