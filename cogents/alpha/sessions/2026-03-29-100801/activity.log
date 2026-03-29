@@ -1,33 +1,35 @@
 # Session 2026-03-29-100801
-Status: interrupted
+Status: in-progress
 
-## Context
-Previous session interrupted. Leaderboard: v367 (TV9) ~8.61.
-Goal: score > 10 in tournament. Current best ~8.6.
+## TV19 Results
 
-## Critical Finding: Idle Stagnation
-- Aligners loop on idle_align_scramble forever when no frontier junctions
-- Default explore offsets (r22) miss junctions at r30-40 on 88x88 map
+### Self-play (8 agents, 10K steps)
+| Seed | Score |
+|------|-------|
+| 0    | 10.53 |
+| 3    | 14.94 |
+| 4    | 14.01 |
+| 5    | 14.46 |
+| **Avg** | **13.49** |
 
-## Policy Iteration (5K steps, 8 agents, seeds 0/3/4)
-
+### Self-play comparison (8 agents, 5K steps)
 | Policy | Seed 0 | Seed 3 | Seed 4 | Avg |
 |--------|--------|--------|--------|-----|
 | TV9    | 5.56   | 6.17   | 7.44   | 6.39 |
-| TV15 (all explore) | 7.25 | 7.37 | 3.50 | 6.04 |
-| TV19 (agent0 wide) | 5.89 | 6.17 | 8.45 | **6.84** |
+| TV19   | 5.89   | 6.17   | 8.45   | 6.84 |
 
-TV15: All idle aligners explore full map. +30% on discovery maps, -52% on defense maps.
-TV19: Only agent 0 uses wide explore offsets (r15-38). Others keep r22.
-  → Consistent improvement: +6%, =, +14% across seeds. Avg +7% over TV9.
-
-Silicon priority causes seed 4 wipeout — removed.
-
-## TV19 Design (final)
+### Design
 - Inherits from TV9 (best tournament base)
-- Only overrides _explore_action for agent 0 aligner
-- Agent 0 cycles through 32 full-map waypoints (r15 to r38) during idle explore
-- Other agents use standard r22 offsets (TV9 behavior unchanged)
-- No other changes — proven TV9 budgets, idle scramble, heart management preserved
+- Only overrides _explore_action for agent 0 aligner when team >= 5
+- Agent 0 cycles through 32 full-map waypoints (r15-r38) during idle explore
+- Other agents use standard r22 offsets
+- Gate: team_size >= 5 (small teams use standard TV9 behavior)
 
-## Uploading TV19 to tournament
+### Uploads
+- v379: TV19 (no LLM, no team_size gate)
+- v380: TV19 (with LLM key, no team_size gate)
+- v381: TV19 (with team_size gate fix)
+
+### Tournament Status
+Matches running/scheduled. Waiting for results.
+New competitor: v56 (unknown, possibly slanky/coglet/other)
