@@ -42,3 +42,9 @@ started: 2026-03-29T22:06:07Z
 - Conclusion: scramble behavior should NOT be removed. It's defensive, not offensive.
 - TV112/TV113 are failures. TV82 baseline remains the best approach.
 - Need to find other improvements to break the ~13 ceiling.
+- PIVOT: Created TV117-TV119 (build on TV82, KEEP scramble):
+  - v478 (TV117): dynamic stagnation — 50% scramble when losing territory, 80% when stable
+  - v479 (TV118): reduced retreat margin (10 instead of 20) — more time on field
+  - v480 (TV119): faster early ramp — 2 aligners from step 10 instead of 30
+- All three keep TV82's proven scramble behavior. Testing micro-optimizations.
+- TV114-TV116 likely bad (inherit from TV112/TV113). Will confirm when results come in.

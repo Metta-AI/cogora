@@ -22481,3 +22481,236 @@ class AlphaTournamentV116Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV117: TV82 + dynamic stagnation with re-alignment priority ─────────────
+
+class AlphaTournamentV117AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV117: TV82 + dynamic stagnation recovery.
+
+    When in stagnation and we've lost >20% of peak junctions, temporarily
+    exit stagnation mode to prioritize re-alignment. Still scramble, but
+    reduce scramble ratio to 50% when losing territory (vs 80% default).
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        elif (self._peak_junction_count >= 5
+              and step - self._last_junction_growth_step > 300
+              and step > 500):
+            self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        # Dynamic scramble ratio based on territory status
+        losing_territory = (self._peak_junction_count > 0 and
+                           friendly_count < self._peak_junction_count * 0.8)
+        # When losing: 50% scramble (step%200 < 100). When stable: 80% (step%200 < 160)
+        scramble_window = 100 if losing_territory else 160
+
+        if self._stagnation_mode and hp > 50:
+            if step % 200 < scramble_window and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV117Policy(MettagridSemanticPolicy):
+    """TournamentV117: TV82 + dynamic stagnation recovery."""
+    short_names = ["alpha-tournament-v117"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV117AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV118: TV82 + reduced retreat margin (more time on field) ───────────────
+
+class AlphaTournamentV118AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV118: TV82 + less conservative retreat.
+
+    Default retreat margin is 20 + modifiers (can reach 40-60+). This wastes
+    many steps walking back to hub. Reduce base margin from 20 to 10, keeping
+    agents on the field ~15% more.
+    """
+
+    def _should_retreat(self, state: MettagridState, role: str, safe_target) -> bool:
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if safe_target is None:
+            return hp <= _h.retreat_threshold(state, role)
+
+        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+        margin = 10  # Reduced from 20
+        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            margin += 10
+        margin += int(state.self_state.inventory.get("heart", 0)) * 5
+        margin += min(_h.resource_total(state), 12) // 2
+        if not _h.has_role_gear(state, role):
+            margin += 10
+        if (state.step or 0) >= 2_500:
+            margin += 5  # Reduced from 10 for aligner/scrambler
+        return hp <= safe_steps + margin
+
+
+class AlphaTournamentV118Policy(MettagridSemanticPolicy):
+    """TournamentV118: TV82 + reduced retreat margin."""
+    short_names = ["alpha-tournament-v118"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV118AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV119: TV82 + faster early ramp (start aligning at step 10) ────────────
+
+class AlphaTournamentV119AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV119: TV82 + faster early ramp.
+
+    Default starts with 2 aligners at step 30. TV119 starts 2 aligners at
+    step 10 to grab junctions faster in the early land-rush.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # Cap by actual sub-team size
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        # Faster ramp: 2 aligners from step 10 instead of 30
+        if step < 10:
+            aligner, scrambler = 1, 0
+        elif min_res < 10 and not can_hearts:
+            aligner, scrambler = 1, 0
+        elif min_res < 30:
+            aligner, scrambler = 2, 0
+        elif min_res < 80:
+            aligner, scrambler = 3, 0
+        elif min_res < 200:
+            scrambler = 1 if step >= 500 else 0
+            aligner = 4
+        else:
+            scrambler = 1 if step >= 500 else 0
+            aligner = min(5, num_agents - 2 - scrambler)
+
+        max_roles = max(team_size - 1, 1)
+        total = aligner + scrambler
+        if total > max_roles:
+            scrambler = min(scrambler, max(0, max_roles - 1))
+            aligner = min(aligner, max_roles - scrambler)
+
+        return aligner, scrambler
+
+
+class AlphaTournamentV119Policy(MettagridSemanticPolicy):
+    """TournamentV119: TV82 + faster early ramp."""
+    short_names = ["alpha-tournament-v119"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV119AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
