@@ -11536,3 +11536,49 @@ class AlphaTournamentV8Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV9AgentPolicy(AlphaTournamentV7AgentPolicy):
+    """TournamentV9: TV7 + fix 2-agent timing.
+
+    TV7's 2-agent behavior (mine 500 steps, align only if min_res >= 50)
+    is too conservative against weak teammates. Fix:
+    1. Start alignment at step 200 (not 500) — same as TV2 baseline
+    2. Always allocate 1 aligner after step 200, regardless of economy
+    3. Keep TV7's idle behavior improvements for 4+ agent games
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """TV7 budgets but with fixed 2-agent timing."""
+        num_agents = self.policy_env_info.num_agents
+
+        if num_agents <= 2:
+            step = state.step or self._step_index
+            min_res = _h.team_min_resource(state)
+            can_hearts = _h.team_can_refill_hearts(state)
+            # Standard TV2 timing: align after 200 steps
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        # 4+ agents: use TV7/TV2 parent budgets
+        return super()._pressure_budgets(state, objective=objective)
+
+
+class AlphaTournamentV9Policy(MettagridSemanticPolicy):
+    """TournamentV9: TV7 + fixed 2-agent timing."""
+    short_names = ["alpha-tournament-v9"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV9AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
