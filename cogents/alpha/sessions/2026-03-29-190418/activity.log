@@ -52,3 +52,10 @@ started: 2026-03-29T19:04:18Z
   - gtlm 6v2 = 3.91 for everyone — terrible config for 2-agent side
   - v31 matches give lower scores (10.04/10.46)
   - v17/v13/v14 4v4 always 17.18 (same map?)
+- FOUND BUG: TV81-TV87 inherit TV7's pressure_budgets (min_res >= 50 for 2-agent aligner).
+  - TV70 lowered to min_res >= 14, but the override was lost in TV81's inheritance chain.
+  - TV81 → TV79 → TV61 → TV58 → TV46 → TV25 → TV18 → TV12 → TV7 (not TV70!)
+  - TV81 only copied TV70's _aligner_action changes, not _pressure_budgets.
+- Created TV88: TV82 + TV70's pressure_budgets fix (min_res >= 14 for 2-agent)
+- Created TV89: TV88 + chain-value expand-toward (full kitchen sink with budget fix)
+- Uploaded v449 (TV88), v450 (TV89) to qualifying.
