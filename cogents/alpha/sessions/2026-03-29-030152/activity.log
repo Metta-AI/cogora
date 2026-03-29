@@ -1,44 +1,33 @@
 status: in-progress
 started: 2026-03-29-030152
 
-## Key Discovery: Economy Collapse in Second Half
-- max_steps = 10000 (tournament), not 5000
-- Aggressive 4a 10k = 2.06 (vs 3.87 at 5k) — economy collapses in steps 5000-10000
-- Average junctions in second half drops to ~0.25 (from 3.87 in first half)
-- This is the #1 optimization target: sustain economy for full 10000 steps
+## BREAKTHROUGH: AlphaSustainable 4a 10k = 8.63 (seed 1)
+- Beats Aggressive (6.45) on same seed by 34%
+- Key: guaranteed 1 miner per team prevents economy collapse
+- Multi-seed 4a 10k: 8.63, 3.29, 6.06 (avg 5.99)
+- Uploaded as v339
 
-## Key Discovery: num_agents Bug is BENEFICIAL
-- The bug (num_agents=total instead of per-team) makes budgets more aggressive
-- More aggressive = more aligners = higher score in early game
-- But causes economy collapse because zero miners
+## Key Discovery: max_steps = 10000
+- 5000-step tests give half the tournament score
+- Economy sustainability is CRITICAL for the second half (5000-10000)
+- Aggressive 4a collapses: avg 3.87 at 5k → 2.06 at 10k (different seed)
+- Sustainable 4a holds 3+ junctions from 5000-10000
 
-## Key Discovery: Different Seeds = Different Bottleneck
-- Silicon bottleneck on default seed
-- Oxygen bottleneck on seed 42
-- Need adaptive resource management, not fixed bias
+## Key Discovery: num_agents Bug
+- Bug is BENEFICIAL for short games (aggressive budgets)
+- But HARMFUL for 10k games (0 miners → economy collapse)
+- Sustainable uses bug for pressure but caps with team_size for miner floor
 
-## Local Test Results (5000 steps, same seed)
-| Policy | 8a | 4a |
+## Local Test Results (10000 steps, seed 1)
+| Policy | 4a 10k | 8a 10k |
 |---|---|---|
-| Aggressive | 5.28 | 3.87 |
-| TeamFix | 4.29 | 2.93 |
-| HighEff | 1.31 | — |
-| Rush | 3.27 | 2.06 |
-| EconRush | 4.44 | — |
-| Turbo | 4.58 | 3.31 |
-| MaxAlignV2 | 1.45 | 1.67 |
+| Aggressive | 6.45 | pending |
+| Sustainable | 8.63 | pending |
 
-## Multi-seed Aggressive 8a (5k): 5.28, 4.54, 3.05, 5.35 (avg 4.56)
-
-## Score Formula
-- Score = avg(junctions_in_network) per tick, normalized by max_steps
-- Each tick: reward += (net_junction_count - 1) / max_steps
-- To get >10: need avg 10 junctions in connected network for full 10000 steps
-
-## Uploads
-- v337 (Turbo): earlier scramblers, silicon-aware macro directive
+## Tournament Uploads
+- v337 (Turbo)
+- v339 (Sustainable) ← best candidate
 
 ## Pending
-- 10k step tests for Aggressive 8a and TeamFix 4a
-- Tournament results for v327-v337
-- Need sustainable economy policy for 10000 steps
+- 8a 10k comparison tests
+- Tournament results for v327-v339
