@@ -160,3 +160,12 @@ Uploaded as v376.
 - v371 (TV15/my version, now TV16): TV12 + tournament economy
 - v372 (TV16): TV12 + tournament economy fix
 - v376 (TV17): TV12 + adaptive partner response
+- v378 (TV18): TV12 + light silicon priority only (no budget changes)
+
+## CRITICAL LEARNING: Don't Change Aligner Budgets!
+v370 (TV14): 8.15, v371: 7.11, v372: 7.35 — ALL worse than v368 (8.69)!
+Reducing aligner count hurts more than silicon depletion.
+TV12's budgets are near-optimal. Only change mining priorities, not budgets.
+
+TV18 = TV12 + silicon priority ONLY when silicon < 50 or already lowest.
+No budget changes. Should match TV12 performance + maybe slight silicon benefit.

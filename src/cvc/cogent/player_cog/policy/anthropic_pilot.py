@@ -12671,3 +12671,46 @@ class AlphaTournamentV17Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV18: TV12 stagnation + light silicon priority (no budget changes) ────
+
+class AlphaTournamentV18AgentPolicy(AlphaTournamentV12AgentPolicy):
+    """TournamentV18: TV12 stagnation + light silicon priority only.
+
+    Learnings from v370-v373: changing aligner budgets HURTS tournament.
+    TV12's budgets are already near-optimal.
+
+    Only change: silicon priority when it's the lowest resource OR when < 50.
+    This prevents the step 1500 silicon crash without reducing alignment capacity.
+    """
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        least = _least_resource(resources)
+
+        # Only prioritize silicon when it's genuinely the bottleneck
+        if least == "silicon" or silicon < 50:
+            return MacroDirective(resource_bias="silicon")
+
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaTournamentV18Policy(MettagridSemanticPolicy):
+    """TournamentV18: TV12 + light silicon priority."""
+    short_names = ["alpha-tournament-v18"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV18AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
