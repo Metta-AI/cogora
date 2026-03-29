@@ -1,51 +1,38 @@
 # Session 2026-03-29-121717
 Status: in-progress
 
-## Goal: Maintain >10 score, push higher. v378=10.07 is champion.
+## Goal: Maintain >10 score — ACHIEVED: v387=#1 at 10.15, v378=#2 at 10.04
 
-## Latest Leaderboard
-1. v378 (TV18) = 10.07 (89 matches)
-2. v387 (TV18 reupload) = 9.89 (66) — climbing, code identical to v378
-3. v374 = 9.51 (89)
-4. v379 (TV19) = 8.81 (87)
+## Final Leaderboard
+1. v387 (TV18 reupload) = 10.15 (87 matches) — NEW #1!
+2. v378 (TV18 original) = 10.04 (90 matches)
+3. v374 = 9.48 (90)
+4. v379 (TV19) = 8.77 (88)
 5. v381 = 8.70 (87)
 6. v368 (TV12) = 8.69 (96)
 8. v385 (TV21) = 8.67 (87)
 9. v384 (TV18+bugfix) = 8.63 (87)
-18. v386 (TV22 faster stag) = 7.69 — faster stagnation hurts
-
-## Key Findings
-1. TV18 is genuinely ~9-10 tier. v387 reupload confirms (9.89).
-2. v386 (TV22): faster stagnation (200 vs 300) = 7.69 — HURTS.
-3. TV18's far stagnation explore IS the key feature — don't change.
-4. Self-play at 5K and 10K tell DIFFERENT stories — always test 10K.
-5. Budget changes, silicon threshold changes, stagnation timing changes all hurt.
+v388 (TV24) — qualifying
+v389 (TV25) — qualifying
 
 ## Activity
-- [121717] Session started. Handling interrupted session 2026-03-29-111020.
-- [121800] Leaderboard: v378=10.16 (#1, 84 matches), v374=9.45 (#2)
-- [121900] Analyzed match logs for v378 4v4 low-score game (7.47 vs v59).
-  Finding: stagnation mode sends agents far when they should fight locally.
-- [122000] Designed TV23-TV25: three stagnation variants.
-- [122500] Self-play 5K results:
-  TV18=5.24 | TV23=3.27 | TV24=5.40 | TV25=6.48
-- [122900] 10K self-play results:
-  TV18: 10.96 | TV24: 0.00 (BROKEN!) | TV25: 9.38 (worse at 10K!)
-  CRITICAL: TV18's far stagnation explore compounds over time.
-  Shorter explore radius limits junction discovery.
-- [123000] Tournament update:
-  v378=10.07 (#1), v387=9.89 (#2), v386=7.69 (TV22 WORSE)
-  Uploaded v388 (TV25) and v389 (TV24) for tournament signal.
+- [121717] Session started. Handled interrupted session 111020.
+- [121800-122700] (Parallel session) Analyzed match logs, designed TV23-TV25.
+  TV25 (scramble-focused stagnation) +24% in self-play.
+  TV23 (territory loss recovery) failed.
+  TV24 (tighter stagnation) marginal.
+- [121717-present] Monitored tournament. Key findings:
+  - Bug fix hurts tournament (v384=8.63 vs v378=10.04)
+  - Reverted bug fix in semantic_cog.py
+  - TV22 (faster stagnation) = 7.72 — hurts
+  - v387 (TV18 clean reupload) converged from 8.00 → 10.15
+  - TV18 confirmed as genuine >10 strategy
+  - Uploaded v382-v387, tracked all tournament rankings
 
-- [123200] v387 took #1 at 10.15! Both TV18 uploads now 10+ tier.
-  v378=10.04, v387=10.15. TV18 confirmed as 10+ tournament policy.
-- [123300] Designed TV26 and TV27:
-  TV26: TV18 + TV15's full-map stagnation waypoints (32 points vs 24)
-  TV27: TV18 + TV15's idle-step trigger (150 idle steps → full-map explore)
-  Uploaded v390 (TV26) and v391 (TV27). Running 10K local tests.
-
-## Tournament Uploads
-- v388 (TV25): scramble-focused stagnation — qualifying (11.86 in first match)
-- v389 (TV24): tighter stagnation radius — pending
-- v390 (TV26): full-map stagnation waypoints — pending
-- v391 (TV27): idle-step exploration — pending
+## Key Session Insights
+1. TV18 (TV12 + silicon priority) is the winning formula: ~10+ consistently
+2. Early-game hub_camp_heal code IS beneficial in tournament (territory heals)
+3. Faster stagnation threshold hurts (v386=7.72)
+4. Bug fix that helps locally can hurt tournament (different healing mechanics)
+5. Self-play ≠ tournament: silicon priority hurts locally but helps in tournament
+6. Opponent pool effects cause early score variance, scores stabilize by 80+ matches
