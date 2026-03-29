@@ -23486,3 +23486,160 @@ class AlphaTournamentV130Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV131: TV82 + no dedicated scramblers (aligners scramble when idle) ──────
+
+class AlphaTournamentV131AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV131: TV82 + zero dedicated scramblers.
+
+    Key insight: dedicated scramblers join at step 200+ and ALWAYS scramble.
+    But in early game (steps 0-1000), there are many alignable junctions.
+    Having that agent be an aligner instead speeds up early expansion.
+    Aligners already scramble when idle (idle_align_scramble, stag_scramble),
+    so scramble coverage is maintained without a dedicated role.
+
+    For 4-agent teams: 3 aligners + 0 scramblers + 1 miner (vs 2+1+1)
+    For 6-agent teams: 5 aligners + 0 scramblers + 1 miner (vs 4+1+1)
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: keep TV7's budget
+        if team_size <= 2:
+            if step < 500 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if min_res >= 50:
+                return 1, 0
+            return 0, 0
+
+        # 4-agent: NO dedicated scrambler, more aligners
+        if team_size <= 4:
+            if step < 30:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 30:
+                return 2, 0
+            # 3 aligners + 0 scramblers + 1 miner (vs 2+1+1)
+            return min(3, team_size - 1), 0
+
+        # 5+ agents: NO dedicated scrambler, more aligners
+        if step < 30:
+            return 2, 0
+
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 30:
+            return 2, 0
+        elif min_res < 80:
+            return 3, 0
+        else:
+            # All non-miner agents are aligners (they scramble when idle)
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV131Policy(MettagridSemanticPolicy):
+    """TournamentV131: TV82 + zero dedicated scramblers."""
+    short_names = ["alpha-tournament-v131"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV131AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV132: TV131 (no scramblers) + faster ramp + dual 2-agent aligner ────────
+
+class AlphaTournamentV132AgentPolicy(AlphaTournamentV131AgentPolicy):
+    """TournamentV132: TV131 + all competitive improvements.
+
+    Combines:
+    - TV131's no dedicated scramblers (aligners scramble when idle)
+    - TV129's faster ramp (aligners from step 30)
+    - TV122's dual aligner for 2-agent teams
+    - TV124's smarter stagnation
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: dual aligner (from TV122)
+        if team_size <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 1, 0  # 1 aligner early
+            if min_res >= 14:
+                return 2, 0  # Both align
+            return 1, 0
+
+        # 4-agent: 3 aligners from step 30, no scrambler
+        if team_size <= 4:
+            if step < 30:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 30:
+                return 2, 0
+            return min(3, team_size - 1), 0
+
+        # 5+ agents: max aligners, no scramblers
+        if step < 10:
+            return 2, 0
+
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 30:
+            return 2, 0
+        elif min_res < 80:
+            return 3, 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV132AgentStagnationPolicy(AlphaTournamentV132AgentPolicy):
+    """TV132 with TV124's improved stagnation."""
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        # Delegate to TV124's aligner action (which has better stagnation)
+        return AlphaTournamentV124AgentPolicy._aligner_action(self, state)
+
+
+class AlphaTournamentV132Policy(MettagridSemanticPolicy):
+    """TournamentV132: No scramblers + fast ramp + dual 2a + smart stagnation."""
+    short_names = ["alpha-tournament-v132"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV132AgentStagnationPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

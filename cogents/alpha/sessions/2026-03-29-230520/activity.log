@@ -51,3 +51,12 @@ started: 2026-03-29T23:05:20Z
   - v491 (TV129): faster early ramp (2 aligners step 30, scrambler step 100)
   - v492 (TV130): all improvements combined (TV123+TV124+TV125+TV129)
 - All v484-v492 in qualifying/running. No competition results yet.
+- QUALIFYING RESULTS: v484=11.16, v485=12.29, v486=11.16, v487=12.29, v488=11.16, v489=11.16
+  None entered competition yet. v483 stable at 13.17 (63m).
+- REALIZED: TV123 changes don't affect 4a/6a competitive play (only 8a qualifying).
+  The TV2 cap and budget logic meant 4a and 6a got same budgets as TV82.
+- Created TV131-TV132 to actually change competitive behavior:
+  - v493 (TV131): NO dedicated scramblers (3 aligners 4a, 5 aligners 6a vs 2+1, 4+1)
+    Rationale: aligners scramble when idle anyway. More aligners = faster early expansion.
+  - v494 (TV132): TV131 + fast ramp + dual 2a + smart stagnation (all combined)
+- These should show real differences in 4v4 and 6v2 competitive matches.
