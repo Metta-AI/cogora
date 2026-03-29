@@ -25,3 +25,12 @@ started: 2026-03-29T20:04:53Z
   - TV93: earlier aligner (step 100 vs 200) + no scramble in 2-agent
 - Uploaded: v451 (TV90), v452 (TV91), v453 (TV92), v454 (TV93) to qualifying.
 - All pass local 100-step test.
+- KEY INSIGHT: Tournament scores are shared between both teams (game-level metric).
+  Both teams ALWAYS get the same score. All current matches are self-play.
+  → Scrambling hurts because it reduces total aligned junctions.
+  → Best strategy: pure alignment efficiency, zero scramble.
+- Created TV94-TV96 (zero-scramble variants):
+  - TV94: TV88 + no scramble at all (no idle/stagnation scramble, zero scrambler budget)
+  - TV95: TV94 + aggressive 2-agent (min_res >= 7)
+  - TV96: TV95 + 3 aligners in 4v4 (instead of 2)
+- Uploaded: v455 (TV94), v456 (TV95), v457 (TV96) to qualifying.
