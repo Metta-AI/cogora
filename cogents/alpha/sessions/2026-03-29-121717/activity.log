@@ -36,3 +36,13 @@ v386 (TV22) — not ranked yet
   - Explore close to hub (within 20) instead of far stagnation offsets (22-35)
   - Stay in fight range instead of wandering far and retreating
 - [122000] Running TV23 local test (5000 steps, 8 agents).
+- [122500] Self-play 5K results:
+  TV18 (baseline): 5.24 | TV23 (loss recovery): 3.27 | TV24 (tighter stag): 5.40 | TV25 (scramble stag): 6.48
+  TV23 is WORSE — aggressive scramble (min_res=7) burns hearts when economy weak.
+  TV25 is promising! Replaces far stagnation explore with more scramble + regular explore.
+  TV25 key change: 50% scramble in stagnation (vs 33%) and use regular explore (not far offsets).
+  TV18 10K: 10.96 self-play. Running TV24/TV25 at 10K to confirm.
+- [122700] TV24 and TV25 also written. 3 variants tested:
+  TV23: territory loss + close explore — FAILED (3.27 vs 5.24)
+  TV24: tighter stagnation radius (15-22 vs 22-35) — marginal (+3%)
+  TV25: scramble-focused stagnation (no far explore) — BEST (+24%)
