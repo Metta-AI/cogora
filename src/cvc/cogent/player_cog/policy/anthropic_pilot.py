@@ -12746,11 +12746,12 @@ class AlphaTournamentV19AgentPolicy(AlphaTournamentV9AgentPolicy):
     """
 
     def _explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
-        """Agent 0 aligner uses wide offsets; others use standard."""
-        if role != "aligner" or self._agent_id != 0:
+        """Agent 0 aligner uses wide offsets when team has 5+ agents."""
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if role != "aligner" or self._agent_id != 0 or team_size < 5:
             return super()._explore_action(state, role=role, summary=summary)
 
-        # Agent 0: cycle through full-map waypoints instead of r22
+        # Agent 0 with 5+ agents: cycle through full-map waypoints
         current_pos = _h.absolute_position(state)
         hub = self._nearest_hub(state)
         center = (hub.global_x, hub.global_y) if hub is not None else current_pos
