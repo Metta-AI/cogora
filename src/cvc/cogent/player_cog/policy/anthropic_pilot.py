@@ -10519,3 +10519,264 @@ class AlphaScoutExplorePolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# Dense spiral exploration: covers the full 88x88 map systematically
+# 13x13 observation = 6 tiles in each direction, so spacing of ~12 gives full coverage
+_SPIRAL_EXPLORE_OFFSETS = (
+    # Ring 1: ~12 tiles from hub
+    (0, -12), (12, 0), (0, 12), (-12, 0),
+    # Ring 2: ~24 tiles
+    (0, -24), (17, -17), (24, 0), (17, 17),
+    (0, 24), (-17, 17), (-24, 0), (-17, -17),
+    # Ring 3: ~36 tiles (covers far corners of 88x88)
+    (0, -36), (25, -25), (36, 0), (25, 25),
+    (0, 36), (-25, 25), (-36, 0), (-25, -25),
+    # Ring 4: ~44 tiles (map edge for center hubs)
+    (0, -44), (31, -31), (44, 0), (31, 31),
+    (0, 44), (-31, 31), (-44, 0), (-31, -31),
+)
+
+
+class AlphaScoutV2AgentPolicy(AlphaScoutExploreAgentPolicy):
+    """Scout V2: denser spiral pattern for better map coverage.
+
+    The scout uses a 4-ring spiral pattern spaced 12 tiles apart,
+    which matches the 13x13 observation window for full coverage.
+    """
+
+    def _scout_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Scout uses dense spiral pattern."""
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+
+        # If low HP, heal
+        if hp < 30:
+            hub = self._nearest_hub(state)
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="scout_heal", vibe="change_vibe_heart")
+
+        # If carrying resources, deposit (help economy while scouting)
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="scout_deposit", vibe="change_vibe_aligner")
+
+        # If scout finds an alignable junction nearby, align it!
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        if hearts > 0:
+            target = self._preferred_alignable_neutral_junction(state)
+            if target is not None:
+                dist = _h.manhattan(current_pos, target.position)
+                if dist <= 10:  # Only align if close (don't abandon scouting)
+                    return self._move_to_known(state, target, summary="scout_align_nearby", vibe="change_vibe_aligner")
+
+        # Dense spiral exploration
+        hub = self._nearest_hub(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+        offsets = _SPIRAL_EXPLORE_OFFSETS
+        offset_index = (self._explore_index + self._agent_id) % len(offsets)
+        target_offset = offsets[offset_index]
+        absolute_target = (center[0] + target_offset[0], center[1] + target_offset[1])
+        if _h.manhattan(current_pos, absolute_target) <= 2:
+            self._explore_index += 1
+            offset_index = (self._explore_index + self._agent_id) % len(offsets)
+            target_offset = offsets[offset_index]
+            absolute_target = (center[0] + target_offset[0], center[1] + target_offset[1])
+        return self._move_to_position(state, absolute_target, summary="scout_spiral", vibe="change_vibe_aligner")
+
+
+class AlphaScoutV2Policy(MettagridSemanticPolicy):
+    """TV2 + scout with dense spiral pattern."""
+    short_names = ["alpha-scout-v2"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaScoutV2AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaScoutChainAgentPolicy(AlphaScoutV2AgentPolicy):
+    """ScoutV2 + chain-building: prefer junctions that unlock others.
+
+    Combines the best of both approaches:
+    - 1 dedicated scout for junction discovery (proven +28%)
+    - Aligners prefer frontier junctions that expand the network
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """TV2 aligner with chain-building targeting."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        # Use chain-building targeting: prefer junctions that unlock others
+        target = self._chain_or_normal_target(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="chain_align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Idle: scramble (proven critical)
+        min_res = _h.team_min_resource(state)
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _chain_or_normal_target(self, state: MettagridState) -> KnownEntity | None:
+        """Pick alignable junction, preferring ones that expand the network."""
+        team_id = _h.team_id(state)
+        hub = self._nearest_hub(state)
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda e: e.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda e: e.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+
+        all_neutral = self._known_junctions(state, predicate=lambda j: j.owner in {None, "neutral"})
+        frontier = []
+        unreachable = []
+        for j in all_neutral:
+            if _h.within_alignment_network(j.position, network_sources):
+                frontier.append(j)
+            else:
+                unreachable.append(j)
+
+        if not frontier:
+            return None
+
+        current_pos = _h.absolute_position(state)
+        hub_pos = hub.position if hub else None
+
+        # Score: prefer junctions that unlock more unreachable ones
+        def chain_score(candidate: KnownEntity) -> tuple:
+            expansion = sum(
+                1 for u in unreachable
+                if _h.manhattan(candidate.position, u.position) <= _h._JUNCTION_ALIGN_DISTANCE
+            )
+            dist = _h.manhattan(current_pos, candidate.position)
+            claimed = _h.is_claimed_by_other(
+                claims=self._shared_claims,
+                candidate=candidate.position,
+                agent_id=self._agent_id,
+                step=self._step_index,
+            )
+            return (-expansion, dist + (50 if claimed else 0))
+
+        directed = self._directive_target_candidate(frontier)
+        if directed is not None:
+            return directed
+
+        return min(frontier, key=chain_score)
+
+
+class AlphaScoutChainPolicy(MettagridSemanticPolicy):
+    """ScoutV2 + chain-building alignment targeting."""
+    short_names = ["alpha-scout-chain"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaScoutChainAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTwoScoutsAgentPolicy(AlphaScoutV2AgentPolicy):
+    """TV2 with 2 dedicated scouts instead of 1.
+
+    If 1 scout gave +28%, 2 scouts might discover even more junctions.
+    Trade-off: fewer miners but more junction discovery.
+    """
+
+    def _desired_role(self, state: MettagridState, *, objective: str | None = None) -> str:
+        """Convert the 2 highest-ID agents to permanent scout role."""
+        team_ids = self._shared_team_ids
+        if team_ids and len(team_ids) >= 4:
+            sorted_ids = sorted(team_ids)
+            if self._agent_id in sorted_ids[-2:]:
+                return "scout"
+        elif team_ids:
+            max_id = max(team_ids)
+            if self._agent_id == max_id:
+                return "scout"
+        return super(AlphaScoutV2AgentPolicy, self)._desired_role(state, objective=objective)
+
+
+class AlphaTwoScoutsPolicy(MettagridSemanticPolicy):
+    """TV2 + 2 dedicated scouts for maximum junction discovery."""
+    short_names = ["alpha-two-scouts"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTwoScoutsAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
