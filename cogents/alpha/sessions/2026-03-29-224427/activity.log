@@ -12,3 +12,7 @@ started: 2026-03-29T22:44:27Z
   - v479 (TV118): reduced retreat margin (10 vs 20)
   - v480 (TV119): faster early ramp (2 aligners from step 10)
 - Todos: reduce retreat overhead, study opponents, improve 2v6 vs gtlm-reactive.
+- TV82 self-play scored 0.00 (all agents wiped out at step 100, map seed issue). TV117 scored 4.48.
+  Self-play is highly seed-dependent. Tournament results are the real signal.
+- v478 (TV117) passed qualifying, entered competition. v479-v480 likely in qualifying still.
+- All tournament matches still running (17-20 at a time). Queue is heavily backed up.
