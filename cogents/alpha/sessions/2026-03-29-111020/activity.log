@@ -7,30 +7,38 @@ Current best: v368 (TV12) at 8.69, #1 on leaderboard.
 Goal: score > 10 in tournament.
 
 ## CRITICAL BUG FIX: Early-game wipeout
-All agents died at step ~50 due to hub_camp_heal/survival_hold code
-that assumed territory healing works while doing noop. Fix: removed
-early-game holding, agents start moving immediately.
+Removed hub_camp_heal/survival_hold code that killed agents in ~50 steps.
+Agents now start moving immediately, territory healing kicks in.
 
-## Self-play Results (10K steps, fixed TV12)
-- Seed 0: 8.93
-- Seed 1: 13.76
-- Seed 2: 7.99
-- **Average: 10.23** (above >10 goal in self-play!)
+## GOAL ACHIEVED: v378 (TV18) at 10.13 on leaderboard!
+Leaderboard as of now:
+1. v378 (TV18) = 10.13 (78 matches) — ABOVE >10 GOAL
+2. v374 = 9.40 (79 matches)
+3. v379 (TV19) = 9.14 (48 matches)
+4. v381 (TV19+fix) = 8.95 (44 matches)
+5. v380 (TV19+LLM) = 8.73 (50 matches)
+6. v368 (TV12) = 8.69 (96 matches)
 
-Starter policy scores 0.00 on all seeds at 5K (baseline).
-Key finding: silicon is always the bottleneck resource.
+v382 (TV12+bugfix) = 3.70 (only 2 matches, too early)
+v383 (TV20) not scored yet
 
-## Tournament Uploads
-- **v382**: TV12 + early-game fix
-- **v383**: TV20 (TV12 + full-map explore + silicon priority)
+## Self-play Results (10K steps, fixed base)
+- TV12: avg 10.23 (seeds: 8.93, 13.76, 7.99)
+- TV20: avg 6.03 (worse! silicon+explore hurt locally)
+- TV18: 0.09 on seed 0 (silicon priority kills locally)
+- TV15: 4.91 on seed 0 (full-map explore hurts locally)
 
-## TV20 Design
-Based on TV12 (stagnation detection) with improvements:
-1. Full-map waypoints (TV15) for stagnation explore (radius 38 vs 35)
-2. Skip scrambling during stagnation (save hearts for new alignments)
-3. Silicon priority mining when genuinely bottleneck
-4. Idle step tracking as secondary stagnation trigger
+Key insight: what works in tournament vs self-play can be very different.
+Tournament has opponents who create dynamics self-play doesn't capture.
 
-## Tournament Status
-All matches still running/scheduled. New opponents: v49, v50, v58, v11.
-TV20 local tests running...
+## Key Findings
+- Silicon priority HELPS in tournament (v378=10.13 vs v368=8.69) but HURTS locally
+- Full-map exploration neutral/slightly positive in tournament (v379=9.14)
+- Budget changes always hurt
+- The early-game bug fix may or may not affect tournament (different env?)
+- v382 needs more matches to determine impact
+
+## Next Steps
+- Monitor v382 and v383 tournament performance
+- If bug fix helps: could push further improvements
+- If bug fix doesn't help: focus on other tournament-proven strategies
