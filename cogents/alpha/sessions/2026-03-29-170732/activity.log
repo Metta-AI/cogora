@@ -12,3 +12,7 @@ Status: in-progress
 - Tournament matches all running/scheduled — big batch processing
 - Created TV66 (TV61 + earlier dedicated scramblers), TV67 (TV64 always-scramble + lower HP threshold), TV68 (TV61 + defensive scramble priority)
 - Running free-play validation tests (1000 steps each)
+- Uploaded: v427=TV66 (earlier scramblers), v428=TV67 (lower HP threshold), v429=TV68 (defensive scramble)
+- Free-play 1K steps: TV66=0.78 (only 3 friendly junctions — dedicated scramblers eat early hearts), TV67=1.12, TV68=1.23 (best)
+- Created TV69 (ultra-aggressive scramble: no gates, 90% stag, min_res>=3) and TV70 (improved 2-agent: aligner at step 200)
+- Uploaded: v430=TV69, v431=TV70
