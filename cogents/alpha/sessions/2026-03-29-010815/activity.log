@@ -13,3 +13,10 @@ status: in-progress
 - 01:23:00 Created AlphaUltraV2 (chain expand + 1 scrambler + idle-scramble if rich) and AlphaUltraV3 (chain expand + Aggressive budgets + idle-scramble)
 - 01:24:00 Uploaded: v319=Ultra, v320=UltraV2, v321=UltraV3 to tournament
 - 01:24:00 Running local tests: UltraV2 8a, UltraV3 8a/4a
+- 01:30:00 RESULT: UltraV2 8a = 5.67, UltraV3 8a = **11.47** (!!), UltraV3 4a = 5.82
+- 01:30:00 KEY INSIGHT: V3 (Aggressive budgets + chain expansion_weight=20) is MASSIVE improvement:
+  - 8a: 11.47 vs Aggressive 3.61 (+218%)
+  - 4a: 5.82 vs Aggressive 3.51 (+66%)
+  - V3 8a peaks at 20j, sustains 12-17j mid, 8j late (vs Aggressive: 9j peak, 4j late)
+- 01:30:00 The ONLY difference: expansion_weight=20 + expansion_cap=120 (chain weights)
+- 01:30:00 This is the path to >10 in tournament! If Aggressive gets 6.54 tournament, V3 should get much more.
