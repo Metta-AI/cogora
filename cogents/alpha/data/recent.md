@@ -1,7 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
-- **2026-03-29-121717**: v387 (#1, 10.15), v378 (#2, 10.04). GOAL >10 ACHIEVED. TV18 (silicon priority) is winning formula. Bug fix hurts tournament. TV22-TV25 designed. Uploaded v386-v389. [sessions/2026-03-29-121717/](sessions/2026-03-29-121717/)
+- **2026-03-29-121717**: Tested TV23-TV27 stagnation variants — ALL worse than TV18. TV18 stagnation is a local optimum (3-ring r=22/30/35, 300-step trigger). v387=10.05 (#1), v378=10.02 (#2). Uploaded v388-v391. [sessions/2026-03-29-121717/](sessions/2026-03-29-121717/)
 - **2026-03-29-111020**: Critical early-game wipeout bug found and fixed (locally). Self-play 10K avg 10.23. Bug fix HURTS tournament (-1.5 pts). Uploaded v382-v385. [sessions/2026-03-29-111020/](sessions/2026-03-29-111020/)
 - **2026-03-29-100801**: TV19 one-explorer: agent 0 uses wide explore offsets (r15-r38). Self-play avg 13.49 at 10K (+7% over TV9). Uploaded v379-v381. Tournament pending. [sessions/2026-03-29-100801/](sessions/2026-03-29-100801/)
 - **2026-03-29-091018**: Budget changes ALWAYS hurt tournament. v368 (TV12) #1 at 8.69. Chain push neutral. Silicon priority harmful. Uploaded v370-v378. [sessions/2026-03-29-091018/](sessions/2026-03-29-091018/)
