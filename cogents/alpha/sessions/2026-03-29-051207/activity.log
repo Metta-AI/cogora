@@ -5,39 +5,56 @@ Status: in-progress
 - v348 was #1 with 7.53. Goal: >10.
 - TournamentV2 base: AdaptiveV3 + team cap + idle scramble.
 
-## Tournament Leaderboard (78 matches)
-| Policy | Score |
-|--------|-------|
-| v351 (TV3) | 7.51 |
-| v348 (TV2) | 7.50 |
-| v352 (TV4) | 7.50 |
-| v290 (Aggressive) | 6.50 |
+## Tournament Leaderboard (81 matches)
+| Rank | Policy | Score |
+|------|--------|-------|
+| 1 | v348 (TV2) | 7.57 |
+| 2 | v352 (TV4) | 7.50 |
+| 3 | v351 (TV3) | 7.49 |
+| 4 | v290 (Aggressive) | 6.50 |
 
 ## Experiments Run
-| Policy | 4a self-play | 10k self-play | Key Finding |
-|--------|-------------|---------------|-------------|
-| TV2 (baseline) | 3.85 | 4.43 | Best overall |
-| ExplorerV2 | 0.99 | — | Exploration hurts throughput |
-| Capture | 3.85 | — | Same as TV2 in self-play |
-| CapturePlus | 2.12 | — | Faster hearts hurts |
-| TV5 | 3.26 | — | Fast ramp crashes economy |
-| Patrol | 3.58 | — | Passive defense fails |
-| MaxPressure4a | 1.44 | 3.07 | 0-miner phase starves economy |
+| Policy | 4a self-play | Notes |
+|--------|-------------|-------|
+| TV2 (baseline) | 3.85 | Best overall |
+| ExplorerV2 | 0.99 | Wide exploration hurts throughput |
+| Capture | 3.85 | Same as TV2 in self-play (symmetric) |
+| CapturePlus | 2.12 | Faster hearts hurts |
+| TV5 | 3.26 | Fast 4a ramp crashes economy |
+| Patrol | 3.58 | Passive defense fails |
+| MaxPressure4a | 1.44 | 0-miner phase starves economy |
+| AdaptiveMap (seed 1) | 4.51 | +4% on good maps |
+| AdaptiveMap (seed 2) | 0.83 | -35% on bad maps |
 
 ## Multi-Seed Self-Play (TV2, 4a, 5000 steps)
-- Seed 1: 4.33, Seed 2: 1.28, Seed 3: 2.16, Seed 4: 1.99, Seed 5: 2.32
-- Map variance is HUGE — dominant factor in score
+| Seed | Score |
+|------|-------|
+| 1 | 4.33 |
+| 2 | 1.28 |
+| 3 | 2.16 |
+| 4 | 1.99 |
+| 5 | 2.32 |
 
 ## Key Insights
-1. TV2's balance is hard to beat — deviating in ANY direction hurts self-play
-2. All top3 (v348,v351,v352) converge to ~7.5 in tournament
-3. 72% of aligner time is idle-scrambling (frontier=0)
-4. Junction discovery limited to ~14/65 per team
-5. Capture targeting makes no difference in self-play (symmetric)
-6. Tournament ceiling may be ~7.5 with current architecture
+1. TV2's balance is hard to beat — deviating in ANY direction hurts
+2. All top3 converge to ~7.5 in tournament with 81 matches
+3. Map variance is DOMINANT factor (1.28-4.33 across seeds)
+4. 72% of aligner time is idle-scrambling (frontier=0)
+5. Junction discovery limited to ~14/65 per team in self-play
+6. Capture targeting = TV2 in self-play (symmetric benefit)
+7. Clips faction competes for junctions — relevant for tournament
+8. Exploration helps on good maps (+4%) but hurts on bad maps (-35%)
+9. Current heuristic ceiling appears to be ~7.5
 
 ## Uploads This Session
 - v353: Capture (pure heuristic)
 - v354: TV2 (pure heuristic)
-- v355: TV5 (capture + fast ramp + lower scramble)
+- v355: TV5 (capture + fast ramp)
 - v356: MaxPressure4a
+- v357: AdaptiveMap
+
+## Suggestions for Future Work
+- Analyze tournament match logs to understand per-map dynamics
+- Study Clips ship behavior and optimize scramble targeting for Clips
+- Consider RL training with GPU access to break heuristic ceiling
+- Test with tournament-specific configurations (vs starter, vs real opponents)
