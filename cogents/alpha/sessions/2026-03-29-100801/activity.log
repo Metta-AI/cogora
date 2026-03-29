@@ -1,20 +1,19 @@
 # Session 2026-03-29-100801
-Status: in-progress
+Status: completed
 
 ## Summary
-Created TV19: agent 0 uses full-map explore offsets (r15-r38) during idle.
-Self-play: avg 13.49 at 10K steps (+7% over TV9 at 5K).
-Uploaded v379-v381. Tournament running but slow — no completed matches yet.
+Created TV19 (one-explorer aligner) with +7% over TV9 in self-play.
+Uploaded v379-v381 to tournament. Results pending due to server load.
 
-## TV19 10K Self-play: 10.53, 14.94, 14.01, 14.46 → avg 13.49
-## TV19 5K vs TV9: +6%, =, +14% → avg +7%
+## Results
+- TV19 10K self-play: 10.53, 14.94, 14.01, 14.46 → avg 13.49
+- TV19 5K vs TV9: +6%, =, +14% → avg +7%
+- Tournament: 17 running, 0 completed at session end
 
-## Key Insight: One-explorer wins
-- All agents exploring (TV15): high variance, -52% on some maps
-- One agent exploring (TV19): consistent improvement, preserves defense
-- Gate on team_size >= 5 prevents 4-agent regression
-
-## Tournament Status
-15+ matches running, 0 completed. Server processing backlog.
-Competitors: gtlm-reactive, Paz-Bot, slanky, many alpha versions.
-Waiting for results to determine next iteration.
+## Key Findings
+1. Idle stagnation is the #1 bottleneck: aligners loop at same position forever
+2. Default explore r22 misses junctions at r30-40 on 88x88 map
+3. All-agents exploring: high variance (+30%/-52%)
+4. One-agent exploring: consistent improvement, preserves defense
+5. Silicon priority causes wipeouts — avoid overriding _macro_directive
+6. Gate exploration on team_size >= 5

@@ -1,12 +1,11 @@
-# Session 2026-03-29-100801 — Interrupted
+# Session 2026-03-29-100801
 
-Session was interrupted while investigating idle stagnation bug and designing TV13.
+Created TV19 policy: one-explorer aligner design.
 
-## Key Findings
-- Idle stagnation bug: 2-agent aligner gets stuck at same position for 5000+ steps
-- Default explore offsets only reach radius 22, map is 88x88
-- Junctions beyond radius 22 from hub are NEVER discovered
-- TV13 designed with full-map exploration waypoints but not fully tested
-
-## Status
-Interrupted before TV13 local validation completed.
+- Agent 0 uses full-map explore waypoints (r15-r38) during idle time
+- Other agents use standard r22 offsets (TV9 behavior)
+- Gated on team_size >= 5 (4-agent teams use standard behavior)
+- Self-play avg 13.49 at 10K steps (seeds: 10.53, 14.94, 14.01, 14.46)
+- +7% over TV9 at 5K steps (consistent across seeds)
+- Uploaded v379-v381 to tournament
+- Tournament results pending (server overloaded)

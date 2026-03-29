@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-29-100801**: TV19 one-explorer: agent 0 uses wide explore offsets (r15-r38). Self-play avg 13.49 at 10K (+7% over TV9). Uploaded v379-v381. Tournament pending. [sessions/2026-03-29-100801/](sessions/2026-03-29-100801/)
 - **2026-03-29-091018**: Budget changes ALWAYS hurt tournament. v368 (TV12) #1 at 8.69. Chain push neutral. Silicon priority harmful. Uploaded v370-v378. [sessions/2026-03-29-091018/](sessions/2026-03-29-091018/)
 - **2026-03-29-080619**: TV12-TV16 policies. TV15 (idle explore) self-play avg 15.16. TV12 tournament 7.54 (stagnation hurt). Uploaded v368-v375. [sessions/2026-03-29-080619/](sessions/2026-03-29-080619/)
 - **2026-03-29-071830**: Monitoring v362 tournament results. Tournament results: v360 4a=2.31, v362 2a=5.24. Server intermittent SSL issues. [sessions/2026-03-29-071830/](sessions/2026-03-29-071830/)
