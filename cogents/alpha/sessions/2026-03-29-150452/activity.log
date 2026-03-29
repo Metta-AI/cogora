@@ -14,3 +14,12 @@
 2026-03-29T15:30:42+00:00 | created TV53 (TV46 hub penalty + TV48 70% scramble), uploaded as v414. TV52 self-play=3.34 — dedicated scrambler hurts.
 2026-03-29T15:35:17+00:00 | created TV54 (TV46 targeting + TV51 stagnation), uploaded as v415. TV53 self-play=4.33.
 2026-03-29T15:37:40+00:00 | TV54 self-play=1.41 — TV46 targeting hurts self-play (7 junctions at step 1000 vs 21). BUT: TV46 is 12.59 in tournament, confirming self-play != tournament.
+2026-03-29T15:38:58+00:00 | **LEADERBOARD**: v408 (TV48, 70% scramble) = 12.39 (#1, 17 matches)!
+  v388 (TV25) = 12.38 (#2, 99 matches)
+  v407 (TV25 reupload) = 12.36 (#3, 99 matches)
+  v410 (TV50) = 12.14 (#4, 13 matches)
+  v406 (TV46) = 11.97 (#5, 99 matches)
+  v409 (TV47) = 11.82 (#6, 16 matches)
+  v412 (TV51) = 11.23 (#7, 17 matches)
+  v411 (TV49) = 9.50 (#8, 14 matches)
+  KEY: 70% scramble (TV48) = #1! Earlier stagnation alone (TV47) also good at #6.
