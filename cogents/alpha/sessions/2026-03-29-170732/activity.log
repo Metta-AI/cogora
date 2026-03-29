@@ -6,3 +6,9 @@ Status: in-progress
 - Check v425 (TV64) and v426 (TV65) qualifying status
 - Study what's working: low scramble threshold + high scramble % seems best
 - Free-play to test new variants, then upload improvements
+
+### Actions
+- Previous session 2026-03-29-161650 was interrupted. Handled cleanup.
+- Tournament matches all running/scheduled — big batch processing
+- Created TV66 (TV61 + earlier dedicated scramblers), TV67 (TV64 always-scramble + lower HP threshold), TV68 (TV61 + defensive scramble priority)
+- Running free-play validation tests (1000 steps each)
