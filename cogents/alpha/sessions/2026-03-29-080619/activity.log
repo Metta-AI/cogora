@@ -1,35 +1,34 @@
 # Session 2026-03-29-080619
 Status: in-progress
 
+## Best Self-Play: TV15 avg 15.16 (4 seeds, 8a, 10K)
+TV15 = TV9 + idle step counter (150 steps) → full-map exploration.
+Simpler than TV12 stagnation detection, more robust.
+
 ## Uploads This Session
-- v368 (TV12/stagnation): competition — 7.5 avg (12 matches)
-- v369 (TV13/stagnation+explore+chain): qualifying
-- v373 (TV11b/chain push only): qualifying — safest improvement
+- v368 (TV12/stagnation): competition — avg ~7.5 (12 matches)
+- v369 (TV13/combined): qualifying
+- v373 (TV11b/chain push): qualifying
+- v374 (TV15/idle explore): qualifying — BEST CANDIDATE
+- v375 (TV16/economy fix): qualifying
 
-## v368 Tournament Results (12 matches)
-- 2a: avg 7.02 (range 5.18-10.81)
-- 4a: avg 7.90 (range 6.35-9.30)
-- 6a: avg 7.69 (all 7.69)
-- Overall: ~7.54
+## Self-Play Results (8a, 10K)
+| Policy | Avg | Seeds | Notes |
+|--------|-----|-------|-------|
+| TV7    | 10.3 | 8 | Tournament proven at 8.55 |
+| TV11b  | 8.5 | 7 (1 wipeout) | Chain push only |
+| TV12   | 9.9 | 8 | Stagnation detection |
+| TV13   | 13.2 | 8 (2 wipeouts) | Combined but unstable |
+| TV15   | 15.2 | 4 | Idle step counter → full-map explore |
 
-Stagnation detection may hurt tournament (lower than v367's 8.61).
-Possible cause: stagnation triggers too early in 2a/4a tournament
-where teams are different from self-play.
+## Key Insight: Idle Step Counting
+TV15's approach: count consecutive steps with no align target.
+After 150 idle steps → enter full-map exploration mode.
+Explores with wide waypoints covering entire 88x88 map.
+Scrambles 1/8 of the time during exploration.
+Simple, robust, no false triggers.
 
-## Self-Play Results (8a, 10K, 8 seeds)
-| Policy | Avg | Notes |
-|--------|-----|-------|
-| TV7    | ~10.3 | Tournament proven at 8.55 |
-| TV11b  | 8.49 | Chain push only (safe) |
-| TV12   | 9.89 | Stagnation detection |
-| TV13   | 13.15 | Combined (high ceiling but high variance) |
-
-## Key Insight
-Self-play performance doesn't directly predict tournament performance!
-TV12 was best in self-play but worse in tournament than TV9.
-TV11b (chain push) is safe/conservative improvement.
-
-## Strategy
-Upload conservative improvements (chain push) rather than
-aggressive changes (stagnation detection) that may hurt
-tournament performance despite improving self-play.
+## Tournament Reality
+v368 (TV12) scored 7.5 in tournament (worse than v367's 8.61).
+Stagnation detection may hurt tournament with mixed teams.
+TV15's idle-step approach may be more tournament-friendly.
