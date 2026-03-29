@@ -61,3 +61,11 @@
   ChainDefense: partial (5.50, 6.21, pending) — defense helps BAD seeds dramatically!
     seed=42: ChainExpand 2.09 -> ChainDefense 5.50 (+163%)
   Uploads: v309=AdaptiveV3, v310=Balanced, v311=ChainExpand, v312=ChainDefense
+- [2026-03-29 00:03] MaxChain (expansion_weight=30, cap=180, all-explore): 1.84 TERRIBLE.
+  Too high expansion weight makes agents chase distant chain junctions, ignore nearby easy ones.
+  CONCLUSION: expansion_weight=20/cap=120 is optimal. Don't go higher.
+- [2026-03-29 00:05] Leaderboard update:
+  #1 v290: 6.54 (67 matches)
+  #3 v309: 5.52 (41 matches) — dropped from 5.95 with more matches
+  #4 v311: 5.52 (13 matches) — ChainExpand entered competition!
+  v312 not showing yet. Strategy: tournament is the bottleneck now, need more matches.
