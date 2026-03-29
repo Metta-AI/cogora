@@ -1,32 +1,33 @@
 # Session 2026-03-29-080619
 Status: in-progress
 
-## LEADERBOARD: v363 #1 (8.74), v364 #2 (8.71)!
-Both beating v348 (7.60) by ~15%! Goal: >10.
+## LEADERBOARD (latest)
+1. v363: 8.66 (56 matches)
+2. v364 (TV7): 8.65 (53 matches)
+3. v366 (TV8-multi): 8.31 (51 matches) — SURPRISE!
+4. v348: 7.60 (90 matches)
+5. v365 (raw TV2): 7.41 (57 matches)
 
-## v364 (TV7) Detailed Analysis (42 matches, overall 8.23)
+All new policies beating v348! TV8-multi performing well despite poor self-play.
+
+## v364 by Config (42 matches)
 - us=2a: avg=6.41 (v348: 6.04) — +6%
 - us=4a: avg=9.27 (v348: 7.87) — +18%!
 - us=6a: avg=9.21 (v348: 7.95) — +16%!
-- Leaderboard score: 8.71 (uses weighted formula)
 
-Best: 13.95 (4a), 11.80 (6a), 11.37 (2a)
+## v367 (TV9) Status
+Qualifying. Fix: revert 2a timing to step 200 (from TV7's 500).
+TV7's 2a optimization helps with good teammates (slanky: 11.37)
+but hurts with weak ones (old alphas: 5.54 → same as TV2).
 
-## v365 (raw TV2) at 6.86 (15 matches)
-Confirms: LLM wrapper in v348 adds ~0.74 points (7.60 vs 6.86)
+## Uploads This Session
+- v364 (TV7): competition, #2
+- v365 (raw TV2): competition
+- v366 (TV8-multi): competition, #3
+- v367 (TV9): qualifying
 
-## Key Finding
-v364 outperforms DESPITE not having LLM wrapper!
-TV7's heuristic improvements > LLM wrapper effect.
-Potential: TV7 + LLM wrapper could be even better.
-
-## Uploads
-- v363: #1, 8.74 (44 matches) — uploaded by other session
-- v364 (TV7): #2, 8.71 (41 matches)
-- v365 (raw TV2): 6.86 (15 matches)
-- v366 (TV8-multi): qualifying
-
-## Next Steps
-- Create TV7 variant with LLM wrapper for potential extra +0.7 points
-- If that works: 8.71 + 0.7 = ~9.4 → much closer to >10
-- Continue monitoring v364 results as more matches complete
+## Analysis: Why >10 is Hard
+Even at 8.65 avg, need +16% more to hit 10.
+2-agent games ceiling at ~6-7 avg drags everything down.
+Best individual: 13.95 (4a), 11.80 (6a), 11.37 (2a)
+Need structural improvement, not incremental tuning.
