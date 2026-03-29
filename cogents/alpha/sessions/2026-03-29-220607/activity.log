@@ -10,3 +10,13 @@ started: 2026-03-29T22:06:07Z
 - Best known: v449 (TV88) = 12.93 avg (84 matches), v442 (TV81) = 13.52 peak.
 - Critical bug found last session: num_agents was always 8, 2-agent code was dead. Now fixed.
 - Goal: Check v470-v472 results, iterate on fixed 2-agent strategy.
+- Continuing from interrupted session: v470-472 already in tournament.
+- v470 (TV109, fixed explore-first): 2vX=5.54 (1 match) — WORSE! The budget fix (1,0) broke things.
+  The default 8-agent budget accidentally gave both 2-agent members aligner role.
+  "Fixing" to (1,0) actually reduces alignment capacity.
+- v472 (TV111, all-team explore): 2.62 avg — terrible. No scramble kills larger teams.
+- CORRECTED APPROACH: Created TV112-TV113 — keep default budgets, only change idle behavior:
+  - v473 (TV112): no idle scramble for 2-agent teams only
+  - v474 (TV113): no idle scramble for ALL team sizes
+- All unfixed TV90-TV108 versions are equivalent to TV82 (dead 2-agent code).
+- Waiting for v473/v474 qualifying + competition results.
