@@ -33,3 +33,8 @@
   v410=12.12, v408=12.01, v409=11.96, v412=11.30
   Pattern: all new variants 11-12, TV25 (v388) still the benchmark at 12.38
   TV53 (TV46 hub penalty + TV48 70% scramble) is the most promising new variant
+2026-03-29T15:53:30+00:00 | **v414 (TV53) NOW #1 at 12.47 (39 matches)!** v410 = 12.42 (#2, 37 matches)!
+  Both beating v388's 12.38 (99 matches)!
+  v415 (TV54) dropped to 11.49 — earlier stagnation + TV46 targeting hurts
+  TV53 = TV46 hub penalty + TV48 70% scramble = BEST COMBINATION
+  TV50 = TV25 + lower scramble threshold (7 vs 14) = STRONG
