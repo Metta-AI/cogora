@@ -63,3 +63,10 @@ started: 2026-03-29T20:04:53Z
   - v461 (TV100): TV90 + faster stagnation (200 steps)
   - Both still qualifying.
 - v458 (TV97) entering competition (20 pending). v459 (TV98) first result: 6.68 (bad, likely 2v6).
+- Updated results (28+ matches):
+  - v451 (TV90): 13.13(28) — BEST, stable. 2v6=11.54, 4v4=14.77, 6v2=13.08
+  - v458 (TV97, TV92-based): 10.70(20) — 2v6=5.33, confirming TV92 is toxic
+  - v459 (TV98, TV92-based): 11.18(26) — same pattern
+  - v449 (TV88): 12.93(84) — well-established baseline
+- v460 (TV99, TV90+3align4v4) and v461 (TV100, TV90+fast stagnation) entering competition.
+- Uploaded v462 (TV101): TV90 + conservative idle scramble (min_res >= 14).
