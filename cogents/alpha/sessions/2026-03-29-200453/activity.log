@@ -70,3 +70,8 @@ started: 2026-03-29T20:04:53Z
   - v449 (TV88): 12.93(84) — well-established baseline
 - v460 (TV99, TV90+3align4v4) and v461 (TV100, TV90+fast stagnation) entering competition.
 - Uploaded v462 (TV101): TV90 + conservative idle scramble (min_res >= 14).
+- With more data, v451 (TV90) dropped to 12.83 (36 matches) — almost identical to v449 (12.93, 84 matches).
+  The min_res >= 7 change is marginal at best. 2v6=11.29 vs 11.00 is slight improvement.
+- v461 (TV100, faster stagnation): 11.00 (11 matches) — faster stagnation HURTS.
+- v460 (TV99, 3-aligner 4v4): 12.46 (8 matches) — too few data points.
+- Tournament seems to have a ceiling around 12.8-13.0 with current policy approach.
