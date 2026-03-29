@@ -1,0 +1,15 @@
+# Session 2026-03-29-111020
+Status: in-progress
+
+## Context
+Previous session (100801) interrupted mid-TV13 design.
+Current best: v368 (TV12) at 8.69, #1 on leaderboard.
+Goal: score > 10 in tournament.
+Key insight from last session: idle stagnation bug in 2-agent mode.
+TV13 designed (full-map exploration waypoints) but untested.
+
+## Plan
+1. Check latest tournament results (v376 TV17, v378 TV18 pending)
+2. Validate TV13 locally
+3. Focus on improving weak 2-agent performance
+4. Upload improved policy to tournament
