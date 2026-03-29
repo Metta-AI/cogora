@@ -3,25 +3,27 @@ Status: in-progress
 
 ### Plan
 - Check latest tournament results for v410/v414
-- Test intermediate scramble thresholds (min_res=5, 10)
+- Test intermediate scramble thresholds
 - Combine TV50 threshold with TV46 targeting
-- Study opponent strategies
 - Upload improved policies
 
 ### Actions
 - Created TV55-TV60 policy variants
 - Uploaded: v416=TV55, v417=TV56, v418=TV57, v419=TV58, v420=TV59, v421=TV60
 - Self-play: TV55=5.22, TV56=4.22 (anti-correlated with tournament)
-- Stable leaderboard (99 matches each):
+
+### Tournament Results (evolving)
+Stable (99 matches):
   1. v414 (TV53) = 12.63
   2. v410 (TV50) = 12.59
   3. v388 (TV25) = 12.38
-- Qualifying results:
-  - v416 (TV55): 14.12, 10.89 — PASSED
-  - v417 (TV56): 10.95 — PASSED
-  - v418 (TV57): 10.16, 11.45 — PASSED
-  - v419 (TV58): 9.93 — PASSED
-  - v420 (TV59): qualifying...
-  - v421 (TV60): qualifying...
-- v416-v419 now in competition matches. v417 vs Paz-Bot, v420 vs slanky
-- We own ALL top 8 leaderboard spots. Best non-alpha is slanky:v112 at 3.72
+
+New uploads (early, 1-6 matches):
+  v420 (TV59) = 14.60 (1m) — aggressive 2-agent, too early
+  v419 (TV58) = 12.80 (1m) — kitchen sink, too early
+  v416 (TV55) = 12.51 (6m) — TV46+TV50 combo, converging
+  v418 (TV57) = 12.48 (6m) — TV50+70% scramble, converging
+  v417 (TV56) = 4.99 (1m) — very low threshold (3), likely bad
+
+Key: v416 and v418 at 6 matches are close to v414/v410. Could overtake with more data.
+v417 (threshold=3) confirmed too aggressive.
