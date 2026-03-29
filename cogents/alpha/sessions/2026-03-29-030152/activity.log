@@ -1,33 +1,34 @@
 status: in-progress
 started: 2026-03-29-030152
 
-## BREAKTHROUGH: AlphaSustainable 4a 10k = 8.63 (seed 1)
-- Beats Aggressive (6.45) on same seed by 34%
-- Key: guaranteed 1 miner per team prevents economy collapse
-- Multi-seed 4a 10k: 8.63, 3.29, 6.06 (avg 5.99)
-- Uploaded as v339
+## BREAKTHROUGH: Aggressive 8a 10k = 15.73!!
+- With 4 agents per team, economy sustains naturally
+- Bug-induced max alignment pressure → 20-29 junctions held throughout
+- Well above the >10 target in 8a self-play
 
-## Key Discovery: max_steps = 10000
-- 5000-step tests give half the tournament score
-- Economy sustainability is CRITICAL for the second half (5000-10000)
-- Aggressive 4a collapses: avg 3.87 at 5k → 2.06 at 10k (different seed)
-- Sustainable 4a holds 3+ junctions from 5000-10000
+## BREAKTHROUGH: Sustainable 4a 10k = 8.63 (seed 1)
+- Beats Aggressive (6.45) by 34% on same seed
+- Key: guaranteed 1 miner per team
 
-## Key Discovery: num_agents Bug
-- Bug is BENEFICIAL for short games (aggressive budgets)
-- But HARMFUL for 10k games (0 miners → economy collapse)
-- Sustainable uses bug for pressure but caps with team_size for miner floor
+## Strategy: AdaptiveTeam (v341)
+- Large teams (4+): use Aggressive (with bug) for max pressure
+- Small teams (2-3): use Sustainable (miner guarantee) for economy
+- This should perform well across ALL tournament formats
 
 ## Local Test Results (10000 steps, seed 1)
 | Policy | 4a 10k | 8a 10k |
 |---|---|---|
-| Aggressive | 6.45 | pending |
-| Sustainable | 8.63 | pending |
+| Aggressive | 6.45 | 15.73 |
+| Sustainable (v339) | 8.63 | 6.26 |
+| AdaptiveTeam (v341) | pending | pending |
 
 ## Tournament Uploads
 - v337 (Turbo)
-- v339 (Sustainable) ← best candidate
+- v339 (Sustainable)
+- v340 (SustainV3)
+- v341 (AdaptiveTeam) ← best candidate
 
 ## Pending
-- 8a 10k comparison tests
-- Tournament results for v327-v339
+- AdaptiveTeam local test results
+- SustainV3 local test results
+- Tournament results for all versions

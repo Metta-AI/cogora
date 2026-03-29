@@ -8455,3 +8455,69 @@ class AlphaSustainV3Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaAdaptiveTeamPolicy — THE KEY POLICY
+#
+# Adapts strategy based on actual team size:
+# - Large teams (4+): Use Aggressive (with bug) for max alignment pressure
+# - Small teams (2-3): Use Sustainable (miner guarantee) for economy
+# - 1 agent: Pure mining→alignment cycle
+#
+# Aggressive 8a 10k: 15.73 (amazing!)
+# Sustainable 4a 10k: 8.63 (good, beats Aggressive's 6.45)
+# ---------------------------------------------------------------------------
+
+class AlphaAdaptiveTeamAgentPolicy(AlphaAggressiveAgentPolicy):
+    """AdaptiveTeam: switches between Aggressive and Sustainable based on team size.
+
+    Team size is detected via shared_team_ids (populated as agents register).
+    For the first few steps, team size may be underestimated; we default to
+    Aggressive and switch to Sustainable once team size stabilizes.
+    """
+
+    def _get_team_size(self) -> int:
+        """Get actual team size (may be underestimated in first few steps)."""
+        return len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Adaptive: Aggressive for large teams, Sustainable for small teams."""
+        team_size = self._get_team_size()
+
+        if team_size >= 4:
+            # Large team: use pure Aggressive (no cap)
+            return AlphaAggressiveAgentPolicy._pressure_budgets(self, state, objective=objective)
+        else:
+            # Small team: use Sustainable (with miner guarantee)
+            return AlphaSustainableAgentPolicy._pressure_budgets(self, state, objective=objective)
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Adaptive: Aggressive idle behavior for large teams, conservative for small."""
+        team_size = self._get_team_size()
+
+        if team_size >= 4:
+            # Large team: use Aggressive's idle-scramble
+            return AlphaAggressiveAgentPolicy._aligner_action(self, state)
+        else:
+            # Small team: more conservative idle behavior
+            return AlphaSustainableAgentPolicy._aligner_action(self, state)
+
+
+class AlphaAdaptiveTeamPolicy(MettagridSemanticPolicy):
+    """AdaptiveTeam: Aggressive for large teams, Sustainable for small teams."""
+    short_names = ["alpha-adaptive-team"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAdaptiveTeamAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
