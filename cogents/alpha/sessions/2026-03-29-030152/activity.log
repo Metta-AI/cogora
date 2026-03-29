@@ -6,3 +6,28 @@ started: 2026-03-29-030152
 - Study opponent strategies from match logs
 - Iterate on policy based on findings
 - Upload improved versions
+
+## Actions
+- Set up environment, pulled latest
+- Tournament matches all running/scheduled (v333, v334, v335 active)
+- New opponents: v12, v13, v14, v17, v29, v31, v34, v35, v38, Paz-Bot, slanky
+- Local testing 8a self-play results:
+  - Aggressive: 5.28 (baseline, best)
+  - TeamFix: 4.29 (TeamFix HURTS — bug is beneficial)
+  - HighEff: 1.31 (no scramble = terrible)
+  - Rush (TeamFix + silicon): 3.27 (worse)
+  - EconRush: 4.44
+  - Turbo: 4.58
+  - MaxAlignV2: 1.45 (too many aligners, no economy)
+- Local testing 4a self-play:
+  - Aggressive: 3.87 (best)
+  - Turbo: 3.31
+  - MaxAlignV2: 1.67
+  - Rush: 2.06
+- Key learnings:
+  1. num_agents bug is BENEFICIAL for tournament — makes budgets more aggressive
+  2. Silicon over-correction hurts (Rush had too much silicon, oxygen bottleneck instead)
+  3. Max alignment without economy = terrible
+  4. Aggressive base remains the strongest
+- Created AlphaRush, AlphaEconRush, AlphaTurbo, AlphaMaxAlignV2 policies
+- Running multi-seed Aggressive tests for variance analysis
