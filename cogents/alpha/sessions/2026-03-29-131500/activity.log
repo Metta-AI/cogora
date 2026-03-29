@@ -6,22 +6,25 @@ Status: in-progress
 ## Activity
 - [1315] Session started. v387=#1 at 10.05, v388-v391 still running.
 - [1315] New opponents spotted: Paz-Bot-9005, slanky:v112.
-- [1318] Analyzed policy code. Identified non-stagnation improvements.
-- [1320] Self-play 10K results (round 1):
-  - TV18 baseline: 8.82 / 8.63 (avg 8.73)
-  - TV28 (hotspot=-10): 9.49 / 9.02 (avg 9.26) ✓
-  - TV29 (faster ramp): 6.96 ✗
-  - TV30 (combined): 0.00 (wipeout bug) ✗
-  - TV31 (hotspot=-5): 10.18 / 5.57 (HIGH VARIANCE)
-  - TV32 (hotspot=0): 8.76
-  - TV33 (hotspot=-3): 8.35
-  - TV34 (hotspot=-7): 6.00
-- [1327] Uploaded: v392=TV28, v393=TV31, v394=TV32, v395=TV33, v396=TV34
-- [1332] Running 3 more TV28 and 3 more TV18 tests for reliable averages.
-- [1332] All tournament matches still running/scheduled — no results yet.
-
-## Key Insight
-Hotspot weight (re-alignment preference) is a promising improvement vector.
-Default=8.0 (avoid scrambled junctions). Negative values prefer re-alignment.
-Self-play is too noisy for single-run conclusions — need multiple runs OR tournament.
-Tournament signal is more reliable. Waiting for v392-v396 results.
+- [1318] **Key insight**: Default hotspot_weight=8.0 PENALIZES re-aligning
+  scrambled junctions. But scrambled junctions are already in our network
+  range and cheap to re-align. Negative weight = prefer re-alignment.
+- [1320] Self-play results (TV28-TV36 variants tested):
+  - TV18 baseline: avg 7.83 (n=4, excluding wipeouts)
+  - **TV28 (hotspot=-10): avg 8.91 (n=4) — +13.8% improvement!**
+  - TV29 (faster ramp): 6.96 — WORSE, faster ramp hurts
+  - TV30 (combined): 0.00 — BROKEN, early wipeout
+  - TV31-TV34 (hotspot -5/-3/-7/0): mixed, high variance
+  - TV35 (bolder expansion): 7.40 — worse
+  - TV36 (stronger silicon): 6.96 — worse in self-play (may differ in tournament)
+- [1327] Tournament uploads (v392-v400):
+  - v392 = TV28 (hotspot=-10) ← MAIN BET
+  - v393 = TV31 (hotspot=-5)
+  - v394 = TV32 (hotspot=0)
+  - v395 = TV33 (hotspot=-3)
+  - v396 = TV34 (hotspot=-7)
+  - v397 = TV28 duplicate (risk spreading)
+  - v398 = TV35 (hotspot=-10 + bolder expansion)
+  - v400 = TV36 (hotspot=-10 + stronger silicon)
+- [1340] No tournament matches completed yet — queue is slow today.
+  Waiting for results to confirm self-play findings.
