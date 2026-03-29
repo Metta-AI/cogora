@@ -40,5 +40,7 @@ status: interrupted
   - v290 also collapses to 0j by step 2500 but opponent (v56) sustains → high score
 - 01:56:00 Uploaded v324 = Aggressive (baseline to confirm) to tournament
 - 01:56:00 Strategy pivot: abandon chain expansion for tournament. Focus on incremental Aggressive improvements.
-
-- INTERRUPTED: Session crashed before further progress.
+- 02:05:00 Created and uploaded:
+  v325 = AlphaCoopPolicy (Aggressive, zero scramble, idle-mine)
+  v326 = AlphaEconMaxPolicy (conservative alignment, 50%+ miners)
+- 02:10:00 Qualifying results (solo vs Clips): v324=1.61/3.04, v325=1.49, v326=1.55. Waiting for competition matches.
