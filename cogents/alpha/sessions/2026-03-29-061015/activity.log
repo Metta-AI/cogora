@@ -4,25 +4,50 @@ Status: in-progress
 ## Context
 - v348 is #1 at 7.57 (81 matches). Goal: >10.
 - Heuristic ceiling ~7.5. Need new approach.
-- Key insight: cooperative scoring + map variance dominates.
 - Previous session tested 7 variants, none beat TV2.
 
-## Key Discovery: Cooperative Scrambling Already Implemented
-- Investigated junction owner values in-game: owner='cogs', team_id='cogs'
-- Both Cogs sub-teams share the SAME team_id ('cogs')
-- Base _best_scramble_target already excludes team_id junctions
-- So we NEVER scramble other Cogs — only Clips. CoopV2 fix was redundant!
+## Key Discoveries
 
-## New Approaches Being Tested
-- TV2 baseline: 5.03 (8a, 5000 steps, seed 0)
-- AlphaWideExplore: TV2 + wider exploration pattern (inner+outer ring at 22+38 tiles)
-- AlphaExploreFirst: TV2 + explore before scramble when idle
-- AlphaChainBuilder: TV2 + chain-building (prefer junctions that unlock unreachable ones)
-- AlphaScoutExplore: TV2 + 1 dedicated scout agent for junction discovery
+### 1. Cooperative Scrambling Already Implemented
+- Junction owners: team_id='cogs' for BOTH Cogs sub-teams
+- Base _best_scramble_target already excludes cogs → only scrambles Clips
+- CoopV2's "cooperative fix" was redundant (no-op)
 
-## Analysis
-- 72% of aligner time is idle-scrambling (frontier=0)
-- Only 14/65 junctions discovered per team in self-play
-- Aligner explore offsets only reach 22 tiles from hub (88x88 map = 44 max)
-- Wide explore adds outer ring at 38 tiles to cover more map
-- Tournament: new "competition" pool with matches running (v336-v342 vs v59)
+### 2. Tournament Match Structure
+- Matches have VARIABLE agent counts: 2v6, 4v4, or 6v2
+- Cooperative scoring confirmed: both teams get identical scores
+- With 6 agents, v348 scored 9.61! With 4: 6.31. With 2: 5.23.
+- Current competition pool: v59/v60 vs various alpha versions
+
+### 3. BREAKTHROUGH: Scouts Dramatically Improve Score
+| Policy | Score (8a, 5k, seed 0) | vs TV2 |
+|--------|----------------------|--------|
+| TV2 baseline | 5.03 | — |
+| WideExplore | 4.74 | -6% |
+| ChainBuilder | 4.30 | -14% |
+| ExploreFirst | 3.75 | -25% |
+| **ScoutExplore (1 scout)** | **6.42** | **+28%** |
+| ScoutV2 (dense spiral) | 4.43 | -12% |
+| ScoutChain | 4.42 | -12% |
+| **TwoScouts** | **7.36** | **+46%** |
+
+### 4. Multi-Seed ScoutExplore vs TV2
+| Seed | ScoutExplore | TV2 |
+|------|-------------|-----|
+| 0 | 6.42 | 5.03 |
+| 1 | 6.43 | 5.98 |
+| 2 | 5.36 | 0.00 |
+| 3 | 5.53 | 6.66 |
+| 4 | 6.07 | 7.25 |
+| Avg | 5.96 | 4.98 |
+
+Scout helps most on bad seeds (seed 2: 5.36 vs 0.00!)
+
+## Uploads
+- v359: ScoutExplore (1 dedicated scout, +28%)
+- v360: TwoScouts (2 dedicated scouts, +46%)
+
+## Testing In Progress
+- TwoScouts multi-seed validation (seeds 1-4)
+- SmartScout (scouts that align junctions they find)
+- ThreeScouts (3 dedicated scouts)
