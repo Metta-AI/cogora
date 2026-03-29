@@ -102,4 +102,20 @@ Self-play 10K: 10.59, 14.29, 5.79 → avg 10.22 (slightly lower than TV12 due to
 - v367 (TV9): 8.61 avg — current leader
 - v368 (TV12): stagnation exploration — qualifying
 - v370 (TV14): TV12 + 2-agent fix + silicon — qualifying
-- v371 (TV15): TV12 + tournament economy fix — qualifying
+- v371 (TV15): TV12 + tournament economy fix — qualifying (renamed to TV16=v372 after parallel session conflict)
+- v372 (TV16): TV12 stagnation + tournament economy fix — qualifying
+
+## Parallel Session TV15
+Parallel session created its own TV15: TV9 + aggressive idle exploration
+(150 idle steps → full-map waypoint exploration, 32 waypoints).
+Different approach: based on TV9 instead of TV12.
+
+## Strategy Summary
+Main innovations attempted:
+1. Chain push (TV11): neutral impact — abandoned
+2. Burst explorer (TV11): works but not impactful
+3. Stagnation detection (TV12, parallel session): +8% self-play — best approach
+4. Tournament economy fix (TV16): conservative budgets for sub-team play
+5. Silicon priority (TV14): helps tournament, hurts self-play if too aggressive
+
+Waiting for tournament results on v370-v372...
