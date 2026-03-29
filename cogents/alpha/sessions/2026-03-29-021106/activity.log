@@ -22,3 +22,17 @@ Previous session (010815) crashed. Key state:
 - 02:20:00 ROOT CAUSE: Carbon depletion is #1 bottleneck. Hub carbon=0 by step 6000. Aligner gear costs 3x carbon.
 - 02:20:00 SCORE MATH: If sustain 10j vs 7j in steps 5000-10k, score goes from ~6.3 to ~9+
 - 02:22:00 Creating AlphaFocusedPolicy: hub-proximal junctions + faster ramp + economy sustain
+- 02:28:00 RESULTS round 1:
+  - Focused 8a: 3.93 (network_weight=0.5 hurts — fewer junctions)
+  - Focused 4a: 6.51 (good for 4a)
+  - CarbonBoost 8a: 5.89 (slightly worse than Aggressive 6.31)
+  - CarbonBoost 4a: 8.82 (HUGE vs Aggressive ~3.51!)
+  - SustainV2 8a: 5.52 (economy-gating too conservative)
+- 02:28:00 Bug: Focused 8a originally 0.00 — 3 aligners from step 0 burns all carbon (24 initial, 30 needed). Fixed to 2.
+- 02:35:00 RESULTS round 2 (seed 42): MASSIVE VARIANCE
+  - CarbonBoost 8a: 9.27 (!)
+  - Aggressive 8a: 0.00 (!)
+  - CarbonBoost 4a: 6.32
+  - Aggressive 4a: 7.66
+- 02:35:00 KEY INSIGHT: Single-seed results unreliable. Need 3-5 seeds for valid comparison.
+- 02:35:00 Uploaded: v328=CarbonBoost, v329=Aggressive, v330=Focused
