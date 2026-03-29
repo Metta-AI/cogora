@@ -41,7 +41,23 @@ TV11 ≈ TV9 on average. Chain push helps on good maps (seed 1: +3.62) but hurts
 
 **Burst explorer works**: Agent 7 visited 17/20 waypoints in 400 steps. But missing 1 miner for 400 steps may cost more than it gains.
 
-## Variants Under Test
-- TV11b: chain push only (15 steps), no burst explorer
-- TV11c: short chain push (10 steps), no burst explorer
-Running across 5 seeds...
+## Variant Results (8 agents, 5000 steps)
+
+TV11b (chain push 15, no explorer): 7.23, 7.06, 2.45, 8.24, 4.34 → avg **5.86**
+TV11c (chain push 10, no explorer): 6.17, 9.61, 4.85, 6.38, 3.00 → avg **6.00**
+
+**Conclusion: Chain push is neutral-to-harmful**. Increases variance without improving average.
+On hard maps, chain push wastes time that could be spent re-aligning scrambled junctions.
+
+## 10K Step Tests (matches tournament length)
+
+TV9 at 10K steps: 11.47, 16.94, [retrying seed 2, 4]
+
+At 10K steps, TV9 already exceeds the >10 goal on some seeds!
+The longer game amplifies the score (more time for aligned junctions to contribute).
+
+## Next Strategy
+Abandon chain push. Focus on:
+1. Test TV9 at 10K to get reliable average
+2. If avg is near 10, upload as-is and iterate from tournament results
+3. If avg is under 10, try: faster aligner ramp, better 4-agent behavior
