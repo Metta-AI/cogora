@@ -9,22 +9,19 @@ Status: in-progress
 - Upload improved policies
 
 ### Actions
-- Created TV55-TV60 policy variants:
-  - TV55: TV46 targeting + TV50 threshold (min_res >= 7) — main combo hypothesis
-  - TV56: TV50 + very low threshold (min_res >= 3)
-  - TV57: TV50 threshold + 70% scramble ratio
-  - TV58: TV46 + TV50 + 70% scramble — kitchen sink combo
-  - TV59: TV55 + aggressive 2-agent play (align at step 200 / min_res >= 14)
-  - TV60: TV25 + intermediate threshold (min_res >= 10)
+- Created TV55-TV60 policy variants
 - Uploaded: v416=TV55, v417=TV56, v418=TV57, v419=TV58, v420=TV59, v421=TV60
-- Self-play results (5000 steps):
-  - TV55: 5.22 per cog
-  - TV56: 4.22 per cog
-- Leaderboard check:
-  1. v414 (TV53) = 12.62 (96m) — NOW #1!
-  2. v410 (TV50) = 12.59 (97m)
-  3. v388 (TV25) = 12.38 (99m)
-  4. v407 (TV25) = 12.36 (99m)
-  - We own ALL top 8 spots. Best non-alpha is slanky:v112 at 3.72 (#92)
-  - Competition is not close. We're 3.4x better than nearest competitor.
-- Qualifying matches for v416-v421 all still running (~16:24-16:28)
+- Self-play: TV55=5.22, TV56=4.22 (anti-correlated with tournament)
+- Stable leaderboard (99 matches each):
+  1. v414 (TV53) = 12.63
+  2. v410 (TV50) = 12.59
+  3. v388 (TV25) = 12.38
+- Qualifying results:
+  - v416 (TV55): 14.12, 10.89 — PASSED
+  - v417 (TV56): 10.95 — PASSED
+  - v418 (TV57): 10.16, 11.45 — PASSED
+  - v419 (TV58): 9.93 — PASSED
+  - v420 (TV59): qualifying...
+  - v421 (TV60): qualifying...
+- v416-v419 now in competition matches. v417 vs Paz-Bot, v420 vs slanky
+- We own ALL top 8 leaderboard spots. Best non-alpha is slanky:v112 at 3.72
