@@ -12,3 +12,22 @@ Need better exploration on unfavorable maps to raise average.
 2. Read current policy code to understand exploration logic
 3. Improve junction discovery on low-scoring maps
 4. Test locally with multi-seed, then upload to tournament
+
+## Tournament Status
+- Many matches currently running (new competitor: coglet-v0!)
+- v65 vs v364 (4a): 6.84
+
+## TV11 Design
+Created AlphaTournamentV11Policy with two innovations:
+1. **Early burst explorer**: Agent 0 systematically covers map grid for first 400 steps
+   - 20 waypoints covering inner/mid/outer rings and far corners
+   - Discovers junctions before aligners need them
+   - Returns to normal miner after 400 steps
+2. **Chain push**: After aligning a frontier junction (dist >= 15 from hub),
+   aligner explores 20 steps in that direction to discover chain extensions
+
+## TV7 Baseline Test
+8 agents, 5000 steps, default seed: **2.46** (low — unfavorable seed)
+8 friendly junctions at step 5000, 6 enemy, 1 frontier
+
+## Testing TV11 (in progress...)

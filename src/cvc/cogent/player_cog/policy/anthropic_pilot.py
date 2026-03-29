@@ -11680,3 +11680,159 @@ class AlphaTournamentV10Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV11: Early burst exploration + chain push ────────────────────────────
+
+# Systematic grid covering the 88x88 map (offsets from hub)
+# 20 waypoints: traverse in sequence to discover junctions across the map
+_SYSTEMATIC_EXPLORE_GRID = (
+    # Inner ring (radius ~15) — quick discovery near hub
+    (15, 0), (0, 15), (-15, 0), (0, -15),
+    # Mid ring (radius ~25) — where alignment network starts
+    (20, -20), (20, 20), (-20, 20), (-20, -20),
+    # Outer ring (radius ~35) — distant junctions
+    (35, 0), (0, 35), (-35, 0), (0, -35),
+    (25, -25), (25, 25), (-25, 25), (-25, -25),
+    # Far corners (radius ~40) — map edges
+    (40, -10), (10, -40), (-40, 10), (-10, 40),
+)
+
+
+class AlphaTournamentV11AgentPolicy(AlphaTournamentV9AgentPolicy):
+    """TournamentV11: TV9 + early burst exploration + chain push.
+
+    Key insight: Score is avg junctions/tick, so early discovery is
+    disproportionately valuable. Maps vary wildly in junction accessibility.
+
+    Changes from TV9:
+    1. Agent 0 systematically explores the map for first 400 steps
+       instead of mining, feeding junctions into shared world model
+    2. After aligning a frontier junction, aligners explore in that direction
+       for up to 20 steps to discover chain extensions
+    3. TV9 base for budgets and 2-agent behavior
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._explore_waypoint_idx = 0
+        self._chain_push_steps = 0
+        self._chain_push_direction: tuple[int, int] | None = None
+        self._last_aligned_position: tuple[int, int] | None = None
+
+    def _miner_action(self, state: MettagridState, summary_prefix: str = "") -> tuple[Action, str]:
+        """Agent 0: systematic map exploration for first 400 steps."""
+        step = state.step or self._step_index
+        num_agents = self.policy_env_info.num_agents
+
+        # Only agent 0 explores, only for first 400 steps, only for 4+ agents
+        if self._agent_id == 0 and step < 400 and num_agents >= 4:
+            hp = int(state.self_state.inventory.get("hp", 0))
+
+            # Retreat to hub when HP gets low
+            if hp < 30:
+                hub = self._nearest_hub(state)
+                if hub is not None:
+                    return self._move_to_known(state, hub, summary="explorer_retreat", vibe="change_vibe_miner")
+
+            # Deposit any resources picked up along the way
+            if self._should_deposit_resources(state):
+                depot = self._nearest_friendly_depot(state)
+                if depot is not None:
+                    return self._move_to_known(state, depot, summary="explorer_deposit", vibe="change_vibe_miner")
+
+            # Systematic grid exploration
+            current_pos = _h.absolute_position(state)
+            hub = self._nearest_hub(state)
+            center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+
+            waypoint = _SYSTEMATIC_EXPLORE_GRID[self._explore_waypoint_idx % len(_SYSTEMATIC_EXPLORE_GRID)]
+            target = (center[0] + waypoint[0], center[1] + waypoint[1])
+
+            # Clamp to map bounds (0-87)
+            target = (max(2, min(85, target[0])), max(2, min(85, target[1])))
+
+            if _h.manhattan(current_pos, target) <= 3:
+                self._explore_waypoint_idx += 1
+                waypoint = _SYSTEMATIC_EXPLORE_GRID[self._explore_waypoint_idx % len(_SYSTEMATIC_EXPLORE_GRID)]
+                target = (center[0] + waypoint[0], center[1] + waypoint[1])
+                target = (max(2, min(85, target[0])), max(2, min(85, target[1])))
+
+            return self._move_to_position(state, target, summary="systematic_explore", vibe="change_vibe_miner")
+
+        # Normal miner behavior
+        return super()._miner_action(state, summary_prefix=summary_prefix)
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """TV9 aligner + chain push: after aligning a frontier junction,
+        continue exploring in that direction to discover more junctions."""
+        hub = self._nearest_hub(state)
+        current_pos = _h.absolute_position(state)
+
+        # If in chain push mode, continue exploring toward frontier
+        if self._chain_push_steps > 0:
+            self._chain_push_steps -= 1
+            hp = int(state.self_state.inventory.get("hp", 0))
+
+            # Abort chain push if HP too low
+            if hp < 25 or self._chain_push_direction is None:
+                self._chain_push_steps = 0
+                self._chain_push_direction = None
+            else:
+                # Check if we found a new alignable junction during push
+                new_target = self._preferred_alignable_neutral_junction(state)
+                if new_target is not None:
+                    self._chain_push_steps = 0
+                    self._chain_push_direction = None
+                    self._claim_target(new_target.position)
+                    self._set_sticky_target(new_target.position, new_target.entity_type)
+                    return self._move_to_known(state, new_target, summary="chain_align_junction", vibe="change_vibe_aligner")
+
+                # Continue pushing in the direction
+                push_target = (
+                    current_pos[0] + self._chain_push_direction[0] * 5,
+                    current_pos[1] + self._chain_push_direction[1] * 5,
+                )
+                push_target = (max(2, min(85, push_target[0])), max(2, min(85, push_target[1])))
+                return self._move_to_position(state, push_target, summary="chain_push_explore", vibe="change_vibe_aligner")
+
+        # Get the parent's aligner action
+        action, summary = super()._aligner_action(state)
+
+        # After aligning, initiate chain push toward the frontier
+        if summary == "align_junction" and self._current_target_position is not None:
+            target_pos = self._current_target_position
+            hub_pos = (hub.global_x, hub.global_y) if hub is not None else current_pos
+            # Direction from hub toward the junction we're aligning
+            dx = target_pos[0] - hub_pos[0]
+            dy = target_pos[1] - hub_pos[1]
+            dist = max(abs(dx) + abs(dy), 1)
+            # Normalize to unit direction (-1, 0, or 1)
+            norm_dx = 1 if dx > 0 else (-1 if dx < 0 else 0)
+            norm_dy = 1 if dy > 0 else (-1 if dy < 0 else 0)
+            # Only chain push if this junction is at the frontier (far from hub)
+            if dist >= 15:
+                self._chain_push_steps = 20
+                self._chain_push_direction = (norm_dx, norm_dy)
+                self._last_aligned_position = target_pos
+
+        return action, summary
+
+
+class AlphaTournamentV11Policy(MettagridSemanticPolicy):
+    """TournamentV11: TV9 + early burst exploration + chain push."""
+    short_names = ["alpha-tournament-v11"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV11AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
