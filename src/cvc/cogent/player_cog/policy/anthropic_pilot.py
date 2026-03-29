@@ -15948,3 +15948,52 @@ class AlphaTournamentV51Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV52: TV51 + early dedicated scrambler at step 500 ──────────────────
+
+class AlphaTournamentV52AgentPolicy(AlphaTournamentV51AgentPolicy):
+    """TournamentV52: TV51 + dedicated scrambler from step 500.
+
+    TV51 has no dedicated scramblers in budget (0 from TV2/TV7 base).
+    TV52 adds 1 dedicated scrambler from step 500 when economy is
+    healthy (min_res >= 14). This creates a constant stream of neutral
+    junctions for aligners to recapture, complementing stagnation scramble.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """TV51 budgets + 1 dedicated scrambler from step 500."""
+        aligner_budget, scrambler_budget = super()._pressure_budgets(state, objective=objective)
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        num_agents = self.policy_env_info.num_agents
+
+        # Add 1 scrambler from step 500 if economy supports it
+        if (step >= 500
+            and min_res >= 14
+            and num_agents >= 5
+            and objective not in {"resource_coverage", "economy_bootstrap"}
+            and aligner_budget >= 3):
+            scrambler_budget = max(scrambler_budget, 1)
+            aligner_budget = max(aligner_budget - 1, 2)  # Trade 1 aligner for scrambler
+
+        return aligner_budget, scrambler_budget
+
+
+class AlphaTournamentV52Policy(MettagridSemanticPolicy):
+    """TournamentV52: TV51 + early dedicated scrambler."""
+    short_names = ["alpha-tournament-v52"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV52AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

@@ -4,3 +4,4 @@
 2026-03-29T15:16:04+00:00 | uploaded v408=TV48, v409=TV47, v410=TV50, v411=TV49 to tournament qualifying
 2026-03-29T15:17:58+00:00 | TV48 (70% scramble) shows 14 friendly junctions at step 5000 vs TV25's 8. Economy 10x healthier. Created TV51 (TV48+TV47 combo). Running tests.
 2026-03-29T15:20:02+00:00 | TV51=7.43 best self-play! Uploaded as v412. Running consistency checks. Results: TV25=2.98, TV47=4.99, TV48=6.60, TV49=4.34, TV50=4.84, TV51=7.43
+2026-03-29T15:24:35+00:00 | tournament early: v406=13.52 (1 match!), v405=10.18. TV52 self-play 0.00 (wipeout). TV51 avg ~5.66 (excl wipeout). v412=TV51 in qualifying.
