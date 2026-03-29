@@ -11706,7 +11706,7 @@ class AlphaTournamentV11AgentPolicy(AlphaTournamentV9AgentPolicy):
     disproportionately valuable. Maps vary wildly in junction accessibility.
 
     Changes from TV9:
-    1. Agent 0 systematically explores the map for first 400 steps
+    1. Last miner agent systematically explores the map for first 400 steps
        instead of mining, feeding junctions into shared world model
     2. After aligning a frontier junction, aligners explore in that direction
        for up to 20 steps to discover chain extensions
@@ -11721,12 +11721,14 @@ class AlphaTournamentV11AgentPolicy(AlphaTournamentV9AgentPolicy):
         self._last_aligned_position: tuple[int, int] | None = None
 
     def _miner_action(self, state: MettagridState, summary_prefix: str = "") -> tuple[Action, str]:
-        """Agent 0: systematic map exploration for first 400 steps."""
+        """Last agent: systematic map exploration for first 400 steps."""
         step = state.step or self._step_index
         num_agents = self.policy_env_info.num_agents
+        # Use highest-ID agent as explorer (it's always a miner in priority order)
+        explorer_id = max(self._shared_team_ids) if self._shared_team_ids else num_agents - 1
 
-        # Only agent 0 explores, only for first 400 steps, only for 4+ agents
-        if self._agent_id == 0 and step < 400 and num_agents >= 4:
+        # Only the explorer agent, only for first 400 steps, only for 4+ agents
+        if self._agent_id == explorer_id and step < 400 and num_agents >= 4:
             hp = int(state.self_state.inventory.get("hp", 0))
 
             # Retreat to hub when HP gets low
@@ -11827,6 +11829,156 @@ class AlphaTournamentV11Policy(MettagridSemanticPolicy):
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTournamentV11AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV11b: Chain push only (no burst explorer) ───────────────────────────
+
+class AlphaTournamentV11bAgentPolicy(AlphaTournamentV9AgentPolicy):
+    """TV11b: TV9 + chain push only (no burst explorer).
+
+    After aligning a frontier junction (>= 15 from hub), explore 15 steps
+    in that direction to discover chain extensions.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._chain_push_steps = 0
+        self._chain_push_direction: tuple[int, int] | None = None
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        hub = self._nearest_hub(state)
+        current_pos = _h.absolute_position(state)
+
+        if self._chain_push_steps > 0:
+            self._chain_push_steps -= 1
+            hp = int(state.self_state.inventory.get("hp", 0))
+
+            if hp < 25 or self._chain_push_direction is None:
+                self._chain_push_steps = 0
+                self._chain_push_direction = None
+            else:
+                new_target = self._preferred_alignable_neutral_junction(state)
+                if new_target is not None:
+                    self._chain_push_steps = 0
+                    self._chain_push_direction = None
+                    self._claim_target(new_target.position)
+                    self._set_sticky_target(new_target.position, new_target.entity_type)
+                    return self._move_to_known(state, new_target, summary="chain_align_junction", vibe="change_vibe_aligner")
+
+                push_target = (
+                    current_pos[0] + self._chain_push_direction[0] * 5,
+                    current_pos[1] + self._chain_push_direction[1] * 5,
+                )
+                push_target = (max(2, min(85, push_target[0])), max(2, min(85, push_target[1])))
+                return self._move_to_position(state, push_target, summary="chain_push_explore", vibe="change_vibe_aligner")
+
+        action, summary = super()._aligner_action(state)
+
+        if summary == "align_junction" and self._current_target_position is not None:
+            target_pos = self._current_target_position
+            hub_pos = (hub.global_x, hub.global_y) if hub is not None else current_pos
+            dx = target_pos[0] - hub_pos[0]
+            dy = target_pos[1] - hub_pos[1]
+            dist = max(abs(dx) + abs(dy), 1)
+            norm_dx = 1 if dx > 0 else (-1 if dx < 0 else 0)
+            norm_dy = 1 if dy > 0 else (-1 if dy < 0 else 0)
+            if dist >= 15:
+                self._chain_push_steps = 15
+                self._chain_push_direction = (norm_dx, norm_dy)
+
+        return action, summary
+
+
+class AlphaTournamentV11bPolicy(MettagridSemanticPolicy):
+    """TV11b: TV9 + chain push only."""
+    short_names = ["alpha-tournament-v11b"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV11bAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV11c: Short chain push (10 steps) + no explorer ─────────────────────
+
+class AlphaTournamentV11cAgentPolicy(AlphaTournamentV9AgentPolicy):
+    """TV11c: TV9 + short chain push (10 steps) after frontier alignment."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._chain_push_steps = 0
+        self._chain_push_direction: tuple[int, int] | None = None
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        hub = self._nearest_hub(state)
+        current_pos = _h.absolute_position(state)
+
+        if self._chain_push_steps > 0:
+            self._chain_push_steps -= 1
+            hp = int(state.self_state.inventory.get("hp", 0))
+
+            if hp < 30 or self._chain_push_direction is None:
+                self._chain_push_steps = 0
+                self._chain_push_direction = None
+            else:
+                new_target = self._preferred_alignable_neutral_junction(state)
+                if new_target is not None:
+                    self._chain_push_steps = 0
+                    self._chain_push_direction = None
+                    self._claim_target(new_target.position)
+                    self._set_sticky_target(new_target.position, new_target.entity_type)
+                    return self._move_to_known(state, new_target, summary="chain_align_junction", vibe="change_vibe_aligner")
+
+                push_target = (
+                    current_pos[0] + self._chain_push_direction[0] * 5,
+                    current_pos[1] + self._chain_push_direction[1] * 5,
+                )
+                push_target = (max(2, min(85, push_target[0])), max(2, min(85, push_target[1])))
+                return self._move_to_position(state, push_target, summary="chain_push_explore", vibe="change_vibe_aligner")
+
+        action, summary = super()._aligner_action(state)
+
+        if summary == "align_junction" and self._current_target_position is not None:
+            target_pos = self._current_target_position
+            hub_pos = (hub.global_x, hub.global_y) if hub is not None else current_pos
+            dx = target_pos[0] - hub_pos[0]
+            dy = target_pos[1] - hub_pos[1]
+            dist = max(abs(dx) + abs(dy), 1)
+            norm_dx = 1 if dx > 0 else (-1 if dx < 0 else 0)
+            norm_dy = 1 if dy > 0 else (-1 if dy < 0 else 0)
+            if dist >= 15:
+                self._chain_push_steps = 10
+                self._chain_push_direction = (norm_dx, norm_dy)
+
+        return action, summary
+
+
+class AlphaTournamentV11cPolicy(MettagridSemanticPolicy):
+    """TV11c: TV9 + short chain push."""
+    short_names = ["alpha-tournament-v11c"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV11cAgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),

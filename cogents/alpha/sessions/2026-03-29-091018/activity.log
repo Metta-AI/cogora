@@ -30,4 +30,18 @@ Created AlphaTournamentV11Policy with two innovations:
 8 agents, 5000 steps, default seed: **2.46** (low — unfavorable seed)
 8 friendly junctions at step 5000, 6 enemy, 1 frontier
 
-## Testing TV11 (in progress...)
+## TV11 Multi-Seed Results (8 agents, 5000 steps)
+
+**TV11 (explorer + chain push 20)**: 5.95, 9.99, 3.73, 5.22, 6.82 → **avg 6.34**
+**TV9 (baseline)**: 4.54, 6.37, 5.61, 7.37, 7.65 → **avg 6.31**
+
+TV11 ≈ TV9 on average. Chain push helps on good maps (seed 1: +3.62) but hurts on bad maps (seed 2: -1.88, seed 3: -2.15). Higher variance.
+
+**Key finding**: Chain push discovered more junctions on favorable maps but wasted time on unfavorable maps (pushing into dead ends/areas with no junctions).
+
+**Burst explorer works**: Agent 7 visited 17/20 waypoints in 400 steps. But missing 1 miner for 400 steps may cost more than it gains.
+
+## Variants Under Test
+- TV11b: chain push only (15 steps), no burst explorer
+- TV11c: short chain push (10 steps), no burst explorer
+Running across 5 seeds...
