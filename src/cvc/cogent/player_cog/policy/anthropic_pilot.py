@@ -11414,77 +11414,20 @@ class AlphaTournamentV7Policy(MettagridSemanticPolicy):
 
 
 class AlphaTournamentV8AgentPolicy(AlphaTournamentV2AgentPolicy):
-    """TournamentV8: Multi-phase strategy for 10K-step games.
+    """TournamentV8: TV2 + wider exploration + more explore when idle.
 
-    Phase 1 (0-500): Economy rush — pure mining, stockpile resources
-    Phase 2 (500-3000): Aggressive alignment — max aligners
-    Phase 3 (3000-7000): Balanced — sustain alignment + scramble Clips
-    Phase 4 (7000-10000): Max scramble — disrupt Clips to protect lead
+    Key insight: The 88x88 map has junctions far from hub. Current explore
+    offsets only reach radius 22. Wider exploration discovers more junctions
+    which allows more alignment.
 
-    Also includes TV7's 2-agent cooperation optimization.
+    Changes:
+    1. Wider explore pattern for idle aligners (radius 30-40)
+    2. When idle with healthy economy, explore instead of scramble
+    3. Keep scrambling but alternate with exploration
     """
 
-    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Phase-based budget allocation."""
-        step = state.step or self._step_index
-        min_res = _h.team_min_resource(state)
-        can_hearts = _h.team_can_refill_hearts(state)
-        num_agents = self.policy_env_info.num_agents
-        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
-
-        if objective == "resource_coverage":
-            return 0, 0
-
-        # 2-agent: same as TV7 (support the team)
-        if num_agents <= 2:
-            if step < 500 or (min_res < 7 and not can_hearts):
-                return 0, 0
-            if min_res >= 50:
-                return 1, 0
-            return 0, 0
-
-        # Phase 1: Economy rush (0-500)
-        if step < 500:
-            if num_agents <= 4:
-                return 1, 0  # 1 aligner starts early
-            return 2, 0  # 2 aligners for bigger teams
-
-        # Phase 2: Aggressive alignment (500-3000)
-        if step < 3000:
-            if min_res < 7 and not can_hearts:
-                return 1, 0
-            elif min_res < 30:
-                return 2, 0
-            elif min_res < 80:
-                return min(3, team_size - 1), 0
-            else:
-                # Max aligners: leave 1-2 miners
-                max_aligners = min(team_size - 1, 5)
-                return max_aligners, 0
-
-        # Phase 3: Balanced (3000-7000)
-        if step < 7000:
-            if min_res < 10 and not can_hearts:
-                return 1, 0
-            elif min_res < 30:
-                return 2, 0
-            elif min_res < 80:
-                scrambler = 1 if step >= 4000 else 0
-                return 3, scrambler
-            else:
-                scrambler = 1 if step >= 4000 else 0
-                aligner = min(4, team_size - 2 - scrambler)
-                return aligner, scrambler
-
-        # Phase 4: Late game sustain + scramble (7000-10000)
-        if min_res < 10 and not can_hearts:
-            return 1, 0
-        scrambler = 1 if min_res >= 14 else 0
-        aligner = min(3, team_size - 2 - scrambler)
-        return max(aligner, 1), scrambler
-
     def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
-        """Phase-aware aligner with more scramble pressure in late game."""
+        """TV2 aligner but with exploration-first idle behavior."""
         hearts = int(state.self_state.inventory.get("heart", 0))
         hub = self._nearest_hub(state)
         step = state.step or self._step_index
@@ -11519,7 +11462,7 @@ class AlphaTournamentV8AgentPolicy(AlphaTournamentV2AgentPolicy):
             if depot is not None:
                 return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
 
-        # Expand toward unreachable junctions
+        # Expand toward unreachable junctions (wider range)
         current_pos = _h.absolute_position(state)
         hp = int(state.self_state.inventory.get("hp", 0))
         unreachable = self._known_junctions(
@@ -11528,37 +11471,56 @@ class AlphaTournamentV8AgentPolicy(AlphaTournamentV2AgentPolicy):
         if unreachable:
             safe_unreachable = [
                 j for j in unreachable
-                if _h.manhattan(current_pos, j.position) < hp - 20
+                if _h.manhattan(current_pos, j.position) < hp - 15  # Less conservative
             ]
             targets = safe_unreachable if safe_unreachable else unreachable
             nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
             dist = _h.manhattan(current_pos, nearest.position)
-            if dist < hp - 20:
+            if dist < hp - 15:
                 return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
-        # Idle behavior varies by phase
+        # Idle behavior: alternate between scramble and explore
         min_res = _h.team_min_resource(state)
+        phase = (step // 100) % 3  # 0=scramble, 1=explore, 2=explore
 
-        if step < 3000:
-            # Phase 2: explore aggressively to discover more junctions
-            if hearts > 0 and min_res >= 14:
-                scramble_target = self._preferred_scramble_target(state)
-                if scramble_target is not None:
-                    return self._move_to_known(state, scramble_target, summary="idle_scramble", vibe="change_vibe_scrambler")
-            return self._explore_action(state, role="aligner", summary="explore_junction")
-        else:
-            # Phase 3-4: scramble aggressively to protect lead
-            if hearts > 0 and min_res >= 10:
-                scramble_target = self._preferred_scramble_target(state)
-                if scramble_target is not None:
-                    return self._move_to_known(state, scramble_target, summary="idle_scramble", vibe="change_vibe_scrambler")
-            if min_res < 30:
-                return self._miner_action(state, summary_prefix="idle_align_")
-            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if phase == 0 and hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        # Explore using wider pattern to discover more junctions
+        if hp > 60:
+            return self._wide_explore_action(state)
+
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _wide_explore_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Wider exploration pattern to discover distant junctions."""
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+        # Wider offsets covering more of the 88x88 map
+        wide_offsets = (
+            (0, -35), (25, -25), (35, 0), (25, 25),
+            (0, 35), (-25, 25), (-35, 0), (-25, -25),
+            (0, -20), (15, -15), (20, 0), (15, 15),
+            (0, 20), (-15, 15), (-20, 0), (-15, -15),
+        )
+        offset_index = (self._explore_index + self._agent_id * 3) % len(wide_offsets)
+        target = wide_offsets[offset_index]
+        absolute_target = (center[0] + target[0], center[1] + target[1])
+        if _h.manhattan(current_pos, absolute_target) <= 3:
+            self._explore_index += 1
+            offset_index = (self._explore_index + self._agent_id * 3) % len(wide_offsets)
+            target = wide_offsets[offset_index]
+            absolute_target = (center[0] + target[0], center[1] + target[1])
+        return self._move_to_position(state, absolute_target, summary="wide_explore", vibe="change_vibe_aligner")
 
 
 class AlphaTournamentV8Policy(MettagridSemanticPolicy):
-    """TournamentV8: Multi-phase strategy for 10K games."""
+    """TournamentV8: TV2 + wider exploration for distant junction discovery."""
     short_names = ["alpha-tournament-v8"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
