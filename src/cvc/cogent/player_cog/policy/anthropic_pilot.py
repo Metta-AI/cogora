@@ -7447,6 +7447,52 @@ class AlphaTeamFixPolicy(MettagridSemanticPolicy):
 
 
 # ---------------------------------------------------------------------------
+# AlphaSmartHybridPolicy — TeamFix budgets + carbon bias for 5+ agents
+# Best of both worlds: proper budgets for 4a, carbon fix for 8a.
+# ---------------------------------------------------------------------------
+
+class AlphaSmartHybridAgentPolicy(AlphaTeamFixAgentPolicy):
+    """Smart hybrid: TeamFix budgets + adaptive carbon bias.
+
+    - 4 agents: balanced bias (all resources needed equally, can't afford carbon focus)
+    - 5+ agents: carbon bias for even agents (carbon bottleneck with many agents)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._carbon_bias_applied = False
+
+    def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
+        """Apply carbon bias lazily once team size is known."""
+        if not self._carbon_bias_applied:
+            self._carbon_bias_applied = True
+            team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+            if team_size >= 5 and self._agent_id % 2 == 0:
+                self._default_resource_bias = "carbon"
+                self._resource_bias = "carbon"
+        return super()._preferred_miner_extractor(state)
+
+
+class AlphaSmartHybridPolicy(MettagridSemanticPolicy):
+    """SmartHybrid: TeamFix + carbon bias for large teams."""
+    short_names = ["alpha-smart-hybrid"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaSmartHybridAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
 # AlphaHighEffAgentPolicy — Aggressive + efficient mining (high deposit threshold)
 # + no scrambling (idle mine instead) + carbon bias
 # Combines best elements from testing.
