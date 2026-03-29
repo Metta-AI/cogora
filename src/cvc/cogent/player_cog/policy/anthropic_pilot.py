@@ -14081,3 +14081,49 @@ class AlphaTournamentV35Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV36: TV28 + stronger silicon priority ──────────────────────────────
+
+class AlphaTournamentV36AgentPolicy(AlphaTournamentV18AgentPolicy):
+    """TournamentV36: TV28 (hotspot=-10) + stronger silicon priority.
+
+    Silicon extractors are scarcer (45 vs avg 52 for other resources).
+    TV18 triggers silicon bias at silicon < 50 or when silicon is least.
+    TV36 raises the threshold to < 100 to keep miners on silicon longer,
+    preventing the late-game silicon crash.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        least = _least_resource(resources)
+
+        # Stronger silicon priority: < 100 instead of < 50
+        if least == "silicon" or silicon < 100:
+            return MacroDirective(resource_bias="silicon")
+
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaTournamentV36Policy(MettagridSemanticPolicy):
+    """TournamentV36: TV28 + stronger silicon priority."""
+    short_names = ["alpha-tournament-v36"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV36AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
