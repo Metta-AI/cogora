@@ -7,37 +7,45 @@ Status: interrupted
 #3: alpha.0:v351 at 7.49
 Target: >10 (need +32% improvement)
 
-No policy in the tournament has ever scored >10 average.
-
-## v348 Analysis (87 matches, avg 7.38)
-By configuration:
-- us=2a_opp=6a: avg=6.04 (range 3.91-8.83)
-- us=4a_opp=4a: avg=7.87 (range 3.95-13.86)
-- us=6a_opp=2a: avg=7.95 (range 2.86-9.61)
-
-10 individual matches scored >10 (11% hit rate)
-
-## Self-Play Testing (5K steps, 8a)
+## Self-Play Results (5K steps, 8a)
 | Policy | Seed 0 | Seed 1 | Seed 2 | Seed 3 | Avg |
 |--------|--------|--------|--------|--------|-----|
 | TV2    | 3.63   | 5.98   | 5.30   | 5.73   | 5.16 |
-| TV7    | 6.96   | 5.84   | 4.05   | 5.78   | 5.66 |
+| TV7    | 6.96   | 5.84   | 4.05   | 5.78   | **5.66** |
+| TV8-multi | 6.48 | 6.13 | 2.17 | 3.36 | 4.54 |
+| TV8-explore | 6.20 | 5.74 | 4.21 | 3.40 | 4.89 |
+| SV4    | 8.60 | 10.20  | —      | —      | 9.40* (*10K) |
 
-TV7 +10% over TV2 in self-play.
+TV7 best at 5K. SV4 too conservative at 10K. TV8 variants worse.
 
-## Policies Created
+## 10K Self-Play Results (8a)
+| Policy | Seed 0 | Seed 1 | Avg |
+|--------|--------|--------|-----|
+| TV2    | 9.17   | 16.60  | 12.89 |
+| TV7    | 10.97  | 16.94  | 13.96 |
+
+## Policies Created & Tested
 - SustainV4: Always-silicon bias — TOO CONSERVATIVE
-- TournamentV6: Silicon-aware budget — marginal
-- TournamentV7: 2-agent cooperation + explore idle — +10% in self-play
+- TournamentV6: Silicon-aware budget — marginal at best
+- TournamentV7: 2-agent cooperation + explore idle — **+10% self-play**
+- TournamentV8-multi: Phase-based budget — WORSE on 2 of 4 seeds
+- TournamentV8-explore: Wider explore pattern — WORSE overall
 
 ## Uploads This Session
-- v364 (TournamentV7) — in qualifying
+- v364 (TV7) — passed qualifying, in competition (all 20 matches running)
+- v365 (raw TV2) — qualifying
+- v366 (TV8-multi) — qualifying
 
-## Key Insight: Cooperative Scoring
-Both players on same Cogs team. Score = avg aligned junctions against Clips.
-High scores come when both policies cooperate well (especially 4v4).
+## Key Insights
+1. Game is COOPERATIVE: both players on same Cogs team vs Clips AI
+2. Silicon is structural bottleneck (fewest extractors)
+3. 6-agent performance caps at ~9.09 in tournament
+4. Self-play scores DON'T predict tournament well (different dynamics)
+5. v348 uses AnthropicCyborgPolicy (LLM wrapper), my uploads use raw policies
+6. Idle-scramble is critical: scrambling Clips = more junctions to align
+7. TV7's explore-idle behavior helps on hard maps (seed 0: +92%)
 
 ## Next Steps
-- Monitor v364 tournament results
-- Consider major architecture changes to break 7.60 ceiling
-- Ideas: multi-phase strategy, opponent-adaptive, better exploration
+- Wait for v364 competition results
+- If v364 scores better than v348, iterate further
+- Otherwise: consider LLM cyborg wrapper, RL, or other radical approach
