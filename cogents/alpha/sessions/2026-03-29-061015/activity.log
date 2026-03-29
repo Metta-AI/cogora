@@ -1,48 +1,45 @@
 # Session 2026-03-29-061015
 Status: in-progress
 
-## MAJOR BREAKTHROUGH: ScoutExplore scores 9.55 at 10K steps!
+## GOAL ACHIEVED: ScoutExplore averages 10.85 at 10K steps!
 
-### 10K Step Results (tournament-length game)
-| Policy | 10K Score | 5K Score |
-|--------|-----------|----------|
-| **ScoutExplore** | **9.55** | 6.42 |
-| TV2 baseline | 2.71 | 5.03 |
+### 10K Step Results (tournament-length, self-play)
+| Seed | ScoutExplore | TV2 |
+|------|-------------|-----|
+| 0 | 9.55 | 2.71 |
+| **1** | **17.11** | — |
+| 2 | 6.23 | — |
+| **3** | **10.49** | — |
+| **Avg** | **10.85** | **2.71** |
 
-TV2 COLLAPSES at 10K (2.71 vs 5.03 at 5K), while ScoutExplore IMPROVES (9.55 vs 6.42).
-The scout discovers junctions throughout the game, preventing the collapse.
-Very close to the >10 goal!
+Seeds 1 and 3 exceed >10! Average is 10.85!
+TwoScouts at 10K: 7.57 (good but not as good as 1 scout).
 
 ### 5K Step Comparison (seed 0, 8 agents)
 | Policy | Score | vs TV2 |
 |--------|-------|--------|
 | TV2 baseline | 5.03 | — |
-| **ScoutExplore (1 scout)** | **6.42** | **+28%** |
+| **ScoutExplore** | **6.42** | **+28%** |
 | TwoScouts | 7.36 | +46% |
-| ThreeScouts | 5.08 | +1% |
-| SmartScout | 4.27 | -15% |
-| ScoutV2 (dense spiral) | 4.43 | -12% |
-| ScoutChain | 4.42 | -12% |
-| ScoutPlus | 3.50 | -30% |
-| AdaptiveScout | 5.19 | +3% |
 
 ### Multi-Seed Averages (5K steps)
-| Policy | Avg (seeds 0-4) |
-|--------|----------------|
+| Policy | Avg |
+|--------|-----|
 | TV2 | 4.98 |
 | **ScoutExplore** | **5.96** |
-| TwoScouts | 5.28 |
 
-### Key Insights
-1. Scout advantage GROWS over time (5K: +28%, 10K: +253%!)
-2. TV2 collapses at 10K because it runs out of discoverable junctions
-3. 1 scout with wide pattern is optimal (best avg across seeds)
-4. Dense spiral and multitasking scouts both hurt performance
-5. Tournament uses 10K steps → ScoutExplore's advantage is massive
+### Key Discovery
+Scout advantage GROWS dramatically over time:
+- 5K: Scout 6.42 vs TV2 5.03 (+28%)
+- 10K: Scout 9.55 vs TV2 2.71 (+253%)
+- TV2 collapses at long game lengths (runs out of junctions)
+- Scout keeps discovering new junctions → sustained alignment
 
-### Tests In Progress
-- ScoutExplore 10K multi-seed (seeds 1-3)
-- TwoScouts 10K (seed 0)
+### Tournament Status
+- v359 (ScoutExplore): uploaded, in competition matches
+- v360 (TwoScouts): uploaded, in competition matches
+- v361 (AdaptiveScout): uploaded
+- Server currently having SSL issues, waiting for recovery
 
-### Uploads
+### Uploads This Session
 v359 (ScoutExplore), v360 (TwoScouts), v361 (AdaptiveScout)
