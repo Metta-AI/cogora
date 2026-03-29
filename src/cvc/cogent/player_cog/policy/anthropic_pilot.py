@@ -8358,3 +8358,100 @@ class AlphaSustainablePolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaSustainV3Policy — Sustainable + no scrambling + higher idle-mine threshold
+#
+# Hypothesis: in cooperative scoring, scrambling hurts BOTH teams.
+# Save all hearts for alignment. Mine when not aligning.
+# ---------------------------------------------------------------------------
+
+class AlphaSustainV3AgentPolicy(AlphaSustainableAgentPolicy):
+    """SustainV3: no scrambling, pure alignment + mining economy.
+
+    Changes from Sustainable:
+    1. Zero scramblers always (save hearts for alignment)
+    2. Idle aligners ALWAYS mine (never scramble)
+    3. Higher economy threshold for alignment pressure
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Same as Sustainable but zero scramblers."""
+        aligner, _ = super()._pressure_budgets(state, objective=objective)
+        return aligner, 0  # Never assign scramblers
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner: align > expand > MINE. No scrambling ever."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Always mine when idle (never scramble — save hearts for alignment)
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+
+class AlphaSustainV3Policy(MettagridSemanticPolicy):
+    """SustainV3: no scrambling, pure alignment + mining."""
+    short_names = ["alpha-sustain-v3"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaSustainV3AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
