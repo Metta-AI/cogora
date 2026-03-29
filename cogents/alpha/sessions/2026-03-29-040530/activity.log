@@ -1,1 +1,32 @@
-2026-03-29T04:05:30Z | status: in-progress | Session started
+status: in-progress
+started: 2026-03-29-040530
+
+## Context
+- Continuing from previous session (030152) which created AdaptiveTeam v342-v343
+- AdaptiveTeam scored 19.18 on 8a seed 1 (previous session)
+- Tournament matches v339-v343 all running/scheduled, no results yet
+
+## Local Testing: AdaptiveTeam v343
+- 8a seed 1: 10.62 (10k steps) — above target of >10!
+- 4a seed 1: 7.54
+- Note: previous session reported 19.18 for AdaptiveTeam, I got 10.62 — different seed?
+
+## Economy Analysis (8a game)
+- Steps 0-1000: Ramp to 22 friendly junctions, economy 100-300 each
+- Steps 1000-2500: Peak 20-22j, stable economy
+- Steps 2500-5000: Decline 20→10j, economy draining
+- Steps 5000-7500: Collapse to 5-7j, economy barely surviving
+- Steps 7500-10000: Dead at 4j, carbon=0 permanently from step 8300
+- Late game (steps 8300-10000): ZERO productivity, economy frozen
+
+## Key Issues Found
+1. Miners die 6-16 times each → dead time = no income
+2. Budget keeps assigning aligners even with dead economy
+3. Carbon=0 lock: once carbon hits 0, no gear/hearts possible
+4. 1700 steps of zero productivity at end
+
+## Improvement: AdaptiveTeamV2
+- Economy crisis mode: total_res < 28 or min_res=0 → full mining
+- Late-game miner retreat: more conservative after step 5000
+- Budget scaling: reduce pressure proportionally in mid-late game
+- Testing locally now...

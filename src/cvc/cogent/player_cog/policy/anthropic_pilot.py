@@ -8577,3 +8577,81 @@ class AlphaAdaptiveTeamPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaAdaptiveTeamV2AgentPolicy(AlphaAdaptiveTeamAgentPolicy):
+    """AdaptiveTeamV2: Late-game economy fixes.
+
+    Key improvements over AdaptiveTeam:
+    1. Economy crisis mode: when hub total < 28, drop ALL pressure to mine
+    2. More conservative miner retreat after step 5000 to reduce deaths
+    3. Budget scales down with economy health in mid-late game
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Economy-aware budgets with crisis mode."""
+        step = state.step or self._step_index
+        resources = _shared_resources(state)
+        total_res = sum(resources.values())
+        min_res = min(resources.values())
+
+        # Hearts cost 7 of each element = 28 total minimum
+        # If hub can't make even 1 heart, FULL MINING MODE
+        if total_res < 28 or min_res == 0:
+            if step > 500:  # Give early game time to ramp
+                return 0, 0
+
+        # Late game economy scaling: reduce pressure proportionally
+        if step >= 5000 and min_res < 50:
+            team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+            # Allow max 1 aligner when economy is struggling
+            if min_res < 20:
+                aligner = min(1, max(team_size - 1, 1))
+                return aligner, 0
+            # Allow max 2 aligners in mid-health
+            aligner = min(2, max(team_size - 1, 1))
+            return aligner, 0
+
+        return super()._pressure_budgets(state, objective=objective)
+
+    def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
+        """More conservative miner retreat in late game to reduce deaths."""
+        step = state.step or self._step_index
+        if role == "miner" and step >= 5000:
+            hp = int(state.self_state.inventory.get("hp", 0))
+            if safe_target is None:
+                return hp <= _h.retreat_threshold(state, role) + 15
+            safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+            # Much more conservative margin for late-game miners
+            margin = 25
+            margin += int(state.self_state.inventory.get("heart", 0)) * 3
+            margin += min(_h.resource_total(state), 12) // 2
+            if not _h.has_role_gear(state, role):
+                margin += 12
+            if hp <= safe_steps + margin:
+                return True
+            pos = _h.absolute_position(state)
+            dist = _h.manhattan(pos, safe_target.position)
+            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 25:
+                return True
+            return False
+        return super()._should_retreat(state, role, safe_target)
+
+
+class AlphaAdaptiveTeamV2Policy(MettagridSemanticPolicy):
+    """AdaptiveTeamV2: Late-game economy fixes."""
+    short_names = ["alpha-adaptive-team-v2"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAdaptiveTeamV2AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
