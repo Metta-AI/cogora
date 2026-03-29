@@ -1,5 +1,5 @@
 # Session 2026-03-29-080619
-Status: in-progress
+Status: completed
 
 ## Best Self-Play: TV15 avg 15.16 (4 seeds, 8a, 10K)
 TV15 = TV9 + idle step counter (150 steps) → full-map exploration.

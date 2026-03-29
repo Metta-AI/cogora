@@ -1,17 +1,18 @@
 # Todos
 
-- [ ] Achieve score > 10 in tournament (current best: 8.63, v363)
-- [ ] **Monitor v367 (TV9) tournament results** — fixes TV7's 2-agent timing
-- [ ] **Study v363 strategy** — it's #1, understand what it does differently
-- [ ] **Try LLM wrapper + TV7** — v348's LLM adds ~0.2 points; could push to ~9
-- [ ] **Improve 2-agent performance** — biggest drag on average (6.41 avg)
-- [ ] **Study Clips faction behavior** — understand scramble patterns for defense
-- [ ] **Multi-seed tournament variance** — scores vary 2x between maps
-- [x] v364 (TV7) leaderboard #2 at 8.54 — beats v348 by +12%
-- [x] v366 (TV8-multi) leaderboard #3 at 8.32 — phase-based strategy works
-- [x] v365 (raw TV2) at 7.59 — confirms LLM wrapper adds ~0.2 points
-- [x] CONFIRMED: Scout architecture hurts tournament (v362 at 6.85 vs v348 at 7.60)
-- [x] CONFIRMED: Game is cooperative — both players same Cogs team
-- [x] CONFIRMED: Silicon is structural bottleneck (fewest extractors)
-- [x] CONFIRMED: Idle-scramble critical differentiator
-- [x] CONFIRMED: TV7's explore-idle helps on hard maps (+92% seed 0)
+- [ ] Achieve score > 10 in tournament (current best: ~8.6, v367/TV9)
+- [ ] **Monitor v371/v374 (TV15) tournament results** — idle explore trigger, best self-play
+- [ ] **Monitor v372/v375 (TV16) tournament results** — economy fix for tournament
+- [ ] **Combine TV15 idle-explore + chain push** — two orthogonal improvements
+- [ ] **Improve 2-agent performance** — biggest drag on average (6-7 avg)
+- [ ] **Study opponent strategies** — slanky, gtlm-reactive, Paz-Bot, coglet-v0
+- [ ] **Try progressive exploration** — widen explore radius over time, not all at once
+- [x] v368 (TV12) tournament avg 7.54 — stagnation detection hurt tournament
+- [x] TV15 self-play avg 15.16 (4 seeds, 8a, 10K) — best policy found
+- [x] Junction discovery confirmed as primary bottleneck (21/65 at step 1000)
+- [x] Silicon structural bottleneck (45 extractors vs 50-58 others)
+- [x] Self-play ≠ tournament (TV12: 9.9 self-play, 7.5 tournament)
+- [x] Idle step counting > junction count stagnation for explore trigger
+- [x] Chain push adds +~10% after frontier alignments
+- [x] More scramblers crash economy (TV10 at 3.55)
+- [x] Explore-always loses to Clips (no scramble pressure)
