@@ -1,0 +1,38 @@
+# Session 2026-03-29-051207
+Status: in-progress
+
+## Context
+- Previous session interrupted. v348 at #1 with 7.53.
+- Goal: score > 10. Gap: ~2.5 points.
+- Strategy: build on TournamentV2 (AdaptiveV3 + idle scramble) base.
+
+## Analysis
+- TournamentV2 self-play: 4a=3.85, 8a=2.57 (per cog, total is double)
+- In 4a, agents found only 14 of ~65 junctions. frontier=0 by step 1500.
+- First alignment at step 200 (4a) or step 1500 (8a)!
+- After frontier=0, agents just idle-scramble back and forth.
+- Explore offsets radius ~22 on 88x88 map = insufficient coverage.
+- Key bottleneck: ALIGNMENT THROUGHPUT, not junction discovery.
+
+## ExplorerV2 Created
+- Based on TournamentV2 (v348, #1)
+- Adds wide exploration (radius 36) when frontier=0
+- Result: ExplorerV2 WORSE (0.99 4a vs TV2's 3.85)
+- More junctions discovered (9 vs 6) but less alignment throughput (42 vs 105)
+- Exploration takes agents away from scramble-realign cycle
+
+## Key Insight: Scramble-Realign Cycle
+- 72% of aligner time is idle_align_scramble (no alignable targets)
+- Only 7% is actual align_junction
+- Bottleneck: many scrambled enemy junctions NOT within our alignment range
+- Solution: prioritize scrambling enemy junctions within our network range
+
+## Capture Policy Created
+- AlphaCapturePolicy: scramble targeting with -50 bonus for capturable junctions
+- AlphaCapturePlusPolicy: + faster heart cycle (batch to 2 instead of 3-6)
+- Testing both locally now
+
+## TV2 10k Self-Play
+- Score: 4.43 (vs 3.85 at 5k) — longer games dilute early 0-score period
+- Friendly junctions stabilize at 8-9
+- Tournament opponents: Paz-Bot, slanky:v112, alpha.0:v11-v14, alpha.0:v49

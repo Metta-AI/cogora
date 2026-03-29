@@ -9364,3 +9364,176 @@ class AlphaExplorerV2Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaCaptureAgentPolicy(AlphaTournamentV2AgentPolicy):
+    """TournamentV2 + capture-optimized scramble targeting.
+
+    Key insight: idle-scrambling is 72% of aligner time, but many scrambled
+    junctions can't be immediately re-aligned (too far from network).
+    This policy prioritizes scrambling enemy junctions within alignment range
+    of our network, creating immediate capture (scramble→realign) cycles.
+    """
+
+    def _preferred_scramble_target(self, state: MettagridState) -> KnownEntity | None:
+        """Override: strongly prefer enemy junctions we can realign after scrambling."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        )
+        if not enemy_junctions:
+            return None
+
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda e: e.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda j: j.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+
+        # Partition: capturable (within alignment range) vs non-capturable
+        capturable = []
+        non_capturable = []
+        for ej in enemy_junctions:
+            if _h.within_alignment_network(ej.position, network_sources):
+                capturable.append(ej)
+            else:
+                non_capturable.append(ej)
+
+        # Strongly prefer capturable targets (add -50 bonus)
+        hub_pos = hub.position if hub else current_pos
+        neutral_junctions = self._world_model.entities(
+            entity_type="junction",
+            predicate=lambda e: e.owner in {None, "neutral"},
+        )
+
+        best = None
+        best_score = float("inf")
+        for ej in enemy_junctions:
+            base_score = _h.scramble_target_score(
+                current_position=current_pos,
+                hub_position=hub_pos,
+                candidate=ej,
+                neutral_junctions=neutral_junctions,
+                friendly_junctions=friendly_junctions,
+            )[0]
+            # Massive bonus for capturable junctions (within our alignment range)
+            if ej in capturable:
+                base_score -= 50.0
+            if base_score < best_score:
+                best_score = base_score
+                best = ej
+
+        return best
+
+
+class AlphaCapturePolicy(MettagridSemanticPolicy):
+    """TournamentV2 + capture-optimized scramble targeting."""
+    short_names = ["alpha-capture"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaCaptureAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaCapturePlusAgentPolicy(AlphaCaptureAgentPolicy):
+    """Capture + faster heart cycle + lower batch target.
+
+    Reduces heart batch target to 2 (from 3) so aligners spend less time
+    at hub and more time in the scramble→realign cycle. With 10000 steps,
+    every trip to hub costs ~30-60 steps of lost alignment time.
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Lower batch threshold: go align with 2 hearts instead of waiting for 3."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        # Skip batching entirely in early game
+        if step < 200:
+            pass
+        elif hearts < 2 and hub is not None:
+            # Only batch to 2 hearts (not 3-6 like default)
+            hub_dist = _h.manhattan(_h.absolute_position(state), hub.position)
+            if hub_dist <= 1 and _h.team_can_refill_hearts(state):
+                return self._move_to_known(state, hub, summary="quick_batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward known unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Idle: scramble (capture-optimized) at lower threshold
+        min_res = _h.team_min_resource(state)
+        if hearts > 0 and min_res >= 10:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaCapturePlusPolicy(MettagridSemanticPolicy):
+    """Capture-optimized + faster heart cycle."""
+    short_names = ["alpha-capture-plus"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaCapturePlusAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
