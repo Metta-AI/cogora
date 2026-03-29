@@ -6,3 +6,10 @@ started: 2026-03-29T14:03:57Z
 - Study opponent strategies if results available
 - Run free-play experiments based on findings
 - Push score higher
+
+## Activity
+- [1403] Session started. v387=#1 at 10.05, all v392-v401 still running.
+- [1406] All tournament matches running/scheduled — no completed results yet.
+- [1408] Running self-play games: baseline (AlphaCyborgPolicy), TV28, 2-agent, starter.
+- [1415] Created TV38 (enemy-directed stagnation explore), TV39 (earlier scrambler),
+  TV40 (reduced hub penalty). Testing now.
