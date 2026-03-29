@@ -1,27 +1,25 @@
 # Session 2026-03-29-121717
 Status: in-progress
 
-## Goal: Maintain >10 score, push higher. v378=10.14 is current champion.
+## Goal: Maintain >10 score, push higher. v378=10.14 is champion.
 
 ## Latest Leaderboard
 1. v378 (TV18) = 10.14 (87 matches)
-2. v374 = 9.50 (87)
-3. v379 (TV19) = 8.81 (87)
-4. v381 = 8.70 (87)
-5. v368 (TV12) = 8.69 (96)
-6. v385 (TV21) = 8.69 (84) — climbing!
-7. v369 = 8.67 (96)
-8. v384 (TV18+bugfix) = 8.63 (86)
-9. v380 = 8.60 (87)
-17. v387 (TV18 reupload) = 8.00 (1 match)
-v386 (TV22) — not ranked yet
+2. v374 = 9.51 (89)
+3. v387 (TV18 reupload) = 9.23 (41) — climbing fast!
+4. v379 (TV19) = 8.81 (87)
+5. v381 = 8.70 (87)
+6. v368 (TV12) = 8.69 (96)
+8. v385 (TV21) = 8.67 (87)
+9. v384 (TV18+bugfix) = 8.63 (87)
+18. v386 (TV22 faster stag) = 7.72 (40) — faster stagnation hurts
 
-## Analysis
-- v378 maintains 10+ with 87 matches — very stable
-- v385 (TV21 = TV12+TV18+TV19) climbed to 8.69, competitive but not #1
-- v384 (TV18+bugfix) at 8.63 — bug fix costs ~1.5 points
-- v387 (TV18 clean) needs more matches to validate
-- Gap from #2 to #1 is 0.64 — v378 is uniquely good
+## Key Findings
+1. v387 (TV18 reupload) = 9.23 and climbing. Code identical to v378.
+   Gap was due to small sample + opponent pool. TV18 is genuinely ~9-10 tier.
+2. v386 (TV22): faster stagnation (200 vs 300) = 7.72 — HURTS. Don't change.
+3. All variants cluster 8.5-8.8 except TV18 (9-10 tier).
+4. TV18's silicon priority is the single best improvement.
 
 ## Activity
 - [121717] Session started. Handling interrupted session 2026-03-29-111020.
@@ -46,3 +44,11 @@ v386 (TV22) — not ranked yet
   TV23: territory loss + close explore — FAILED (3.27 vs 5.24)
   TV24: tighter stagnation radius (15-22 vs 22-35) — marginal (+3%)
   TV25: scramble-focused stagnation (no far explore) — BEST (+24%)
+
+## Tournament Uploads (this session + previous)
+- v382 (TV12+bugfix) = 8.54 (87) — similar to TV12 (8.69)
+- v383 (TV20) = bad
+- v384 (TV18+bugfix) = 8.63 (87) — bug fix costs ~0.5-1.5 points
+- v385 (TV21) = 8.67 (87) — competitive
+- v386 (TV22) = 7.72 (40) — faster stagnation hurts
+- v387 (TV18 reupload) = 9.23 (41) — climbing, converging toward v378
