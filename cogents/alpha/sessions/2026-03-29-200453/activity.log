@@ -44,5 +44,15 @@ started: 2026-03-29T20:04:53Z
   Scramble defense is essential. No-scramble approach is a dead end.
 - v451 (TV90) passed qualifying, entering competition against external opponents.
 - v452-v454 all entered competition. First results:
-  - v453 (TV92: aggressive 2-agent + reduced batch) vs Paz-Bot: 13.83, vs slanky: 13.63
-  - Very promising — TV92 combining both 2-agent improvements.
+  - v453 (TV92: aggressive 2-agent + reduced batch) — initially looked good, but 2v6 = 5.41!
+- **MAJOR FINDING**: Competition results (10-84 matches per version):
+  - v451 (TV90): overall=13.87(10) — **BEST** — 2v6=13.02, 4v4=16.29, 6v2=12.60
+  - v449 (TV88): overall=12.93(84) — 2v6=11.00, 4v4=13.66, 6v2=14.12
+  - v452 (TV91): overall=11.81(15) — 2v6=5.60 ← reduced batch KILLS 2v6
+  - v454 (TV93): overall=11.40(15) — 2v6=5.45 ← early aligner KILLS 2v6
+  - v453 (TV92): overall=11.00(16) — 2v6=5.41 ← both changes KILL 2v6
+- TV90 (min_res >= 7 threshold only) is the ONLY improvement that helps 2v6.
+  TV91 (reduced batch) and TV93 (early aligner) are toxic to 2v6.
+- v451 still has small sample (10 matches). Need more data to confirm.
+- Created and uploaded TV97 (3 aligners 4v4) and TV98 (faster early game) — both based on TV92.
+  TV97/TV98 may also suffer from TV92's 2v6 problem. Need to create TV90-based variants instead.
