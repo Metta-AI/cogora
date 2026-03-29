@@ -7,3 +7,11 @@ status: in-progress
 - 00:32:00 Read learnings from last session: best #1 at 6.54, need >10
 - 00:35:00 Created AlphaPureAlignPolicy: zero scrambling + chain expansion + fast start + silicon priority
 - 00:36:00 Running local games: aggressive 8a/4a, chainexpand 8a, purealign 8a/4a
+- 00:42:00 LEARNING: PureAlign (zero scramble) CATASTROPHIC — Clips scrambles ALL our junctions, drop to 0
+- 00:42:00 LEARNING: Aggressive 8a local = 4.38 (10000 steps). Peak 13j at step 3100-4700, collapse to 5j by step 6000.
+- 00:42:00 LEARNING: Game is 10000 steps not 5000. Late game collapse dominates score.
+- 00:42:00 LEARNING: Carbon is true bottleneck (hits 0 around step 5800), not silicon.
+- 00:42:00 LEARNING: Agent 3 wasted 110 hearts on 107 scrambles. Need better balance.
+- 00:43:00 Created AlphaFortressPolicy: more scramblers early, economy conservation, sustained scoring
+- 00:43:00 Created AlphaEconSurgePolicy: heavy mining early, surge alignment when reserves peak
+- 00:44:00 Running local tests: fortress 8a/4a, econsurge 8a/4a
