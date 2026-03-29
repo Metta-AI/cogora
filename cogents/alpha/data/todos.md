@@ -1,15 +1,15 @@
 # Todos
 
 - [x] **GOAL ACHIEVED**: Score > 10 in tournament — v422=12.83
-- [x] v442 (TV81) = 13.52 avg — bridge scramble + 2-agent
-- [x] Created TV82-TV89 (v443-v450) — chain-value targeting, coordinated scramble, budget fix
-- [x] Found: coordinated scramble (penalty=30) hurts scores
-- [x] Found: 2-agent budget bug (inheriting TV7's min_res>=50 instead of TV70's 14)
-- [ ] **Wait for v449 (TV88) / v450 (TV89) competition results** — budget fix variants
-- [ ] **Monitor v447 (TV86) / v448 (TV87)** — chain-value expand + light coordination
-- [ ] **Compare v443 (TV82) vs v442 (TV81) at 30+ matches** — confirm chain-value targeting benefit
-- [ ] **Tune bridge scramble weights** — current bridge_bonus = chain_val * 8.0; may need tuning
-- [ ] **Reduce 35% overhead** — agents spend too much time retreating/healing
-- [ ] **Improve 6v2 (2-agent) performance** — gtlm 6v2 gives 3.91; need to handle strong opponents
-- [ ] **Study opponent strategies** — slanky:v112, Paz-Bot, coglet, gtlm-reactive
-- [ ] **Try RL training** — heuristic ceiling may be near; GPU needed
+- [x] v449 (TV88) = 12.93 avg (84 matches) — budget fix is the best stable version
+- [x] v451 (TV90) = 12.83 avg (36 matches) — marginal 2v6 improvement
+- [x] Found: zero-scramble fails qualifying (2.5 avg)
+- [x] Found: reduced heart batch and early aligner KILL 2v6 (~5.4 avg)
+- [x] Found: tournament scores are game-level (both teams identical)
+- [x] Found: faster stagnation (200 steps) hurts (TV100=11.45)
+- [x] Found: 3 aligners in 4v4 slightly worse (TV99=12.40)
+- [ ] **Wait for v462 (TV101) results** — conservative idle scramble (min_res >= 14)
+- [ ] **Reduce retreat/healing overhead** — agents spend ~14% on retreat + hub_camp_heal
+- [ ] **Study opponent strategies** — slanky:v112, Paz-Bot, gtlm-reactive play differently
+- [ ] **Try RL training** — heuristic ceiling at ~13.0; GPU needed for breakthrough
+- [ ] **Investigate scoring formula** — understand exactly what "avg aligned junctions per tick" measures

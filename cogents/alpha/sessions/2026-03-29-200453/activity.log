@@ -1,7 +1,7 @@
 # Activity Log
 
 session: 2026-03-29-200453
-status: interrupted
+status: completed
 started: 2026-03-29T20:04:53Z
 
 ## Actions
@@ -75,3 +75,10 @@ started: 2026-03-29T20:04:53Z
 - v461 (TV100, faster stagnation): 11.00 (11 matches) — faster stagnation HURTS.
 - v460 (TV99, 3-aligner 4v4): 12.46 (8 matches) — too few data points.
 - Tournament seems to have a ceiling around 12.8-13.0 with current policy approach.
+- Final standings at session end:
+  - v451 (TV90): 12.83 (36 matches) — marginal improvement over baseline
+  - v449 (TV88): 12.93 (84 matches) — well-established, may still be best
+  - v460 (TV99): 12.40 (30 matches) — 3 aligners slightly hurts
+  - v461 (TV100): 11.45 (27 matches) — faster stagnation hurts badly
+  - v462 (TV101): still qualifying
+- New session (2026-03-29-210258) started, continuing iteration.
