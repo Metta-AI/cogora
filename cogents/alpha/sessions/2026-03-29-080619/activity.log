@@ -1,35 +1,32 @@
 # Session 2026-03-29-080619
-Status: interrupted
+Status: in-progress
 
-## LEADERBOARD (from parallel session)
-1. v367 (TV9): 8.61 (early)
-2. v363: 8.59 (89 matches)
-3. v364 (TV7): 8.55 (89 matches)
-4. v366 (TV8-multi): 8.35 (86 matches)
+## LATEST: TV12 Uploaded as v368
+TV12 = TV7 + stagnation-triggered wider exploration.
+When junction count stops growing for 300 steps (peak >= 5),
+switches idle aligners to explore with 3-ring offsets (22, 30, 35).
 
-## Self-Play Results (multi-seed 10K)
-TV7, 8 agents, 10K steps: avg 9.25 (range 4.88-13.08)
-TV7, 4 agents, 10K steps: avg 6.36 (range 5.05-8.43)
+## Self-Play Comparison (8a, 10K, 8 seeds each)
+| Policy | Avg | Best | Worst |
+|--------|-----|------|-------|
+| TV7    | 10.29 | 15.39 | 3.44 |
+| TV12   | 11.15 | 27.32 | 0.00* |
+*0.00 = wipeout seed (map death), also happens to TV7
 
-MASSIVE variance across seeds: 4.88 to 13.08!
-Map layout determines which junctions are discoverable.
+TV12 +8% avg over TV7 in self-play.
 
-## Seed Analysis (8a 10K)
-- Seed 3 (13.08): 22 friendly junctions at step 5000, silicon 1210
-- Seed 2 (4.88): 11 friendly junctions at step 5000, silicon 1308
-- Difference: junction discovery, NOT economy
+## Tournament Status
+- v367 (TV9): 8.61 avg — current best in tournament
+- v368 (TV12): qualifying — just uploaded
+- Goal: >10 avg
 
-## Experiments
-- TV10 (double scramble): 3.55 — economy collapse
-- TV9 (explore-always): 2.88 — Clips domination without scramble
+## Uploads This Session
+- v368 (TV12/AdaptiveStagnation): qualifying
 
-## Key Insight: Map Layout is King
-The biggest factor in score variance is map layout (junction placement).
-Can't control this in tournament. But can improve AVERAGE by being
-better at discovering junctions on unfavorable maps.
-
-## Strategy to Reach >10
-Tournament avg currently ~8.5. Self-play 8a avg 9.25 at 10K.
-Gap: tournament has different team sizes and opponents.
-Need to reduce variance — make low-scoring maps score higher.
-This means: better exploration on maps where junctions are far from hub.
+## Key Learnings
+1. Map layout causes MASSIVE score variance (3.44 to 27.32)
+2. Stagnation detection helps on maps where junctions are far from hub
+3. Idle scrambling remains critical — can't remove it
+4. Self-play seeds are not deterministic across runs
+5. Double scramblers crash economy (TV10 failed at 3.55)
+6. Explore-always idle loses to Clips (TV9-explore at 2.88)
