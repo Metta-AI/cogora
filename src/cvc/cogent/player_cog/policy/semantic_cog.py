@@ -393,12 +393,25 @@ class SemanticCogAgentPolicy(AgentPolicy):
         safe_target = self._nearest_hub(state)
         safe_distance = 0 if safe_target is None else _h.manhattan(_h.absolute_position(state), safe_target.position)
 
+        # EARLY-GAME SURVIVAL: HP starts at 50, drains 1/tick, territory heals +100/tick.
+        # Territory radius is 10 tiles from hub/network junctions.
         hp = int(state.self_state.inventory.get("hp", 0))
         step = state.step or self._step_index
 
-        # WIPEOUT RECOVERY: If hp=0, move to hub (walking on hub heals).
+        # Stay at hub until HP reaches 100. Territory heals +100/tick when in range.
+        # Short timeout: if healed to 100+ by step 20, move on. Otherwise extend wait.
+        if hp < 100 and hp > 0 and safe_target is not None and safe_distance <= 3 and step <= 20:
+            return self._hold(summary="hub_camp_heal", vibe="change_vibe_default")
+
+        # If HP dropping in early game, rush to hub immediately.
+        if step < 150 and safe_target is not None and hp > 0 and hp < 40:
+            if safe_distance > 2:
+                return self._move_to_known(state, safe_target, summary="survival_retreat")
+            return self._hold(summary="survival_hold", vibe="change_vibe_default")
+
+        # WIPEOUT RECOVERY: If hp=0, stay near hub to try to trigger healing.
         if hp == 0 and safe_target is not None:
-            if safe_distance > 0:
+            if safe_distance > 3:
                 return self._move_to_known(state, safe_target, summary="wipeout_return_hub")
             return self._hold(summary="wipeout_hub_hold", vibe="change_vibe_default")
 
