@@ -36,3 +36,10 @@ Previous session (010815) crashed. Key state:
   - Aggressive 4a: 7.66
 - 02:35:00 KEY INSIGHT: Single-seed results unreliable. Need 3-5 seeds for valid comparison.
 - 02:35:00 Uploaded: v328=CarbonBoost, v329=Aggressive, v330=Focused
+- 02:40:00 CarbonBoost seed 42: 8a=9.35 (Aggressive=0.00!), 4a=6.32 (Aggressive=7.66)
+- 02:40:00 Carbon bias breaks death spirals on bad seeds — changes early mining decisions
+- 02:42:00 HighEff (no scramble + high deposit threshold): 8a=0.00, 4a=0.96. Confirmed: scramblers needed.
+- 02:45:00 CRITICAL BUG FOUND: num_agents uses total (8) in 4v4 instead of per-team (4).
+  - In 75% of tournament (4-agent), Aggressive uses 8-agent budgets → too many aligners
+  - AlphaTeamFix already exists to fix this
+- 02:46:00 Created AlphaTeamCarbonPolicy: TeamFix + CarbonBoost. Testing now.

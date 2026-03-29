@@ -7444,3 +7444,209 @@ class AlphaTeamFixPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaHighEffAgentPolicy — Aggressive + efficient mining (high deposit threshold)
+# + no scrambling (idle mine instead) + carbon bias
+# Combines best elements from testing.
+# ---------------------------------------------------------------------------
+
+class AlphaTeamCarbonAgentPolicy(AlphaTeamFixAgentPolicy):
+    """TeamFix + CarbonBoost: proper team-size budgets + carbon bias.
+
+    Combines the two most impactful fixes:
+    1. TeamFix: correct per-team agent count for budgets
+    2. CarbonBoost: 50% carbon-biased miners for the #1 bottleneck
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self._agent_id % 2 == 0:
+            self._default_resource_bias = "carbon"
+            self._resource_bias = "carbon"
+
+
+class AlphaTeamCarbonPolicy(MettagridSemanticPolicy):
+    """TeamCarbon: proper team-size budgets + carbon-biased mining."""
+    short_names = ["alpha-team-carbon"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTeamCarbonAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaHighEffAgentPolicy(AlphaAggressiveAgentPolicy):
+    """High efficiency: optimized mining + no scrambling waste + carbon bias.
+
+    Key changes from Aggressive:
+    1. Higher deposit threshold (20) — fewer trips to hub, more mining per trip
+    2. Idle aligners mine instead of scramble — sustain economy, don't waste hearts
+    3. Carbon bias for even agents — address carbon bottleneck
+    4. No scramblers in early game — pure economy + alignment focus
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self._agent_id % 2 == 0:
+            self._default_resource_bias = "carbon"
+            self._resource_bias = "carbon"
+
+    def _should_deposit_resources(self, state: MettagridState) -> bool:
+        """Higher deposit threshold (20) for more efficient mining trips."""
+        cargo = _h.resource_total(state)
+        if cargo <= 0:
+            return False
+        # Miners: batch to 20 before depositing
+        threshold = 20 if _h.has_role_gear(state, "miner") else 4
+        if cargo >= threshold:
+            return True
+        # Near hub, deposit anything
+        hub = self._nearest_hub(state)
+        if hub is not None:
+            dist = _h.manhattan(_h.absolute_position(state), hub.position)
+            if dist <= 2 and cargo >= 4:
+                return True
+        # If retreating with cargo, deposit
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if hp < 30 and cargo >= 8:
+            return True
+        return False
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner: align > expand > mine. Never scramble (saves hearts)."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Idle: ALWAYS mine to sustain economy (never scramble — saves hearts for alignment)
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Same as Aggressive but fewer scramblers — pure economy + alignment."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            if min_res >= 50 and step >= 500:
+                aligner_budget = min(3, num_agents - 1)
+            return aligner_budget, 0  # Zero scramblers
+
+        # 5+ agents
+        if step < 30:
+            return 2, 0
+
+        economy_surplus = min_res >= 100
+        economy_crisis = min_res < 3 and not can_hearts
+
+        if economy_surplus:
+            pressure_budget = min(num_agents - 1, 7)
+        elif step < 100:
+            pressure_budget = 3
+        elif economy_crisis:
+            pressure_budget = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(5, num_agents - 2)
+
+        # Only 1 scrambler late game with surplus — pure alignment focus
+        scrambler_budget = 0
+        if step >= 5000 and min_res >= 50:
+            scrambler_budget = 1
+
+        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaHighEffPolicy(MettagridSemanticPolicy):
+    """HighEff: efficient mining, no scramble, carbon bias, pure alignment focus."""
+    short_names = ["alpha-high-eff"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaHighEffAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
