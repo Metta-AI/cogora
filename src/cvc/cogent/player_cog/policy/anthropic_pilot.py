@@ -12562,3 +12562,112 @@ class AlphaTournamentV16Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV17: Adaptive partner policy ─────────────────────────────────────────
+
+class AlphaTournamentV17AgentPolicy(AlphaTournamentV12AgentPolicy):
+    """TournamentV17: TV12 stagnation + adaptive partner response.
+
+    Key insight: tournament score is average across all partner pairings.
+    When paired with a weak partner, we need to carry (more alignment).
+    When paired with a strong partner, we should support (more mining).
+
+    Adaptation:
+    - Track junction growth rate from step 500-1000 (after initial ramp)
+    - If growth is strong (>15 junctions by step 1000): partner is good → support mode
+    - If growth is weak (<10 junctions by step 1000): partner is weak → carry mode
+
+    Carry mode: 3 aligners, 1 miner (maximize our alignment contribution)
+    Support mode: 1-2 aligners, 2-3 miners (boost economy for strong partner)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._partner_strength_assessed = False
+        self._strong_partner = False
+        self._junction_at_1000 = 0
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: TV9 fix
+        if team_size <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        # Self-play: use parent budgets
+        if team_size >= num_agents:
+            return super()._pressure_budgets(state, objective=objective)
+
+        # Tournament: assess partner at step 1000
+        if step >= 1000 and not self._partner_strength_assessed:
+            self._partner_strength_assessed = True
+            team_id = _h.team_id(state)
+            friendly_count = len(self._known_junctions(
+                state, predicate=lambda j: j.owner == team_id
+            ))
+            self._junction_at_1000 = friendly_count
+            # If partner is contributing, we have >15 junctions by step 1000
+            self._strong_partner = friendly_count >= 15
+
+        max_roles = max(team_size - 1, 1)
+
+        if step < 500:
+            # Early game: standard ramp
+            if step < 100 or (min_res < 10 and not can_hearts):
+                return min(1, max_roles), 0
+            return min(2, max_roles), 0
+
+        if self._strong_partner:
+            # Strong partner: support with more mining
+            if min_res < 30:
+                return min(1, max_roles), 0
+            return min(2, max_roles), 0
+        else:
+            # Weak partner: carry with more alignment
+            if min_res < 10 and not can_hearts:
+                return min(1, max_roles), 0
+            if min_res < 30:
+                return min(2, max_roles), 0
+            return min(3, max_roles), 0
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Least resource bias, silicon priority when low in tournament."""
+        resources = _shared_resources(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if team_size < num_agents:
+            silicon = resources.get("silicon", 0)
+            if silicon < 80:
+                return MacroDirective(resource_bias="silicon")
+
+        return MacroDirective(resource_bias=_least_resource(resources))
+
+
+class AlphaTournamentV17Policy(MettagridSemanticPolicy):
+    """TournamentV17: TV12 stagnation + adaptive partner response."""
+    short_names = ["alpha-tournament-v17"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV17AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

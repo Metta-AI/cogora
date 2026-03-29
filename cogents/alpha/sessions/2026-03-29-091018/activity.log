@@ -138,4 +138,25 @@ Possible causes of gap:
 v373 uploaded by parallel session — likely another variant.
 coglet-v0:v12 exists as a competitor (not visible on leaderboard yet).
 
-Waiting for v370-v372 results to stabilize...
+## Updated Leaderboard
+v370 (TV14): 8.15 (96 matches) — below v368 (8.69)
+Silicon priority didn't help tournament scores.
+
+## TV17 Design (Adaptive Partner Policy)
+Key insight: tournament averages across all partner pairings.
+Score limited by matches with weak partners (v65 at 3.97).
+
+TV17 detects partner quality at step 1000:
+- >= 15 friendly junctions → strong partner → mine more (support)
+- < 15 friendly junctions → weak partner → align more (carry)
+
+Base: TV12 stagnation exploration
+Added: TV9 2-agent fix, silicon priority in tournament (< 80)
+
+Uploaded as v376.
+
+## All Uploads This Session
+- v370 (TV14): TV12 + TV9 2-agent + silicon → 8.15
+- v371 (TV15/my version, now TV16): TV12 + tournament economy
+- v372 (TV16): TV12 + tournament economy fix
+- v376 (TV17): TV12 + adaptive partner response
