@@ -1,54 +1,30 @@
 # Session 2026-03-29-080619
 Status: in-progress
 
-## LEADERBOARD (latest)
-1. v363: 8.66 (56 matches)
-2. v364 (TV7): 8.65 (53 matches)
-3. v366 (TV8-multi): 8.31 (51 matches) — SURPRISE!
-4. v348: 7.60 (90 matches)
-5. v365 (raw TV2): 7.41 (57 matches)
+## LEADERBOARD (stabilized ~90 matches each)
+1. **v367 (TV9): 8.61** (9 matches — early but leading!)
+2. v363: 8.59 (89 matches)
+3. v364 (TV7): 8.55 (89 matches)
+4. v366 (TV8-multi): 8.35 (86 matches)
+5. v365 (raw TV2): 7.63 (89 matches)
+6. v348: 7.60 (90 matches)
 
-All new policies beating v348! TV8-multi performing well despite poor self-play.
+TV9 = TV7 + fixed 2a timing. Leading despite few matches.
 
-## v364 by Config (42 matches)
-- us=2a: avg=6.41 (v348: 6.04) — +6%
-- us=4a: avg=9.27 (v348: 7.87) — +18%!
-- us=6a: avg=9.21 (v348: 7.95) — +16%!
+## Key Tournament Findings
+- v364 (TV7): +12% over v348 across 89 matches. Confirmed.
+- v366 (TV8-multi): +10% over v348. Phase-based helps tournament!
+- v365 (raw TV2): matches v348 (7.63 vs 7.60). LLM wrapper negligible.
+- v367 (TV9): early results promising (8.61 at 9 matches, 9.48 best 4a)
 
-## v367 (TV9) Status
-Qualifying. Fix: revert 2a timing to step 200 (from TV7's 500).
-TV7's 2a optimization helps with good teammates (slanky: 11.37)
-but hurts with weak ones (old alphas: 5.54 → same as TV2).
+## v367 Completed Matches
+- 9.48 us=4a vs v51(4a)
+- 8.60 us=4a vs v59(4a)
 
-## Uploads This Session
-- v364 (TV7): competition, #2
-- v365 (raw TV2): competition
-- v366 (TV8-multi): competition, #3
-- v367 (TV9): qualifying
+## Uploads
+v364 (TV7), v365 (raw TV2), v366 (TV8-multi), v367 (TV9)
 
-## Analysis: Why >10 is Hard
-Even at 8.65 avg, need +16% more to hit 10.
-2-agent games ceiling at ~6-7 avg drags everything down.
-Best individual: 13.95 (4a), 11.80 (6a), 11.37 (2a)
-Need structural improvement, not incremental tuning.
-
-## Self-Play Results (this session, 8a, 5K steps, seed 0)
-| Policy | Score | Notes |
-|--------|-------|-------|
-| TV2    | 3.73  | Baseline, current tournament champion |
-| TV7    | 5.38  | +44% over TV2! 2-agent mining + explore-idle |
-| TV8    | 1.19  | Wide explore only — terrible |
-| TV9-explore | 2.88  | Explore-always idle — no scramble = Clips dominate |
-| TV9-scramble+wideexplore | 4.25 | Scramble + wide explore idle |
-| TV9-scramble+explore | 4.25 | Scramble + default explore idle |
-
-## TV7 10K steps: 7.65 (close to v348 tournament avg 7.60)
-
-## Key Learnings
-1. Idle scrambling is CRITICAL — disrupts Clips junctions
-2. Junction discovery IS a bottleneck (19/65 at step 1000) but...
-3. Explore-always hurts because it removes scramble pressure
-4. TV7's explore/mine alternation is well balanced
-5. Wide explore offsets (radius 30+) hurt — agents go too far
-6. TV7/TV9 in tournament: 8.65 avg — big improvement over v348's 7.60
-7. 2-agent games drag average down (ceiling ~6-7)
+## Strategy Assessment
+All policies converging to 8.3-8.6 range. Gap to >10 is ~16%.
+2-agent performance (avg ~6.4) is the main drag.
+Need fundamentally different approach for 2a or major breakthrough.
