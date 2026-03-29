@@ -71,4 +71,15 @@ Combined best features:
 - TV9's fixed 2-agent timing (align at step 200, not 500)
 - Silicon priority mining when silicon < 100 (prevents heart collapse)
 
-## Uploading TV13 as next tournament version
+## Uploads
+- v370 (TV14): TV12 stagnation + TV9 2-agent fix + silicon priority
+  Self-play 10K avg: 12.70
+
+## Merge Conflict Resolution
+Parallel session created TV13 with TV12 + TV11 explorer + chain push.
+My version renamed to TV14 (TV12 + TV9 2-agent + silicon priority).
+
+## Current Tournament Versions
+- v367 (TV9): 8.61 avg — current leader
+- v368 (TV12): stagnation exploration — qualifying
+- v370 (TV14): TV12 + 2-agent fix + silicon — qualifying
