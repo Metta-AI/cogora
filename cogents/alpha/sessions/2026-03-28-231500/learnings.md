@@ -1,54 +1,58 @@
 # Session 2026-03-28-231500 Learnings
 
-## Key Discovery: Extractor Exploration Bug
-Miners ignore undiscovered resource types. On 2-agent games, oxygen extractors
-were never found, leaving oxygen at 4 while other resources reached 300+. Hearts
-blocked entirely since they need 7 of EACH element.
+## Key Discovery: Economy-Gated Budgets + Chain Expansion
+The best local scoring comes from combining two innovations:
+1. **Economy-gated aligner budgets**: Scale aligners based on min_res thresholds
+   (not fixed counts). Prevents the late-game collapse caused by heart starvation.
+2. **Chain expansion weights**: expansion_weight=20 (2x default) strongly prefers
+   junctions that unlock other junctions, building connected networks faster.
 
-Fix: When bottleneck resource < 7 with 10x resource imbalance and no known
-extractors for it, force exploration instead of mining wrong resource.
-Result: 2a 0.65→1.66 (+155%), 8a 6.62→8.09 (+22%).
+## Local Scoring Progression (8a, default seed)
+| Policy | Score | Key Change |
+|--------|-------|------------|
+| Aggressive | 2.55 | 6 aligners, 1 miner — economy collapses step 2000 |
+| Balanced | 3.16 | Economy-gated budgets, silicon mining — +24% |
+| AdaptiveV3 | 3.77 | Dynamic scaling (1-5 aligners) — +48% |
+| ChainExpand | 5.91 | expansion_weight=20 + explore idle — +132% |
+| ChainDefense | 6.49 | + late-game scramble defense — +155% |
 
-## Retreat Margin Optimization
-Original AlphaAggressive had 26 retreat actions vs 19 alignment actions per game.
-Tighter margins (base 10 vs 15, hearts*3 vs *5, late +5 vs +10) reduced retreats
-to 17 and increased alignments to 36 (nearly 2x). No increase in deaths.
+## Tournament vs Local Disconnect
+Local scores do NOT predict tournament performance:
+- Aggressive: 2.55 local → 6.54 tournament (#1)
+- ChainExpand: 5.91 local → 5.52 tournament (#4)  
+- ChainDefense: 6.49 local → 3.06 tournament (#14!)
 
-## What Didn't Work This Session
-1. **AlphaSustainPolicy** (conservation): Hoarded resources → fewer junctions (6-8 vs 10-14)
-2. **AlphaExplorerPolicy** (wider exploration): Delayed early alignment → slower start
-3. **Bridge scoring** (prefer cluster junctions): Sent agents too far → -37%
-4. **Lower surplus threshold** (100→50): Collapsed economy on good seeds (7.95→3.83)
-5. **Early 4a scrambler** (step 500): Lost an aligner slot → 3.34 vs 4.29
-6. **Silicon-first mining**: Silicon not actually the bottleneck (60 extractors, not 45)
+Key reason: tournament opponents are WEAKER than the clips AI used locally.
+- Against weak opponents, aggressive play (max aligners, idle-scramble) works best
+- Against strong opponents, economy management prevents collapse
+- Defense scrambling wastes hearts vs weak opponents (no benefit from denying their score)
 
-## What Worked
-1. **Tighter retreat margins**: +100% alignment actions, biggest single improvement
-2. **Extractor exploration fix**: Critical for 2-agent games, helps all configs
-3. **4a 3-aligner budget** (min_res>=50, step>=500): Keeps alignment pressure high
+## Multi-Seed Variance
+Scores vary 2-4x between seeds on the SAME policy:
+- AdaptiveV3: 1.84, 5.13, 8.81 (4.8x range)
+- ChainExpand: 2.09, 5.99, 5.54 (2.9x range)
+- ChainDefense: 5.50, 6.21, 3.00 (2.1x range)
 
-## Performance Summary
-- 8a avg: 6.08 (seeds 1-5: 7.97, 4.85, 5.55, 2.64, 9.40)
-- 4a avg: 3.50 (seeds 1-5: 2.99, 2.46, 4.73, 2.20, 5.10)
-- 2a: improved from 0.65 to 1.66
-- Best single seed: 9.40 (8a seed 5)
-- Estimated tournament avg: ~4.2 (75% 4a + 25% 8a)
+ChainDefense has the lowest variance — defense helps on bad seeds.
 
-## Seed Variance
-- 8a range: 2.64-9.40 (3.6x)
-- 4a range: 2.20-5.10 (2.3x)
-- Seed-based comparison unreliable (nondeterministic even with same seed in different runs)
-- Tournament is the only reliable signal
+## What Didn't Work
+- MaxChain (expansion_weight=30): Agents chase distant junctions, ignore nearby easy ones
+- AggroChain (Aggressive + chain weights): Chain weights hurt with too many aligners
+- Lower economy surplus threshold (50 vs 100): Collapses 8a economy
+- Wider exploration offsets (35 vs 22): Delays early game
 
-## Game Mechanics Insights
-- Map has 68 junctions, 60 silicon extractors (not 45 as previously thought)
-- Best scrambler agent cleared 85 enemy junctions in one game
-- Junction count peaks at step 500-1000, declines in late game
-- Enemy (Clips AI) grows from 0→17 junctions by step 5000
+## expansion_weight Sweet Spot
+- Default (10): Adequate but doesn't prioritize chain-building
+- 20: Optimal — +132% local improvement
+- 30: Too high �� agents walk too far for chain targets
+
+## Silicon is THE Bottleneck
+Only 45 silicon extractors on map. Silicon depletes step 3000-3500, killing hearts.
+Silicon-priority mining delays collapse but doesn't prevent it.
+Fundamental limit: 5000-step games outlast silicon supply.
 
 ## Path to Score >10
-1. Current avg ~4-6, need 2-3x improvement
-2. Heuristic ceiling likely ~8-10 on favorable seeds
-3. Need to maintain 10+ junctions throughout entire game
-4. Key bottleneck: network expansion stalls when frontier=0
-5. GPU-accelerated RL training remains the most promising path for >10
+1. v290 is #1 at 6.54 (heuristic ceiling in tournament)
+2. Need tournament opponents to get stronger for economy policies to shine
+3. OR need a qualitative improvement (RL, LLM cyborg that works)
+4. With 67 matches, v290 is stable — we've likely reached heuristic tournament ceiling

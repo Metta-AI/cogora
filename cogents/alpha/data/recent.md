@@ -1,7 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
-- **2026-03-28-231500**: Fixed extractor exploration bug (2a +155%), tighter retreat (+100% alignments). 8a avg 6.08, 4a avg 3.50. Uploaded v303-v311. [sessions/2026-03-28-231500/](sessions/2026-03-28-231500/)
+- **2026-03-28-231500**: ChainExpand (+132% local 8a), economy-gated budgets, extractor bug fix. Tournament: v290 #1 at 6.54, v309 #3 at 5.56. Defense hurts tournament. Uploaded v303-v316. [sessions/2026-03-28-231500/](sessions/2026-03-28-231500/)
 - **2026-03-28-211301**: AlphaAggressivePolicy: +112% 4a (2.37 vs 1.12), +14% 8a (3.97 vs 3.47). No early heart batch, idle-scramble, economy surplus. Silicon depletion bottleneck identified. Uploaded v287-v301. [sessions/2026-03-28-211301/](sessions/2026-03-28-211301/)
 - **2026-03-28-191208**: Scoring confirmed cooperative (both players same score). Clips analysis: 4 ships × 70-tick cycle. AlignMax worse (economy starvation). Created AlphaOptimal (v65 targeting + improvements). Uploaded v280-v298. [sessions/2026-03-28-191208/](sessions/2026-03-28-191208/)
 - **2026-03-28-201449**: Fixed miner sticky-target bug in main AlphaCogAgentPolicy (+86% self-play). Shared WorldModel broke pathfinding (reverted). All heuristics converge to 2.0-2.5 tournament. Uploaded v270-v279. [sessions/2026-03-28-201449/](sessions/2026-03-28-201449/)
