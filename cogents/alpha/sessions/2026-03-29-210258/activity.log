@@ -40,3 +40,13 @@ started: 2026-03-29T21:02:58Z
   - Scrambling hurts shared score; exploring finds more junctions to align
   - Dual aligner (TV102) helps mildly but combo with no-batch (TV105) is toxic
   - Single aligner + explore > dual aligner approaches
+- **CRITICAL BUG FOUND**: policy_env_info.num_agents is ALWAYS 8 (total agents), NOT team size!
+  ALL TV90-TV108 checks `num_agents <= 2` NEVER fire. All 2-agent-specific code was dead code.
+  Score differences between versions are pure opponent-mix variance, not real improvements.
+  The correct way to get team size is: `len(self._shared_team_ids) if self._shared_team_ids else 8`
+  (as TV81 does in _aligner_action).
+- Created TV109-TV111 with FIXED team size detection:
+  - TV109: FIXED explore-first for 2-agent (the real TV104)
+  - TV110: FIXED dual aligner + explore-first (the real TV105)
+  - TV111: FIXED explore-first for ALL team sizes + skip batch in 2-agent
+- Uploaded: v470 (TV109), v471 (TV110), v472 (TV111) to qualifying.
