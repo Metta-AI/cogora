@@ -31,3 +31,24 @@ Even at 8.65 avg, need +16% more to hit 10.
 2-agent games ceiling at ~6-7 avg drags everything down.
 Best individual: 13.95 (4a), 11.80 (6a), 11.37 (2a)
 Need structural improvement, not incremental tuning.
+
+## Self-Play Results (this session, 8a, 5K steps, seed 0)
+| Policy | Score | Notes |
+|--------|-------|-------|
+| TV2    | 3.73  | Baseline, current tournament champion |
+| TV7    | 5.38  | +44% over TV2! 2-agent mining + explore-idle |
+| TV8    | 1.19  | Wide explore only — terrible |
+| TV9-explore | 2.88  | Explore-always idle — no scramble = Clips dominate |
+| TV9-scramble+wideexplore | 4.25 | Scramble + wide explore idle |
+| TV9-scramble+explore | 4.25 | Scramble + default explore idle |
+
+## TV7 10K steps: 7.65 (close to v348 tournament avg 7.60)
+
+## Key Learnings
+1. Idle scrambling is CRITICAL — disrupts Clips junctions
+2. Junction discovery IS a bottleneck (19/65 at step 1000) but...
+3. Explore-always hurts because it removes scramble pressure
+4. TV7's explore/mine alternation is well balanced
+5. Wide explore offsets (radius 30+) hurt — agents go too far
+6. TV7/TV9 in tournament: 8.65 avg — big improvement over v348's 7.60
+7. 2-agent games drag average down (ceiling ~6-7)
