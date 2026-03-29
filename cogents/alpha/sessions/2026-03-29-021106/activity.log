@@ -10,3 +10,15 @@ Previous session (010815) crashed. Key state:
 
 ## Actions
 - 02:11:06 Session started. Recovered crashed session 010815.
+- 02:15:00 Tournament matches for v319-v324 still running/scheduled. No completed results yet.
+- 02:17:00 Free-play results: Coop 8a=1.38 (terrible), EconMax 8a=0.00 (terrible), Aggressive 8a=6.31 (baseline)
+- 02:17:00 KEY INSIGHT: Removing scramblers (Coop) HURTS in self-play. Clips ships scramble unchecked → our junctions destroyed.
+- 02:17:00 KEY INSIGHT: Too many miners (EconMax) = zero alignment = zero score. Economy without pressure is useless.
+- 02:20:00 JUNCTION TRAJECTORY ANALYSIS (Aggressive 8a):
+  - Steps 0-500: Ramp to 16j
+  - Steps 500-2500: Peak 17-20j
+  - Steps 2500-5000: Decline 20→7j (Clips scrambles + carbon depletion)
+  - Steps 5000-10000: FLAT at 7j (economy dead, can't re-align)
+- 02:20:00 ROOT CAUSE: Carbon depletion is #1 bottleneck. Hub carbon=0 by step 6000. Aligner gear costs 3x carbon.
+- 02:20:00 SCORE MATH: If sustain 10j vs 7j in steps 5000-10k, score goes from ~6.3 to ~9+
+- 02:22:00 Creating AlphaFocusedPolicy: hub-proximal junctions + faster ramp + economy sustain
