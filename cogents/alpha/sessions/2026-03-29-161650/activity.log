@@ -1,29 +1,24 @@
 ## Session 2026-03-29-161650
 Status: in-progress
 
-### Plan
-- Check latest tournament results for v410/v414
-- Test intermediate scramble thresholds
-- Combine TV50 threshold with TV46 targeting
-- Upload improved policies
+### Tournament Results
+New uploads (10-13 matches, converging):
+  1. **v419 (TV58) = 12.87 (10m) — POTENTIAL NEW #1!** Kitchen sink: TV46+TV50+70% scramble
+  2. v420 (TV59) = 12.57 (10m) — TV55 + aggressive 2-agent
+  3. v416 (TV55) = 12.51 (12m) — TV46 targeting + TV50 threshold
+  4. v418 (TV57) = 12.25 (13m) — TV50 threshold + 70% scramble
+  5. v421 (TV60) = 12.01 (10m) — intermediate threshold (10)
+  6. v417 (TV56) = 10.60 (12m) — very low threshold (3), confirmed bad
 
-### Actions
-- Created TV55-TV60 policy variants
-- Uploaded: v416=TV55, v417=TV56, v418=TV57, v419=TV58, v420=TV59, v421=TV60
-- Self-play: TV55=5.22, TV56=4.22 (anti-correlated with tournament)
-
-### Tournament Results (evolving)
 Stable (99 matches):
-  1. v414 (TV53) = 12.63
-  2. v410 (TV50) = 12.59
-  3. v388 (TV25) = 12.38
+  v414 (TV53) = 12.63 — current stable #1
+  v410 (TV50) = 12.59
 
-New uploads (early, 1-6 matches):
-  v420 (TV59) = 14.60 (1m) — aggressive 2-agent, too early
-  v419 (TV58) = 12.80 (1m) — kitchen sink, too early
-  v416 (TV55) = 12.51 (6m) — TV46+TV50 combo, converging
-  v418 (TV57) = 12.48 (6m) — TV50+70% scramble, converging
-  v417 (TV56) = 4.99 (1m) — very low threshold (3), likely bad
+### Key Insights
+- TV58 (all 3 improvements combined) > TV55 (targeting+threshold) > TV53 (targeting+scramble ratio)
+- Threshold=3 (TV56) confirmed too aggressive — drains economy
+- Threshold=10 (TV60) = 12.01 — threshold=7 (TV50) is still better
+- The three improvements are additive: targeting + threshold + scramble ratio
 
-Key: v416 and v418 at 6 matches are close to v414/v410. Could overtake with more data.
-v417 (threshold=3) confirmed too aggressive.
+### Policies Created/Uploaded
+- v416=TV55, v417=TV56, v418=TV57, v419=TV58, v420=TV59, v421=TV60
