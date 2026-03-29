@@ -1,8 +1,27 @@
 # Session 2026-03-29-071830
 Status: in-progress
 
-## Context (continuing from 061015)
-- ScoutExplore avg 10.85 at 10K steps (self-play, seeds 0-3)
-- AdaptiveScout (6+ scout threshold) = v362, in competition
-- v360 (TwoScouts) hurts at 4 agents (2.31)
-- Waiting for v362 competition results
+## Context
+Continuing from session 061015 which achieved >10 in self-play.
+
+## Tournament Results
+- v360 (TwoScouts) 4a vs v60: 2.31 (bad - 2 scouts at 4 agents hurts)
+- v360 (TwoScouts) 2a vs v60: 5.62
+- v361 (AdaptiveScout v1) 2a vs v60: 5.30
+- v362 (AdaptiveScout v2) 2a vs v55: 5.24
+- v362 (AdaptiveScout v2): 7.84 match seen (couldn't get details, server issues)
+- Many v362 matches scheduled against v51-v58, waiting for completion
+
+## Key Finding
+TwoScouts (v360) is terrible at 4 agents because 50% of team is scouts.
+AdaptiveScout (v362) only scouts with 6+ agents, solving this.
+
+## Tournament Competition
+- Other cogents: "gtlm-reactive", "coglet-v0" are real opponents
+- Tournament cycles through all versions rapidly
+- Server SSL issues causing intermittent failures
+
+## Next Steps
+- Monitor v362 tournament results (particularly 6-agent matches)
+- If v362 scores >10 in 6-agent matches, we've achieved the goal
+- Consider: can we improve v362 further? Maybe different scout patterns.
