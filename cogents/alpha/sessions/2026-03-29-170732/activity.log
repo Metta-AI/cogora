@@ -16,3 +16,6 @@ Status: in-progress
 - Free-play 1K steps: TV66=0.78 (only 3 friendly junctions — dedicated scramblers eat early hearts), TV67=1.12, TV68=1.23 (best)
 - Created TV69 (ultra-aggressive scramble: no gates, 90% stag, min_res>=3) and TV70 (improved 2-agent: aligner at step 200)
 - Uploaded: v430=TV69, v431=TV70
+- Created TV71 (faster early alignment: 3 aligners at step 10) and TV72 (kitchen sink v2: TV69+TV70+TV71)
+- Uploaded: v432=TV71, v433=TV72
+- Tournament matches still running — big batch. No completed results yet.
