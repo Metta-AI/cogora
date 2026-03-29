@@ -1,0 +1,13 @@
+# Session 2026-03-29-121717
+Status: in-progress
+
+## Goal: Maintain >10 score, push higher. v378=10.22 is current champion.
+
+## Context
+- Previous session achieved >10 goal with v378 (TV18) at 10.22
+- Bug fix hurts tournament — hub_camp_heal is beneficial
+- v385 (TV21) uploaded but unranked — need to check
+- Focus: understand v378's success, find safe improvements
+
+## Activity
+- [121717] Session started. Handling interrupted session 2026-03-29-111020.
