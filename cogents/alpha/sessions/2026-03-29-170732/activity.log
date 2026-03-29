@@ -44,3 +44,8 @@ External opponents all below 4.0: slanky:v112=3.92, Paz-Bot=3.87. We're 3x bette
 - Defensive scramble targeting hurts: v429=10.11. Default targeting is better.
 - TV61 (80% scramble, TV58 kitchen sink) is the clear winner.
 - Score curve: TV25(12.38) -> TV50(12.59) -> TV53(12.63) -> TV61(12.83)
+
+### More Uploads
+- Created TV73 (85% scramble), TV74 (more aligners when economy healthy), TV75 (lower heart batch target)
+- Uploaded: v434=TV73, v435=TV74, v436=TV75
+- Testing if 85% scramble splits the difference between 80% (12.83) and 100% (9.05)
