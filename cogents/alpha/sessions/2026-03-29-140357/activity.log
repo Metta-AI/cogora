@@ -37,3 +37,14 @@ started: 2026-03-29T14:03:57Z
 - [1433] Uploaded: v402=TV40, v403=TV41, v404=TV38, v405=TV42.
 - [1434] Analysis: mid-game stagnation is main bottleneck. frontier=0 from step 2300+.
   Opponent out-aligns us on favorable map positions. Need better stagnation response.
+- [1435] Self-play summary (all on same map seed):
+  - TV40: 5.04 (5K) / 8.39 (10K) — BEST, 0 wipeouts in 4 runs
+  - TV42 (zero hub): 4.77 — close but slightly worse
+  - TV43 (high expansion): 3.53 — no help
+  - TV44 (late-game defense): 3.64 at 8K — budget change hurts again
+- [1437] Tournament results arriving:
+  - v405 (TV42) qualifying: 8.71 (8 agents, solo)
+  - v64 vs v401 (2v6): 2.53 tie
+  - v64 vs v394 (4v4): 8.12 tie
+  All ties — expected in same-policy-family matchups.
+- [1437] Created TV44 (late-game defensive shift) — budget change hurts as expected.

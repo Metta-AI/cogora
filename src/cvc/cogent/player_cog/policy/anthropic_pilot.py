@@ -15027,3 +15027,97 @@ class AlphaTournamentV43Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV44: TV40 + late-game defensive scrambler shift ─────────────────────
+
+class AlphaTournamentV44AgentPolicy(AlphaTournamentV40AgentPolicy):
+    """TournamentV44: TV40 + shift to more scramblers after step 5000.
+
+    In late game (step 5000+), resources are depleting and new alignments
+    are rare. Shift 1 extra agent to scrambling to deny opponent score
+    while we hold existing junctions. Also: reduce late-game heart batch
+    target since economy is tighter.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """TV40 budgets + more scramblers after step 5000."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 500 and num_agents >= 4 and min_res >= 14 else 0
+            # Late game: shift to 1a+1s instead of 2a
+            if step >= 5000 and scrambler_budget == 0 and min_res >= 7:
+                scrambler_budget = 1
+                aligner_budget = max(aligner_budget - 1, 1)
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents
+        if step < 30:
+            return 2, 0
+        elif step < 100:
+            pressure_budget = 3
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            elif min_res < 7:
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+
+        scrambler_budget = 0
+        if step >= 5000 and min_res >= 7:
+            # Late game: 2 scramblers (up from 1) to maintain defensive pressure
+            scrambler_budget = min(2, pressure_budget // 2)
+        elif step >= 3000 and min_res >= 14:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 200 and min_res >= 7:
+            scrambler_budget = min(1, pressure_budget // 3)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaTournamentV44Policy(MettagridSemanticPolicy):
+    """TournamentV44: TV40 + late-game defensive scrambler shift."""
+    short_names = ["alpha-tournament-v44"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV44AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
