@@ -1,35 +1,25 @@
 # Session 2026-03-29-100801
 Status: in-progress
 
-## TV19 Results
+## Summary
+Created TV19: agent 0 uses full-map explore offsets (r15-r38) during idle, others use standard r22.
+Self-play avg 13.49 at 10K steps. Uploaded v379-v381.
+Tournament matches running but not completed yet.
 
-### Self-play (8 agents, 10K steps)
-| Seed | Score |
-|------|-------|
-| 0    | 10.53 |
-| 3    | 14.94 |
-| 4    | 14.01 |
-| 5    | 14.46 |
-| **Avg** | **13.49** |
+## TV19 Self-play Results (10K steps, 8 agents)
+Seeds: 10.53, 14.94, 14.01, 14.46 → avg 13.49
 
-### Self-play comparison (8 agents, 5K steps)
-| Policy | Seed 0 | Seed 3 | Seed 4 | Avg |
-|--------|--------|--------|--------|-----|
-| TV9    | 5.56   | 6.17   | 7.44   | 6.39 |
-| TV19   | 5.89   | 6.17   | 8.45   | 6.84 |
+## TV19 vs TV9 (5K steps, 8 agents)
+TV9: 5.56, 6.17, 7.44 → avg 6.39
+TV19: 5.89, 6.17, 8.45 → avg 6.84 (+7%)
 
-### Design
-- Inherits from TV9 (best tournament base)
-- Only overrides _explore_action for agent 0 aligner when team >= 5
-- Agent 0 cycles through 32 full-map waypoints (r15-r38) during idle explore
-- Other agents use standard r22 offsets
-- Gate: team_size >= 5 (small teams use standard TV9 behavior)
+## Key Findings
+1. Idle stagnation: aligners loop at same position when no frontier junctions
+2. All-agent explore (TV15): +30% on discovery maps, -52% on defense maps
+3. One-agent explore (TV19): consistent +7% without defense regression
+4. Team_size gate needed: wide explore hurts with <5 agents
+5. Silicon priority causes wipeouts — removed
 
-### Uploads
-- v379: TV19 (no LLM, no team_size gate)
-- v380: TV19 (with LLM key, no team_size gate)
-- v381: TV19 (with team_size gate fix)
-
-### Tournament Status
-Matches running/scheduled. Waiting for results.
-New competitor: v56 (unknown, possibly slanky/coglet/other)
+## Uploads
+- v379: TV19 (no gate), v380: TV19+LLM, v381: TV19 (team_size gate)
+- Tournament matches running against v53, v51, Paz-Bot, slanky
