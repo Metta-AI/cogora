@@ -12784,3 +12784,157 @@ class AlphaTournamentV19Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV20: TV12 stagnation + full-map explore + silicon priority ─────────
+
+class AlphaTournamentV20AgentPolicy(AlphaTournamentV12AgentPolicy):
+    """TournamentV20: TV12 stagnation + full-map exploration + silicon awareness.
+
+    Improvements over TV12:
+    1. Replace TV12's 3-ring stagnation explore (max r=35) with TV15's
+       full-map waypoints (reaches r=38, corners, edges).
+    2. During stagnation, explore-ONLY (no scrambling) — save hearts
+       for aligning newly-discovered junctions.
+    3. Silicon priority mining (TV18 style): only when genuinely bottleneck.
+    4. Track idle steps as secondary trigger (150 idle → explore).
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._idle_steps = 0
+        self._map_waypoint_index = 0
+
+    def _stagnation_explore(self, state: MettagridState) -> tuple[Action, str]:
+        """Full-map exploration when stagnating (replaces TV12's 3-ring)."""
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+        waypoints = _TV15_FULL_MAP_WAYPOINTS
+        idx = (self._map_waypoint_index + self._agent_id * 7) % len(waypoints)
+        offset = waypoints[idx]
+        absolute_target = (center[0] + offset[0], center[1] + offset[1])
+        if _h.manhattan(current_pos, absolute_target) <= 3:
+            self._map_waypoint_index += 1
+            idx = (self._map_waypoint_index + self._agent_id * 7) % len(waypoints)
+            offset = waypoints[idx]
+            absolute_target = (center[0] + offset[0], center[1] + offset[1])
+        return self._move_to_position(state, absolute_target, summary="stag_map_explore", vibe="change_vibe_aligner")
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """TV12 aligner + full-map stagnation explore + idle tracking."""
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+
+        # Track junction count — detect stagnation (same as TV12)
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        elif (self._peak_junction_count >= 5
+              and step - self._last_junction_growth_step > 300
+              and step > 500):
+            self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            self._idle_steps = 0
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            self._idle_steps = 0
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._idle_steps = 0
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                self._idle_steps = 0
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        self._idle_steps += 1
+        min_res = _h.team_min_resource(state)
+
+        # STAGNATION: full-map explore, skip scrambling to save hearts
+        if (self._stagnation_mode or self._idle_steps >= 150) and hp > 40:
+            return self._stagnation_explore(state)
+
+        # Normal idle: TV12 behavior
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Silicon priority when it's the bottleneck (TV18 style)."""
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        least = _least_resource(resources)
+        if least == "silicon" or silicon < 50:
+            return MacroDirective(resource_bias="silicon")
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaTournamentV20Policy(MettagridSemanticPolicy):
+    """TournamentV20: TV12 stagnation + full-map explore + silicon priority."""
+    short_names = ["alpha-tournament-v20"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV20AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
