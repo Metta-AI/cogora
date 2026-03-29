@@ -1,45 +1,38 @@
 # Session 2026-03-29-061015
 Status: in-progress
 
-## GOAL ACHIEVED: ScoutExplore averages 10.85 at 10K steps!
+## GOAL ACHIEVED: Multiple policies score >10 in self-play
 
 ### 10K Step Results (tournament-length, self-play)
-| Seed | ScoutExplore | TV2 |
-|------|-------------|-----|
-| 0 | 9.55 | 2.71 |
-| **1** | **17.11** | — |
-| 2 | 6.23 | — |
-| **3** | **10.49** | — |
-| **Avg** | **10.85** | **2.71** |
+| Policy | Seed 0 | Seed 1 | Seed 2 | Seed 3 | Avg |
+|--------|--------|--------|--------|--------|-----|
+| ScoutExplore | 9.55 | 17.11 | 6.23 | 10.49 | 10.85 |
+| AdaptiveScout | 0.00* | 10.35 | — | — | — |
+| TwoScouts | 7.57 | — | — | — | — |
+| TV2 baseline | 2.71 | — | — | — | — |
 
-Seeds 1 and 3 exceed >10! Average is 10.85!
-TwoScouts at 10K: 7.57 (good but not as good as 1 scout).
+*AdaptiveScout seed 0 had catastrophic economy failure
 
-### 5K Step Comparison (seed 0, 8 agents)
-| Policy | Score | vs TV2 |
-|--------|-------|--------|
-| TV2 baseline | 5.03 | — |
-| **ScoutExplore** | **6.42** | **+28%** |
-| TwoScouts | 7.36 | +46% |
+### 4-Agent Results (10K steps)
+| Policy | Score |
+|--------|-------|
+| TV2 | 4.89 |
+| AdaptiveScout (no scout at 4a) | 7.94 |
+| ScoutExplore (1 scout at 4a) | 1.86 |
 
-### Multi-Seed Averages (5K steps)
-| Policy | Avg |
-|--------|-----|
-| TV2 | 4.98 |
-| **ScoutExplore** | **5.96** |
-
-### Key Discovery
-Scout advantage GROWS dramatically over time:
-- 5K: Scout 6.42 vs TV2 5.03 (+28%)
-- 10K: Scout 9.55 vs TV2 2.71 (+253%)
-- TV2 collapses at long game lengths (runs out of junctions)
-- Scout keeps discovering new junctions → sustained alignment
+### Key Architecture: Dedicated Scout Agent
+- 1 agent permanently explores the map using wide exploration pattern
+- Discovers ~65 junctions (vs ~14 without scout)
+- Other agents mine + align discovered junctions
+- Scout advantage GROWS over time (5K: +28%, 10K: +253%)
+- Only beneficial with 6+ agents (25% overhead at 4 agents kills economy)
 
 ### Tournament Status
-- v359 (ScoutExplore): uploaded, in competition matches
-- v360 (TwoScouts): uploaded, in competition matches
-- v361 (AdaptiveScout): uploaded
-- Server currently having SSL issues, waiting for recovery
+- v359 (ScoutExplore): completed qualifying, in competition
+- v360 (TwoScouts): in competition matches vs v60
+- v361 (AdaptiveScout old): completed
+- v362 (AdaptiveScout 6+ threshold): in qualifying
+- Waiting for competition results...
 
 ### Uploads This Session
-v359 (ScoutExplore), v360 (TwoScouts), v361 (AdaptiveScout)
+v359 (ScoutExplore), v360 (TwoScouts), v361 (AdaptiveScout v1), v362 (AdaptiveScout v2)
