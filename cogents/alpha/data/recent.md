@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-29-224427**: (interrupted) Uploaded TV117-TV122 (v478-v483). TV117-119 all worse than baseline. Retreat reduction (TV118) initially promising but settled at 10.93. Created TV122 dual aligner for 2v teams. [sessions/2026-03-29-224427/](sessions/2026-03-29-224427/)
 - **2026-03-29-220607**: Found critical num_agents bug (always 8, 2-agent code was dead in TV90-TV108). All no-scramble variants (TV109-TV116, v463-v477) failed — scramble essential for defense. v451=13.31 (#1). Heuristic ceiling ~13. [sessions/2026-03-29-220607/](sessions/2026-03-29-220607/)
 - **2026-03-29-210258**: (interrupted) Created TV102-TV108 (v463-v469), discovered num_agents bug via log analysis. TV104 explore-first initially seemed promising (14.51) but was noise. [sessions/2026-03-29-210258/](sessions/2026-03-29-210258/)
 - **2026-03-29-200453**: Created TV90-TV101 (v451-v462). Tested 2-agent improvements, zero-scramble, stagnation tuning. Zero-scramble fails qualifying. Reduced heart batch kills 2v6. v451 (TV90)=12.83, v449 (TV88)=12.93 remain best. Heuristic ceiling ~13.0. [sessions/2026-03-29-200453/](sessions/2026-03-29-200453/)
@@ -10,6 +11,4 @@
 - **2026-03-29-161650**: (interrupted) Tested TV55-TV65 combo variants. v422 (TV61)=12.83 (#1), v421 (TV60)=12.66 (#2). Uploaded v416-v426. [sessions/2026-03-29-161650/](sessions/2026-03-29-161650/)
 - **2026-03-29-150452**: **NEW #1: v410 (TV50) at 12.69!** Lower scramble threshold (min_res 7 vs 14) is simplest winning change. v414 (TV53) at 12.57 (#2). Created TV47-TV54, uploaded v408-v415. Self-play still anti-correlated with tournament. [sessions/2026-03-29-150452/](sessions/2026-03-29-150452/)
 - **2026-03-29-140357**: **LEADERBOARD: v388=#1 at 12.38!** TV25 (scramble-focused stagnation) dominates tournament. Created TV38-TV46, uploaded v402-v407. TV40 (reduced hub penalty) best in self-play but self-play poorly predicts tournament. TV46 (TV25+TV40+TV28) uploaded as main bet. [sessions/2026-03-29-140357/](sessions/2026-03-29-140357/)
-- **2026-03-29-131500**: **Hotspot weight inversion!** TV28 (hotspot=-10) avg 8.91 vs TV18 7.83 (+13.8%). Uploaded v392-v401. All passed qualifying. Tournament queue slow — no results yet. [sessions/2026-03-29-131500/](sessions/2026-03-29-131500/)
-- **2026-03-29-121717**: Tested TV23-TV27 stagnation variants — ALL worse than TV18. TV18 stagnation is a local optimum (3-ring r=22/30/35, 300-step trigger). v387=10.05 (#1), v378=10.02 (#2). Uploaded v388-v391. [sessions/2026-03-29-121717/](sessions/2026-03-29-121717/)
 
