@@ -13668,3 +13668,168 @@ class AlphaTournamentV27Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV28: TV18 + prefer re-aligning scrambled junctions ──────────────────
+
+class AlphaTournamentV28AgentPolicy(AlphaTournamentV18AgentPolicy):
+    """TournamentV28: TV18 + negative hotspot weight (prefer re-alignment).
+
+    Key insight: When enemy scramblers unalign our junctions, they become
+    neutral again but are still in our network range. Re-aligning them is
+    cheaper than discovering new junctions. Default hotspot_weight=8.0
+    penalizes these, but we WANT to re-align them quickly.
+
+    Change: hotspot_weight = -10.0 (strong preference for re-alignment)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0  # Prefer re-aligning scrambled junctions
+
+
+class AlphaTournamentV28Policy(MettagridSemanticPolicy):
+    """TournamentV28: TV18 + prefer re-aligning scrambled junctions."""
+    short_names = ["alpha-tournament-v28"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV28AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV29: TV18 + faster 4-agent alignment ramp ──────────────────────────
+
+class AlphaTournamentV29AgentPolicy(AlphaTournamentV18AgentPolicy):
+    """TournamentV29: TV18 + faster alignment start for 4-agent games.
+
+    In 4v4 tournament games, TV18 waits until step 100 before first aligner
+    (inherited from AdaptiveV3). Starting alignment at step 50 with even just
+    1 aligner could accumulate more score in the early game.
+
+    Also: in 2-agent games, try aligning earlier (step 300 instead of 500)
+    if economy is healthy.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            # Earlier alignment for 2-agent: step 300 instead of 500
+            if step < 300 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if min_res >= 30:
+                return 1, 0
+            return 0, 0
+
+        if num_agents <= 4:
+            # Start alignment at step 50 instead of 100
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 30:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 100 and step >= 500:
+                aligner_budget = min(3, num_agents - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: use parent (TV7 -> TV2 -> AdaptiveV3)
+        return super()._pressure_budgets(state, objective=objective)
+
+
+class AlphaTournamentV29Policy(MettagridSemanticPolicy):
+    """TournamentV29: TV18 + faster alignment ramp."""
+    short_names = ["alpha-tournament-v29"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV29AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV30: TV18 + TV28 re-alignment + TV29 faster ramp (combined) ────────
+
+class AlphaTournamentV30AgentPolicy(AlphaTournamentV18AgentPolicy):
+    """TournamentV30: TV18 + re-alignment preference + faster ramp.
+
+    Combines TV28 (negative hotspot weight) and TV29 (faster alignment ramp).
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 300 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if min_res >= 30:
+                return 1, 0
+            return 0, 0
+
+        if num_agents <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 30:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 100 and step >= 500:
+                aligner_budget = min(3, num_agents - 1)
+            return aligner_budget, 0
+
+        return super()._pressure_budgets(state, objective=objective)
+
+
+class AlphaTournamentV30Policy(MettagridSemanticPolicy):
+    """TournamentV30: TV18 + re-alignment + faster ramp (combined)."""
+    short_names = ["alpha-tournament-v30"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV30AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
