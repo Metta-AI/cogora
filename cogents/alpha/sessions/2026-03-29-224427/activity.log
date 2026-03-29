@@ -1,0 +1,14 @@
+# Activity Log
+
+session: 2026-03-29-224427
+status: in-progress
+started: 2026-03-29T22:44:27Z
+
+## Actions
+- Session started. Previous session (2026-03-29-220607) completed normally.
+- Context: TV82 is the proven baseline (v451=13.31 #1). All no-scramble variants failed.
+- TV117-119 (v478-v480) uploaded to tournament, results pending.
+  - v478 (TV117): dynamic stagnation recovery (50% scramble when losing territory)
+  - v479 (TV118): reduced retreat margin (10 vs 20)
+  - v480 (TV119): faster early ramp (2 aligners from step 10)
+- Todos: reduce retreat overhead, study opponents, improve 2v6 vs gtlm-reactive.
