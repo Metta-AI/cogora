@@ -7,3 +7,13 @@ Status: in-progress
 - Combine TV50 threshold with TV46 targeting
 - Study opponent strategies
 - Upload improved policies
+
+### Actions
+- Created TV55-TV58 policy variants:
+  - TV55: TV46 targeting + TV50 threshold (min_res >= 7) — main combo hypothesis
+  - TV56: TV50 + very low threshold (min_res >= 3) — testing lower bound
+  - TV57: TV50 threshold + 70% scramble ratio — combines frequency + intensity
+  - TV58: TV46 + TV50 + 70% scramble — kitchen sink combo
+- Uploaded: v416=TV55, v417=TV56, v418=TV57, v419=TV58
+- Running self-play: TV55 and TV56 at 5000 steps
+- Tournament: all recent matches still running/scheduled, no new completed results yet
