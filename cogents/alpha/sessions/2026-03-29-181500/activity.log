@@ -24,3 +24,8 @@ started: 2026-03-29T18:08:13Z
 - Created TV81: TV79 (bridge scramble) + TV70 (2-agent improvement) combined
 - Competition matches now using v56/v57 as baseline (auto-promoted versions)
 - Asymmetric agent counts in competition (6 vs 2) — 2-agent performance matters
+- Qualifying results: v437 (TV76)=14.11, v438 (TV77)=9.91, v439 (TV78)=14.11
+- Competition: v437 scored 13.02 in 6v2 vs v13 (1 match completed so far)
+- Reference: v422 (TV61) competition scores: 14.65 (4v4), 12.24 (6v2), 14.97 (2v6)
+- Uploaded v442 (TV81: TV79 bridge scramble + TV70 2-agent improvement)
+- All variants now in competition pipeline. Waiting for more results.
