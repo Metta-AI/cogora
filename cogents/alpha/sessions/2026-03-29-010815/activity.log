@@ -1,5 +1,5 @@
 # Activity Log — 2026-03-29-010815
-status: in-progress
+status: interrupted
 
 ## Actions
 - 01:08:15 Session started. Goal: >10 score. Current best #1 at 6.54. Last session interrupted — created Fortress (4.94) and EconSurge (5.15) policies, uploaded v317/v318.
@@ -40,3 +40,5 @@ status: in-progress
   - v290 also collapses to 0j by step 2500 but opponent (v56) sustains → high score
 - 01:56:00 Uploaded v324 = Aggressive (baseline to confirm) to tournament
 - 01:56:00 Strategy pivot: abandon chain expansion for tournament. Focus on incremental Aggressive improvements.
+
+- INTERRUPTED: Session crashed before further progress.
