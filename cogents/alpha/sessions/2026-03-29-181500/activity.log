@@ -20,3 +20,7 @@ started: 2026-03-29T18:08:13Z
 - Created TV79: bridge-aware scramble targeting (bonus for scrambling enemy junctions that unlock unreachable neutrals)
 - Created TV80: dynamic stagnation exit (reduce scramble %, increase explore when junctions lost below 80% of peak)
 - Both pass 100-step tests
+- TV79 scored 3.33 in self-play (best so far, vs TV61=2.16) — bridge-aware scramble targeting is promising
+- Created TV81: TV79 (bridge scramble) + TV70 (2-agent improvement) combined
+- Competition matches now using v56/v57 as baseline (auto-promoted versions)
+- Asymmetric agent counts in competition (6 vs 2) — 2-agent performance matters
