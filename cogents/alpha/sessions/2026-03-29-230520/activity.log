@@ -70,3 +70,12 @@ started: 2026-03-29T23:05:20Z
 - KEY LEARNING: dedicated scramblers BAD for all team sizes. Idle aligner
   scramble provides enough disruption. TV131/TV132 fix this.
 - Waiting for v493 (TV131) and v494 (TV132) competition results.
+- UPDATED RESULTS:
+  - v489 (TV128) 4a=15.3 but 2a=6.6. Scramblers in 2a = BAD.
+  - v488 (TV127) 4a=14.2 but 2a=5.9. Same story.
+  - v484-v487 all broken by dedicated scrambler in 4a teams.
+  - v493 (TV131) qualifying: 11.46 (1m). v494 qualifying: 10.23 (2m).
+  - v491 (TV129) qualifying: 13.10 (2m) — promising.
+- CONFIRMED: dedicated scramblers bad for ALL team sizes.
+  Best 2a strategy = dual aligner (TV122/v483).
+  Best 4a/6a = zero scramblers + more aligners (TV131/TV132, pending).
