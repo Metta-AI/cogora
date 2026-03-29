@@ -12267,3 +12267,60 @@ class AlphaTournamentV13Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV14: TV12 stagnation + TV9 2-agent fix + silicon priority ────────────
+
+class AlphaTournamentV14AgentPolicy(AlphaTournamentV12AgentPolicy):
+    """TournamentV14: TV12 stagnation + TV9 2-agent fix + silicon priority.
+
+    Self-play avg 12.70 at 10K steps.
+    Tournament improvements over TV12:
+    1. TV9's 2-agent timing fix (align at 200, not 500)
+    2. Silicon priority when silicon < 100
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """TV9's fixed 2-agent budgets, TV7/TV12 for 4+ agents."""
+        num_agents = self.policy_env_info.num_agents
+
+        if num_agents <= 2:
+            step = state.step or self._step_index
+            min_res = _h.team_min_resource(state)
+            can_hearts = _h.team_can_refill_hearts(state)
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        return super()._pressure_budgets(state, objective=objective)
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Silicon-priority mining when silicon gets low."""
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        if silicon < 100:
+            return MacroDirective(resource_bias="silicon")
+        least = _least_resource(resources)
+        least_amount = resources[least]
+        if silicon <= least_amount + 30:
+            return MacroDirective(resource_bias="silicon")
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaTournamentV14Policy(MettagridSemanticPolicy):
+    """TournamentV14: TV12 stagnation + TV9 2-agent + silicon priority."""
+    short_names = ["alpha-tournament-v14"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV14AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

@@ -56,8 +56,19 @@ TV9 at 10K steps: 11.47, 16.94, [retrying seed 2, 4]
 At 10K steps, TV9 already exceeds the >10 goal on some seeds!
 The longer game amplifies the score (more time for aligned junctions to contribute).
 
-## Next Strategy
-Abandon chain push. Focus on:
-1. Test TV9 at 10K to get reliable average
-2. If avg is near 10, upload as-is and iterate from tournament results
-3. If avg is under 10, try: faster aligner ramp, better 4-agent behavior
+## 10K Step Results (matches tournament length)
+
+TV9 10K 8a: 11.47, 16.94, 7.66, 15.39, 10.14 → **avg 12.32**
+TV12 10K 8a: 12.61, 20.05, 5.96 → **avg 12.87** (3 seeds)
+TV13 10K 8a: 12.73, 17.56, 7.10, 16.23, 9.90 → **avg 12.70**
+
+All policies well above 10 in self-play at 10K. Tournament drag comes from
+different team sizes and opponent quality.
+
+## TV13 Design
+Combined best features:
+- TV12's stagnation-adaptive exploration (best self-play performance)
+- TV9's fixed 2-agent timing (align at step 200, not 500)
+- Silicon priority mining when silicon < 100 (prevents heart collapse)
+
+## Uploading TV13 as next tournament version
