@@ -8580,62 +8580,54 @@ class AlphaAdaptiveTeamPolicy(MettagridSemanticPolicy):
 
 
 class AlphaAdaptiveTeamV2AgentPolicy(AlphaAdaptiveTeamAgentPolicy):
-    """AdaptiveTeamV2: Late-game economy fixes.
+    """AdaptiveTeamV2: Safer retreat + gentle late-game economy scaling.
 
     Key improvements over AdaptiveTeam:
-    1. Economy crisis mode: when hub total < 28, drop ALL pressure to mine
-    2. More conservative miner retreat after step 5000 to reduce deaths
-    3. Budget scales down with economy health in mid-late game
+    1. Slightly more conservative retreat for all roles (reduce deaths)
+    2. Very late game (>7000): if economy truly dead, cap aligners at 1
+    3. Keep aggressive alignment in early-mid game (DON'T cut on temp dips)
     """
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Economy-aware budgets with crisis mode."""
+        """Standard budgets but reduce late-game when economy is truly dead."""
         step = state.step or self._step_index
-        resources = _shared_resources(state)
-        total_res = sum(resources.values())
-        min_res = min(resources.values())
+        aligner, scrambler = super()._pressure_budgets(state, objective=objective)
 
-        # Hearts cost 7 of each element = 28 total minimum
-        # If hub can't make even 1 heart, FULL MINING MODE
-        if total_res < 28 or min_res == 0:
-            if step > 500:  # Give early game time to ramp
-                return 0, 0
+        # Only intervene in very late game when economy is genuinely collapsed
+        if step >= 7000:
+            resources = _shared_resources(state)
+            min_res = min(resources.values())
+            total_res = sum(resources.values())
+            # Economy truly dead: can't make hearts (need 7 of each = 28 total)
+            if min_res == 0 and total_res < 50:
+                return min(aligner, 1), 0
 
-        # Late game economy scaling: reduce pressure proportionally
-        if step >= 5000 and min_res < 50:
-            team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
-            # Allow max 1 aligner when economy is struggling
-            if min_res < 20:
-                aligner = min(1, max(team_size - 1, 1))
-                return aligner, 0
-            # Allow max 2 aligners in mid-health
-            aligner = min(2, max(team_size - 1, 1))
-            return aligner, 0
-
-        return super()._pressure_budgets(state, objective=objective)
+        return aligner, scrambler
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
-        """More conservative miner retreat in late game to reduce deaths."""
+        """Slightly more conservative retreat to reduce deaths."""
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if safe_target is None:
+            return hp <= _h.retreat_threshold(state, role) + 5
+        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+        margin = 12  # vs 10 in Aggressive
+        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            margin += 10
+        margin += int(state.self_state.inventory.get("heart", 0)) * 3
+        margin += min(_h.resource_total(state), 12) // 3
+        if not _h.has_role_gear(state, role):
+            margin += 10
         step = state.step or self._step_index
-        if role == "miner" and step >= 5000:
-            hp = int(state.self_state.inventory.get("hp", 0))
-            if safe_target is None:
-                return hp <= _h.retreat_threshold(state, role) + 15
-            safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
-            # Much more conservative margin for late-game miners
-            margin = 25
-            margin += int(state.self_state.inventory.get("heart", 0)) * 3
-            margin += min(_h.resource_total(state), 12) // 2
-            if not _h.has_role_gear(state, role):
-                margin += 12
-            if hp <= safe_steps + margin:
-                return True
+        if step >= 2_500:
+            margin += 7 if role in {"aligner", "scrambler"} else 5
+        if hp <= safe_steps + margin:
+            return True
+        if role == "miner" and safe_target is not None:
             pos = _h.absolute_position(state)
             dist = _h.manhattan(pos, safe_target.position)
-            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 25:
+            if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 20:
                 return True
-            return False
-        return super()._should_retreat(state, role, safe_target)
+        return False
 
 
 class AlphaAdaptiveTeamV2Policy(MettagridSemanticPolicy):
