@@ -25,3 +25,8 @@ started: 2026-03-29T21:02:58Z
   - TV104: TV90 + explore-first in 2-agent (no idle scramble, always explore)
   - TV105: TV102 + explore-first + skip batching (full combo)
 - Uploaded: v463 (TV102), v464 (TV103), v465 (TV104), v466 (TV105) to qualifying.
+- All passed qualifying (13.34). v464 (TV103) entering competition first — 15 matches scheduled.
+- Self-play 5K with TV102 (8-agent): score 5.38 — normal self-play. TV102 changes only affect 2-agent.
+- Match config analysis: 66% of matches are 2v6, 34% are 4v4. 2v6 improvements have outsized impact.
+- Explore offsets: aligner uses r=22 circle (8 waypoints), miner r=28 corners, scrambler r=36 corners.
+- Waiting for competition results...
