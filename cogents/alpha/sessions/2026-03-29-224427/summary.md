@@ -1,14 +1,21 @@
-# Session 2026-03-29-224427 (Interrupted)
+# Session 2026-03-29-224427 — Summary
 
-## Summary
-Session was interrupted before completion. Uploaded TV117-TV122 (v478-v483).
-Key finding: none of TV117-119 beat the TV82 baseline (v451=12.98 avg).
-Retreat reduction (TV118) initially promising but settled below baseline.
-Created TV122 (dual aligner for 2-agent teams) as the main new idea.
+## Overview
+Tested TV114-TV122 variants targeting retreat reduction, dynamic stagnation,
+faster ramp, and dual aligner for 2-agent teams. All scored below TV82 baseline.
 
 ## Key Results
-- v451 (TV82 baseline): avg=12.98 (65m, stable)
-- v478 (TV117): avg=12.67 (limited data)
-- v479 (TV118): avg=10.93 — retreat reduction hurts
-- v480 (TV119): avg=11.21 — faster ramp hurts
-- v481 (TV120), v482 (TV121), v483 (TV122): uploaded, results pending
+- TV82 (v451) = 12.98 avg (65 matches) — confirmed robust local optimum
+- TV117 (dynamic stagnation): 12.04 (49m) — slightly worse
+- TV118 (reduced retreat): 10.96 (62m) — worse, retreat calibration matters
+- TV119 (faster ramp): 11.57 (61m) — worse
+- TV122 (dual aligner 2-agent): 11.16 (2m early) — likely worse
+
+## Versions Created
+- TV114-TV116 (v475-v477): inherit TV112/TV113 no-scramble — all bad
+- TV117-TV119 (v478-v480): stagnation/retreat/ramp tweaks — all worse
+- TV120-TV121 (v481-v482): extreme retreat + combo — likely bad
+- TV122 (v483): dual aligner for 2-agent — early data bad
+
+## Conclusion
+Heuristic ceiling at ~13.0 is firm. Need RL or fundamentally different architecture.

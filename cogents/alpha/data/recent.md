@@ -1,7 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
-- **2026-03-29-224427**: (interrupted) Uploaded TV117-TV122 (v478-v483). TV117-119 all worse than baseline. Retreat reduction (TV118) initially promising but settled at 10.93. Created TV122 dual aligner for 2v teams. [sessions/2026-03-29-224427/](sessions/2026-03-29-224427/)
+- **2026-03-29-224427**: Tested TV114-TV122 (v475-v483): retreat reduction, stagnation recovery, faster ramp, dual aligner. ALL worse than TV82 baseline (12.98). Heuristic ceiling ~13 confirmed. [sessions/2026-03-29-224427/](sessions/2026-03-29-224427/)
 - **2026-03-29-220607**: Found critical num_agents bug (always 8, 2-agent code was dead in TV90-TV108). All no-scramble variants (TV109-TV116, v463-v477) failed — scramble essential for defense. v451=13.31 (#1). Heuristic ceiling ~13. [sessions/2026-03-29-220607/](sessions/2026-03-29-220607/)
 - **2026-03-29-210258**: (interrupted) Created TV102-TV108 (v463-v469), discovered num_agents bug via log analysis. TV104 explore-first initially seemed promising (14.51) but was noise. [sessions/2026-03-29-210258/](sessions/2026-03-29-210258/)
 - **2026-03-29-200453**: Created TV90-TV101 (v451-v462). Tested 2-agent improvements, zero-scramble, stagnation tuning. Zero-scramble fails qualifying. Reduced heart batch kills 2v6. v451 (TV90)=12.83, v449 (TV88)=12.93 remain best. Heuristic ceiling ~13.0. [sessions/2026-03-29-200453/](sessions/2026-03-29-200453/)

@@ -1,7 +1,7 @@
 # Activity Log
 
 session: 2026-03-29-224427
-status: interrupted
+status: completed
 started: 2026-03-29T22:44:27Z
 
 ## Actions
@@ -47,3 +47,12 @@ started: 2026-03-29T22:44:27Z
   - v480 (TV119): 11.57 (61m) — confirmed worse
 - All TV117-120 likely failures. TV82 = 12.98 is robust.
 - v481-v483 still in qualifying/competition queue.
+- FINAL RESULTS UPDATE:
+  - v478 (TV117): 12.04 (49m) — below baseline
+  - v481 (TV120): 12.47 (2m) — too few
+  - v482 (TV121): 7.46 (1m) — bad
+  - v483 (TV122, dual aligner): 11.16 (2m) — below baseline
+- CONCLUSION: TV82 baseline (12.98 avg, 65m) is a robust local optimum.
+  All heuristic modifications in this session (TV112-TV122) scored worse.
+  The only way to meaningfully improve may be RL training or fundamentally
+  different architecture (not just parameter tweaks).
