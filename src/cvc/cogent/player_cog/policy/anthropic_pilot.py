@@ -7696,3 +7696,199 @@ class AlphaHighEffPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaRushPolicy — Optimized for tournament score >10
+#
+# Combines: TeamFix budgets + Aggressive idle-scramble + silicon-priority
+# mining + faster alignment start + reduced deaths
+# ---------------------------------------------------------------------------
+
+class AlphaRushAgentPolicy(AlphaAggressiveAgentPolicy):
+    """Rush: fast alignment with silicon-aware economy and smart scrambling.
+
+    Key changes from Aggressive:
+    1. TeamFix: use actual team size for budgets (not total agents)
+    2. Silicon priority: 50% of miners always target silicon (the #1 bottleneck)
+    3. Smarter budgets: more aligners earlier, fewer when economy is weak
+    4. Faster first alignment start
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # 50% of agents get silicon bias (the bottleneck resource)
+        if self._agent_id % 2 == 1:
+            self._default_resource_bias = "silicon"
+            self._resource_bias = "silicon"
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """TeamFix budgets with aggressive alignment pressure."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        # Use actual team size
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 150 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 80:
+                return 1, 0
+            if min_res < 5 and not can_hearts:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 0
+            if min_res >= 30 and step >= 400:
+                aligner_budget = min(3, num_agents - 1)
+            if min_res >= 100 and step >= 800:
+                scrambler_budget = 1
+                aligner_budget = min(2, num_agents - 1 - scrambler_budget)
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents
+        if step < 25:
+            return 2, 0
+
+        economy_surplus = min_res >= 80
+        economy_crisis = min_res < 3 and not can_hearts
+
+        if economy_surplus:
+            pressure_budget = min(num_agents - 1, 7)
+        elif step < 80:
+            pressure_budget = 3
+        elif economy_crisis:
+            pressure_budget = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(5, num_agents - 2)
+
+        scrambler_budget = 0
+        if step >= 2000 and min_res >= 14:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 150 and min_res >= 7:
+            scrambler_budget = min(1, pressure_budget // 3)
+
+        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Prioritize silicon when it's low relative to others."""
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        others_min = min(v for k, v in resources.items() if k != "silicon")
+        # If silicon is significantly lower, bias toward it
+        if silicon < others_min * 0.7 and silicon < 50:
+            return MacroDirective(resource_bias="silicon")
+        return MacroDirective(resource_bias=_least_resource(resources))
+
+
+class AlphaRushPolicy(MettagridSemanticPolicy):
+    """Rush: fast alignment + silicon economy + TeamFix budgets."""
+    short_names = ["alpha-rush"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaRushAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaEconRushPolicy — Rush variant with economy-first strategy
+# ---------------------------------------------------------------------------
+
+class AlphaEconRushAgentPolicy(AlphaRushAgentPolicy):
+    """EconRush: build strong economy first, then overwhelm with alignment."""
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Economy-first: delay alignment pressure until resources are strong."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 10 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 150 or (min_res < 10 and not can_hearts):
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 0
+            if min_res >= 50 and step >= 500:
+                aligner_budget = min(3, num_agents - 1)
+            if min_res >= 150 and step >= 1000:
+                scrambler_budget = 1
+                aligner_budget = min(2, num_agents - 1 - scrambler_budget)
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents
+        if step < 50:
+            return 1, 0
+
+        economy_surplus = min_res >= 100
+        economy_crisis = min_res < 5 and not can_hearts
+
+        if economy_surplus:
+            pressure_budget = min(num_agents - 1, 7)
+        elif step < 150:
+            pressure_budget = 2
+        elif economy_crisis:
+            pressure_budget = max(1, num_agents // 4)
+        elif min_res < 10:
+            pressure_budget = min(3, num_agents - 2)
+        else:
+            pressure_budget = min(5, num_agents - 2)
+
+        scrambler_budget = 0
+        if step >= 3000 and min_res >= 20:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 300 and min_res >= 10:
+            scrambler_budget = min(1, pressure_budget // 3)
+
+        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaEconRushPolicy(MettagridSemanticPolicy):
+    """EconRush: economy-first then overwhelm with alignment."""
+    short_names = ["alpha-econ-rush"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaEconRushAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
