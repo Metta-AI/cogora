@@ -6,23 +6,22 @@ Status: in-progress
 ## Activity
 - [1315] Session started. v387=#1 at 10.05, v388-v391 still running.
 - [1315] New opponents spotted: Paz-Bot-9005, slanky:v112.
-- [1318] Analyzed policy code. Identified non-stagnation improvements:
-  1. TV28: negative hotspot weight — prefer re-aligning scrambled junctions
-  2. TV29: faster alignment ramp for 2/4-agent games
-  3. TV30: combined TV28+TV29
-- [1320] Self-play 10K results:
-  - TV18 baseline: 8.82
-  - TV28 (hotspot=-10): 9.49 (+7.6%) ✓ BEST
-  - TV29 (faster ramp): 6.96 (-21%) ✗
-  - TV30 (combined): 0.00 (completely broken — early wipeout) ✗
-- [1325] TV28 is promising! Added TV31 (hotspot=-5) and TV32 (hotspot=0) variants.
-- [1327] Uploaded to tournament:
-  - v392 = TV28 (hotspot=-10.0)
-  - v393 = TV31 (hotspot=-5.0)
-  - v394 = TV32 (hotspot=0.0)
-- [1327] Running TV28 second confirmation test + TV31/TV32 self-play.
+- [1318] Analyzed policy code. Identified non-stagnation improvements.
+- [1320] Self-play 10K results (round 1):
+  - TV18 baseline: 8.82 / 8.63 (avg 8.73)
+  - TV28 (hotspot=-10): 9.49 / 9.02 (avg 9.26) ✓
+  - TV29 (faster ramp): 6.96 ✗
+  - TV30 (combined): 0.00 (wipeout bug) ✗
+  - TV31 (hotspot=-5): 10.18 / 5.57 (HIGH VARIANCE)
+  - TV32 (hotspot=0): 8.76
+  - TV33 (hotspot=-3): 8.35
+  - TV34 (hotspot=-7): 6.00
+- [1327] Uploaded: v392=TV28, v393=TV31, v394=TV32, v395=TV33, v396=TV34
+- [1332] Running 3 more TV28 and 3 more TV18 tests for reliable averages.
+- [1332] All tournament matches still running/scheduled — no results yet.
 
 ## Key Insight
-The default hotspot_weight=8.0 PENALIZES re-aligning scrambled junctions.
-But scrambled junctions are already in our network range — re-aligning is cheap.
-Negative hotspot weight = prefer re-alignment = +7.6% in self-play.
+Hotspot weight (re-alignment preference) is a promising improvement vector.
+Default=8.0 (avoid scrambled junctions). Negative values prefer re-alignment.
+Self-play is too noisy for single-run conclusions — need multiple runs OR tournament.
+Tournament signal is more reliable. Waiting for v392-v396 results.
