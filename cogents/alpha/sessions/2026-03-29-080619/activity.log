@@ -1,39 +1,35 @@
 # Session 2026-03-29-080619
 Status: in-progress
 
-## LEADERBOARD (stabilized ~90 matches each)
-1. **v367 (TV9): 8.61** (9 matches — early but leading!)
+## LEADERBOARD (from parallel session)
+1. v367 (TV9): 8.61 (early)
 2. v363: 8.59 (89 matches)
 3. v364 (TV7): 8.55 (89 matches)
 4. v366 (TV8-multi): 8.35 (86 matches)
-5. v365 (raw TV2): 7.63 (89 matches)
-6. v348: 7.60 (90 matches)
 
-TV9 = TV7 + fixed 2a timing. Leading despite few matches.
+## Self-Play Results (multi-seed 10K)
+TV7, 8 agents, 10K steps: avg 9.25 (range 4.88-13.08)
+TV7, 4 agents, 10K steps: avg 6.36 (range 5.05-8.43)
 
-## Key Tournament Findings
-- v364 (TV7): +12% over v348 across 89 matches. Confirmed.
-- v366 (TV8-multi): +10% over v348. Phase-based helps tournament!
-- v365 (raw TV2): matches v348 (7.63 vs 7.60). LLM wrapper negligible.
-- v367 (TV9): early results promising (8.61 at 9 matches, 9.48 best 4a)
+MASSIVE variance across seeds: 4.88 to 13.08!
+Map layout determines which junctions are discoverable.
 
-## Self-Play Experiments (this instance)
-| Policy | 8a 5K | Notes |
-|--------|-------|-------|
-| TV2    | 3.73  | Baseline |
-| TV7    | 5.38  | +44%! 2-agent mining + explore-idle |
-| TV8    | 1.19  | Wide explore only — terrible |
-| TV10   | 3.55  | Double scramble — economy collapse |
-| TV7 10K| 7.65  | Close to tournament avg |
+## Seed Analysis (8a 10K)
+- Seed 3 (13.08): 22 friendly junctions at step 5000, silicon 1210
+- Seed 2 (4.88): 11 friendly junctions at step 5000, silicon 1308
+- Difference: junction discovery, NOT economy
 
-## Root Cause Analysis: Why >10 is Hard
-1. Junction discovery saturates at step 1000 (~21/65 found)
-2. Silicon runs out late game (377→80) — fewest extractors (45 vs 50-58)
-3. Clips overtakes us: friendly 21→12, enemy 0→13 (steps 1000→5000)
-4. Miners mine wrong resource (can't find silicon extractors)
-5. 2-agent matches ceiling ~6.4 (only control 2/8 agents)
-6. All policies converging to 8.3-8.6 range. Gap to >10 = ~16%.
+## Experiments
+- TV10 (double scramble): 3.55 — economy collapse
+- TV9 (explore-always): 2.88 — Clips domination without scramble
 
-## Next Steps
-- Need fundamentally different approach for breakthrough
-- Ideas: Silicon-focused miner paths, progressive exploration rings
+## Key Insight: Map Layout is King
+The biggest factor in score variance is map layout (junction placement).
+Can't control this in tournament. But can improve AVERAGE by being
+better at discovering junctions on unfavorable maps.
+
+## Strategy to Reach >10
+Tournament avg currently ~8.5. Self-play 8a avg 9.25 at 10K.
+Gap: tournament has different team sizes and opponents.
+Need to reduce variance — make low-scoring maps score higher.
+This means: better exploration on maps where junctions are far from hub.
