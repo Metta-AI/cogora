@@ -13900,3 +13900,61 @@ class AlphaTournamentV32Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV33: TV18 + hotspot=-3.0 (between 0 and -5) ───────────────────────
+
+class AlphaTournamentV33AgentPolicy(AlphaTournamentV18AgentPolicy):
+    """TournamentV33: TV18 + hotspot weight -3.0."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -3.0
+
+
+class AlphaTournamentV33Policy(MettagridSemanticPolicy):
+    """TournamentV33: TV18 + hotspot=-3.0."""
+    short_names = ["alpha-tournament-v33"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV33AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV34: TV18 + hotspot=-7.0 (between -5 and -10) ─────────────────────
+
+class AlphaTournamentV34AgentPolicy(AlphaTournamentV18AgentPolicy):
+    """TournamentV34: TV18 + hotspot weight -7.0."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -7.0
+
+
+class AlphaTournamentV34Policy(MettagridSemanticPolicy):
+    """TournamentV34: TV18 + hotspot=-7.0."""
+    short_names = ["alpha-tournament-v34"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV34AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
