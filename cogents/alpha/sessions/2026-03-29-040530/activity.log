@@ -1,44 +1,41 @@
 status: in-progress
 started: 2026-03-29-040530
 
-## Leaderboard Analysis
-- #1: v290 (Aggressive, OLD rules): 6.54 (77 matches)
-- #3: v309 (AdaptiveV3): 5.54 — best "new era" policy
-- #5: v315 (AdaptiveV3 fresh): 5.48
-- v341 (AdaptiveTeam): 3.29
-- v343 (AdaptiveTeam): 2.48
-- Key: AdaptiveV3 >> Aggressive-based for tournament
+## BREAKTHROUGH: v348 TournamentV2 = #1 at 7.09 (41 matches)!
+- Beats previous #1 v290 (6.50) by 0.59 points
+- Rising with more matches (was 6.81 at 24 matches, now 7.09 at 41)
+- Architecture: AdaptiveV3 base + team-size cap + idle scramble at min_res>=14
 
-## Tournament Match Analysis
-- 4v4 match v57+v343 scored 1.18: ECONOMY CRASH
-  - Both policies allocate 3 aligners → 6 aligners + 2 miners for 8 agents
-  - Carbon drops to 4 by step 500
-  - Root cause: independent budget allocation without coordination
-- 6v2 match v57+v343 scored 9.01: works because v57 dominant
+## Tournament Results Summary
+| Policy | Version | Score | Matches | Rank |
+|---|---|---|---|---|
+| TournamentV2 | v348 | 7.09 | 41 | #1 |
+| (old) Aggressive | v290 | 6.50 | 79 | #2 |
+| AdaptiveV3 | v347 | 5.38 | 40 | #8 |
+| Aggressive | v345 | 3.25 | 46 | #21 |
+| V3 TournamentOpt | v346 | 3.26 | 42 | #20 |
+| AdaptiveTeam | v344 | 2.48 | 45 | #94 |
 
-## Local Testing (AdaptiveTeam v343)
+## Why v348 Works
+1. AdaptiveV3 base: conservative economy-gated budgets prevent crash
+2. Team-size cap: guarantees miners in sub-team when sharing with partner
+3. Idle scramble at min_res>=14: aggressive scrambling against weak opponents
+4. No dedicated scramblers in budget: hearts saved for aligners
+
+## Key Tournament Insights
+- Conservative budgets >> aggressive in tournament (economy sustainability)
+- Idle scrambling >> dedicated scramblers (flexible, economy-aware)
+- Team cap helps on AdaptiveV3 base (modest cap on already-conservative budgets)
+- Team cap HURTS on Aggressive base (removes too many aligners)
+
+## Pending Results
+- v349: AdaptiveV4 (faster ramp, still qualifying)
+- v350: AdaptiveV5 (no scramble, still qualifying)
+
+## Local Testing (earlier)
 | Config | Score |
 |---|---|
-| 8a seed 1 | 10.62 |
-| 8a seed 42 | 6.77 |
-| 8a seed 7 | 5.12 |
-| 4a seed 1 | 7.54 |
-| 4a seed 42 | 7.92 |
-
-## Early Tournament Results (new uploads)
-- v346 (V3 TournamentOpt): 3.11 (2 matches) — best new upload
-- v345 (Aggressive): 2.76 (4 matches)
-- v344 (AdaptiveTeam): 1.71 (2 matches)
-
-## Policy Uploads This Session
-- v344: AdaptiveTeam (baseline)
-- v345: Aggressive (for comparison)
-- v346: AdaptiveTeamV3 (tournament-optimized, slower early ramp)
-- v347: AdaptiveV3 (proven best tournament performer, re-upload)
-- v348: TournamentV2 (AdaptiveV3 base + team cap + aggressive scramble)
-
-## Key Insight: Why Tournament << Local
-- Environment likely changed since v290 era
-- In tournament, both policies allocate independently → economy over-allocation
-- Conservative budgets (AdaptiveV3) handle this better than aggressive ones
-- AdaptiveV3 only ramps when min_res >= 30, preventing early crash
+| AdaptiveTeam 8a seed 1 | 10.62 |
+| AdaptiveTeam 8a seed 42 | 6.77 |
+| AdaptiveTeam 8a seed 7 | 5.12 |
+| AdaptiveTeam 4a seed 1 | 7.54 |
