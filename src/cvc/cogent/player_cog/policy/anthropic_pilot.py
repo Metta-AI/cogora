@@ -8482,14 +8482,13 @@ class AlphaAdaptiveTeamAgentPolicy(AlphaAggressiveAgentPolicy):
         # Get base Aggressive budgets
         aligner, scrambler = super()._pressure_budgets(state, objective=objective)
 
-        # For small teams, cap to ensure at least 1 miner
+        # Always cap to ensure at least 1 miner per team
         team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
-        if team_size <= 3:
-            max_roles = max(team_size - 1, 1)
-            total = aligner + scrambler
-            if total > max_roles:
-                scrambler = min(scrambler, max(0, max_roles - 1))
-                aligner = min(aligner, max_roles - scrambler)
+        max_roles = max(team_size - 1, 1)
+        total = aligner + scrambler
+        if total > max_roles:
+            scrambler = min(scrambler, max(0, max_roles - 1))
+            aligner = min(aligner, max_roles - scrambler)
 
         return aligner, scrambler
 
@@ -8546,26 +8545,19 @@ class AlphaAdaptiveTeamAgentPolicy(AlphaAggressiveAgentPolicy):
             if dist < hp - 20:
                 return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
-        # Idle: check team size for behavior
-        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        # Idle: scramble when economy healthy, mine otherwise
         min_res = _h.team_min_resource(state)
+        # Higher threshold for scrambling = more conservative economy
+        scramble_threshold = 20  # Only scramble with healthy economy
 
-        if team_size >= 4:
-            # Large team: scramble when economy healthy (Aggressive behavior)
-            if hearts > 0 and min_res >= 14:
-                scramble_target = self._preferred_scramble_target(state)
-                if scramble_target is not None:
-                    return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
-            if min_res < 14:
-                return self._miner_action(state, summary_prefix="idle_align_")
-            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
-        else:
-            # Small team: only scramble when economy very healthy, otherwise mine
-            if hearts > 0 and min_res >= 30:
-                scramble_target = self._preferred_scramble_target(state)
-                if scramble_target is not None:
-                    return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+        if hearts > 0 and min_res >= scramble_threshold:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if min_res < scramble_threshold:
             return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
 
 
 class AlphaAdaptiveTeamPolicy(MettagridSemanticPolicy):
