@@ -36,3 +36,8 @@ started: 2026-03-29T22:44:27Z
 - None of TV117-119 beat the baseline. Retreat reduction hurts more than it helps.
   The default 20-margin retreat is actually well-calibrated.
 - v481/v482 in qualifying. If TV118 failed, TV120 (margin=5) will likely be worse.
+- v451 (TV82 baseline) = 12.98 avg (65m). 2v=11.6, 4v=13.6, 6v=14.0.
+  2v is the weakest config (66% of matches). Improving 2v is highest impact.
+- Created TV122: dual aligner for 2-agent teams (both align when min_res >= 14).
+  In 2v6, opponent's 6 agents provide resources. Our 2nd agent mining is wasted.
+  v483 uploaded.
