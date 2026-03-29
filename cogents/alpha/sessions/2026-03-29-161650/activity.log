@@ -9,11 +9,15 @@ Status: in-progress
 - Upload improved policies
 
 ### Actions
-- Created TV55-TV58 policy variants:
+- Created TV55-TV60 policy variants:
   - TV55: TV46 targeting + TV50 threshold (min_res >= 7) — main combo hypothesis
   - TV56: TV50 + very low threshold (min_res >= 3) — testing lower bound
   - TV57: TV50 threshold + 70% scramble ratio — combines frequency + intensity
   - TV58: TV46 + TV50 + 70% scramble — kitchen sink combo
-- Uploaded: v416=TV55, v417=TV56, v418=TV57, v419=TV58
-- Running self-play: TV55 and TV56 at 5000 steps
-- Tournament: all recent matches still running/scheduled, no new completed results yet
+  - TV59: TV55 + aggressive 2-agent play (align at step 200 / min_res >= 14)
+  - TV60: TV25 + intermediate threshold (min_res >= 10)
+- Uploaded: v416=TV55, v417=TV56, v418=TV57, v419=TV58, v420=TV59, v421=TV60
+- Self-play results (5000 steps, self-play anti-correlated with tournament):
+  - TV55: 5.22 per cog
+  - TV56: 4.22 per cog
+- Tournament: all recent matches still running/scheduled
