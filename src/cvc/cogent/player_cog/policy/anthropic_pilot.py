@@ -12324,3 +12324,168 @@ class AlphaTournamentV14Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV15: Aggressive idle exploration to break stagnation ──────────────
+
+# Full-map exploration waypoints: systematic grid covering 88x88 map
+_TV15_FULL_MAP_WAYPOINTS = (
+    # Inner ring (radius ~15)
+    (0, -15), (11, -11), (15, 0), (11, 11),
+    (0, 15), (-11, 11), (-15, 0), (-11, -11),
+    # Mid ring (radius ~25)
+    (0, -25), (18, -18), (25, 0), (18, 18),
+    (0, 25), (-18, 18), (-25, 0), (-18, -18),
+    # Outer ring (radius ~35)
+    (0, -35), (25, -25), (35, 0), (25, 25),
+    (0, 35), (-25, 25), (-35, 0), (-25, -25),
+    # Corner probes (reach map edges)
+    (30, -30), (30, 30), (-30, 30), (-30, -30),
+    (-38, 0), (38, 0), (0, -38), (0, 38),
+)
+
+
+class AlphaTournamentV15AgentPolicy(AlphaTournamentV9AgentPolicy):
+    """TournamentV15: TV9 + aggressive idle exploration.
+
+    Key insight: When all nearby junctions are aligned, aligners loop on
+    idle_align_scramble forever at the same position. The default explore
+    offsets only reach radius 22, but the 88x88 map has junctions out to
+    radius ~40.
+
+    Fix:
+    1. Track consecutive "idle" steps (no align target available)
+    2. After 150 idle steps: switch to full-map exploration using
+       waypoints that cover the entire map (inner/mid/outer/corners)
+    3. Exploration has priority over idle scrambling when exploring
+    4. Once a new frontier junction is found, immediately return to alignment
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._idle_steps = 0
+        self._exploring_map = False
+        self._map_waypoint_index = 0
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """TV9 aligner with aggressive exploration when idle."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            self._idle_steps = 0
+            self._exploring_map = False
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            self._idle_steps = 0
+            self._exploring_map = False
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._idle_steps = 0
+            self._exploring_map = False
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                self._idle_steps = 0
+                self._exploring_map = False
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        self._idle_steps += 1
+        min_res = _h.team_min_resource(state)
+
+        if self._idle_steps >= 150 and hp > 40:
+            self._exploring_map = True
+
+        if self._exploring_map:
+            if step % 400 < 50 and hearts > 0 and min_res >= 14:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="explore_scramble", vibe="change_vibe_scrambler")
+            return self._full_map_explore(state)
+
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _full_map_explore(self, state: MettagridState) -> tuple[Action, str]:
+        """Visit waypoints across the entire 88x88 map."""
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+
+        waypoints = _TV15_FULL_MAP_WAYPOINTS
+        idx = (self._map_waypoint_index + self._agent_id * 7) % len(waypoints)
+        offset = waypoints[idx]
+        absolute_target = (center[0] + offset[0], center[1] + offset[1])
+
+        if _h.manhattan(current_pos, absolute_target) <= 3:
+            self._map_waypoint_index += 1
+            idx = (self._map_waypoint_index + self._agent_id * 7) % len(waypoints)
+            offset = waypoints[idx]
+            absolute_target = (center[0] + offset[0], center[1] + offset[1])
+
+        return self._move_to_position(state, absolute_target, summary="map_explore", vibe="change_vibe_aligner")
+
+
+class AlphaTournamentV15Policy(MettagridSemanticPolicy):
+    """TournamentV15: TV9 + aggressive idle exploration."""
+    short_names = ["alpha-tournament-v15"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV15AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

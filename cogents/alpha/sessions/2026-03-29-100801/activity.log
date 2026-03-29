@@ -12,3 +12,33 @@ Key insight: chain push not helpful, 10K step TV9 hits 11+ on good seeds.
 2. Run TV9 at 10K steps multi-seed to get reliable average
 3. Identify weaknesses on low-scoring seeds
 4. Improve policy for weak maps, upload to tournament
+
+## Tournament Analysis
+Latest matches (all vs v368/TV12):
+- v62 (6a) vs v368 (2a): scores range 5.18-10.81
+- v59 (4a) vs v368 (4a): scores range 7.69-10.19
+- Massive variance driven by map seed
+
+## Critical Finding: Idle Stagnation Bug
+Analyzed low-scoring match (5.18):
+- 2-agent aligner gets stuck at same position (-13,-15) for 5000+ steps
+- frontier=0 from step 1000 onwards — zero new junctions to align
+- Agent loops on `idle_align_scramble` at same spot forever
+- Default explore offsets only reach radius 22, map is 88x88 (radius 44)
+- Junctions beyond radius 22 from hub are NEVER discovered
+
+## TV13 Design
+Created AlphaTournamentV13Policy:
+- Tracks consecutive idle steps (no alignment target available)
+- After 150 idle steps: enters aggressive full-map exploration mode
+- Uses 32 waypoints covering entire map (inner/mid/outer rings + corners)
+- Each agent starts at different waypoint for spread coverage
+- Still scrambles briefly (50/400 steps) to maintain pressure
+- Immediately returns to alignment when new frontier junction discovered
+- Based on TV9 (inherits 2-agent timing fix)
+
+## Local Tests
+- TV9 seed 0, 5K steps: 5.56 (reference)
+- TV9 seed 0, 10K steps: 4.22 (reward metric seems different?)
+- TV9 seed 1, 10K steps: 0.0 (wipeout - all agents die)
+- TV13 tests running...
