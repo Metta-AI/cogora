@@ -1,25 +1,30 @@
 ## Session 2026-03-29-161650
 Status: in-progress
 
-### Tournament Results (~20 matches, converging)
-  1. **v416 (TV55) = 12.71 (23m) — NEW #1!** TV46 targeting + TV50 threshold
-  2. v414 (TV53) = 12.63 (99m) — stable
-  3. v410 (TV50) = 12.59 (99m) — stable
-  4. v419 (TV58) = 12.55 (19m) — kitchen sink, dropped from 12.82
-  5. v418 (TV57) = 12.39 (22m) — threshold+scramble ratio
-  6. v420 (TV59) = 12.26 (20m) — TV55+2-agent
-  7. v421 (TV60) = 11.73 (21m) — threshold=10
-  8. v417 (TV56) = 10.32 (19m) — threshold=3, too aggressive
+### Tournament Results (~30 matches, stabilizing)
+  1. v414 (TV53) = 12.63 (99m) — STABLE #1
+  2. v410 (TV50) = 12.59 (99m) — STABLE #2
+  3. v416 (TV55) = 12.42 (31m) — TV46 targeting + TV50 threshold
+  4. v419 (TV58) = 12.41 (30m) — kitchen sink
+  5. v388 (TV25) = 12.38 (99m) — stable
+  6. v418 (TV57) = 12.34 (29m) — threshold+scramble ratio
+  7. v420 (TV59) = 12.26 (27m) — TV55+2-agent
+  8. v421 (TV60) = 11.90 (29m) — threshold=10
+  9. v417 (TV56) = 10.99 (30m) — threshold=3
 
-### Key Insights
-1. **TV55 (targeting+threshold) is the optimal combo** — better than kitchen sink
-2. Adding 70% scramble on top of TV55 (making TV58) slightly hurts
-3. TV46's reduced hub penalty targeting adds ~0.1-0.2 pts over TV50 alone
-4. TV50's lower threshold (7) adds ~0.1-0.2 pts over TV53 alone
-5. threshold=3 (TV56) confirmed bad (~10.3), threshold=10 (TV60) decent (~11.7)
-6. Aggressive 2-agent play (TV59) doesn't help much
+### Key Finding
+New variants are settling around 12.3-12.4, competitive but NOT beating v414/v410.
+The existing v414 (TV53) and v410 (TV50) appear near-optimal at ~12.6.
+Combining improvements (TV55, TV58) doesn't produce additive gains.
+
+### Ranking of Factors (from this session + prior)
+1. Scramble-focused stagnation (TV25 base): +4 pts over older policies
+2. Lower scramble threshold (7 vs 14): +0.2 pts (v410 vs v388)
+3. Reduced hub penalty + 70% scramble (TV53): +0.25 pts (v414 vs v388)
+4. Combining all: ~+0.0 pts (no additive benefit)
+5. Threshold=3: -2 pts (v417 = 10.99)
+6. Threshold=10: -0.7 pts (v421 = 11.90)
 
 ### Uploads
-- v416=TV55, v417=TV56, v418=TV57, v419=TV58, v420=TV59, v421=TV60
-- v422=TV61 (80% scramble), v423=TV62 (earlier stagnation), v424=TV63 (TV58+2-agent)
-- v422-v424 still qualifying
+v416-v421 in competition (~30 matches each)
+v422-v424 still qualifying/processing
