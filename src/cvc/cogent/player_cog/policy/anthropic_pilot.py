@@ -19593,3 +19593,217 @@ class AlphaTournamentV85Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV86: TV82 + chain-value expand-toward ───────────────────────────────────
+
+class AlphaTournamentV86AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV86: TV82 (best so far) + chain-value expand-toward.
+
+    TV82 has chain-value alignment targeting + bridge scramble + 2-agent.
+    TV86 adds chain-value scoring for expand_toward_junction (pick unreachable
+    junctions with highest bridge potential, not just nearest).
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        elif (self._peak_junction_count >= 5
+              and step - self._last_junction_growth_step > 300
+              and step > 500):
+            self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Chain-value expand-toward
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_positions = {e.position for e in [*hubs, *friendly_junctions]}
+
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            best = min(targets, key=lambda j: (
+                _h.manhattan(current_pos, j.position)
+                - _chain_expansion_value(j.position, [u for u in unreachable if u is not j], network_positions, max_depth=3) * 5.0
+            ))
+            dist = _h.manhattan(current_pos, best.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, best, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        if self._stagnation_mode and hp > 50:
+            if step % 200 < 160 and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV86Policy(MettagridSemanticPolicy):
+    """TournamentV86: TV82 + chain-value expand-toward."""
+    short_names = ["alpha-tournament-v86"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV86AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV87: TV82 + light scramble coordination (penalty=15) ────────────────────
+
+class AlphaTournamentV87AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV87: TV82 + light coordinated scramble targeting.
+
+    TV83 used penalty=30 for coordinated scramble but TV84 (which included it)
+    scored lower than TV82 (which doesn't). Try lighter penalty=15 to gently
+    spread scramble targets without over-penalizing good targets.
+    """
+
+    def _best_scramble_target(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        neutral_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner in {None, "neutral"})
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda entity: entity.owner not in {None, "neutral", team_id},
+        )
+        if not enemy_junctions:
+            return None
+        directed_candidate = self._directive_target_candidate(enemy_junctions)
+        if directed_candidate is not None:
+            return directed_candidate
+
+        hub_position = current_pos if hub is None else hub.position
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda e: e.team == team_id)
+        network_positions = {e.position for e in [*hubs, *friendly_junctions]}
+        network_sources = [*hubs, *friendly_junctions]
+        unreachable_neutrals = [
+            j for j in neutral_junctions
+            if not _h.within_alignment_network(j.position, network_sources)
+        ]
+
+        def _light_coordinated_score(candidate: KnownEntity) -> tuple[float, float]:
+            base_score, base_tie = _h.scramble_target_score(
+                current_position=current_pos,
+                hub_position=hub_position,
+                candidate=candidate,
+                neutral_junctions=neutral_junctions,
+                friendly_junctions=friendly_junctions,
+            )
+            bridge_bonus = 0.0
+            if _h.within_alignment_network(candidate.position, network_sources):
+                chain_val = _chain_expansion_value(
+                    candidate.position, unreachable_neutrals, network_positions, max_depth=2
+                )
+                bridge_bonus = chain_val * 8.0
+            # Light coordination: penalty=15 instead of 30
+            claimed_by_other = _h.is_claimed_by_other(
+                claims=self._shared_claims,
+                candidate=candidate.position,
+                agent_id=self._agent_id,
+                step=self._step_index,
+            )
+            coordination_penalty = 15.0 if claimed_by_other else 0.0
+            return (base_score - bridge_bonus + coordination_penalty, base_tie - bridge_bonus)
+
+        best = min(
+            enemy_junctions,
+            key=lambda entity: (
+                _light_coordinated_score(entity),
+                entity.position,
+            ),
+        )
+        self._shared_claims[best.position] = (self._agent_id, self._step_index)
+        return best
+
+
+class AlphaTournamentV87Policy(MettagridSemanticPolicy):
+    """TournamentV87: TV82 + light scramble coordination."""
+    short_names = ["alpha-tournament-v87"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV87AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

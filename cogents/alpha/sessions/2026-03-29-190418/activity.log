@@ -38,3 +38,8 @@ started: 2026-03-29T19:04:18Z
   - v445 (TV84) avg: 12.36 (5 matches) — all improvements, but slanky scores are low
     - vs v13: 17.18/13.02, vs slanky: 10.53/11.78/9.29
   - v443 (TV82) > v442 (TV81 historical 13.52) so far!
+- Key finding: TV84 (all improvements incl coordinated scramble) scores LOWER than TV82 (no coordinated scramble).
+  - Coordinated scramble penalty=30 is too aggressive, pushing agents to suboptimal targets.
+- Created TV86: TV82 + chain-value expand-toward (smart expansion scoring)
+- Created TV87: TV82 + light scramble coordination (penalty=15 instead of 30)
+- Uploaded v447 (TV86), v448 (TV87) to qualifying.
