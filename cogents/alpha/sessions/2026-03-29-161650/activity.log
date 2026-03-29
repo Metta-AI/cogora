@@ -1,30 +1,27 @@
 ## Session 2026-03-29-161650
 Status: in-progress
 
-### Tournament Results (~30 matches, stabilizing)
-  1. v414 (TV53) = 12.63 (99m) — STABLE #1
-  2. v410 (TV50) = 12.59 (99m) — STABLE #2
-  3. v416 (TV55) = 12.42 (31m) — TV46 targeting + TV50 threshold
-  4. v419 (TV58) = 12.41 (30m) — kitchen sink
-  5. v388 (TV25) = 12.38 (99m) — stable
-  6. v418 (TV57) = 12.34 (29m) — threshold+scramble ratio
-  7. v420 (TV59) = 12.26 (27m) — TV55+2-agent
-  8. v421 (TV60) = 11.90 (29m) — threshold=10
-  9. v417 (TV56) = 10.99 (30m) — threshold=3
+### Tournament Results
+Stable (99m):
+  1. v414 (TV53) = 12.63 — #1
+  2. v410 (TV50) = 12.59 — #2
 
-### Key Finding
-New variants are settling around 12.3-12.4, competitive but NOT beating v414/v410.
-The existing v414 (TV53) and v410 (TV50) appear near-optimal at ~12.6.
-Combining improvements (TV55, TV58) doesn't produce additive gains.
+New uploads (~45-48m, converging):
+  v422 (TV61) = 12.98 (3m) — 80% scramble, VERY early
+  v416 (TV55) = 12.50 (48m) — TV46+TV50
+  v419 (TV58) = 12.56 (46m) — kitchen sink
+  v421 (TV60) = 12.50 (48m) — threshold=10
+  v420 (TV59) = 12.44 (46m) — TV55+2-agent
+  v423 (TV62) = 12.50 (1m) — earlier stagnation, very early
+  v418 (TV57) = 11.76 (42m) — threshold+scramble
+  v417 (TV56) = 11.64 (41m) — threshold=3
 
-### Ranking of Factors (from this session + prior)
-1. Scramble-focused stagnation (TV25 base): +4 pts over older policies
-2. Lower scramble threshold (7 vs 14): +0.2 pts (v410 vs v388)
-3. Reduced hub penalty + 70% scramble (TV53): +0.25 pts (v414 vs v388)
-4. Combining all: ~+0.0 pts (no additive benefit)
-5. Threshold=3: -2 pts (v417 = 10.99)
-6. Threshold=10: -0.7 pts (v421 = 11.90)
+### Summary
+- New variants cluster at 12.4-12.5, slightly below v414 (12.63)
+- v422 (TV61, 80% scramble) at 12.98 is intriguing but only 3 matches
+- The differences between our top variants are within noise
+- v414 and v410 remain the best with mature data (99m)
+- Uploaded v425=TV64 (always-scramble), v426=TV65 (delayed economy) — qualifying
 
-### Uploads
-v416-v421 in competition (~30 matches each)
-v422-v424 still qualifying/processing
+### Uploads This Session
+v416-v426 (TV55-TV65), 11 variants tested
