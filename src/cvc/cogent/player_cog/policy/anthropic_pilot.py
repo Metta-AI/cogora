@@ -11582,3 +11582,101 @@ class AlphaTournamentV9Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV10: Double scramble pressure + faster ramp ─────────────────────────
+
+class AlphaTournamentV10AgentPolicy(AlphaTournamentV7AgentPolicy):
+    """TournamentV10: TV7 + more scramblers + faster ramp + silicon focus.
+
+    Analysis shows junction count drops from 21→12 while Clips grows from 0→13
+    between steps 1000-5000. Silicon runs out (377→80) killing heart production.
+
+    Changes from TV7:
+    1. 2 scramblers instead of 1 for 6+ agents — slows Clips expansion
+    2. Faster initial ramp: 3 aligners at step 30 for 8 agents
+    3. Silicon-priority mining when silicon < 150 (crisis threshold)
+    4. Keep TV7's 2-agent mining optimization
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """TV7 budgets + double scramble + faster ramp."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: same as TV7
+        if num_agents <= 2:
+            if step < 500 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if min_res >= 50:
+                return 1, 0
+            return 0, 0
+
+        if num_agents <= 4:
+            # 4 agents: same as TV2/AdaptiveV3
+            return super()._pressure_budgets(state, objective=objective)
+
+        # 6+ agents: faster ramp + double scramble
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+        max_roles = max(team_size - 2, 1)  # Keep at least 2 miners
+
+        if step < 30:
+            return min(3, max_roles), 0  # Faster: 3 aligners immediately
+
+        if min_res < 10 and not can_hearts:
+            return 1, 0  # Crisis
+
+        if min_res < 30:
+            return min(2, max_roles), 0
+
+        # 2 scramblers when economy permits
+        scrambler = 0
+        if step >= 300 and min_res >= 14:
+            scrambler = min(2, max_roles - 2)
+        elif step >= 200 and min_res >= 7:
+            scrambler = 1
+
+        if min_res < 80:
+            aligner = min(3, max_roles - scrambler)
+        elif min_res < 200:
+            aligner = min(4, max_roles - scrambler)
+        else:
+            aligner = min(5, max_roles - scrambler)
+
+        return aligner, scrambler
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Silicon-priority mining when silicon gets low."""
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        if silicon < 150:
+            return MacroDirective(resource_bias="silicon")
+        least = _least_resource(resources)
+        least_amount = resources[least]
+        if silicon <= least_amount + 20:
+            return MacroDirective(resource_bias="silicon")
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaTournamentV10Policy(MettagridSemanticPolicy):
+    """TournamentV10: TV7 + double scramble + faster ramp + silicon focus."""
+    short_names = ["alpha-tournament-v10"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV10AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

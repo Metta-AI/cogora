@@ -17,14 +17,23 @@ TV9 = TV7 + fixed 2a timing. Leading despite few matches.
 - v365 (raw TV2): matches v348 (7.63 vs 7.60). LLM wrapper negligible.
 - v367 (TV9): early results promising (8.61 at 9 matches, 9.48 best 4a)
 
-## v367 Completed Matches
-- 9.48 us=4a vs v51(4a)
-- 8.60 us=4a vs v59(4a)
+## Self-Play Experiments (this instance)
+| Policy | 8a 5K | Notes |
+|--------|-------|-------|
+| TV2    | 3.73  | Baseline |
+| TV7    | 5.38  | +44%! 2-agent mining + explore-idle |
+| TV8    | 1.19  | Wide explore only — terrible |
+| TV10   | 3.55  | Double scramble — economy collapse |
+| TV7 10K| 7.65  | Close to tournament avg |
 
-## Uploads
-v364 (TV7), v365 (raw TV2), v366 (TV8-multi), v367 (TV9)
+## Root Cause Analysis: Why >10 is Hard
+1. Junction discovery saturates at step 1000 (~21/65 found)
+2. Silicon runs out late game (377→80) — fewest extractors (45 vs 50-58)
+3. Clips overtakes us: friendly 21→12, enemy 0→13 (steps 1000→5000)
+4. Miners mine wrong resource (can't find silicon extractors)
+5. 2-agent matches ceiling ~6.4 (only control 2/8 agents)
+6. All policies converging to 8.3-8.6 range. Gap to >10 = ~16%.
 
-## Strategy Assessment
-All policies converging to 8.3-8.6 range. Gap to >10 is ~16%.
-2-agent performance (avg ~6.4) is the main drag.
-Need fundamentally different approach for 2a or major breakthrough.
+## Next Steps
+- Need fundamentally different approach for breakthrough
+- Ideas: Silicon-focused miner paths, progressive exploration rings
