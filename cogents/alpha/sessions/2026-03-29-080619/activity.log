@@ -1,12 +1,31 @@
 # Session 2026-03-29-080619
 Status: in-progress
 
-## Context
-Previous session (071830) interrupted. It created TV7 (v364) and was monitoring results.
-Current leaderboard: #1 alpha.0:v348 at 7.60 (87 matches). Goal: >10.
+## v364 (TV7) TOURNAMENT RESULTS — 7.93 avg (26 matches)
+**Better than v348's 7.60!** (+4.3%)
 
-## Plan
-1. Check tournament results for v362 (AdaptiveScout) and v364 (TV7)
-2. Analyze what strategies are working in tournament
-3. Iterate on policy improvements
-4. Upload improved versions
+Best matches:
+- 11.80 us=6a vs gtlm-reactive:v1(2a) — NEW BEST 6a score!
+- 11.37 us=2a vs slanky:v112(6a) — amazing 2a performance!
+- 10.96 us=4a vs old alphas (v11-v17) — consistent
+- 10.08 us=6a vs old alphas — consistent above 10
+
+By config (v364):
+- 6a: 5.22-11.80 (10.08 typical vs weak, 9.09 vs mid)
+- 4a: 3.45-10.96 (variable)
+- 2a: 3.91-11.37 (huge range based on teammate quality)
+
+## Uploads In Progress
+- v364 (TV7): 26 completed, 23 still running — leading v348!
+- v365 (raw TV2): qualifying
+- v366 (TV8-multi): qualifying
+
+## What TV7 Changed (vs TV2/v348)
+1. 2-agent: mine for 500 steps first, align only if economy healthy
+2. Idle aligners: alternate explore/mine instead of only scrambling
+3. More aggressive expansion toward unreachable junctions
+
+## Next Steps
+- Wait for more v364 results to confirm improvement
+- Check v365/v366 qualifying status
+- If v364 confirms better, upload TV7 variants with further tweaks
