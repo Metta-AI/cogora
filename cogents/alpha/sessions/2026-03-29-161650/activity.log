@@ -1,24 +1,25 @@
 ## Session 2026-03-29-161650
 Status: in-progress
 
-### Tournament Results
-New uploads (10-13 matches, converging):
-  1. **v419 (TV58) = 12.87 (10m) — POTENTIAL NEW #1!** Kitchen sink: TV46+TV50+70% scramble
-  2. v420 (TV59) = 12.57 (10m) — TV55 + aggressive 2-agent
-  3. v416 (TV55) = 12.51 (12m) — TV46 targeting + TV50 threshold
-  4. v418 (TV57) = 12.25 (13m) — TV50 threshold + 70% scramble
-  5. v421 (TV60) = 12.01 (10m) — intermediate threshold (10)
-  6. v417 (TV56) = 10.60 (12m) — very low threshold (3), confirmed bad
-
-Stable (99 matches):
-  v414 (TV53) = 12.63 — current stable #1
-  v410 (TV50) = 12.59
+### Tournament Results (~20 matches, converging)
+  1. **v416 (TV55) = 12.71 (23m) — NEW #1!** TV46 targeting + TV50 threshold
+  2. v414 (TV53) = 12.63 (99m) — stable
+  3. v410 (TV50) = 12.59 (99m) — stable
+  4. v419 (TV58) = 12.55 (19m) — kitchen sink, dropped from 12.82
+  5. v418 (TV57) = 12.39 (22m) — threshold+scramble ratio
+  6. v420 (TV59) = 12.26 (20m) — TV55+2-agent
+  7. v421 (TV60) = 11.73 (21m) — threshold=10
+  8. v417 (TV56) = 10.32 (19m) — threshold=3, too aggressive
 
 ### Key Insights
-- TV58 (all 3 improvements combined) > TV55 (targeting+threshold) > TV53 (targeting+scramble ratio)
-- Threshold=3 (TV56) confirmed too aggressive — drains economy
-- Threshold=10 (TV60) = 12.01 — threshold=7 (TV50) is still better
-- The three improvements are additive: targeting + threshold + scramble ratio
+1. **TV55 (targeting+threshold) is the optimal combo** — better than kitchen sink
+2. Adding 70% scramble on top of TV55 (making TV58) slightly hurts
+3. TV46's reduced hub penalty targeting adds ~0.1-0.2 pts over TV50 alone
+4. TV50's lower threshold (7) adds ~0.1-0.2 pts over TV53 alone
+5. threshold=3 (TV56) confirmed bad (~10.3), threshold=10 (TV60) decent (~11.7)
+6. Aggressive 2-agent play (TV59) doesn't help much
 
-### Policies Created/Uploaded
+### Uploads
 - v416=TV55, v417=TV56, v418=TV57, v419=TV58, v420=TV59, v421=TV60
+- v422=TV61 (80% scramble), v423=TV62 (earlier stagnation), v424=TV63 (TV58+2-agent)
+- v422-v424 still qualifying
