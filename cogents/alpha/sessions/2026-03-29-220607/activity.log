@@ -20,3 +20,9 @@ started: 2026-03-29T22:06:07Z
   - v474 (TV113): no idle scramble for ALL team sizes
 - All unfixed TV90-TV108 versions are equivalent to TV82 (dead 2-agent code).
 - Waiting for v473/v474 qualifying + competition results.
+- Created TV114-TV116 (new variants):
+  - TV114: TV112 + defensive re-alignment (stop scramble when losing >20% territory)
+  - TV115: TV112 + delayed heart batching (skip until step 500, more early alignment)
+  - TV116: TV113 (no scramble) + delayed batching combo
+- Self-play TV109 8-agent: ~4.2 score (expected mirror). Late-game retreat overhead high.
+- All v469-v472 matches still running/scheduled — tournament queue slow.
