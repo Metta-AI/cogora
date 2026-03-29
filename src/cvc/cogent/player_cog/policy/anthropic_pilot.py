@@ -12938,3 +12938,63 @@ class AlphaTournamentV20Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV21: TV18 silicon + TV19 one-explorer + TV12 stagnation ────────────
+
+class AlphaTournamentV21AgentPolicy(AlphaTournamentV12AgentPolicy):
+    """TournamentV21: TV12 stagnation + TV18 silicon + TV19 one-explorer.
+
+    Best of all proven tournament improvements:
+    - TV12's stagnation detection (proven +0.12 over TV9)
+    - TV18's light silicon priority (v378 #1 at 10.13)
+    - TV19's agent-0 wide explore offsets (v379 #3 at 9.14)
+    """
+
+    def _explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
+        """Agent 0 aligner uses wide offsets when team has 5+ agents."""
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if role != "aligner" or self._agent_id != 0 or team_size < 5:
+            return super()._explore_action(state, role=role, summary=summary)
+
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+        offsets = _TV19_FULL_MAP_WAYPOINTS
+        offset_index = (self._explore_index + self._agent_id * 7) % len(offsets)
+        target = offsets[offset_index]
+        absolute_target = (center[0] + target[0], center[1] + target[1])
+        if _h.manhattan(current_pos, absolute_target) <= 2:
+            self._explore_index += 1
+            offset_index = (self._explore_index + self._agent_id * 7) % len(offsets)
+            target = offsets[offset_index]
+            absolute_target = (center[0] + target[0], center[1] + target[1])
+        return self._move_to_position(state, absolute_target, summary=summary, vibe=_h.role_vibe(role))
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Silicon priority when bottleneck (TV18 style)."""
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        least = _least_resource(resources)
+        if least == "silicon" or silicon < 50:
+            return MacroDirective(resource_bias="silicon")
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaTournamentV21Policy(MettagridSemanticPolicy):
+    """TournamentV21: TV12 stagnation + TV18 silicon + TV19 one-explorer."""
+    short_names = ["alpha-tournament-v21"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV21AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
