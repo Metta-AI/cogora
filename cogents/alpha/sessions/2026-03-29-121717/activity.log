@@ -37,6 +37,15 @@ Status: in-progress
   v378=10.07 (#1), v387=9.89 (#2), v386=7.69 (TV22 WORSE)
   Uploaded v388 (TV25) and v389 (TV24) for tournament signal.
 
+- [123200] v387 took #1 at 10.15! Both TV18 uploads now 10+ tier.
+  v378=10.04, v387=10.15. TV18 confirmed as 10+ tournament policy.
+- [123300] Designed TV26 and TV27:
+  TV26: TV18 + TV15's full-map stagnation waypoints (32 points vs 24)
+  TV27: TV18 + TV15's idle-step trigger (150 idle steps → full-map explore)
+  Uploaded v390 (TV26) and v391 (TV27). Running 10K local tests.
+
 ## Tournament Uploads
-- v388 (TV25): scramble-focused stagnation — pending
+- v388 (TV25): scramble-focused stagnation — qualifying (11.86 in first match)
 - v389 (TV24): tighter stagnation radius — pending
+- v390 (TV26): full-map stagnation waypoints — pending
+- v391 (TV27): idle-step exploration — pending
