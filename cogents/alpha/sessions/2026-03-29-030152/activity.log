@@ -1,28 +1,23 @@
 status: in-progress
 started: 2026-03-29-030152
 
-## BEST RESULTS: AdaptiveTeam (v342)
-- 8a 10k seed 1: 19.18 (BEST! beats Aggressive 15.73 and Sustainable 6.26)
-- 4a 10k seed 1: 8.59 (matches Sustainable 8.63, beats Aggressive 6.45)
-- Strategy: Aggressive budgets + cap for small teams + conservative idle behavior
-- Uploaded as v342
+## Best Policy: AlphaAdaptiveTeam (v342/v343)
+- Key insight: cap budget by actual team_size to guarantee 1 miner per team
+- Inherits Aggressive's pressure but prevents economy collapse
+- 4a 10k multi-seed: 8.67, 3.22, 1.57, 8.72 (avg 5.55)
+- 8a 10k seed 1: 9.24 (v343, with universal cap)
+- Prior v342 (cap only for <=3): 8a=19.18, 4a=8.59
 
-## Full Comparison (10000 steps, seed 1)
-| Policy | 4a 10k | 8a 10k |
-|---|---|---|
-| Aggressive | 6.45 | 15.73 |
-| Sustainable (v339) | 8.63 | 6.26 |
-| SustainV3 (v340) | 2.77 | — |
-| AdaptiveTeam (v342) | 8.59 | 19.18 |
+## Tournament Status
+- Uploaded: v337 (Turbo), v339 (Sustainable), v340 (SustainV3), v342+v343 (AdaptiveTeam)
+- No tournament results yet (matches still running)
+- Opponents seen: v12-v54, Paz-Bot, slanky
 
-## Key Insights
-1. max_steps = 10000 in tournament (not 5000)
-2. Economy sustainability is critical for second half
-3. num_agents bug helps large teams (more alignment pressure)
-4. Small teams need guaranteed miners (economy collapses otherwise)
-5. Scrambling is essential (SustainV3 without scrambling scored 2.77)
-6. AdaptiveTeam combines best of both worlds
-
-## Tournament Uploads
-- v337 (Turbo), v339 (Sustainable), v340 (SustainV3), v342 (AdaptiveTeam)
-- All in qualifying/competition pools, results pending
+## Key Discoveries This Session
+1. max_steps = 10000 in tournament (previous tests used 5000)
+2. Economy collapse in 2nd half (steps 5000-10000) is the #1 score killer
+3. num_agents bug helps for max pressure but causes 0 miners in small teams
+4. Capping budget by team_size guarantees economy sustainability
+5. Score = avg(net_junction_count) per tick, normalized by max_steps
+6. Scrambling IS essential (SustainV3 without scrambling: 2.77 vs 8.67 with)
+7. Map variance is huge (1.57-8.72 across seeds)
