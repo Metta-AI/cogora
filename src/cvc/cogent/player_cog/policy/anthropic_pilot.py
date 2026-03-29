@@ -10053,3 +10053,469 @@ class AlphaAdaptiveMapPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# --- Wide-explore exploration offsets ---
+# Inner ring (original): 8 points at ~20 tiles from hub
+# Outer ring: 8 points at ~35 tiles from hub (covers more of 88x88 map)
+_WIDE_EXPLORE_OFFSETS = (
+    # Inner ring
+    (0, -22), (16, -16), (22, 0), (16, 16),
+    (0, 22), (-16, 16), (-22, 0), (-16, -16),
+    # Outer ring - reach further into map corners
+    (0, -38), (27, -27), (38, 0), (27, 27),
+    (0, 38), (-27, 27), (-38, 0), (-27, -27),
+)
+
+
+class AlphaWideExploreAgentPolicy(AlphaTournamentV2AgentPolicy):
+    """TV2 + wider exploration to discover more junctions.
+
+    Key change: When idle (no frontier), alternate between scrambling and
+    exploring a WIDER pattern (inner + outer ring). This discovers more of
+    the ~65 junctions on the 88x88 map while maintaining scramble pressure.
+
+    Also uses a dedicated explore phase: every 3rd idle cycle, explore
+    instead of scramble to continuously discover new junction clusters.
+    """
+
+    def _explore_action(self, state: MettagridState, *, role: str, summary: str) -> tuple[Action, str]:
+        """Use wider exploration pattern for aligners."""
+        if role != "aligner":
+            return super()._explore_action(state, role=role, summary=summary)
+
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+        offsets = _WIDE_EXPLORE_OFFSETS
+        offset_index = (self._explore_index + self._agent_id) % len(offsets)
+        target = offsets[offset_index]
+        absolute_target = (center[0] + target[0], center[1] + target[1])
+        if _h.manhattan(current_pos, absolute_target) <= 2:
+            self._explore_index += 1
+            offset_index = (self._explore_index + self._agent_id) % len(offsets)
+            target = offsets[offset_index]
+            absolute_target = (center[0] + target[0], center[1] + target[1])
+        return self._move_to_position(state, absolute_target, summary=summary, vibe=_h.role_vibe(role))
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """TV2 aligner with explore-first idle behavior."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # KEY CHANGE: alternate between scramble and explore when idle
+        # Every 3rd idle cycle, explore instead of scramble to discover new junctions
+        min_res = _h.team_min_resource(state)
+        idle_cycle = (step // 50) % 3  # cycles every 150 steps
+
+        if idle_cycle < 2:
+            # 2/3 of time: scramble (proven critical for tournament)
+            if hearts > 0 and min_res >= 14:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+        else:
+            # 1/3 of time: explore wider to discover new junction clusters
+            if hp > 40:
+                return self._explore_action(state, role="aligner", summary="idle_wide_explore")
+
+        # Fallback: scramble if explore phase skipped, or mine if economy tight
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaWideExplorePolicy(MettagridSemanticPolicy):
+    """TV2 + wider exploration pattern for better junction discovery."""
+    short_names = ["alpha-wide-explore"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaWideExploreAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaExploreFirstAgentPolicy(AlphaTournamentV2AgentPolicy):
+    """TV2 but prioritizes exploration over scrambling when idle.
+
+    Instead of 72% idle-scrambling, invest that time in exploring to
+    discover more junctions. Only scramble when resources are very high.
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Explore-first: discover junctions before scrambling."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # EXPLORE FIRST: prioritize discovering new junctions
+        # Only scramble after step 1000 when economy is very strong
+        min_res = _h.team_min_resource(state)
+
+        if step < 1000 or min_res < 50:
+            # Early/mid game: explore to discover junctions
+            if hp > 30:
+                return self._explore_action(state, role="aligner", summary="idle_explore_discover")
+
+        # Late game with strong economy: scramble
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaExploreFirstPolicy(MettagridSemanticPolicy):
+    """TV2 + explore-first when idle (less scrambling, more discovery)."""
+    short_names = ["alpha-explore-first"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaExploreFirstAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaChainBuilderAgentPolicy(AlphaTournamentV2AgentPolicy):
+    """TV2 + aggressive chain building toward far junctions.
+
+    When idle, instead of scrambling, move toward the nearest unreachable
+    neutral junction. If we align it AND it's near other unreachable ones,
+    our network grows. Prioritize junctions with high "expansion_value"
+    (number of currently-unreachable junctions they'd unlock).
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """TV2 base + chain-building idle behavior."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        # CHAIN BUILDING: prefer junctions that unlock the most unreachable ones
+        target = self._best_chain_target(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="chain_align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable neutral junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            # Prefer junctions that would unlock the most others
+            def expansion_value(j: KnownEntity) -> int:
+                return sum(
+                    1 for other in unreachable
+                    if other.position != j.position
+                    and _h.manhattan(j.position, other.position) <= _h._JUNCTION_ALIGN_DISTANCE
+                )
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            if safe_unreachable:
+                # Pick the one with highest expansion value, tie-break by distance
+                best = max(safe_unreachable, key=lambda j: (expansion_value(j), -_h.manhattan(current_pos, j.position)))
+                return self._move_to_known(state, best, summary="chain_expand_junction", vibe="change_vibe_aligner")
+
+        # Idle: scramble (still important)
+        min_res = _h.team_min_resource(state)
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _best_chain_target(self, state: MettagridState) -> KnownEntity | None:
+        """Pick alignable frontier junction that unlocks the most unreachable ones."""
+        team_id = _h.team_id(state)
+        hub = self._nearest_hub(state)
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda e: e.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda e: e.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+
+        frontier = []
+        all_neutral = self._known_junctions(state, predicate=lambda j: j.owner in {None, "neutral"})
+        unreachable = []
+        for j in all_neutral:
+            if _h.within_alignment_network(j.position, network_sources):
+                frontier.append(j)
+            else:
+                unreachable.append(j)
+
+        if not frontier:
+            return None
+
+        current_pos = _h.absolute_position(state)
+        hub_pos = hub.position if hub else None
+
+        # Score each frontier junction by expansion value
+        def chain_score(candidate: KnownEntity) -> float:
+            expansion = sum(
+                1 for u in unreachable
+                if _h.manhattan(candidate.position, u.position) <= _h._JUNCTION_ALIGN_DISTANCE
+            )
+            dist = _h.manhattan(current_pos, candidate.position)
+            claimed = _h.is_claimed_by_other(
+                claims=self._shared_claims,
+                candidate=candidate.position,
+                agent_id=self._agent_id,
+                step=self._step_index,
+            )
+            # Expansion value is primary, distance is secondary
+            # Negative because min() is used
+            return (-expansion * 100 + dist + (50 if claimed else 0))
+
+        directed = self._directive_target_candidate(frontier)
+        if directed is not None:
+            return directed
+
+        return min(frontier, key=chain_score)
+
+
+class AlphaChainBuilderPolicy(MettagridSemanticPolicy):
+    """TV2 + chain-building: prefer frontier junctions that unlock the most others."""
+    short_names = ["alpha-chain-builder"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaChainBuilderAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaScoutExploreAgentPolicy(AlphaTournamentV2AgentPolicy):
+    """TV2 but dedicates 1 miner to scouting instead.
+
+    On maps where we only discover 14/65 junctions, having a scout
+    that permanently explores can double junction discovery. The
+    scout brings back junction locations to the shared world model.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Same as TV2 but ensure at least 2 miners (1 will be converted to scout)."""
+        aligner, scrambler = super()._pressure_budgets(state, objective=objective)
+        return aligner, scrambler
+
+    def _desired_role(self, state: MettagridState, *, objective: str | None = None) -> str:
+        """Convert the highest-ID agent to permanent scout role."""
+        team_ids = self._shared_team_ids
+        if team_ids:
+            max_id = max(team_ids)
+            if self._agent_id == max_id:
+                return "scout"
+        return super()._desired_role(state, objective=objective)
+
+    def _choose_action(self, state: MettagridState, role: str) -> tuple[Action, str]:
+        """Scout role: permanently explore the map to discover junctions."""
+        if role == "scout":
+            return self._scout_action(state)
+        return super()._choose_action(state, role)
+
+    def _scout_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Scout explores a wide pattern to discover junctions."""
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+
+        # If low HP, go deposit and heal
+        if hp < 30:
+            hub = self._nearest_hub(state)
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="scout_heal", vibe="change_vibe_heart")
+
+        # If carrying resources, deposit
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="scout_deposit", vibe="change_vibe_aligner")
+
+        # Explore wide pattern
+        hub = self._nearest_hub(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+        offsets = _WIDE_EXPLORE_OFFSETS
+        offset_index = (self._explore_index + self._agent_id) % len(offsets)
+        target = offsets[offset_index]
+        absolute_target = (center[0] + target[0], center[1] + target[1])
+        if _h.manhattan(current_pos, absolute_target) <= 2:
+            self._explore_index += 1
+            offset_index = (self._explore_index + self._agent_id) % len(offsets)
+            target = offsets[offset_index]
+            absolute_target = (center[0] + target[0], center[1] + target[1])
+        return self._move_to_position(state, absolute_target, summary="scout_explore", vibe="change_vibe_aligner")
+
+
+class AlphaScoutExplorePolicy(MettagridSemanticPolicy):
+    """TV2 + 1 dedicated scout for junction discovery."""
+    short_names = ["alpha-scout-explore"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaScoutExploreAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

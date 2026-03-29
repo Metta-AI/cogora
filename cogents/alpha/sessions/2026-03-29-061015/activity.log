@@ -6,3 +6,23 @@ Status: in-progress
 - Heuristic ceiling ~7.5. Need new approach.
 - Key insight: cooperative scoring + map variance dominates.
 - Previous session tested 7 variants, none beat TV2.
+
+## Key Discovery: Cooperative Scrambling Already Implemented
+- Investigated junction owner values in-game: owner='cogs', team_id='cogs'
+- Both Cogs sub-teams share the SAME team_id ('cogs')
+- Base _best_scramble_target already excludes team_id junctions
+- So we NEVER scramble other Cogs — only Clips. CoopV2 fix was redundant!
+
+## New Approaches Being Tested
+- TV2 baseline: 5.03 (8a, 5000 steps, seed 0)
+- AlphaWideExplore: TV2 + wider exploration pattern (inner+outer ring at 22+38 tiles)
+- AlphaExploreFirst: TV2 + explore before scramble when idle
+- AlphaChainBuilder: TV2 + chain-building (prefer junctions that unlock unreachable ones)
+- AlphaScoutExplore: TV2 + 1 dedicated scout agent for junction discovery
+
+## Analysis
+- 72% of aligner time is idle-scrambling (frontier=0)
+- Only 14/65 junctions discovered per team in self-play
+- Aligner explore offsets only reach 22 tiles from hub (88x88 map = 44 max)
+- Wide explore adds outer ring at 38 tiles to cover more map
+- Tournament: new "competition" pool with matches running (v336-v342 vs v59)
