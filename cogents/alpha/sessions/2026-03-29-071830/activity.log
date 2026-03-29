@@ -10,16 +10,37 @@ Status: in-progress
 - v348 (TournamentV2) remains best at avg ~9.09 for 6-agent matches
 - Best single tournament match: 13.86 (v348 4v4)
 
-### Self-Play vs Tournament Gap
-- Self-play (both teams = our policy): ScoutExplore excels (10.85 avg 10K)
-- Tournament (mixed opponents, 2/4/6 agents): ScoutExplore hurts at small teams
-- AdaptiveScout (v362, 6+ only) should bridge the gap but results pending
+### v348 Full Analysis (87 matches, avg 7.28)
+- us=2a_opp=6a: avg=6.04 (range 3.91-8.83)
+- us=4a_opp=4a: avg=7.87 (range 3.95-13.86)
+- us=6a_opp=2a: avg=7.95 (range 2.86-9.61)
 
-### Next Steps
-1. Wait for v362 tournament results (should match TV2 at 2-4 agents, beat at 6)
-2. If v362 also disappoints, the scout may not be tournament-viable
-3. Focus on what made v348 get 13.86 — map-specific optimization?
-4. Consider: the >10 goal may require RL or fundamentally different approach
+v362 (AdaptiveScout) overall avg: 6.90 (50 matches)
+- 6-agent: consistently 7.03 (vs TV2's 9.09!) - SCOUT HURTS
+
+Other opponents: coglet-v0:v12, gtlm-reactive-v3:v1, Paz-Bot-9005:v1, slanky:v112
+
+### CRITICAL: Game is COOPERATIVE
+Both players on same Cogs team. Score = shared metric against Clips AI.
+
+### Self-Play Free-Play (10K steps, 8a)
+| Policy | Seed 0 | Seed 1 | Seed 2 | Avg |
+|--------|--------|--------|--------|-----|
+| TV2    | 9.17   | 16.60  | 8.65   | 11.47 |
+| TV6    | 7.13   | 16.35  | 10.18  | 11.22 |
+| SV4    | 8.60   | 10.20  | —      | 9.40 |
+| TV7    | running | running | running | — |
+
+### Policies Created This Session
+- SustainV4: Always-silicon bias — TOO CONSERVATIVE
+- TournamentV6: Silicon-aware budget — marginal
+- TournamentV7: 2-agent cooperation + explore idle — testing
 
 ## Uploads
 v359 (ScoutExplore), v360 (TwoScouts), v361 (AdaptiveScout v1), v362 (AdaptiveScout v2)
+
+## Next Steps
+1. Wait for TV7 results
+2. Upload best new policy to tournament
+3. If TV7 doesn't help, try pure economy support at 2 agents
+4. Consider fundamentally different approach for >10 goal
