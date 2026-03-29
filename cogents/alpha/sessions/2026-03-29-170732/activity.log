@@ -18,4 +18,7 @@ Status: in-progress
 - Uploaded: v430=TV69, v431=TV70
 - Created TV71 (faster early alignment: 3 aligners at step 10) and TV72 (kitchen sink v2: TV69+TV70+TV71)
 - Uploaded: v432=TV71, v433=TV72
-- Tournament matches still running — big batch. No completed results yet.
+- Tournament matches still running — big batch. No completed results visible (API shows only 20 most recent, all running/scheduled)
+- v427-v433 now in competition pool (passed qualifying)
+- Running TV69 5K step self-play for analysis
+- Opponent slanky:v112 seen in matches
