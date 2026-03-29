@@ -21,3 +21,13 @@ started: 2026-03-29T14:03:57Z
   - AlphaCyborg: 3.85
 - [1420] TV40 (reduced hub penalty) shows biggest improvement. Created TV41 (TV40+TV38 combined).
 - [1421] Running validation (3x each) for TV28, TV38, TV40. Also running TV41.
+- [1425] Validation results (4 runs each, 5K steps, same map):
+  - TV28: avg 0.87 (3 wipeouts!) — map-dependent fragility
+  - TV38: avg 2.30 (2 wipeouts)
+  - TV40: avg 4.36 (0 wipeouts!) — most robust
+  - TV41: 4.15 (single run) — combined TV40+TV38, worse than TV40 alone
+- [1427] Uploaded to tournament:
+  - v402 = TV40 (reduced hub penalty) — MAIN BET
+  - v403 = TV41 (TV40+TV38 combined)
+  - v404 = TV38 (enemy-directed explore)
+- [1428] Still no completed tournament matches for v392-v401.
