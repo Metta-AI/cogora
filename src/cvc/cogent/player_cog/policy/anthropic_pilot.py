@@ -19161,3 +19161,306 @@ class AlphaTournamentV81Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV82: TV81 (bridge scramble + 2-agent) + chain-value alignment targeting ──
+
+class AlphaTournamentV82AgentPolicy(AlphaTournamentV81AgentPolicy):
+    """TournamentV82: TV81 + chain-value alignment targeting from TV76.
+
+    TV81 has bridge-aware scramble + 2-agent improvement but uses TV61's simple
+    alignment targeting. TV76's chain-value scoring prefers junctions that unlock
+    chains of further junctions. Combining should give best-of-all-worlds.
+    """
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """TV76-style chain-value targeting with TV46 reduced hub penalty."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        network_positions = {e.position for e in network_sources}
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity
+            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+
+        def _chain_score(
+            current_position: tuple[int, int],
+            candidate: KnownEntity,
+            unreachable: list[KnownEntity],
+            enemy_junctions: list[KnownEntity],
+            claimed_by_other: bool,
+            hub_position: tuple[int, int] | None,
+            hotspot_count: int,
+            hotspot_weight: float,
+        ) -> tuple[float, float]:
+            distance = float(_h.manhattan(current_position, candidate.position))
+            chain_val = _chain_expansion_value(
+                candidate.position, unreachable, network_positions, max_depth=3
+            )
+            imm_expansion = sum(
+                1 for entity in unreachable if _h.manhattan(candidate.position, entity.position) <= 15
+            )
+            enemy_aoe = (
+                1.0
+                if any(_h.manhattan(candidate.position, enemy.position) <= 5 for enemy in enemy_junctions)
+                else 0.0
+            )
+            hub_penalty = 0.0
+            if hub_position is not None:
+                hub_dist = float(_h.manhattan(hub_position, candidate.position))
+                if hub_dist > 25:
+                    hub_penalty = (hub_dist - 25) * 8.0 + 30.0
+                elif hub_dist > 15:
+                    hub_penalty = (hub_dist - 15) * 1.5 + 5.0
+                elif hub_dist > 10:
+                    hub_penalty = (hub_dist - 10) * 1.0 + 1.0
+                else:
+                    hub_penalty = hub_dist * 0.2
+            hotspot_penalty = min(hotspot_count, 3) * hotspot_weight
+            chain_bonus = min(chain_val * 7.0, 70.0)
+            return (
+                distance
+                - chain_bonus
+                + enemy_aoe * 8.0
+                + (20.0 if claimed_by_other else 0.0)
+                + hub_penalty
+                + hotspot_penalty,
+                -float(chain_val * 10 + imm_expansion),
+            )
+
+        return min(
+            candidates,
+            key=lambda entity: (
+                _chain_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    hotspot_weight=self._hotspot_weight,
+                )
+            ),
+        )
+
+
+class AlphaTournamentV82Policy(MettagridSemanticPolicy):
+    """TournamentV82: TV81 + chain-value alignment targeting."""
+    short_names = ["alpha-tournament-v82"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV82AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV83: TV81 + coordinated scramble targeting ──────────────────────────────
+
+class AlphaTournamentV83AgentPolicy(AlphaTournamentV81AgentPolicy):
+    """TournamentV83: TV81 + coordinated scramble targets via shared_claims.
+
+    When multiple agents scramble, they often target the same enemy junction,
+    wasting hearts. TV83 adds a penalty for scramble targets already claimed
+    by another agent, spreading pressure across more enemy junctions.
+    """
+
+    def _best_scramble_target(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        neutral_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner in {None, "neutral"})
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda entity: entity.owner not in {None, "neutral", team_id},
+        )
+        if not enemy_junctions:
+            return None
+        directed_candidate = self._directive_target_candidate(enemy_junctions)
+        if directed_candidate is not None:
+            return directed_candidate
+
+        hub_position = current_pos if hub is None else hub.position
+
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda e: e.team == team_id)
+        network_positions = {e.position for e in [*hubs, *friendly_junctions]}
+        network_sources = [*hubs, *friendly_junctions]
+        unreachable_neutrals = [
+            j for j in neutral_junctions
+            if not _h.within_alignment_network(j.position, network_sources)
+        ]
+
+        def _coordinated_bridge_score(candidate: KnownEntity) -> tuple[float, float]:
+            base_score, base_tie = _h.scramble_target_score(
+                current_position=current_pos,
+                hub_position=hub_position,
+                candidate=candidate,
+                neutral_junctions=neutral_junctions,
+                friendly_junctions=friendly_junctions,
+            )
+            bridge_bonus = 0.0
+            if _h.within_alignment_network(candidate.position, network_sources):
+                chain_val = _chain_expansion_value(
+                    candidate.position, unreachable_neutrals, network_positions, max_depth=2
+                )
+                bridge_bonus = chain_val * 8.0
+            claimed_by_other = _h.is_claimed_by_other(
+                claims=self._shared_claims,
+                candidate=candidate.position,
+                agent_id=self._agent_id,
+                step=self._step_index,
+            )
+            coordination_penalty = 30.0 if claimed_by_other else 0.0
+            return (base_score - bridge_bonus + coordination_penalty, base_tie - bridge_bonus)
+
+        best = min(
+            enemy_junctions,
+            key=lambda entity: (
+                _coordinated_bridge_score(entity),
+                entity.position,
+            ),
+        )
+        self._shared_claims[best.position] = (self._agent_id, self._step_index)
+        return best
+
+
+class AlphaTournamentV83Policy(MettagridSemanticPolicy):
+    """TournamentV83: TV81 + coordinated scramble targeting."""
+    short_names = ["alpha-tournament-v83"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV83AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV84: TV82 + TV83 (chain-value targeting + coordinated scramble) ─────────
+
+class AlphaTournamentV84AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV84: TV82 (chain-value targeting) + TV83 (coordinated scramble).
+
+    Combines all improvements:
+    - Bridge-aware scramble targeting (TV79)
+    - 2-agent improvement (TV70)
+    - Chain-value alignment targeting (TV76)
+    - Coordinated scramble via shared_claims (TV83)
+    """
+
+    def _best_scramble_target(self, state: MettagridState) -> KnownEntity | None:
+        """Same coordinated bridge scramble as TV83."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        neutral_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner in {None, "neutral"})
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda entity: entity.owner not in {None, "neutral", team_id},
+        )
+        if not enemy_junctions:
+            return None
+        directed_candidate = self._directive_target_candidate(enemy_junctions)
+        if directed_candidate is not None:
+            return directed_candidate
+
+        hub_position = current_pos if hub is None else hub.position
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda e: e.team == team_id)
+        network_positions = {e.position for e in [*hubs, *friendly_junctions]}
+        network_sources = [*hubs, *friendly_junctions]
+        unreachable_neutrals = [
+            j for j in neutral_junctions
+            if not _h.within_alignment_network(j.position, network_sources)
+        ]
+
+        def _coordinated_bridge_score(candidate: KnownEntity) -> tuple[float, float]:
+            base_score, base_tie = _h.scramble_target_score(
+                current_position=current_pos,
+                hub_position=hub_position,
+                candidate=candidate,
+                neutral_junctions=neutral_junctions,
+                friendly_junctions=friendly_junctions,
+            )
+            bridge_bonus = 0.0
+            if _h.within_alignment_network(candidate.position, network_sources):
+                chain_val = _chain_expansion_value(
+                    candidate.position, unreachable_neutrals, network_positions, max_depth=2
+                )
+                bridge_bonus = chain_val * 8.0
+            claimed_by_other = _h.is_claimed_by_other(
+                claims=self._shared_claims,
+                candidate=candidate.position,
+                agent_id=self._agent_id,
+                step=self._step_index,
+            )
+            coordination_penalty = 30.0 if claimed_by_other else 0.0
+            return (base_score - bridge_bonus + coordination_penalty, base_tie - bridge_bonus)
+
+        best = min(
+            enemy_junctions,
+            key=lambda entity: (
+                _coordinated_bridge_score(entity),
+                entity.position,
+            ),
+        )
+        self._shared_claims[best.position] = (self._agent_id, self._step_index)
+        return best
+
+
+class AlphaTournamentV84Policy(MettagridSemanticPolicy):
+    """TournamentV84: chain-value targeting + coordinated scramble."""
+    short_names = ["alpha-tournament-v84"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV84AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
