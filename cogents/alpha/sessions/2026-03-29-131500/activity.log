@@ -1,1 +1,28 @@
-status: in-progress\nstarted: 2026-03-29 13:15:00\n\n## Activity Log\n- 13:15 Session started. Goal: push score past 11+. v387=10.05 (#1).
+# Session 2026-03-29-131500
+Status: in-progress
+
+## Goal: Push tournament score from 10.05 to 11+
+
+## Activity
+- [1315] Session started. v387=#1 at 10.05, v388-v391 still running.
+- [1315] New opponents spotted: Paz-Bot-9005, slanky:v112.
+- [1318] Analyzed policy code. Identified non-stagnation improvements:
+  1. TV28: negative hotspot weight — prefer re-aligning scrambled junctions
+  2. TV29: faster alignment ramp for 2/4-agent games
+  3. TV30: combined TV28+TV29
+- [1320] Self-play 10K results:
+  - TV18 baseline: 8.82
+  - TV28 (hotspot=-10): 9.49 (+7.6%) ✓ BEST
+  - TV29 (faster ramp): 6.96 (-21%) ✗
+  - TV30 (combined): 0.00 (completely broken — early wipeout) ✗
+- [1325] TV28 is promising! Added TV31 (hotspot=-5) and TV32 (hotspot=0) variants.
+- [1327] Uploaded to tournament:
+  - v392 = TV28 (hotspot=-10.0)
+  - v393 = TV31 (hotspot=-5.0)
+  - v394 = TV32 (hotspot=0.0)
+- [1327] Running TV28 second confirmation test + TV31/TV32 self-play.
+
+## Key Insight
+The default hotspot_weight=8.0 PENALIZES re-aligning scrambled junctions.
+But scrambled junctions are already in our network range — re-aligning is cheap.
+Negative hotspot weight = prefer re-alignment = +7.6% in self-play.

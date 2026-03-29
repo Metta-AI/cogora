@@ -13833,3 +13833,70 @@ class AlphaTournamentV30Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV31: TV18 + mild re-alignment preference ───────────────────────────
+
+class AlphaTournamentV31AgentPolicy(AlphaTournamentV18AgentPolicy):
+    """TournamentV31: TV18 + mild negative hotspot weight (-5.0).
+
+    TV28 uses -10.0 for aggressive re-alignment. TV31 uses -5.0 for
+    a milder preference to see which weight works better in tournament.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -5.0
+
+
+class AlphaTournamentV31Policy(MettagridSemanticPolicy):
+    """TournamentV31: TV18 + mild re-alignment preference."""
+    short_names = ["alpha-tournament-v31"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV31AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV32: TV18 + zero hotspot weight (no bias either way) ───────────────
+
+class AlphaTournamentV32AgentPolicy(AlphaTournamentV18AgentPolicy):
+    """TournamentV32: TV18 + zero hotspot weight.
+
+    TV18 default avoids scrambled junctions (weight=8.0).
+    TV28 strongly prefers them (weight=-10.0).
+    TV32 is neutral (weight=0.0) — treats scrambled same as any other junction.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = 0.0
+
+
+class AlphaTournamentV32Policy(MettagridSemanticPolicy):
+    """TournamentV32: TV18 + zero hotspot weight (neutral)."""
+    short_names = ["alpha-tournament-v32"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV32AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
