@@ -29,4 +29,14 @@ started: 2026-03-29T21:02:58Z
 - Self-play 5K with TV102 (8-agent): score 5.38 — normal self-play. TV102 changes only affect 2-agent.
 - Match config analysis: 66% of matches are 2v6, 34% are 4v4. 2v6 improvements have outsized impact.
 - Explore offsets: aligner uses r=22 circle (8 waypoints), miner r=28 corners, scrambler r=36 corners.
-- Waiting for competition results...
+- COMPETITION RESULTS (11-21 matches each):
+  - **v465 (TV104, explore-first): 14.51 avg (11) — BEST!** 2vX=14.40, 4vX=15.75, 6vX=13.02
+  - v464 (TV103, dual+no batch): 13.74 (21) — 2vX=11.42, 4vX=16.68, 6vX=13.12
+  - v463 (TV102, dual aligner): 13.51 (11) — 2vX=12.98, 4vX=14.71, 6vX=12.62
+  - v451 (TV90, baseline): 13.25 (24) — 2vX=11.80, 4vX=12.97, 6vX=14.97
+  - v466 (TV105, dual+explore+no batch): 11.86 (12) — 2vX=9.99 BAD
+- KEY INSIGHT: Explore-first (no scramble) in 2-agent mode is the big winner!
+  - 2vX jumps from 11.80 → 14.40 (+22%)
+  - Scrambling hurts shared score; exploring finds more junctions to align
+  - Dual aligner (TV102) helps mildly but combo with no-batch (TV105) is toxic
+  - Single aligner + explore > dual aligner approaches
