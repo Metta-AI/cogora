@@ -60,3 +60,13 @@ started: 2026-03-29T23:05:20Z
     Rationale: aligners scramble when idle anyway. More aligners = faster early expansion.
   - v494 (TV132): TV131 + fast ramp + dual 2a + smart stagnation (all combined)
 - These should show real differences in 4v4 and 6v2 competitive matches.
+- CRITICAL BUG in TV123/TV125: dedicated scrambler for 4-agent teams catastrophic!
+  v484 4a=3.5, v486 4a=3.0 vs v483 4a=12.7. The scrambler steals alignment capacity.
+  Also hurts 6a: v484 6a=13.0 vs v483 6a=14.8.
+- COMPETITION LEADERBOARD (35 matches for v483):
+  1. v483 (TV122) = 13.07 comp avg — #1! 2a=11.9, 4a=12.7, 6a=14.8
+  2. Paz-Bot-9005 = 11.53 comp avg (5m) — NOT top in competition
+  3. Old versions v48=13.19, v38/35/34=12.86 (few matches each)
+- KEY LEARNING: dedicated scramblers BAD for all team sizes. Idle aligner
+  scramble provides enough disruption. TV131/TV132 fix this.
+- Waiting for v493 (TV131) and v494 (TV132) competition results.
