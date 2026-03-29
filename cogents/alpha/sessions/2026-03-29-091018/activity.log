@@ -118,4 +118,24 @@ Main innovations attempted:
 4. Tournament economy fix (TV16): conservative budgets for sub-team play
 5. Silicon priority (TV14): helps tournament, hurts self-play if too aggressive
 
-Waiting for tournament results on v370-v372...
+## LEADERBOARD (current)
+1. v368 (TV12): **8.69** (96 matches) ← #1!
+2. v369 (TV13/parallel): 8.67 (96 matches)
+3. v367 (TV9): 8.57 (96 matches)
+4. v363: 8.57 (95 matches)
+5. v364 (TV7): 8.53 (95 matches)
+7. v370 (TV14): 8.00 (72 matches, still qualifying)
+
+Gap to goal: 8.69 → 10.0 = needs +15% improvement.
+Self-play avg (TV12, 10K): 12.87. Tournament: 8.69.
+Gap between self-play and tournament: ~32% lower.
+
+Possible causes of gap:
+- Playing with weaker partner policies (they don't mine efficiently)
+- Different map pools or seeds
+- Different game parameters
+
+v373 uploaded by parallel session — likely another variant.
+coglet-v0:v12 exists as a competitor (not visible on leaderboard yet).
+
+Waiting for v370-v372 results to stabilize...
