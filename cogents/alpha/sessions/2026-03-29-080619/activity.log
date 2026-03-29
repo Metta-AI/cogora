@@ -1,33 +1,35 @@
 # Session 2026-03-29-080619
 Status: in-progress
 
-## LATEST: TV13 Uploaded as v369
-TV13 = TV12 (stagnation) + TV11 (systematic explore + chain push)
-Combines three improvements over TV7:
-1. Stagnation-triggered wider exploration for idle aligners
-2. Last miner systematically explores map for first 400 steps
-3. Chain push: after aligning frontier junction, explore further in that direction
-
-## Self-Play Comparison (8a, 10K, 8 seeds each)
-| Policy | Avg | Non-wipeout Avg | Best |
-|--------|-----|-----------------|------|
-| TV12   | 7.38 | 8.43 | 14.07 |
-| TV13   | 13.15 | 17.52 | 36.11 |
-
-TV13 +78% avg over TV12! Massive improvement from combining stagnation + explore + chain push.
-
 ## Uploads This Session
-- v368 (TV12): qualifying
-- v369 (TV13): qualifying — best candidate!
+- v368 (TV12/stagnation): competition — 7.5 avg (12 matches)
+- v369 (TV13/stagnation+explore+chain): qualifying
+- v373 (TV11b/chain push only): qualifying — safest improvement
 
-## Key Design: TV13
-- TV12 stagnation detection: when junction count stops growing, explore more
-- TV11 systematic explore: last miner maps the world early (400 steps)
-- TV11 chain push: after frontier alignment, continue 15 steps in same direction
-- All on top of TV7's proven 2-agent mining and idle behavior
+## v368 Tournament Results (12 matches)
+- 2a: avg 7.02 (range 5.18-10.81)
+- 4a: avg 7.90 (range 6.35-9.30)
+- 6a: avg 7.69 (all 7.69)
+- Overall: ~7.54
 
-## Tournament Status
-- v367 (TV9): ~8.6 avg — current best
-- v368 (TV12): qualifying
-- v369 (TV13): qualifying — expects significant improvement
-- Goal: >10 avg
+Stagnation detection may hurt tournament (lower than v367's 8.61).
+Possible cause: stagnation triggers too early in 2a/4a tournament
+where teams are different from self-play.
+
+## Self-Play Results (8a, 10K, 8 seeds)
+| Policy | Avg | Notes |
+|--------|-----|-------|
+| TV7    | ~10.3 | Tournament proven at 8.55 |
+| TV11b  | 8.49 | Chain push only (safe) |
+| TV12   | 9.89 | Stagnation detection |
+| TV13   | 13.15 | Combined (high ceiling but high variance) |
+
+## Key Insight
+Self-play performance doesn't directly predict tournament performance!
+TV12 was best in self-play but worse in tournament than TV9.
+TV11b (chain push) is safe/conservative improvement.
+
+## Strategy
+Upload conservative improvements (chain push) rather than
+aggressive changes (stagnation detection) that may hurt
+tournament performance despite improving self-play.
