@@ -5779,18 +5779,11 @@ class AlphaMaxChainPolicy(MettagridSemanticPolicy):
 
 
 class AlphaAggroChainAgentPolicy(AlphaAggressiveAgentPolicy):
-    """Aggressive + chain expansion weights + silicon mining.
+    """Aggressive + silicon-priority mining.
 
-    Combines Aggressive's strong tournament performance (idle-scramble, more aligners)
-    with ChainExpand's key innovation (expansion_weight=20, expansion_cap=120).
-    Also adds silicon-priority mining from Balanced.
-    Uses Aggressive budgets (proven best in tournament) not conservative economy budgets.
+    Takes the tournament-proven Aggressive base and adds silicon-priority mining
+    to delay the economy collapse that typically starts around step 2000.
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._expansion_weight = 20.0
-        self._expansion_cap = 120.0
 
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         """Silicon-priority mining when silicon is scarce."""

@@ -77,3 +77,10 @@
 - [2026-03-29 00:12] Updated leaderboard: v311 at 5.37 (33 matches), v309 at 5.52 (41).
   v290 still #1 at 6.54. All our new policies < v290 so far.
   Tournament favors Aggressive approach against weak opponents.
+- [2026-03-29 00:15] CRITICAL: v312 (ChainDefense) at 3.00 (44 matches, rank #18)!
+  Defense scrambling HURTS in tournament! Against weak opponents, scrambling wastes hearts.
+  Aggressive-style play (align everything, no defensive scrambling) wins more.
+  v311 (ChainExpand) at 5.41 (40 matches) — OK but still < v290.
+  v309 (AdaptiveV3) at 5.55 (43 matches) — best of new policies.
+  Uploaded v313: Aggressive + silicon-priority mining (no other changes).
+  Hypothesis: silicon-priority might be the specific "economy fix" in v290.
