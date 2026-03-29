@@ -14799,3 +14799,231 @@ class AlphaTournamentV41Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV42: TV28 + zero hub penalty ────────────────────────────────────────
+
+class AlphaTournamentV42AgentPolicy(AlphaTournamentV28AgentPolicy):
+    """TournamentV42: TV28 + zero hub penalty.
+
+    Complete removal of hub distance penalty from targeting.
+    Aligners choose targets purely by distance + expansion + enemy avoidance.
+    Test if hub proximity matters at all for targeting.
+    """
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """Override targeting with zero hub penalty."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity
+            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+
+        def _zero_hub_score(
+            current_position: tuple[int, int],
+            candidate: KnownEntity,
+            unreachable: list[KnownEntity],
+            enemy_junctions: list[KnownEntity],
+            claimed_by_other: bool,
+            hotspot_count: int,
+            hotspot_weight: float,
+        ) -> tuple[float, float]:
+            distance = float(_h.manhattan(current_position, candidate.position))
+            expansion = sum(
+                1 for entity in unreachable if _h.manhattan(candidate.position, entity.position) <= 15
+            )
+            enemy_aoe = (
+                1.0
+                if any(_h.manhattan(candidate.position, enemy.position) <= 5 for enemy in enemy_junctions)
+                else 0.0
+            )
+            hotspot_penalty = min(hotspot_count, 3) * hotspot_weight
+            return (
+                distance
+                - min(expansion * 5.0, 30.0)
+                + enemy_aoe * 8.0
+                + (20.0 if claimed_by_other else 0.0)
+                + hotspot_penalty,
+                -float(expansion),
+            )
+
+        return min(
+            candidates,
+            key=lambda entity: (
+                _zero_hub_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    hotspot_weight=self._hotspot_weight,
+                )
+            ),
+        )
+
+
+class AlphaTournamentV42Policy(MettagridSemanticPolicy):
+    """TournamentV42: TV28 + zero hub penalty."""
+    short_names = ["alpha-tournament-v42"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV42AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV43: TV40 + higher expansion weight ─────────────────────────────────
+
+class AlphaTournamentV43AgentPolicy(AlphaTournamentV40AgentPolicy):
+    """TournamentV43: TV40 + double expansion weight.
+
+    TV40 reduced hub penalty lets aligners reach farther junctions.
+    TV43 also increases the expansion bonus (from 5.0 to 8.0 per unlocked
+    junction) to more strongly prefer junctions that chain into new clusters.
+    Cap remains at 30.0 → now needs only 4 junctions instead of 6 for max bonus.
+    """
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """TV40 targeting with higher expansion weight."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity
+            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+
+        def _high_expansion_score(
+            current_position: tuple[int, int],
+            candidate: KnownEntity,
+            unreachable: list[KnownEntity],
+            enemy_junctions: list[KnownEntity],
+            claimed_by_other: bool,
+            hub_position: tuple[int, int] | None,
+            hotspot_count: int,
+            hotspot_weight: float,
+        ) -> tuple[float, float]:
+            distance = float(_h.manhattan(current_position, candidate.position))
+            expansion = sum(
+                1 for entity in unreachable if _h.manhattan(candidate.position, entity.position) <= 15
+            )
+            enemy_aoe = (
+                1.0
+                if any(_h.manhattan(candidate.position, enemy.position) <= 5 for enemy in enemy_junctions)
+                else 0.0
+            )
+            # TV40's reduced hub penalty
+            hub_penalty = 0.0
+            if hub_position is not None:
+                hub_dist = float(_h.manhattan(hub_position, candidate.position))
+                if hub_dist > 25:
+                    hub_penalty = (hub_dist - 25) * 8.0 + 30.0
+                elif hub_dist > 15:
+                    hub_penalty = (hub_dist - 15) * 1.5 + 5.0
+                elif hub_dist > 10:
+                    hub_penalty = (hub_dist - 10) * 1.0 + 1.0
+                else:
+                    hub_penalty = hub_dist * 0.2
+            hotspot_penalty = min(hotspot_count, 3) * hotspot_weight
+            return (
+                distance
+                - min(expansion * 8.0, 30.0)  # Higher expansion weight (8.0 vs 5.0)
+                + enemy_aoe * 8.0
+                + (20.0 if claimed_by_other else 0.0)
+                + hub_penalty
+                + hotspot_penalty,
+                -float(expansion),
+            )
+
+        return min(
+            candidates,
+            key=lambda entity: (
+                _high_expansion_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    hotspot_weight=self._hotspot_weight,
+                )
+            ),
+        )
+
+
+class AlphaTournamentV43Policy(MettagridSemanticPolicy):
+    """TournamentV43: TV40 + higher expansion weight."""
+    short_names = ["alpha-tournament-v43"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV43AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
