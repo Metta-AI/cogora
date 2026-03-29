@@ -5776,3 +5776,47 @@ class AlphaMaxChainPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaAggroChainAgentPolicy(AlphaAggressiveAgentPolicy):
+    """Aggressive + chain expansion weights + silicon mining.
+
+    Combines Aggressive's strong tournament performance (idle-scramble, more aligners)
+    with ChainExpand's key innovation (expansion_weight=20, expansion_cap=120).
+    Also adds silicon-priority mining from Balanced.
+    Uses Aggressive budgets (proven best in tournament) not conservative economy budgets.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._expansion_weight = 20.0
+        self._expansion_cap = 120.0
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Silicon-priority mining when silicon is scarce."""
+        resources = _shared_resources(state)
+        silicon = resources.get("silicon", 0)
+        least = _least_resource(resources)
+        least_amount = resources[least]
+        if silicon <= least_amount + 20:
+            return MacroDirective(resource_bias="silicon")
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaAggroChainPolicy(MettagridSemanticPolicy):
+    """Aggressive base + chain expansion weights + silicon mining."""
+    short_names = ["alpha-aggro-chain"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAggroChainAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

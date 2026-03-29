@@ -69,3 +69,11 @@
   #3 v309: 5.52 (41 matches) — dropped from 5.95 with more matches
   #4 v311: 5.52 (13 matches) — ChainExpand entered competition!
   v312 not showing yet. Strategy: tournament is the bottleneck now, need more matches.
+- [2026-03-29 00:10] AggroChain (Aggressive + chain weights): 8a=2.35 WORSE than plain Aggressive.
+  Chain expansion weights hurt with aggressive budgets (6 aligners chase far targets).
+  KEY INSIGHT: economy-gated budgets + chain weights synergize.
+  Aggressive budgets work best in tournament because opponents are weak, not because of chain.
+  Created AlphaAggroChain but won't upload — inferior to both Aggressive and ChainExpand.
+- [2026-03-29 00:12] Updated leaderboard: v311 at 5.37 (33 matches), v309 at 5.52 (41).
+  v290 still #1 at 6.54. All our new policies < v290 so far.
+  Tournament favors Aggressive approach against weak opponents.
