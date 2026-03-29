@@ -34,3 +34,8 @@ started: 2026-03-29T20:04:53Z
   - TV95: TV94 + aggressive 2-agent (min_res >= 7)
   - TV96: TV95 + 3 aligners in 4v4 (instead of 2)
 - Uploaded: v455 (TV94), v456 (TV95), v457 (TV96) to qualifying.
+- Self-play 5K (baseline AlphaCyborg): junctions peak at 12 (step 1000), oscillate due to scramble.
+  Carbon consistently scarcest resource. Resources drain after step 2000.
+- Qualifying progress: v451=13.34(1), v452=8.99(1), v453=11.16(2), v454=8.99(1).
+  v456=2.05(1) — outlier, need more data. v455/v457 still running.
+- Running TV94 (no scramble) 5K self-play for comparison.
