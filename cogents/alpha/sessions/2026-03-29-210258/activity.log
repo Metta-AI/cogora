@@ -9,3 +9,19 @@ started: 2026-03-29T21:02:58Z
 - Current best: v451 (TV90) = 13.13 avg (28 matches). Base: TV88 + min_res >= 7.
 - Pending results: v460 (TV99), v461 (TV100), v462 (TV101) — TV90-based variants in competition.
 - Goal: Check pending results, iterate further on TV90 base.
+- Updated tournament results (500 matches):
+  - v451 (TV90): 12.83 (36 matches) — marginal over v449 (12.93, 84 matches)
+  - v460 (TV99): 12.37 (37 matches) — 3-aligner 4v4 slightly hurts
+  - v461 (TV100): 11.77 (35 matches) — faster stagnation hurts
+  - v462 (TV101): 13.37 (1 match) — too few data points
+- KEY FINDING: Analyzed 2v6 loss vs gtlm-reactive (3.91 score):
+  - Agent 6 (aligner): stuck at 4 junctions for 10K steps, doing idle_align_scramble
+  - Agent 7 (miner): accumulated 300+ resources in hub, never used
+  - Problem: TV90 budget (1,0) means 1 aligner + 1 permanent miner in 2-agent mode
+  - Aligner never gets more hearts despite massive resource stockpile
+- Created TV102-TV105, all targeting 2-agent improvement:
+  - TV102: dual aligner (both agents align when min_res >= 20)
+  - TV103: TV102 + skip heart batching in 2-agent (go align with 1 heart)
+  - TV104: TV90 + explore-first in 2-agent (no idle scramble, always explore)
+  - TV105: TV102 + explore-first + skip batching (full combo)
+- Uploaded: v463 (TV102), v464 (TV103), v465 (TV104), v466 (TV105) to qualifying.
