@@ -1,5 +1,5 @@
 # Activity Log — 2026-03-29-021106
-status: in-progress
+status: completed
 
 ## Context
 Previous session (010815) crashed. Key state:
@@ -81,3 +81,6 @@ Previous session (010815) crashed. Key state:
   Better than CarbonBoost seed 1 (5.89). Uploaded v338=AllCarbon.
 - 03:25:00 All carbon bias helps because resource_priority auto-switches
   when carbon is abundant (sorted by lowest inventory).
+- 03:35:00 AllCarbon 8a multi-seed: 7.84, 9.35, 7.20 → **avg 8.13** (best policy!)
+  vs CarbonBoost avg 7.62, Aggressive avg 3.15
+- 03:35:00 Tournament matches still running (down from 20 to 11). No completed results yet.

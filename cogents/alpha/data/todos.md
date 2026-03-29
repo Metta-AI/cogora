@@ -1,16 +1,16 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (current best 7.03, need ~43% improvement)
-- [ ] **Monitor v327 (TeamFix) tournament results** — uses actual team size for budgets
-- [ ] **Monitor v331 (Focused), v332 (SustainV2) results** — user-created variants
+- [ ] Achieve score > 10 in CogsVsClips (best local avg 8.13, need ~23% improvement)
+- [ ] **Monitor v338 (AllCarbon) tournament results** — best policy, 100% carbon bias
+- [ ] **Monitor v328 (CarbonBoost), v329 (Aggressive) tournament results** for comparison
 - [ ] **Investigate tournament environment changes** — v324 scores much lower than v290
 - [ ] **Study real opponents** — Paz-Bot, slanky, gtlm-reactiv, coglet-v0 appearing
-- [ ] **Fix num_agents bug across all policies** — total vs per-team impacts all budgets
+- [ ] **Extend alignment sustainability** — aligners only productive 0-3000 steps out of 10k
 - [ ] **GPU-accelerated RL training** — heuristic approach may have reached ceiling
-- [ ] **Optimize 2-agent format** — highest scores come from 2a format (avg 5.85, max 7.03)
-- [x] CREATED: UltraV3 (11.47 local 8a, ~1.0 tournament — chain expand hurts tournament)
-- [x] CONFIRMED: Chain expansion HURTS tournament despite 3x local improvement
-- [x] CONFIRMED: Scrambling is ESSENTIAL (removing it → 6x worse score)
-- [x] CONFIRMED: Tournament scoring is cooperative (both teams same score)
-- [x] DISCOVERED: num_agents is total (8 in 4v4) not per-team (4)
-- [x] DISCOVERED: Tournament environment changed — scores much lower across board
+- [ ] **Improve 8a bad-seed robustness** — AllCarbon scores 7.20-9.35 range, reduce variance
+- [x] CREATED: AlphaAllCarbonPolicy — avg 8.13 on 8a (4v4), best variant
+- [x] CONFIRMED: num_agents "bug" is actually BENEFICIAL for 4v4 (more aligners = better)
+- [x] CONFIRMED: Carbon is 3x bottleneck — 100% bias is better than 50%
+- [x] CONFIRMED: Scramblers essential (Coop/HighEff without them → 0-1.38)
+- [x] CONFIRMED: Mining deposit threshold 12 is optimal (8 and 20 both worse)
+- [x] CONFIRMED: -c 8 = 4v4 (main tournament), -c 4 = 2v2 (minority)
