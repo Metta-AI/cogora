@@ -10907,16 +10907,18 @@ class AlphaThreeScoutsPolicy(MettagridSemanticPolicy):
 class AlphaAdaptiveScoutAgentPolicy(AlphaScoutExploreAgentPolicy):
     """Adaptive scouting: only scout when team has enough agents.
 
-    - With 2 agents: no scout (both needed for economy + alignment)
-    - With 4 agents: 1 scout
-    - With 6+ agents: 1 scout
-    This ensures the scout doesn't hurt small teams.
+    Scouting costs 1 agent (no mining/alignment). Data shows:
+    - 8 agents: Scout is +28% (1 of 8 = 12.5% overhead)
+    - 4 agents: Scout is -62% at 10K! (1 of 4 = 25% overhead → economy collapse)
+    - 2 agents: Never scout (50% overhead)
+
+    So only scout with 6+ agents where the overhead is manageable.
     """
 
     def _desired_role(self, state: MettagridState, *, objective: str | None = None) -> str:
-        """Only scout when team has 4+ agents."""
+        """Only scout when team has 6+ agents."""
         team_ids = self._shared_team_ids
-        if team_ids and len(team_ids) >= 4:
+        if team_ids and len(team_ids) >= 6:
             max_id = max(team_ids)
             if self._agent_id == max_id:
                 return "scout"
