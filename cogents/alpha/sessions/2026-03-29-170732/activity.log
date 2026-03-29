@@ -22,3 +22,25 @@ Status: in-progress
 - v427-v433 now in competition pool (passed qualifying)
 - Running TV69 5K step self-play for analysis
 - Opponent slanky:v112 seen in matches
+
+### Leaderboard (17:38 UTC)
+1. **v422 (TV61) = 12.83** at 63m — #1! (80% scramble kitchen sink)
+2. v421 (TV60) = 12.66 at 63m — threshold=10
+3. v414 (TV53) = 12.63 at 99m
+4. v410 (TV50) = 12.59 at 99m
+5. v419 (TV58) = 12.55 at 63m
+
+New variants (early data):
+- v431 (TV70) = 11.54 at 15m — improved 2-agent, decent start
+- v429 (TV68) = 10.11 at 16m — defensive scramble, disappointing
+- v430 (TV69) = 8.48 at 7m — ultra-aggressive scramble, too extreme
+- v427 (TV66) = 5.94 at 17m — dedicated scramblers, TERRIBLE (confirms never do this)
+
+External opponents all below 4.0: slanky:v112=3.92, Paz-Bot=3.87. We're 3x better.
+
+### Key Learnings
+- Dedicated scramblers ALWAYS hurt (v427=5.94). Never allocate dedicated scrambler budget.
+- Ultra-aggressive scramble (min_res >= 3) hurts: v430=8.48. Keep threshold at 7.
+- Defensive scramble targeting hurts: v429=10.11. Default targeting is better.
+- TV61 (80% scramble, TV58 kitchen sink) is the clear winner.
+- Score curve: TV25(12.38) -> TV50(12.59) -> TV53(12.63) -> TV61(12.83)
