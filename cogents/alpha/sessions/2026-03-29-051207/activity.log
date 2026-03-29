@@ -53,6 +53,23 @@ Status: interrupted
 - v356: MaxPressure4a
 - v357: AdaptiveMap
 
+## Pickup Evaluation (TV2 vs starter)
+| TV2 Agents | Score | VOR |
+|-----------|-------|-----|
+| 8 (all) | 13.95 | 13.95 |
+| 7 | 11.70 | 11.70 |
+| 6 | 2.39 | 2.39 |
+| 5 | 1.59 | 1.59 |
+| 4 | 1.82 | 1.82 |
+| 3 | 1.86 | 1.86 |
+| 2 | 1.03 | 1.03 |
+| 1 | 0.00 | 0.00 |
+
+KEY: With 8 agents, TV2 scores 13.95 — ABOVE 10! With 7+1 starter: 11.70!
+Dramatic drop at 6+2: 2.39. The starter policy is hurting the shared score.
+This means the path to >10 is: pair with a strong partner OR dominate the
+agent allocation.
+
 ## Suggestions for Future Work
 - Analyze tournament match logs to understand per-map dynamics
 - Study Clips ship behavior and optimize scramble targeting for Clips
