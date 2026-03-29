@@ -13124,3 +13124,173 @@ class AlphaTournamentV22Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV23: TV18 + territory loss recovery ───────────────────────────────
+
+class AlphaTournamentV23AgentPolicy(AlphaTournamentV18AgentPolicy):
+    """TournamentV23: TV18 + territory loss recovery mode.
+
+    Key insight from match analysis: when friendly junctions drop significantly
+    from peak (>50% loss), the problem isn't stagnation (can't find junctions)
+    but territory loss (enemy scrambling our junctions). In this case:
+    - Don't explore far away (wastes HP and time)
+    - Scramble enemy junctions near our network to create alignable targets
+    - Stay closer to hub to maintain HP for the fight
+
+    v378 (TV18) is #1 at 10.16. This only adds loss recovery behavior,
+    leaving all other mechanics identical.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._territory_loss_mode = False
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """TV18 aligner + territory loss recovery."""
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+
+        # Track junction count — detect stagnation AND territory loss
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+            self._territory_loss_mode = False
+        elif (self._peak_junction_count >= 5
+              and step - self._last_junction_growth_step > 300
+              and step > 500):
+            # Distinguish territory loss from true stagnation
+            if friendly_count <= self._peak_junction_count * 0.5:
+                self._territory_loss_mode = True
+                self._stagnation_mode = False
+            else:
+                self._stagnation_mode = True
+                self._territory_loss_mode = False
+
+        # Standard aligner logic (same as TV12/TV18)
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        # TERRITORY LOSS: prioritize scrambling enemy near hub to create targets
+        if self._territory_loss_mode and hp > 40:
+            if hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="recovery_scramble", vibe="change_vibe_scrambler")
+            # Explore near hub (not far away) to find re-alignable junctions
+            if hub is not None:
+                return self._close_explore(state, hub)
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+        if self._stagnation_mode and hp > 50:
+            # STAGNATION: explore aggressively with wider offsets
+            if step % 300 < 100 and hearts > 0 and min_res >= 14:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._stagnation_explore(state)
+
+        # NOT stagnating: use TV7's proven idle behavior
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _close_explore(self, state: MettagridState, hub) -> tuple[Action, str]:
+        """Explore within hub range (25) to find re-alignable junctions."""
+        current_pos = _h.absolute_position(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+        # Tighter exploration: stay within alignment range of hub (25)
+        offsets = (
+            (0, -12), (9, -9), (12, 0), (9, 9),
+            (0, 12), (-9, 9), (-12, 0), (-9, -9),
+            (0, -20), (14, -14), (20, 0), (14, 14),
+            (0, 20), (-14, 14), (-20, 0), (-14, -14),
+        )
+        offset_index = (self._explore_index + self._agent_id * 3) % len(offsets)
+        target = offsets[offset_index]
+        absolute_target = (center[0] + target[0], center[1] + target[1])
+        if _h.manhattan(current_pos, absolute_target) <= 3:
+            self._explore_index += 1
+            offset_index = (self._explore_index + self._agent_id * 3) % len(offsets)
+            target = offsets[offset_index]
+            absolute_target = (center[0] + target[0], center[1] + target[1])
+        return self._move_to_position(state, absolute_target, summary="recovery_explore", vibe="change_vibe_aligner")
+
+
+class AlphaTournamentV23Policy(MettagridSemanticPolicy):
+    """TournamentV23: TV18 + territory loss recovery."""
+    short_names = ["alpha-tournament-v23"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV23AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

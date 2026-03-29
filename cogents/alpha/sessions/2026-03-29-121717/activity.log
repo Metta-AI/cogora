@@ -23,7 +23,16 @@ v386 (TV22) — not ranked yet
 - v387 (TV18 clean) needs more matches to validate
 - Gap from #2 to #1 is 0.64 — v378 is uniquely good
 
-## Pending
-- v386 (TV22): faster stagnation, awaiting ranking
-- v387 (TV18 clean): 1 match, need more data
-- Need to understand WHY v378 outperforms everything by 0.64+
+## Activity
+- [121717] Session started. Handling interrupted session 2026-03-29-111020.
+- [121800] Leaderboard: v378=10.16 (#1, 84 matches), v374=9.45 (#2), v385=7.97 (#16)
+- [121900] Analyzed match logs for v378 4v4 low-score game (7.47 vs v59).
+  Key finding: when enemy scrambles our junctions, stagnation mode kicks in
+  and agents explore FAR from hub instead of fighting for nearby territory.
+  Friendly junctions drop from 8 → 0 over 2000 steps.
+- [122000] Designed TV23: territory loss recovery mode.
+  When friendly count drops >50% from peak, enter "recovery mode":
+  - Scramble enemy junctions aggressively (lower min_res threshold: 7 vs 14)
+  - Explore close to hub (within 20) instead of far stagnation offsets (22-35)
+  - Stay in fight range instead of wandering far and retreating
+- [122000] Running TV23 local test (5000 steps, 8 agents).
