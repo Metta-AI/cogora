@@ -20602,3 +20602,125 @@ class AlphaTournamentV96Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV97: TV92 (best 2-agent) + 3 aligners in 4v4 (with scramble) ────────────
+
+class AlphaTournamentV97AgentPolicy(AlphaTournamentV92AgentPolicy):
+    """TournamentV97: TV92 + 3 aligners in 4v4.
+
+    TV92 has aggressive 2-agent (min_res >= 7) + reduced heart batch.
+    TV97 adds 3 aligners instead of 2 in 4v4, while keeping scramble defense.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if min_res >= 7:
+                return 1, 0
+            return 0, 0
+
+        if num_agents <= 4:
+            if step < 80:
+                return 1, 0
+            if min_res < 7:
+                return 1, 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            # 3 aligners in 4v4 (leave 1 miner), no scramblers
+            return min(3, num_agents - 1), 0
+
+        # 5+ agents: standard budgets with scramblers from TV82
+        return AlphaTournamentV82AgentPolicy._pressure_budgets(self, state, objective=objective)
+
+
+class AlphaTournamentV97Policy(MettagridSemanticPolicy):
+    """TournamentV97: TV92 + 3 aligners in 4v4."""
+    short_names = ["alpha-tournament-v97"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV97AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV98: TV92 + faster early game (step 100 aligner for all sizes) ───────────
+
+class AlphaTournamentV98AgentPolicy(AlphaTournamentV92AgentPolicy):
+    """TournamentV98: TV92 + faster early game.
+
+    Lower the initial aligner delay from step 200 to step 100 for 2-agent,
+    and from step 80 to step 50 for 4-agent. Get aligners moving faster.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            # Faster: step 100 instead of 200
+            if step < 100 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if min_res >= 7:
+                return 1, 0
+            return 0, 0
+
+        if num_agents <= 4:
+            # Faster: step 50 instead of 80
+            if step < 50:
+                return 1, 0
+            if min_res < 7:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, 0
+
+        # 5+ agents: standard from TV82
+        return AlphaTournamentV82AgentPolicy._pressure_budgets(self, state, objective=objective)
+
+
+class AlphaTournamentV98Policy(MettagridSemanticPolicy):
+    """TournamentV98: TV92 + faster early game."""
+    short_names = ["alpha-tournament-v98"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV98AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
