@@ -29,3 +29,12 @@ started: 2026-03-29T19:04:18Z
 - v441 (TV80) vs v49: 11.86 (4v4), 8.55 (6v2), 11.25 (2v6) — weaker.
 - Key insight: both teams always get same score per game. Score is game-level metric.
 - Competition now using v57/v58 as baselines. Waiting for v443-v446 to enter competition.
+- Competition results accumulating:
+  - v443 (TV82) avg: **13.78** (5 matches) — chain-value targeting is the key addition
+    - vs slanky: 15.35 (6v2), 10.80 (4v4), 13.67 (2v6)
+    - vs v13: 17.18 (4v4), 11.90 (6v2)
+  - v444 (TV83) avg: 12.98 (4 matches) — coordinated scramble
+    - vs slanky: 12.74 (4v4), vs Paz-Bot: 14.30/13.96/10.90
+  - v445 (TV84) avg: 12.36 (5 matches) — all improvements, but slanky scores are low
+    - vs v13: 17.18/13.02, vs slanky: 10.53/11.78/9.29
+  - v443 (TV82) > v442 (TV81 historical 13.52) so far!
