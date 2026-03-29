@@ -8647,3 +8647,71 @@ class AlphaAdaptiveTeamV2Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaAdaptiveTeamV3AgentPolicy(AlphaAdaptiveTeamAgentPolicy):
+    """AdaptiveTeamV3: Tournament-optimized with slower early ramp.
+
+    Key insight from tournament analysis: in 4v4 matches, both policies
+    independently allocate 3 aligners each = 6 aligners + 2 miners for
+    8 total agents. This crashes the economy by step 500 (carbon drops to 0).
+
+    Fix: slower early-game ramp to ensure mining builds economy before
+    alignment ramps up. This trades some early alignment speed for
+    much better economy sustainability in tournament.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Slower early ramp for tournament compatibility."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # Detect tournament: team_size < num_agents means partner policy exists
+        in_tournament = team_size < num_agents
+
+        if in_tournament:
+            # Tournament mode: conservative early game, proportional allocation
+            if step < 200:
+                return 1, 0  # 1 aligner, rest mine — build economy first
+            if step < 500:
+                if min_res < 20:
+                    return 1, 0  # Economy still building
+                return min(2, team_size - 1), 0
+            if step < 1000:
+                if min_res < 10:
+                    return 1, 0
+                return min(2, team_size - 1), 0
+
+            # After step 1000: standard AdaptiveTeam budgets
+            aligner, scrambler = super()._pressure_budgets(state, objective=objective)
+            # Extra economy check: if resources very low, pull back
+            if min_res < 5:
+                return min(aligner, 1), 0
+            return aligner, scrambler
+        else:
+            # Self-play mode: use standard AdaptiveTeam budgets
+            return super()._pressure_budgets(state, objective=objective)
+
+
+class AlphaAdaptiveTeamV3Policy(MettagridSemanticPolicy):
+    """AdaptiveTeamV3: Tournament-optimized with slower early ramp."""
+    short_names = ["alpha-adaptive-team-v3"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAdaptiveTeamV3AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
