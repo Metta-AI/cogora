@@ -2,24 +2,19 @@
 Status: in-progress
 
 ## Summary
-Created TV19: agent 0 uses full-map explore offsets (r15-r38) during idle, others use standard r22.
-Self-play avg 13.49 at 10K steps. Uploaded v379-v381.
-Tournament matches running but not completed yet.
+Created TV19: agent 0 uses full-map explore offsets (r15-r38) during idle.
+Self-play: avg 13.49 at 10K steps (+7% over TV9 at 5K).
+Uploaded v379-v381. Tournament running but slow — no completed matches yet.
 
-## TV19 Self-play Results (10K steps, 8 agents)
-Seeds: 10.53, 14.94, 14.01, 14.46 → avg 13.49
+## TV19 10K Self-play: 10.53, 14.94, 14.01, 14.46 → avg 13.49
+## TV19 5K vs TV9: +6%, =, +14% → avg +7%
 
-## TV19 vs TV9 (5K steps, 8 agents)
-TV9: 5.56, 6.17, 7.44 → avg 6.39
-TV19: 5.89, 6.17, 8.45 → avg 6.84 (+7%)
+## Key Insight: One-explorer wins
+- All agents exploring (TV15): high variance, -52% on some maps
+- One agent exploring (TV19): consistent improvement, preserves defense
+- Gate on team_size >= 5 prevents 4-agent regression
 
-## Key Findings
-1. Idle stagnation: aligners loop at same position when no frontier junctions
-2. All-agent explore (TV15): +30% on discovery maps, -52% on defense maps
-3. One-agent explore (TV19): consistent +7% without defense regression
-4. Team_size gate needed: wide explore hurts with <5 agents
-5. Silicon priority causes wipeouts — removed
-
-## Uploads
-- v379: TV19 (no gate), v380: TV19+LLM, v381: TV19 (team_size gate)
-- Tournament matches running against v53, v51, Paz-Bot, slanky
+## Tournament Status
+15+ matches running, 0 completed. Server processing backlog.
+Competitors: gtlm-reactive, Paz-Bot, slanky, many alpha versions.
+Waiting for results to determine next iteration.
