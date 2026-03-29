@@ -8176,3 +8176,185 @@ class AlphaMaxAlignV2Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaSustainablePolicy — KEY POLICY
+#
+# The core problem: Aggressive's budget bug causes 0 miners in small teams.
+# Economy collapses after step 2000-3000, junctions lost, score drops.
+# In 10000-step games, the second half (5000-10000) has near-zero junctions.
+#
+# Fix: Aggressive alignment pressure but GUARANTEE at least 1 miner.
+# Use shared_team_ids for team sizing (accurate), but keep aggressive budgets.
+# ---------------------------------------------------------------------------
+
+class AlphaSustainableAgentPolicy(AlphaAggressiveAgentPolicy):
+    """Sustainable: Aggressive alignment with guaranteed economy.
+
+    Key insight: In 10000-step tournament games, economy sustainability
+    matters more than front-loading alignment. Average junctions in the
+    second half can drop to ~0 without miners.
+
+    Changes from Aggressive:
+    1. Budget caps ensure at least 1 miner per team at all times
+    2. Uses actual team size for the MINER FLOOR only (keep aggressive num_agents for pressure)
+    3. More aggressive idle-mine when economy is struggling
+    4. Adaptive resource bias based on actual bottleneck
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Aggressive pressure but never exceed (team_size - 1) total roles."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        # Use big num_agents for aggressive budgets
+        num_agents = self.policy_env_info.num_agents
+        # But use actual team size to cap roles (guarantee 1 miner)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+        max_roles = max(team_size - 1, 1)  # Always leave 1 miner
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return min(1, max_roles), 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return min(1, max_roles), 0
+            if min_res < 7 and not can_hearts:
+                return min(1, max_roles), 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 0
+            if min_res >= 50 and step >= 500:
+                aligner_budget = min(3, num_agents - 1)
+            if min_res >= 200 and step >= 1000:
+                scrambler_budget = 1
+                aligner_budget = min(2, num_agents - 1 - scrambler_budget)
+            # Cap to team_size - 1 (guarantee miner)
+            total = aligner_budget + scrambler_budget
+            if total > max_roles:
+                scrambler_budget = min(scrambler_budget, max(0, max_roles - 1))
+                aligner_budget = min(aligner_budget, max_roles - scrambler_budget)
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents
+        if step < 30:
+            return min(2, max_roles), 0
+
+        economy_surplus = min_res >= 100
+        economy_crisis = min_res < 3 and not can_hearts
+
+        if economy_surplus:
+            pressure_budget = min(num_agents - 1, 7)
+        elif step < 100:
+            pressure_budget = 3
+        elif economy_crisis:
+            pressure_budget = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(5, num_agents - 2)
+
+        scrambler_budget = 0
+        if step >= 3000 and min_res >= 14:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 200 and min_res >= 7:
+            scrambler_budget = min(1, pressure_budget // 3)
+
+        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+
+        # Cap to team_size - 1
+        total = aligner_budget + scrambler_budget
+        if total > max_roles:
+            scrambler_budget = min(scrambler_budget, max(0, max_roles - 1))
+            aligner_budget = min(aligner_budget, max_roles - scrambler_budget)
+
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Aligner: idle-mine when economy is weak instead of scrambling."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Idle: scramble ONLY if economy very healthy; otherwise MINE
+        min_res = _h.team_min_resource(state)
+        if hearts > 0 and min_res >= 20:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        # Economy needs help: mine
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+
+class AlphaSustainablePolicy(MettagridSemanticPolicy):
+    """Sustainable: Aggressive alignment with guaranteed economy sustainability."""
+    short_names = ["alpha-sustainable"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaSustainableAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
