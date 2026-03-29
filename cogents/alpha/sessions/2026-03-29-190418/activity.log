@@ -43,3 +43,12 @@ started: 2026-03-29T19:04:18Z
 - Created TV86: TV82 + chain-value expand-toward (smart expansion scoring)
 - Created TV87: TV82 + light scramble coordination (penalty=15 instead of 30)
 - Uploaded v447 (TV86), v448 (TV87) to qualifying.
+- Updated competition results (more matches in):
+  - v443 (TV82): **12.58** avg (9 matches) — was 13.78 with fewer matches, gtlm 6v2 dragged down
+  - v446 (TV85): 13.10 avg (6 matches) — small sample
+  - v444 (TV83): 12.02 avg (9 matches)
+  - v445 (TV84): 11.89 avg (13 matches)
+  - v442 (TV81): 13.52 historical (11 matches from prev session)
+  - gtlm 6v2 = 3.91 for everyone — terrible config for 2-agent side
+  - v31 matches give lower scores (10.04/10.46)
+  - v17/v13/v14 4v4 always 17.18 (same map?)
