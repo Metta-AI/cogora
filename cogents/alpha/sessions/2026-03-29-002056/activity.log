@@ -3,3 +3,7 @@ status: in-progress
 
 ## Actions
 - 00:20:56 Session started. Goal: >10 score. Current best #1 at 6.54.
+- 00:30:00 Environment setup: installed anthropic + openai in cogames venv
+- 00:32:00 Read learnings from last session: best #1 at 6.54, need >10
+- 00:35:00 Created AlphaPureAlignPolicy: zero scrambling + chain expansion + fast start + silicon priority
+- 00:36:00 Running local games: aggressive 8a/4a, chainexpand 8a, purealign 8a/4a
