@@ -1,17 +1,16 @@
 # Todos
 
-- [ ] Achieve score > 10 in CogsVsClips (best local: 8.72 4a, 9.24 8a, avg ~5.55 4a)
-- [ ] **Monitor v343 (AdaptiveTeam) tournament results** — best candidate
-- [ ] **Monitor v339 (Sustainable), v342 (AdaptiveTeam v2) results**
-- [ ] **Improve 4a performance** — avg 5.55 needs to reach 10+
-- [ ] **Faster early alignment** — steps 0-200 have 0 junctions (wasted ticks)
-- [ ] **Better network connectivity** — junction distribution causes huge variance
-- [ ] **Mining efficiency** — reduce travel time, optimize deposit threshold
-- [ ] **Study opponent strategies** — analyze top opponents from match logs
+- [ ] Achieve score > 10 in CogsVsClips (current best: v348 at 7.46, #1 on leaderboard)
+- [ ] **Monitor v351 (TournamentV3) and v352 (TournamentV4) results** — still qualifying
+- [ ] **Close 7.46→10 gap** — may need fundamentally different approach
+- [ ] **Try LLM cyborg in tournament** — AnthropicCyborgPolicy for runtime strategy adjustment
+- [ ] **Study top match logs for v348** — understand what drives high/low scoring matches
 - [ ] **GPU-accelerated RL training** — heuristic approach may have reached ceiling
-- [x] FIXED: economy collapse in 2nd half by capping budget with team_size
-- [x] DISCOVERED: max_steps=10000 in tournament (was testing at 5000)
-- [x] DISCOVERED: scoring is PER TEAM, not cooperative (self-play artifact)
-- [x] CONFIRMED: scrambling essential (without: 2.77 vs with: 8.67)
-- [x] CONFIRMED: economy sustainability is #1 factor for 10k-step games
-- [x] CONFIRMED: num_agents bug helps large teams but kills economy in small teams
+- [ ] **Analyze opponent strategies** — Paz-Bot, slanky, coglet-v0, swoopy-v0
+- [x] BREAKTHROUGH: v348 TournamentV2 = #1 at 7.46 (beats v290's 6.50)
+- [x] CONFIRMED: Idle scrambling at min_res>=14 is THE critical differentiator
+- [x] CONFIRMED: Conservative budgets (AdaptiveV3) >> Aggressive for tournament
+- [x] CONFIRMED: Team-size cap helps on conservative base, hurts on aggressive base
+- [x] CONFIRMED: No scrambling = terrible (v350 at 2.18)
+- [x] CONFIRMED: Tournament env changed since v290 era (fresh Aggressive = 3.25)
+- [x] CONFIRMED: Economy crash in 4v4 when both policies allocate aggressively

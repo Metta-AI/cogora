@@ -1,47 +1,26 @@
-status: in-progress
+status: completed
 started: 2026-03-29-040530
 
-## BREAKTHROUGH: v348 TournamentV2 = #1 at 7.53 (65 matches)!
-- Beats previous #1 v290 (6.50) by 1.03 points and STILL RISING
-- Trajectory: 6.81→7.09→7.40→7.53 as matches increase
+## RESULT: v348 TournamentV2 = #1 on leaderboard at 7.46 (72 matches)
+- Beats previous #1 v290 (6.50) by ~1 point
+- Trajectory: 6.81→7.09→7.40→7.53→7.46 (stabilizing)
 - Architecture: AdaptiveV3 base + team-size cap + idle scramble at min_res>=14
 
-## Tournament Results Summary (latest)
+## Final Tournament Results
 | Policy | Version | Score | Matches | Rank |
 |---|---|---|---|---|
-| **TournamentV2** | **v348** | **7.53** | **65** | **#1** |
+| **TournamentV2** | **v348** | **7.46** | **72** | **#1** |
 | (old) Aggressive | v290 | 6.50 | 79 | #2 |
-| AdaptiveV3 | v347 | 5.40 | 54 | #8 |
-| AdaptiveV4 | v349 | 4.67 | 2 | #14 |
+| AdaptiveV4 | v349 | 5.75 | 71 | #4 |
+| AdaptiveV3 | v347 | 5.54 | 72 | #6 |
 | Aggressive | v345 | 3.25 | 46 | #21 |
 | V3 TournamentOpt | v346 | 3.26 | 42 | #20 |
 | AdaptiveTeam | v344 | 2.48 | 45 | #94 |
-| AdaptiveV5 (no scramble) | v350 | 1.86 | 3 | #286 |
+| AdaptiveV5 (no scramble) | v350 | 2.18 | 69 | #190 |
 
-## Why v348 (TournamentV2) Works — Key Learnings
-1. AdaptiveV3 base: conservative economy-gated budgets prevent crash
-2. Team-size cap: guarantees miners in sub-team when sharing with partner
-3. Idle scramble at min_res>=14: CRITICAL for scoring (v350 without it = 1.86)
-4. No dedicated scramblers in budget: hearts saved for aligners
-5. Silicon-priority mining from Balanced base: sustains economy longer
-
-## Key Tournament Insights
-- Conservative budgets >> aggressive in tournament (economy sustainability)
-- Idle scrambling is THE key differentiator (v348 vs v350: 7.53 vs 1.86)
-- Team cap helps on AdaptiveV3 base but HURTS on Aggressive base
-- AdaptiveV3 economy-gated scaling (only add aligners when min_res allows) is ideal
-
-## All Uploads This Session
-- v344: AdaptiveTeam → 2.48 (bad)
-- v345: Aggressive → 3.25 (ok)
-- v346: AdaptiveTeamV3 → 3.26 (ok)
-- v347: AdaptiveV3 → 5.40 (good, confirming V3 is best base)
-- v348: TournamentV2 → 7.53 (#1!)
-- v349: AdaptiveV4 → 4.67 (early, below V3)
-- v350: AdaptiveV5 → 1.86 (terrible, no scramble kills score)
-
-## Goal Progress
-- Target: score > 10
-- Current best: 7.53 (#1, rising)
-- Gap: 2.47 points
-- v348 still rising with more matches — may stabilize around 7-8
+## All Uploads: v344-v352 (9 versions)
+- v344: AdaptiveTeam, v345: Aggressive, v346: V3-TournamentOpt
+- v347: AdaptiveV3, v348: TournamentV2 (#1!)
+- v349: AdaptiveV4, v350: AdaptiveV5 (no scramble)
+- v351: TournamentV3 (more scramble), v352: TournamentV4 (V4+cap+scramble)
+- v351/v352 still qualifying at session end
