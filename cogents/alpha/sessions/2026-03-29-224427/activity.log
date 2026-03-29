@@ -41,3 +41,9 @@ started: 2026-03-29T22:44:27Z
 - Created TV122: dual aligner for 2-agent teams (both align when min_res >= 14).
   In 2v6, opponent's 6 agents provide resources. Our 2nd agent mining is wasted.
   v483 uploaded.
+- MORE RESULTS (62+ matches each):
+  - v478 (TV117): 11.65 (5m) — too few
+  - v479 (TV118): 10.96 (62m) — confirmed worse than baseline
+  - v480 (TV119): 11.57 (61m) — confirmed worse
+- All TV117-120 likely failures. TV82 = 12.98 is robust.
+- v481-v483 still in qualifying/competition queue.
