@@ -6,3 +6,9 @@ started: 2026-03-29T18:08:13Z
 
 ## Actions
 - Session started. Current #1 at 12.83 (TV61/v422). Goal: push higher with novel strategies.
+- Analyzed TV61 baseline: 25% productive, 35% overhead (retreat/heal), 20% searching. Only 18/47 junctions aligned in self-play.
+- Key insight: frontier=0 for most of game = no reachable junctions. Agents waste time on expand_toward_junction.
+- Created TV76: chain-value targeting (transitive expansion scoring) + smarter expand-toward (pick bridge junctions)
+- Created TV77: TV76 + adaptive scramble ratio (90%/80%/60% based on junction ratio vs peak)
+- Created TV78: TV61 + chain-value expand-toward only (conservative: proven targeting, novel expand)
+- All three variants pass local 100-step tests.

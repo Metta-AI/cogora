@@ -18299,3 +18299,524 @@ class AlphaTournamentV75Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV76: TV61 + chain-value targeting + smarter expansion ──────────────────
+
+def _chain_expansion_value(
+    candidate_pos: tuple[int, int],
+    unreachable: list[KnownEntity],
+    network_positions: set[tuple[int, int]],
+    max_depth: int = 3,
+) -> int:
+    """Compute transitive expansion value: how many junctions become reachable
+    through a chain of alignments starting from candidate.
+
+    Unlike simple expansion (1-hop count), this counts the full tree of junctions
+    unlocked by aligning the candidate, then aligning newly reachable junctions, etc.
+    """
+    unreachable_by_pos = {e.position: e for e in unreachable}
+    reached: set[tuple[int, int]] = set()
+    frontier = {candidate_pos}
+    combined_network = network_positions | {candidate_pos}
+
+    for _ in range(max_depth):
+        new_frontier: set[tuple[int, int]] = set()
+        for src in frontier:
+            for pos, entity in unreachable_by_pos.items():
+                if pos in reached or pos in combined_network:
+                    continue
+                if _h.manhattan(src, pos) <= 15:  # _JUNCTION_ALIGN_DISTANCE
+                    reached.add(pos)
+                    new_frontier.add(pos)
+        if not new_frontier:
+            break
+        frontier = new_frontier
+        combined_network |= new_frontier
+
+    return len(reached)
+
+
+class AlphaTournamentV76AgentPolicy(AlphaTournamentV61AgentPolicy):
+    """TournamentV76: TV61 + chain-value targeting + smarter expand-toward.
+
+    Two key changes:
+    1. When scoring alignment targets, use chain expansion (transitive reachability)
+       instead of 1-hop expansion. This prefers junctions that bridge to clusters.
+    2. When no reachable junctions exist (expand_toward_junction), pick the unreachable
+       junction with the highest chain value as the expansion target rather than just
+       the nearest one.
+    """
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """TV46 reduced hub penalty targeting + chain-value expansion scoring."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        network_positions = {e.position for e in network_sources}
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity
+            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+
+        def _chain_score(
+            current_position: tuple[int, int],
+            candidate: KnownEntity,
+            unreachable: list[KnownEntity],
+            enemy_junctions: list[KnownEntity],
+            claimed_by_other: bool,
+            hub_position: tuple[int, int] | None,
+            hotspot_count: int,
+            hotspot_weight: float,
+        ) -> tuple[float, float]:
+            distance = float(_h.manhattan(current_position, candidate.position))
+            # Chain-value: count transitive reachability (depth 3)
+            chain_val = _chain_expansion_value(
+                candidate.position, unreachable, network_positions, max_depth=3
+            )
+            # Also count immediate expansion for tiebreaking
+            imm_expansion = sum(
+                1 for entity in unreachable if _h.manhattan(candidate.position, entity.position) <= 15
+            )
+            enemy_aoe = (
+                1.0
+                if any(_h.manhattan(candidate.position, enemy.position) <= 5 for enemy in enemy_junctions)
+                else 0.0
+            )
+            # TV46 reduced hub penalty
+            hub_penalty = 0.0
+            if hub_position is not None:
+                hub_dist = float(_h.manhattan(hub_position, candidate.position))
+                if hub_dist > 25:
+                    hub_penalty = (hub_dist - 25) * 8.0 + 30.0
+                elif hub_dist > 15:
+                    hub_penalty = (hub_dist - 15) * 1.5 + 5.0
+                elif hub_dist > 10:
+                    hub_penalty = (hub_dist - 10) * 1.0 + 1.0
+                else:
+                    hub_penalty = hub_dist * 0.2
+            hotspot_penalty = min(hotspot_count, 3) * hotspot_weight
+            # Chain value weighted at 7.0 per junction (stronger than imm 5.0), cap 70
+            chain_bonus = min(chain_val * 7.0, 70.0)
+            return (
+                distance
+                - chain_bonus
+                + enemy_aoe * 8.0
+                + (20.0 if claimed_by_other else 0.0)
+                + hub_penalty
+                + hotspot_penalty,
+                -float(chain_val * 10 + imm_expansion),
+            )
+
+        return min(
+            candidates,
+            key=lambda entity: (
+                _chain_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    hotspot_weight=self._hotspot_weight,
+                )
+            ),
+        )
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        elif (self._peak_junction_count >= 5
+              and step - self._last_junction_growth_step > 300
+              and step > 500):
+            self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Smart expand-toward: pick unreachable junction with best chain value
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_positions = {e.position for e in [*hubs, *friendly_junctions]}
+
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            # Score by chain value (how many junctions this unlocks) minus distance
+            best = min(targets, key=lambda j: (
+                _h.manhattan(current_pos, j.position)
+                - _chain_expansion_value(j.position, [u for u in unreachable if u is not j], network_positions, max_depth=3) * 5.0
+            ))
+            dist = _h.manhattan(current_pos, best.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, best, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        if self._stagnation_mode and hp > 50:
+            # 80% scramble + low threshold (7) — same as TV61
+            if step % 200 < 160 and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV76Policy(MettagridSemanticPolicy):
+    """TournamentV76: TV61 + chain-value targeting + smarter expansion."""
+    short_names = ["alpha-tournament-v76"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV76AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV77: TV76 + adaptive scramble ratio (score-based) ──────────────────────
+
+class AlphaTournamentV77AgentPolicy(AlphaTournamentV76AgentPolicy):
+    """TournamentV77: TV76 (chain-value) + adaptive scramble ratio.
+
+    Instead of fixed 80% scramble during stagnation, dynamically adjust:
+    - If we have many junctions (>= peak * 0.9): scramble 90% (protect lead)
+    - If we have moderate junctions (>= peak * 0.7): scramble 80% (TV61 default)
+    - If below that: scramble 60% and explore more (need to find new territory)
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        elif (self._peak_junction_count >= 5
+              and step - self._last_junction_growth_step > 300
+              and step > 500):
+            self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Smart expand-toward (same as TV76)
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_positions = {e.position for e in [*hubs, *friendly_junctions]}
+
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            best = min(targets, key=lambda j: (
+                _h.manhattan(current_pos, j.position)
+                - _chain_expansion_value(j.position, [u for u in unreachable if u is not j], network_positions, max_depth=3) * 5.0
+            ))
+            dist = _h.manhattan(current_pos, best.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, best, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        if self._stagnation_mode and hp > 50:
+            # Adaptive scramble ratio based on current junction count vs peak
+            if self._peak_junction_count > 0:
+                ratio = friendly_count / self._peak_junction_count
+            else:
+                ratio = 0.0
+
+            if ratio >= 0.9:
+                scramble_steps = 180  # 90% scramble — protecting strong lead
+            elif ratio >= 0.7:
+                scramble_steps = 160  # 80% scramble — TV61 default
+            else:
+                scramble_steps = 120  # 60% scramble — need more exploration
+
+            if step % 200 < scramble_steps and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV77Policy(MettagridSemanticPolicy):
+    """TournamentV77: TV76 + adaptive scramble ratio."""
+    short_names = ["alpha-tournament-v77"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV77AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV78: TV61 + smarter expand-toward only (no chain targeting) ────────────
+
+class AlphaTournamentV78AgentPolicy(AlphaTournamentV61AgentPolicy):
+    """TournamentV78: TV61 + smarter expand-toward using chain value.
+
+    Keep TV61's targeting unchanged (proven), but when no reachable junctions
+    exist, use chain value to pick a better expansion target instead of just
+    the nearest one.
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        elif (self._peak_junction_count >= 5
+              and step - self._last_junction_growth_step > 300
+              and step > 500):
+            self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Chain-value expand-toward (only change from TV61)
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_positions = {e.position for e in [*hubs, *friendly_junctions]}
+
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            best = min(targets, key=lambda j: (
+                _h.manhattan(current_pos, j.position)
+                - _chain_expansion_value(j.position, [u for u in unreachable if u is not j], network_positions, max_depth=3) * 5.0
+            ))
+            dist = _h.manhattan(current_pos, best.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, best, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        if self._stagnation_mode and hp > 50:
+            if step % 200 < 160 and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV78Policy(MettagridSemanticPolicy):
+    """TournamentV78: TV61 + chain-value expand-toward only."""
+    short_names = ["alpha-tournament-v78"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV78AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
