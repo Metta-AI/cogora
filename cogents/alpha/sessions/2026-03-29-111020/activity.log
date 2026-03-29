@@ -1,31 +1,35 @@
 # Session 2026-03-29-111020
 Status: interrupted
 
-## Goal: score > 10 — ACHIEVED: v378 at 10.22 (#1)
+## Goal: score > 10 — ACHIEVED: v378 at 10.16 (#1)
 
-## Current Leaderboard
-1. v378 (TV18) = 10.22 (81 matches) — ABOVE >10 GOAL, INCREASING
-2. v374 = 9.44 (81)
-3. v379 (TV19) = 8.75 (81)
-4. v368 (TV12) = 8.69 (96)
-9. v382 (TV12+bugfix) = 8.53 (80)
-15. v384 (TV18+bugfix) = 7.84 (36) — WORSE than v378!
+## Latest Leaderboard
+1. v378 (TV18) = 10.16 (84 matches)
+2. v374 = 9.45 (84)
+3. v379 (TV19) = 8.76 (84)
+6. v381 = 8.65 (84)
+7. v384 (TV18+bugfix) = 8.65 (84)
+10. v380 = 8.55 (84)
+11. v382 (TV12+bugfix) = 8.54 (84)
+16. v385 (TV21) = 8.10 (17)
 
-## Critical Finding: Bug Fix HURTS Tournament
-v384 (TV18+bugfix) = 7.84 vs v378 (TV18, no bugfix) = 10.22
-The early-game hub_camp_heal code we removed was HELPING in tournament!
-Tournament env likely has functional territory healing at start.
-The 20-step hub wait builds HP from 50→100 before agents venture out.
+## v378 Analysis
+v378 is TV18 = TV12 stagnation + light silicon priority.
+It's the only policy above 10. Gap to #2 is 0.71 points.
+Key factors that make v378 special:
+- TV12's stagnation detection catches when junction growth stalls
+- Light silicon priority prevents silicon crash at step 1500
+- Original early-game hub_camp_heal code (territory heals in tournament)
+- No budget changes from base TV7 defaults
 
-## Uploads This Session
-- v382: TV12 + bugfix → 8.53 (#9) — similar to v368 (8.69)
-- v383: TV20 → 2.82 (terrible)
-- v384: TV18 + bugfix → 7.84 (WORSE than v378)
-- v385: TV21 → not ranked yet
+## Bug Fix Impact (revised)
+v384 (TV18+bugfix) = 8.65 (84 matches) vs v378 (TV18 no bugfix) = 10.16
+Difference: -1.51 points. Bug fix costs ~1.5 points in tournament.
+The hub_camp_heal code IS beneficial in tournament (heals HP to 100).
 
-## Strategy
-v378 is our champion at 10.22. We should NOT change the base code
-(the "bug" fix actually hurts tournament). Focus on:
-1. Understanding why v378 works so well
-2. Finding improvements that don't break what works
-3. Possibly reverting the bug fix and trying other improvements
+## Tournament Strategy
+v378 is winning. Focus on:
+1. Try small improvements on TV18 base (with original early-game code)
+2. TV22 (v386): faster stagnation (200 vs 300 steps)
+3. TV18 clean re-upload (v387): verify v378 performance is reproducible
+4. Consider: more aggressive exploration during stagnation
