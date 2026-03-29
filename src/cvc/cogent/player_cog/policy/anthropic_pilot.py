@@ -9234,3 +9234,133 @@ class AlphaTournamentV4Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# Wide exploration offsets for discovering junctions far from hub (covers 88x88 map)
+_WIDE_EXPLORE_OFFSETS = (
+    (0, -36), (25, -25), (36, 0), (25, 25),
+    (0, 36), (-25, 25), (-36, 0), (-25, -25),
+    (0, -28), (20, -20), (28, 0), (20, 20),
+    (0, 28), (-20, 20), (-28, 0), (-20, -20),
+)
+
+
+class AlphaExplorerV2AgentPolicy(AlphaTournamentV2AgentPolicy):
+    """TournamentV2 + wide exploration when frontier is empty.
+
+    Key insight: agents only discover ~14 of ~65 junctions because exploration
+    radius is too small (~22). When frontier=0, this policy sends idle aligners
+    on wide exploration patterns (radius 36) to discover new junction clusters
+    that can extend the network chain.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._wide_explore_index = 0
+        self._frontier_empty_steps = 0
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """TournamentV2 aligner + wide exploration when frontier empty."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        step = state.step or self._step_index
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            self._frontier_empty_steps = 0
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            self._frontier_empty_steps = 0
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._frontier_empty_steps = 0
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # Expand toward known unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                self._frontier_empty_steps = 0
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # FRONTIER EMPTY — track how long we've been idle
+        self._frontier_empty_steps += 1
+
+        # Scramble if we have hearts and economy is OK (like TournamentV2)
+        min_res = _h.team_min_resource(state)
+        if hearts > 0 and min_res >= 14:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                # Alternate: 2/3 scramble + 1/3 explore to maintain pressure while discovering
+                if self._frontier_empty_steps % 3 != 0:
+                    return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        # WIDE EXPLORATION: explore far from hub to discover new junction clusters
+        if hub is not None and hp > 60:
+            hub_pos = hub.position
+            offset_idx = (self._wide_explore_index + self._agent_id * 3) % len(_WIDE_EXPLORE_OFFSETS)
+            ox, oy = _WIDE_EXPLORE_OFFSETS[offset_idx]
+            explore_target = (hub_pos[0] + ox, hub_pos[1] + oy)
+            if _h.manhattan(current_pos, explore_target) <= 3:
+                self._wide_explore_index += 1
+                offset_idx = (self._wide_explore_index + self._agent_id * 3) % len(_WIDE_EXPLORE_OFFSETS)
+                ox, oy = _WIDE_EXPLORE_OFFSETS[offset_idx]
+                explore_target = (hub_pos[0] + ox, hub_pos[1] + oy)
+            return self._move_to_position(state, explore_target, summary="wide_explore", vibe="change_vibe_aligner")
+
+        # Low HP or no hub: mine to stay alive
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaExplorerV2Policy(MettagridSemanticPolicy):
+    """TournamentV2 + wide exploration when frontier is empty."""
+    short_names = ["alpha-explorer-v2"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaExplorerV2AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
