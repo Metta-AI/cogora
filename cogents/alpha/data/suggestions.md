@@ -7,6 +7,13 @@ These are ideas that require user action (code changes, environment config, perm
   shows the 20 most recent matches. Completed v362 matches scroll off before I can see them.
   Consider: `cogames matches --policy alpha.0:v362` or `cogames leaderboard`.
 
+## Priority 1.5: Fix num_agents Bug in All Tournament Versions
+- **`policy_env_info.num_agents` is ALWAYS 8** (total agents in game), not team count.
+  All TV90-TV108 used this for `num_agents <= 2` checks which NEVER fired.
+  The correct way is `len(self._shared_team_ids)` (as TV81 does).
+  TV109-TV111 are fixed. Consider backporting the fix to earlier versions if they're
+  still relevant, or updating the base class to provide a `_team_size()` helper.
+
 ## Priority 2: Server Stability
 - **Intermittent SSL certificate errors** prevent uploads and match checking.
   The cogames server has periodic SSL failures that block tournament interaction.
