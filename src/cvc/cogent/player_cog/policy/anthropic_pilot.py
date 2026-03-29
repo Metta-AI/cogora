@@ -9961,6 +9961,81 @@ class AlphaAdaptiveMapAgentPolicy(AlphaCaptureAgentPolicy):
         return self._explore_action(state, role="aligner", summary="find_neutral_junction")
 
 
+class AlphaCoopAgentPolicy2(AlphaTournamentV2AgentPolicy):
+    """Cooperative-aware: only scramble Clips junctions, never opponent Cogs.
+
+    CRITICAL INSIGHT: Tournament scoring is COOPERATIVE (both Cogs teams
+    share the same score). Scrambling opponent Cogs junctions is wasteful
+    (temporarily reduces shared score). Only scramble Clips/non-Cogs junctions
+    to convert them to Cogs (net +1 for shared score).
+    """
+
+    def _preferred_scramble_target(self, state: MettagridState) -> KnownEntity | None:
+        """Only target non-Cogs junctions (Clips) for scrambling."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+
+        # Get ALL enemy junctions (not our team, not neutral)
+        all_enemy = self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        )
+        if not all_enemy:
+            return None
+
+        # Filter: only keep non-Cogs junctions (i.e., Clips junctions)
+        # Cogs team IDs are typically "cogs" or "red.X" patterns
+        # We filter OUT any junction owned by a team that contains "cog" or "red"
+        clips_only = [
+            j for j in all_enemy
+            if j.owner and "cog" not in str(j.owner).lower() and "red" not in str(j.owner).lower()
+        ]
+
+        # If no Clips junctions available, fall back to all enemy (including Cogs)
+        # This handles the case where Clips own 0 junctions
+        targets = clips_only if clips_only else all_enemy
+
+        if not targets:
+            return None
+
+        hub_pos = hub.position if hub else current_pos
+        neutral_junctions = self._world_model.entities(
+            entity_type="junction",
+            predicate=lambda e: e.owner in {None, "neutral"},
+        )
+        friendly_junctions = self._known_junctions(state, predicate=lambda j: j.owner == team_id)
+
+        return min(
+            targets,
+            key=lambda entity: _h.scramble_target_score(
+                current_position=current_pos,
+                hub_position=hub_pos,
+                candidate=entity,
+                neutral_junctions=neutral_junctions,
+                friendly_junctions=friendly_junctions,
+            ),
+        )
+
+
+class AlphaCoopPolicy2(MettagridSemanticPolicy):
+    """Cooperative-aware: scramble only Clips, not opponent Cogs."""
+    short_names = ["alpha-coop-v2"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaCoopAgentPolicy2(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaAdaptiveMapPolicy(MettagridSemanticPolicy):
     """Adapts exploration vs scramble based on map junction density."""
     short_names = ["alpha-adaptive-map"]
