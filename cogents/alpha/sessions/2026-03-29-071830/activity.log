@@ -1,27 +1,25 @@
 # Session 2026-03-29-071830
 Status: in-progress
 
-## Context
-Continuing from session 061015 which achieved >10 in self-play.
+## Key Findings (merged with session 071423)
 
-## Tournament Results
-- v360 (TwoScouts) 4a vs v60: 2.31 (bad - 2 scouts at 4 agents hurts)
-- v360 (TwoScouts) 2a vs v60: 5.62
-- v361 (AdaptiveScout v1) 2a vs v60: 5.30
-- v362 (AdaptiveScout v2) 2a vs v55: 5.24
-- v362 (AdaptiveScout v2): 7.84 match seen (couldn't get details, server issues)
-- Many v362 matches scheduled against v51-v58, waiting for completion
+### Tournament Reality Check
+- ScoutExplore (v359) avg ~5.19 in tournament — WORSE than v348 (~7.5)
+- Scout hurts at 2-4 agents due to economy overhead
+- Both sub-teams share the same hub → scout takes from shared pool
+- v348 (TournamentV2) remains best at avg ~9.09 for 6-agent matches
+- Best single tournament match: 13.86 (v348 4v4)
 
-## Key Finding
-TwoScouts (v360) is terrible at 4 agents because 50% of team is scouts.
-AdaptiveScout (v362) only scouts with 6+ agents, solving this.
+### Self-Play vs Tournament Gap
+- Self-play (both teams = our policy): ScoutExplore excels (10.85 avg 10K)
+- Tournament (mixed opponents, 2/4/6 agents): ScoutExplore hurts at small teams
+- AdaptiveScout (v362, 6+ only) should bridge the gap but results pending
 
-## Tournament Competition
-- Other cogents: "gtlm-reactive", "coglet-v0" are real opponents
-- Tournament cycles through all versions rapidly
-- Server SSL issues causing intermittent failures
+### Next Steps
+1. Wait for v362 tournament results (should match TV2 at 2-4 agents, beat at 6)
+2. If v362 also disappoints, the scout may not be tournament-viable
+3. Focus on what made v348 get 13.86 — map-specific optimization?
+4. Consider: the >10 goal may require RL or fundamentally different approach
 
-## Next Steps
-- Monitor v362 tournament results (particularly 6-agent matches)
-- If v362 scores >10 in 6-agent matches, we've achieved the goal
-- Consider: can we improve v362 further? Maybe different scout patterns.
+## Uploads
+v359 (ScoutExplore), v360 (TwoScouts), v361 (AdaptiveScout v1), v362 (AdaptiveScout v2)
