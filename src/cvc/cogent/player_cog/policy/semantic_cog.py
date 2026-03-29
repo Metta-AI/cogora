@@ -279,6 +279,9 @@ class SemanticCogAgentPolicy(AgentPolicy):
         )
         role = directive.role or self._desired_role(state, objective=directive.objective)
         action, summary = self._choose_action(state, role)
+        if self._step_index <= 3 and self._agent_id == 0:
+            print(f"[COG_DEBUG] agent={self._agent_id} step={self._step_index} role={role} summary={summary} action={action}")
+            print(f"[COG_DEBUG] hp={state.self_state.inventory.get('hp', '?')} pos={_h.absolute_position(state)}")
         self._record_navigation_observation(current_pos, summary)
         macro_snapshot = self._macro_snapshot(state, role)
         self._infos = {
@@ -393,25 +396,12 @@ class SemanticCogAgentPolicy(AgentPolicy):
         safe_target = self._nearest_hub(state)
         safe_distance = 0 if safe_target is None else _h.manhattan(_h.absolute_position(state), safe_target.position)
 
-        # EARLY-GAME SURVIVAL: HP starts at 50, drains 1/tick, territory heals +100/tick.
-        # Territory radius is 10 tiles from hub/network junctions.
         hp = int(state.self_state.inventory.get("hp", 0))
         step = state.step or self._step_index
 
-        # Stay at hub until HP reaches 100. Territory heals +100/tick when in range.
-        # Short timeout: if healed to 100+ by step 20, move on. Otherwise extend wait.
-        if hp < 100 and hp > 0 and safe_target is not None and safe_distance <= 3 and step <= 20:
-            return self._hold(summary="hub_camp_heal", vibe="change_vibe_default")
-
-        # If HP dropping in early game, rush to hub immediately.
-        if step < 150 and safe_target is not None and hp > 0 and hp < 40:
-            if safe_distance > 2:
-                return self._move_to_known(state, safe_target, summary="survival_retreat")
-            return self._hold(summary="survival_hold", vibe="change_vibe_default")
-
-        # WIPEOUT RECOVERY: If hp=0, stay near hub to try to trigger healing.
+        # WIPEOUT RECOVERY: If hp=0, move to hub (walking on hub heals).
         if hp == 0 and safe_target is not None:
-            if safe_distance > 3:
+            if safe_distance > 0:
                 return self._move_to_known(state, safe_target, summary="wipeout_return_hub")
             return self._hold(summary="wipeout_hub_hold", vibe="change_vibe_default")
 
@@ -1276,6 +1266,8 @@ class SemanticCogAgentPolicy(AgentPolicy):
 
     def _action(self, name: str, *, vibe: str | None = None) -> Action:
         action_name = name if name in self._action_names else self._fallback_action
+        if action_name != name and self._step_index <= 5:
+            print(f"[COG_DEBUG] agent={self._agent_id} step={self._step_index} action '{name}' NOT in action_names={sorted(self._action_names)}, falling back to '{action_name}'")
         vibe_name = vibe if vibe in self._vibe_actions else None
         return Action(name=action_name, vibe=vibe_name)
 

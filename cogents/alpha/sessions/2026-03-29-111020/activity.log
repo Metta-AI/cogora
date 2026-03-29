@@ -13,3 +13,33 @@ TV13 designed (full-map exploration waypoints) but untested.
 2. Validate TV13 locally
 3. Focus on improving weak 2-agent performance
 4. Upload improved policy to tournament
+
+## CRITICAL BUG FOUND: Early-game wipeout
+All tournament matches running — new opponents v49, v50 appeared.
+Ran local TV12 test → score 0.00! All agents dead by step 100.
+
+### Root cause
+`_choose_action()` in semantic_cog.py had early-game survival code:
+- Steps 1-20: `hub_camp_heal` — holds (noop) near hub expecting "territory healing +100/tick"
+- But territory healing doesn't work at game start (0 junctions, agent not ON hub)
+- Agents lose 1 HP/tick, die at step ~50
+- Then enter `wipeout_hub_hold` (noop at distance ≤3 from hub) forever
+- All agents dead, score 0 for entire game
+
+### Fix
+Removed the hub_camp_heal and survival_hold early-game waiting behavior.
+Agents now start moving immediately (get gear, mine, explore).
+HP jumps to 100 at step 2 from territory healing once agents move.
+By step 100: agents have hearts, friendly junctions, actively playing.
+
+### IMPORTANT QUESTION
+Was this bug present in the tournament versions we uploaded?
+- The AlphaTournamentV7+ classes override `_aligner_action` and `_pressure_budgets`
+  but NOT `_choose_action` — so they inherit the base bug from SemanticCogAgentPolicy.
+- This means ALL our tournament uploads have this bug!
+- v368 (TV12) scored 8.69 despite this bug — either the tournament environment
+  has different healing mechanics, or the hub spawns closer to agents.
+- If the tournament env heals differently, this fix might not change tournament scores.
+- If the tournament env has the same bug, fixing it could massively improve scores.
+
+Running full 5K step test with fix to measure impact.
