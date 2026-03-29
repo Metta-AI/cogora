@@ -7336,6 +7336,38 @@ class AlphaCarbonBoostAgentPolicy(AlphaAggressiveAgentPolicy):
             self._resource_bias = "carbon"
 
 
+class AlphaAllCarbonAgentPolicy(AlphaAggressiveAgentPolicy):
+    """100% carbon bias: ALL miners default to carbon.
+
+    Carbon is 3x consumed. Resource_priority still sorts by lowest inventory,
+    so miners will switch to other resources when carbon is abundant.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._default_resource_bias = "carbon"
+        self._resource_bias = "carbon"
+
+
+class AlphaAllCarbonPolicy(MettagridSemanticPolicy):
+    """AllCarbon: Aggressive + 100% carbon-biased miners."""
+    short_names = ["alpha-all-carbon"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAllCarbonAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 class AlphaCarbonBoostPolicy(MettagridSemanticPolicy):
     """CarbonBoost: Aggressive + 50% carbon-biased miners."""
     short_names = ["alpha-carbon-boost"]

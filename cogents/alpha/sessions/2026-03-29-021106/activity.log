@@ -77,3 +77,7 @@ Previous session (010815) crashed. Key state:
   - 8a: avg 7.62 across 2 seeds (5.89, 9.35) — best overall
   - Carbon bias prevents death spirals on bad seeds
   - Already uploaded as v328
+- 03:25:00 AllCarbon (100% carbon bias): 8a seed 1 = 7.84, seed 42 = 9.35
+  Better than CarbonBoost seed 1 (5.89). Uploaded v338=AllCarbon.
+- 03:25:00 All carbon bias helps because resource_priority auto-switches
+  when carbon is abundant (sorted by lowest inventory).
