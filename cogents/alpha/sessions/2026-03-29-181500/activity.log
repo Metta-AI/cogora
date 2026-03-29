@@ -12,3 +12,11 @@ started: 2026-03-29T18:08:13Z
 - Created TV77: TV76 + adaptive scramble ratio (90%/80%/60% based on junction ratio vs peak)
 - Created TV78: TV61 + chain-value expand-toward only (conservative: proven targeting, novel expand)
 - All three variants pass local 100-step tests.
+- Self-play results: TV76=1.99, TV78=1.18, TV61 baseline=2.16 (self-play poorly predicts tournament)
+- Uploaded: v437 (TV76), v438 (TV77), v439 (TV78) to qualifying pool
+- TV76 has chain-value targeting + smarter expand
+- TV77 has TV76 + adaptive scramble ratio (90/80/60% based on junction health)
+- TV78 is conservative: TV61 targeting + chain-value expand only
+- Created TV79: bridge-aware scramble targeting (bonus for scrambling enemy junctions that unlock unreachable neutrals)
+- Created TV80: dynamic stagnation exit (reduce scramble %, increase explore when junctions lost below 80% of peak)
+- Both pass 100-step tests
