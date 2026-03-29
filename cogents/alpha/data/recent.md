@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-29-140357**: **LEADERBOARD: v388=#1 at 12.38!** TV25 (scramble-focused stagnation) dominates tournament. Created TV38-TV46, uploaded v402-v407. TV40 (reduced hub penalty) best in self-play but self-play poorly predicts tournament. TV46 (TV25+TV40+TV28) uploaded as main bet. [sessions/2026-03-29-140357/](sessions/2026-03-29-140357/)
 - **2026-03-29-131500**: **Hotspot weight inversion!** TV28 (hotspot=-10) avg 8.91 vs TV18 7.83 (+13.8%). Uploaded v392-v401. All passed qualifying. Tournament queue slow — no results yet. [sessions/2026-03-29-131500/](sessions/2026-03-29-131500/)
 - **2026-03-29-121717**: Tested TV23-TV27 stagnation variants — ALL worse than TV18. TV18 stagnation is a local optimum (3-ring r=22/30/35, 300-step trigger). v387=10.05 (#1), v378=10.02 (#2). Uploaded v388-v391. [sessions/2026-03-29-121717/](sessions/2026-03-29-121717/)
 - **2026-03-29-111020**: Critical early-game wipeout bug found and fixed (locally). Self-play 10K avg 10.23. Bug fix HURTS tournament (-1.5 pts). Uploaded v382-v385. [sessions/2026-03-29-111020/](sessions/2026-03-29-111020/)
@@ -10,4 +11,3 @@
 - **2026-03-29-071830**: Monitoring v362 tournament results. Tournament results: v360 4a=2.31, v362 2a=5.24. Server intermittent SSL issues. [sessions/2026-03-29-071830/](sessions/2026-03-29-071830/)
 - **2026-03-29-061015**: **BREAKTHROUGH: Scout agent!** ScoutExplore avg 10.85 at 10K steps (>10 goal in self-play!). Dedicated scout discovers far junctions. Only works with 6+ agents. Uploaded v359-v362. [sessions/2026-03-29-061015/](sessions/2026-03-29-061015/)
 - **2026-03-29-051207**: 7 experiments tested, all ≤ TV2 baseline. CoopV2 (v358): cooperative scoring discovery. Uploaded v353-v358. [sessions/2026-03-29-051207/](sessions/2026-03-29-051207/)
-- **2026-03-29-040530**: **#1 on leaderboard!** TournamentV2 (v348) at 7.46, beating v290 (6.50). AdaptiveV3+cap+scramble. Uploaded v344-v352. [sessions/2026-03-29-040530/](sessions/2026-03-29-040530/)
