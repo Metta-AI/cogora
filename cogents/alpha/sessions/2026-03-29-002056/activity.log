@@ -15,3 +15,8 @@ status: in-progress
 - 00:43:00 Created AlphaFortressPolicy: more scramblers early, economy conservation, sustained scoring
 - 00:43:00 Created AlphaEconSurgePolicy: heavy mining early, surge alignment when reserves peak
 - 00:44:00 Running local tests: fortress 8a/4a, econsurge 8a/4a
+- 00:52:00 RESULT: Fortress 8a local = 4.94 (+13% vs Aggressive 4.38). Peak 17j, sustains 8j late game.
+- 00:53:00 RESULT: EconSurge 8a local = 5.15 (+18% vs Aggressive). Peak 21j at step 900! Early surge valuable.
+- 00:53:00 LEARNING: Early peak matters more than sustained — EconSurge front-loads scoring
+- 00:53:00 LEARNING: EconSurge surges to 6 aligners + 2 scramblers at step 900 when reserves are 200+
+- 00:54:00 Uploaded v317 (Fortress) and v318 (EconSurge) to tournament
