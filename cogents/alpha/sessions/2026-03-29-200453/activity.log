@@ -55,4 +55,11 @@ started: 2026-03-29T20:04:53Z
   TV91 (reduced batch) and TV93 (early aligner) are toxic to 2v6.
 - v451 still has small sample (10 matches). Need more data to confirm.
 - Created and uploaded TV97 (3 aligners 4v4) and TV98 (faster early game) — both based on TV92.
-  TV97/TV98 may also suffer from TV92's 2v6 problem. Need to create TV90-based variants instead.
+  TV97/TV98 will likely suffer from TV92's 2v6 problem.
+- v451 (TV90) now 13.17 (18 matches). 4v4 lead (15.72) is opponent-mix artifact — identical
+  scores against same opponents. Real improvement is 2v6: 11.31 vs 11.00.
+- Created and uploaded TV90-based variants:
+  - v460 (TV99): TV90 + 3 aligners in 4v4
+  - v461 (TV100): TV90 + faster stagnation (200 steps)
+  - Both still qualifying.
+- v458 (TV97) entering competition (20 pending). v459 (TV98) first result: 6.68 (bad, likely 2v6).
