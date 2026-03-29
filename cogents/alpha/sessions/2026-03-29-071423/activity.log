@@ -5,3 +5,27 @@ Status: interrupted
 1. Check tournament results for v359-v362
 2. Analyze results, iterate on policy
 3. Upload improved policy to tournament
+
+## Tournament Results Analysis
+v348 (TournamentV2) remains best tournament performer:
+- 6-agent: consistently 9.09 (ceiling)
+- 4-agent: 3.95-13.86 (highly variable)
+- 2-agent: 5.15-5.79 (consistently mediocre)
+- Best: 13.86 vs v53 (4v4)
+
+v359 (ScoutExplore): avg ~5.19 — WORSE than v348
+v360 (TwoScouts): avg ~4.62 — WORSE
+v361 (AdaptiveScout v1): avg ~4.80 — WORSE
+v362 (AdaptiveScout v2): still in competition, all matches running
+
+### CRITICAL INSIGHT: Game is COOPERATIVE
+Both players are on same Cogs team! All 8 agents cooperate against Clips AI.
+- Both policies share economy (hub resources)
+- Score = avg aligned junctions per tick across BOTH sub-teams
+- High scores come when both policies are competent and cooperate well
+- Score ceiling (~9) = only ~14% junction utilization (9/65)
+
+### Key Improvement Areas
+1. Break 9.09 ceiling for 6-agent games — more efficient exploration and chain building
+2. Improve 2-agent contribution — focus on economy support
+3. Better cooperation with other sub-team policies
