@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-29-190418**: Created TV82-TV89 (v443-v450). Chain-value targeting, coordinated scramble (hurts!), 2-agent budget fix. v443 (TV82)=12.82, v446 (TV85)=13.32. Found budget inheritance bug. [sessions/2026-03-29-190418/](sessions/2026-03-29-190418/)
 - **2026-03-29-181500**: **v442 (TV81) new #1 at 13.52** (+5.4% over TV61). Bridge-aware scramble + 2-agent improvement. Created TV76-TV81 (v437-v442). Chain-value targeting helps qualifying (14.11) but mixed in competition. Bridge scramble is the breakthrough. [sessions/2026-03-29-181500/](sessions/2026-03-29-181500/)
 - **2026-03-29-170732**: **TV61 holds #1 at 12.83.** Tested TV66-TV75 (v427-v436) — all worse. 80% scramble is local optimum. 85% scramble sharp dropoff. Dedicated scramblers always terrible. External opponents all below 4.0. [sessions/2026-03-29-170732/](sessions/2026-03-29-170732/)
 - **2026-03-29-161650**: (interrupted) Tested TV55-TV65 combo variants. v422 (TV61)=12.83 (#1), v421 (TV60)=12.66 (#2). Uploaded v416-v426. [sessions/2026-03-29-161650/](sessions/2026-03-29-161650/)
