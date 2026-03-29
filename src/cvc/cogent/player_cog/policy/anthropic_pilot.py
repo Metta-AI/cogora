@@ -7353,3 +7353,94 @@ class AlphaCarbonBoostPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ---------------------------------------------------------------------------
+# AlphaTeamFixPolicy — Aggressive but uses actual team size for budgets.
+# The bug: policy_env_info.num_agents=8 (total) in 4v4, causing budget overflow.
+# Fix: use len(shared_team_ids) for per-team agent count.
+# ---------------------------------------------------------------------------
+
+class AlphaTeamFixAgentPolicy(AlphaAggressiveAgentPolicy):
+    """Aggressive with proper per-team budget allocation.
+
+    Fixes the num_agents bug where total (8) is used instead of per-team (4).
+    This means budget calculations correctly leave miners when team is small.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Aggressive budgets using actual team size."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        # Use actual team size, not total agents
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            # Keep at least 1 miner
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 0
+            if min_res >= 50 and step >= 500:
+                aligner_budget = min(3, num_agents - 1)
+            if min_res >= 200 and step >= 1000:
+                scrambler_budget = 1
+                aligner_budget = min(2, num_agents - 1 - scrambler_budget)
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: Aggressive scaling with proper team size
+        if step < 30:
+            return 2, 0
+
+        economy_surplus = min_res >= 100
+        economy_crisis = min_res < 3 and not can_hearts
+
+        if economy_surplus:
+            pressure_budget = min(num_agents - 1, 7)
+        elif step < 100:
+            pressure_budget = 3
+        elif economy_crisis:
+            pressure_budget = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(5, num_agents - 2)
+
+        scrambler_budget = 0
+        if step >= 3000 and min_res >= 14:
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 200 and min_res >= 7:
+            scrambler_budget = min(1, pressure_budget // 3)
+
+        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+        return aligner_budget, scrambler_budget
+
+
+class AlphaTeamFixPolicy(MettagridSemanticPolicy):
+    """TeamFix: Aggressive + proper per-team budget allocation."""
+    short_names = ["alpha-team-fix"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTeamFixAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
