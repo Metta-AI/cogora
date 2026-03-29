@@ -66,3 +66,8 @@ started: 2026-03-29T14:03:57Z
   We DOMINATE the leaderboard — all top 10 are ours.
   Goal > 10 ACHIEVED: v388=12.38, v389=10.39!
   New uploads (TV40/41) haven't converged yet — need more matches.
+- [1448] KEY DISCOVERY: v388 = TV25 (scramble-focused stagnation).
+  TV25 was WORSE in self-play (9.38 vs TV18 10.96) but BEST in tournament (12.38).
+  TV25's near-hub explore + 50% scramble is optimal for PvP.
+- [1450] Created TV46: TV25 + TV40 hub penalty + TV28 hotspot.
+  Uploaded v406=TV46 (MAIN BET) and v407=TV25 reupload for comparison.

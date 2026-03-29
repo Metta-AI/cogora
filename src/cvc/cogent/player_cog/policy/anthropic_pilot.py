@@ -15236,3 +15236,128 @@ class AlphaTournamentV44Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV46: TV25 (tournament #1) + TV40's reduced hub penalty ──────────────
+
+class AlphaTournamentV46AgentPolicy(AlphaTournamentV25AgentPolicy):
+    """TournamentV46: TV25 (scramble-focused stagnation, #1 at 12.38) +
+    TV40's reduced hub penalty for mid-range junctions.
+
+    TV25 is the tournament champion: near-hub explore + 50% scramble during
+    stagnation. TV40's reduced hub penalty lets aligners reach farther junctions.
+    Combines both improvements.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0  # TV28's re-alignment preference
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """TV40's reduced hub penalty targeting."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity
+            for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+
+        def _reduced_hub_penalty_score(
+            current_position: tuple[int, int],
+            candidate: KnownEntity,
+            unreachable: list[KnownEntity],
+            enemy_junctions: list[KnownEntity],
+            claimed_by_other: bool,
+            hub_position: tuple[int, int] | None,
+            hotspot_count: int,
+            hotspot_weight: float,
+        ) -> tuple[float, float]:
+            distance = float(_h.manhattan(current_position, candidate.position))
+            expansion = sum(
+                1 for entity in unreachable if _h.manhattan(candidate.position, entity.position) <= 15
+            )
+            enemy_aoe = (
+                1.0
+                if any(_h.manhattan(candidate.position, enemy.position) <= 5 for enemy in enemy_junctions)
+                else 0.0
+            )
+            hub_penalty = 0.0
+            if hub_position is not None:
+                hub_dist = float(_h.manhattan(hub_position, candidate.position))
+                if hub_dist > 25:
+                    hub_penalty = (hub_dist - 25) * 8.0 + 30.0
+                elif hub_dist > 15:
+                    hub_penalty = (hub_dist - 15) * 1.5 + 5.0
+                elif hub_dist > 10:
+                    hub_penalty = (hub_dist - 10) * 1.0 + 1.0
+                else:
+                    hub_penalty = hub_dist * 0.2
+            hotspot_penalty = min(hotspot_count, 3) * hotspot_weight
+            return (
+                distance
+                - min(expansion * 5.0, 30.0)
+                + enemy_aoe * 8.0
+                + (20.0 if claimed_by_other else 0.0)
+                + hub_penalty
+                + hotspot_penalty,
+                -float(expansion),
+            )
+
+        return min(
+            candidates,
+            key=lambda entity: (
+                _reduced_hub_penalty_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    hotspot_weight=self._hotspot_weight,
+                )
+            ),
+        )
+
+
+class AlphaTournamentV46Policy(MettagridSemanticPolicy):
+    """TournamentV46: TV25 (#1) + TV40 reduced hub penalty + TV28 hotspot."""
+    short_names = ["alpha-tournament-v46"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV46AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
