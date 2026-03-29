@@ -10902,3 +10902,107 @@ class AlphaThreeScoutsPolicy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+class AlphaAdaptiveScoutAgentPolicy(AlphaScoutExploreAgentPolicy):
+    """Adaptive scouting: only scout when team has enough agents.
+
+    - With 2 agents: no scout (both needed for economy + alignment)
+    - With 4 agents: 1 scout
+    - With 6+ agents: 1 scout
+    This ensures the scout doesn't hurt small teams.
+    """
+
+    def _desired_role(self, state: MettagridState, *, objective: str | None = None) -> str:
+        """Only scout when team has 4+ agents."""
+        team_ids = self._shared_team_ids
+        if team_ids and len(team_ids) >= 4:
+            max_id = max(team_ids)
+            if self._agent_id == max_id:
+                return "scout"
+        return super(AlphaScoutExploreAgentPolicy, self)._desired_role(state, objective=objective)
+
+
+class AlphaAdaptiveScoutPolicy(MettagridSemanticPolicy):
+    """TV2 + adaptive scouting (only with 4+ agents)."""
+    short_names = ["alpha-adaptive-scout"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaAdaptiveScoutAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaScoutPlusAgentPolicy(AlphaScoutExploreAgentPolicy):
+    """ScoutExplore + aggressive idle scrambling after early discovery.
+
+    Scouts discover junctions early. After step 1500, if scout has
+    visited all exploration points, it switches to scrambling idle.
+    This combines early discovery advantage with late-game pressure.
+    """
+
+    def _scout_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Scout with phase transition: explore early, scramble late."""
+        step = state.step or self._step_index
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hearts = int(state.self_state.inventory.get("heart", 0))
+
+        # If low HP, heal
+        if hp < 30:
+            hub = self._nearest_hub(state)
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="scout_heal", vibe="change_vibe_heart")
+
+        # If carrying resources, deposit
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="scout_deposit", vibe="change_vibe_aligner")
+
+        # Phase transition: after step 2000, switch to aligner behavior
+        if step >= 2000:
+            # Scout has explored enough; become a regular aligner
+            return self._aligner_action(state)
+
+        # Early game: explore wide pattern
+        hub = self._nearest_hub(state)
+        center = (hub.global_x, hub.global_y) if hub is not None else current_pos
+        offsets = _WIDE_EXPLORE_OFFSETS
+        offset_index = (self._explore_index + self._agent_id) % len(offsets)
+        target_offset = offsets[offset_index]
+        absolute_target = (center[0] + target_offset[0], center[1] + target_offset[1])
+        if _h.manhattan(current_pos, absolute_target) <= 2:
+            self._explore_index += 1
+            offset_index = (self._explore_index + self._agent_id) % len(offsets)
+            target_offset = offsets[offset_index]
+            absolute_target = (center[0] + target_offset[0], center[1] + target_offset[1])
+        return self._move_to_position(state, absolute_target, summary="scout_explore", vibe="change_vibe_aligner")
+
+
+class AlphaScoutPlusPolicy(MettagridSemanticPolicy):
+    """ScoutExplore + scout transitions to aligner after step 2000."""
+    short_names = ["alpha-scout-plus"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaScoutPlusAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
