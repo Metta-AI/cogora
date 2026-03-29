@@ -79,3 +79,11 @@ started: 2026-03-29T23:05:20Z
 - CONFIRMED: dedicated scramblers bad for ALL team sizes.
   Best 2a strategy = dual aligner (TV122/v483).
   Best 4a/6a = zero scramblers + more aligners (TV131/TV132, pending).
+- v494 (TV132) comp=7.63 (18m) — TERRIBLE! More aggressive 4a budget (2 aligners at
+  min_res=7, 3 at min_res=30) DRAINS ECONOMY. TV82's thresholds well-calibrated.
+- KEY LEARNING: TV82's 4-agent budget (1→2→3 aligned with resource thresholds) is optimal.
+  DON'T touch 4a budgets! Only change: 2a dual aligner + 6a no scrambler.
+- Created TV133 (v495): MINIMAL changes from TV82:
+  1. 2-agent: dual aligner (proven in v483)
+  2. 5+ agents: replace dedicated scrambler with extra aligner
+  3. 4-agent: EXACT SAME as TV82 (don't break what works)

@@ -23643,3 +23643,85 @@ class AlphaTournamentV132Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV133: TV82 + MINIMAL changes (dual 2a + no scrambler for 6a) ────────────
+
+class AlphaTournamentV133AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV133: Minimal improvement over TV82.
+
+    ONLY two changes from TV82:
+    1. 2-agent teams: dual aligner (from TV122, proven at v483=13.07 comp)
+    2. 5+ agent teams: replace dedicated scrambler with extra aligner
+       (aligners already scramble when idle via idle_align_scramble/stag_scramble)
+
+    4-agent teams: EXACT same budget as TV82 (don't touch what works)
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: dual aligner (TV122, proven)
+        if team_size <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 1, 0
+            if min_res >= 14:
+                return 2, 0
+            return 1, 0
+
+        # 4-agent: EXACT TV82 budget (AdaptiveV3 for num_agents <= 4)
+        if team_size <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 30:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 100 and step >= 500:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV82 base but replace scrambler with aligner
+        if step < 30:
+            return 2, 0
+
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 30:
+            return 2, 0
+        elif min_res < 80:
+            return 3, 0
+        elif min_res < 200:
+            # TV82 would have: 4 aligners + 1 scrambler
+            # TV133: 5 aligners + 0 scramblers (replace scrambler with aligner)
+            return min(5, team_size - 1), 0
+        else:
+            # Rich: max aligners, no scramblers
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV133Policy(MettagridSemanticPolicy):
+    """TournamentV133: TV82 + dual 2a + no scrambler for 6a."""
+    short_names = ["alpha-tournament-v133"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV133AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
