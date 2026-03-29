@@ -25,3 +25,9 @@ started: 2026-03-29T23:05:20Z
   Massive waste — miner overproducing, aligner unproductive.
 - Planning TV123: increase aligner budgets when rich, earlier 2-agent alignment,
   better stagnation behavior.
+- Created and uploaded TV123-TV126 (v484-v487):
+  - v484 (TV123): aggressive budgets (6 aligners when rich) + earlier 2-agent align (step 200, min_res 14)
+  - v485 (TV124): TV123 + smarter stagnation (100% bridge scramble, far explore)
+  - v486 (TV125): TV123 + dual aligner for 2-agent teams
+  - v487 (TV126): all combined (TV123 + TV124 + TV125)
+- All passed quick validation (100-step test). Full self-play running for TV126.
