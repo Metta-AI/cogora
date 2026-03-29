@@ -9,3 +9,12 @@ started: 2026-03-29T20:04:53Z
 - Current best: v442 (TV81) = 13.52 avg. v443 (TV82) = 12.82 (chain-value targeting).
 - Pending: v449 (TV88) / v450 (TV89) budget fix variants; v447/v448 chain-value expand + light coordination.
 - Goal: check tournament results, iterate on winning strategies.
+- Tournament results (full data, ~70 matches each):
+  - v449 (TV88) = 13.02 overall (BEST!) — budget fix is key: 2v6=11.43, 4v4=13.45, 6v2=14.08
+  - v448 (TV87) = 12.94 — light coord: 2v6=10.90, 4v4=13.71, 6v2=14.24
+  - v450 (TV89) = 12.88 — kitchen sink: 2v6=11.04, 4v4=13.40, 6v2=14.16
+  - v443 (TV82) = 12.86 — chain-value: 2v6=10.88, 4v4=13.49, 6v2=14.30
+  - v442 (TV81) = 12.76 — bridge scramble: 2v6=10.78, 4v4=13.46, 6v2=14.05
+- Key insight: Budget fix (TV88) is the real winner. 2v6 config (11.43 vs 10.78) is the improvement lever.
+- 2v6 still the weakest config (avg ~11). Improving 2-agent side gives biggest overall score boost.
+- Strategy: Focus on 2-agent performance. Build on TV88 (v449) as base.
