@@ -10,29 +10,31 @@ Status: in-progress
 4. v379 (TV19) = 8.77 (88)
 5. v381 = 8.70 (87)
 6. v368 (TV12) = 8.69 (96)
-8. v385 (TV21) = 8.67 (87)
-9. v384 (TV18+bugfix) = 8.63 (87)
-v388 (TV24) — qualifying
-v389 (TV25) — qualifying
+v388 (TV25), v389 (TV24), v390 (TV26), v391 (TV27) — qualifying
 
 ## Activity
 - [121717] Session started. Handled interrupted session 111020.
-- [121800-122700] (Parallel session) Analyzed match logs, designed TV23-TV25.
-  TV25 (scramble-focused stagnation) +24% in self-play.
-  TV23 (territory loss recovery) failed.
-  TV24 (tighter stagnation) marginal.
-- [121717-present] Monitored tournament. Key findings:
-  - Bug fix hurts tournament (v384=8.63 vs v378=10.04)
-  - Reverted bug fix in semantic_cog.py
-  - TV22 (faster stagnation) = 7.72 — hurts
-  - v387 (TV18 clean reupload) converged from 8.00 → 10.15
-  - TV18 confirmed as genuine >10 strategy
-  - Uploaded v382-v387, tracked all tournament rankings
+- [121800-122700] Analyzed match logs, designed TV23-TV25 stagnation variants.
+- [122500] Self-play 5K: TV18=5.24, TV23=3.27, TV24=5.40, TV25=6.48
+- [122900] 10K self-play: TV18=10.96, TV24=0.00 (broken), TV25=9.38 (worse)
+- [123000] Tournament: v378=10.07, v387=9.89, v386=7.69 (TV22 worse)
+- [123200] v387 took #1 at 10.15! TV18 confirmed 10+ tier.
+- [123300] Designed TV26+TV27. Uploaded v390 (TV26) and v391 (TV27).
+- [123500] 10K self-play: TV26=7.60, TV27=4.90 — ALL variants worse than TV18.
+  CONCLUSION: TV18's stagnation (3-ring r=22/30/35, 300-step trigger) is optimal.
+  Every modification hurts. Need non-stagnation improvement approach.
+- [123500] Reverted bug fix in semantic_cog.py (parallel session).
 
 ## Key Session Insights
 1. TV18 (TV12 + silicon priority) is the winning formula: ~10+ consistently
-2. Early-game hub_camp_heal code IS beneficial in tournament (territory heals)
-3. Faster stagnation threshold hurts (v386=7.72)
-4. Bug fix that helps locally can hurt tournament (different healing mechanics)
-5. Self-play ≠ tournament: silicon priority hurts locally but helps in tournament
-6. Opponent pool effects cause early score variance, scores stabilize by 80+ matches
+2. Early-game hub_camp_heal code IS beneficial in tournament
+3. ALL stagnation variants tested worse: TV23-TV27 all below TV18
+4. Self-play ≠ tournament. 5K ≠ 10K. Always test 10K.
+5. Opponent pool effects cause early score variance (v387: 8→10.15)
+6. Bug fix that helps locally hurts tournament (different healing mechanics)
+
+## Tournament Uploads (this session)
+- v388 (TV25): scramble-focused stagnation — qualifying
+- v389 (TV24): tighter stagnation radius — qualifying
+- v390 (TV26): full-map stagnation waypoints — qualifying
+- v391 (TV27): idle-step exploration — qualifying
