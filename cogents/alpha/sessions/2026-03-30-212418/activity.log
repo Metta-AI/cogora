@@ -4,3 +4,17 @@ status: in-progress
 - Session started. Previous session (2026-03-30-211500) was interrupted.
 - Context: v716=15.05 is #1. Last session created TV440-TV446 (v826-v832) with aligner floor + scramble fixes.
 - Need to check v826-v832 tournament results and iterate.
+- Checked v826-v832 competition results:
+  - v831 (TV445) external avg ~6.07: vs mammet 9.31, vs slanky 8.44/4.44, vs modular-lstm 5.72/2.08, vs gtlm 7.47, vs Paz-Bot 5.06
+  - v832 (TV446) external avg ~8.21: vs Paz-Bot 16.54/9.23, vs swoopy 12.73, vs modular-lstm 7.37/3.24, vs slanky 6.16/2.18
+  - Both significantly worse than v716's 15.05 average
+- Downloaded and analyzed v832 worst-case match (3.24 vs modular-lstm-bc 6v2):
+  - DEATH SPIRAL: friendly_j drops to 0 by step 1700, never recovers for 8000+ steps
+  - Agents stuck in idle_align_scramble near hub, never reaching enemy junctions
+  - Positions barely change: oscillating between (-4,2) and (-5,3) for thousands of steps
+  - Root cause: cycling scramble windows waste time, agent retreats for HP, target changes
+- Created TV447-TV449:
+  - TV447: TV350 + crisis recovery mode (always scramble when friendly_j=0 for 300+ steps, prefer hub-proximal enemy junctions)
+  - TV448: TV350 + aligner floor of 2 only (minimal change)
+  - TV449: TV447 + TV448 combined
+- Running local tests...

@@ -47986,3 +47986,265 @@ class AlphaTournamentV446Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV447: TV350 + crisis recovery mode ──────────────────────────────────────
+# When friendly_j=0 for 300+ steps, enter crisis mode:
+# - Always scramble (no cycling windows)
+# - Prefer closest enemy junction to hub (reachable)
+# - Don't waste time exploring for neutrals
+
+class AlphaTournamentV447AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV447: TV350 + crisis recovery when friendly_j=0."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+        self._zero_junction_since = None  # step when friendly_j first hit 0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+    def _crisis_scramble_target(self, state: MettagridState) -> KnownEntity | None:
+        """In crisis mode, pick the closest enemy junction to our hub."""
+        team_id = _h.team_id(state)
+        hub = self._nearest_hub(state)
+        if hub is None:
+            return self._preferred_scramble_target(state)
+
+        hub_pos = hub.position
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        )
+        if not enemy_junctions:
+            return None
+
+        # Score by distance from hub (close = good) + distance from agent
+        # Prefer junctions we can actually reach without dying
+        best = None
+        best_score = float("inf")
+        for ej in enemy_junctions:
+            dist_from_hub = _h.manhattan(hub_pos, ej.position)
+            dist_from_agent = _h.manhattan(current_pos, ej.position)
+            # Skip junctions we can't reach with current HP
+            if dist_from_agent > hp - 30:
+                continue
+            # Heavily weight proximity to hub (for re-alignment after scramble)
+            score = dist_from_hub * 2.0 + dist_from_agent * 1.0
+            # Check if any teammate already claimed this target
+            if hasattr(self, '_shared_claims') and ej.position in self._shared_claims:
+                claim = self._shared_claims[ej.position]
+                if claim != self._agent_id:
+                    score += 30.0  # penalize claimed targets
+            if score < best_score:
+                best_score = score
+                best = ej
+
+        # If nothing reachable, fall back to default
+        if best is None:
+            return self._preferred_scramble_target(state)
+        return best
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        enemy_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        ))
+
+        # Track how long we've had 0 friendly junctions
+        if friendly_count == 0 and step > 500:
+            if self._zero_junction_since is None:
+                self._zero_junction_since = step
+        else:
+            self._zero_junction_since = None
+
+        # CRISIS MODE: 0 friendly junctions for 300+ steps
+        in_crisis = (self._zero_junction_since is not None
+                     and step - self._zero_junction_since >= 300
+                     and enemy_count > 3)
+
+        if in_crisis:
+            hearts = int(state.self_state.inventory.get("heart", 0))
+            hub = self._nearest_hub(state)
+            hp = int(state.self_state.inventory.get("hp", 0))
+
+            # Get hearts if we have none
+            if hearts <= 0:
+                if not _h.team_can_refill_hearts(state):
+                    return self._miner_action(state, summary_prefix="crisis_mine_")
+                if hub is not None:
+                    return self._move_to_known(state, hub, summary="crisis_get_hearts", vibe="change_vibe_heart")
+                return self._explore_action(state, role="aligner", summary="crisis_find_hub")
+
+            # Retreat if HP is dangerously low
+            if hp < 35 and hub is not None:
+                return self._move_to_known(state, hub, summary="crisis_retreat", vibe="change_vibe_heart")
+
+            # Always scramble in crisis - no cycling windows
+            scramble_target = self._crisis_scramble_target(state)
+            if scramble_target is not None:
+                self._claim_target(scramble_target.position)
+                return self._move_to_known(state, scramble_target, summary="crisis_scramble", vibe="change_vibe_scrambler")
+
+            # If no reachable target, head toward hub to reset
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="crisis_regroup", vibe="change_vibe_heart")
+
+        # Normal TV350 behavior
+        return super()._aligner_action(state)
+
+
+class AlphaTournamentV447Policy(MettagridSemanticPolicy):
+    """TV447: TV350 + crisis recovery."""
+    short_names = ["alpha-tournament-v447"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV447AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV448: TV350 + aligner floor of 2 (minimal change to proven winner) ──────
+# Previous variants changed too much. This ONLY adds aligner floor to TV350.
+
+class AlphaTournamentV448AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV448: TV350 + aligner floor of 2 for 5+ agents."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV350 thresholds + aligner floor of 2
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return max(2, 1), 0  # TV448: floor of 2 instead of 1
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV448Policy(MettagridSemanticPolicy):
+    """TV448: TV350 + aligner floor of 2."""
+    short_names = ["alpha-tournament-v448"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV448AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV449: TV350 + crisis recovery + aligner floor (combined) ────────────────
+
+class AlphaTournamentV449AgentPolicy(AlphaTournamentV447AgentPolicy):
+    """TV449: TV447 (crisis recovery) + aligner floor of 2."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV350 thresholds + aligner floor of 2
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 2, 0  # floor of 2
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV449Policy(MettagridSemanticPolicy):
+    """TV449: TV350 + crisis + floor."""
+    short_names = ["alpha-tournament-v449"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV449AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
