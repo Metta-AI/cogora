@@ -5,3 +5,12 @@ started: 2026-03-30-070202
 - Check current tournament standings and latest match results
 - Work on remaining todos: 6a regression fix, threshold tuning, opponent analysis
 - Upload improved policies and enter tournament
+
+## Activity
+- Reviewed memory, todos, and recent sessions. Current best: v522=15.00 (#1)
+- All 20 recent matches (v542-v546) still running — no results yet
+- Created 3 new variants:
+  - TV192: Even lower 6a thresholds (20/30/60) — more aggressive expansion
+  - TV193: Scramble-on-sight idle (always try scramble first, explore fallback)
+  - TV194: TV186 + faster 4a (min_res 15 for 2 aligners)
+- All 3 pass local 100-step smoke test
