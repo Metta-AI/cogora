@@ -30141,3 +30141,293 @@ class AlphaTournamentV201Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV202: TV191 + even faster 4a (min_res 12 for 2 aligners) ────────────────
+
+class AlphaTournamentV202AgentPolicy(AlphaTournamentV186AgentPolicy):
+    """TournamentV202: TV191 with lower 4a min_res threshold (12 vs 15).
+
+    v547 (TV191) 4a=13.45 is the weakest dimension. Hypothesis: faster
+    2nd aligner via min_res 12 captures more junctions early without
+    crashing economy (unlike TV198's always-2 which scored 6.52 in 4a).
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: EXACT TV142
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: even faster ramp (min_res 12 vs 15)
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 12:  # Was 15 in TV191 — even faster 2-aligner start
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV162's lower thresholds
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 25:
+            return 2, 0
+        elif min_res < 40:
+            return 3, 0
+        elif min_res < 80:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV202Policy(MettagridSemanticPolicy):
+    """TournamentV202: TV191 + even faster 4a (min_res 12)."""
+    short_names = ["alpha-tournament-v202"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV202AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV203: TV191 + earlier 3rd aligner in 4a (60/200 vs 80/300) ──────────────
+
+class AlphaTournamentV203AgentPolicy(AlphaTournamentV186AgentPolicy):
+    """TournamentV203: TV191 with earlier 3rd aligner in 4a.
+
+    Once economy is strong (min_res>=60, step>=200), add 3rd aligner.
+    This is more aggressive than TV191's 80/300 threshold but still
+    economy-gated unlike TV198's immediate approach.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: EXACT TV142
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: same as TV191 but earlier 3rd aligner
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:  # Was 80/300 — earlier 3rd aligner
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV162's lower thresholds
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 25:
+            return 2, 0
+        elif min_res < 40:
+            return 3, 0
+        elif min_res < 80:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV203Policy(MettagridSemanticPolicy):
+    """TournamentV203: TV191 + earlier 3rd aligner in 4a."""
+    short_names = ["alpha-tournament-v203"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV203AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV204: TV191 + faster initial ramp in 4a (step<30 vs step<50) ────────────
+
+class AlphaTournamentV204AgentPolicy(AlphaTournamentV186AgentPolicy):
+    """TournamentV204: TV191 with faster initial ramp in 4a.
+
+    Reduces the initial mining-only phase from 50 to 30 steps.
+    Gets 2nd aligner sooner if economy permits.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: EXACT TV142
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: faster initial ramp (step<30 vs step<50)
+        if team_size <= 4:
+            if step < 30:  # Was 50 — faster start
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV162's lower thresholds
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 25:
+            return 2, 0
+        elif min_res < 40:
+            return 3, 0
+        elif min_res < 80:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV204Policy(MettagridSemanticPolicy):
+    """TournamentV204: TV191 + faster initial ramp in 4a."""
+    short_names = ["alpha-tournament-v204"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV204AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV205: TV191 + combined (min_res 12, step<30, 3rd aligner at 60/200) ─────
+
+class AlphaTournamentV205AgentPolicy(AlphaTournamentV186AgentPolicy):
+    """TournamentV205: All 4a improvements combined.
+
+    Combines TV202 (min_res 12) + TV203 (3rd aligner 60/200) + TV204 (step<30).
+    Risk: may be too aggressive. But each change alone is conservative.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: EXACT TV142
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: all improvements combined
+        if team_size <= 4:
+            if step < 30:  # Faster start
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 12:  # Lower threshold
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:  # Earlier 3rd aligner
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV162's lower thresholds
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 25:
+            return 2, 0
+        elif min_res < 40:
+            return 3, 0
+        elif min_res < 80:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV205Policy(MettagridSemanticPolicy):
+    """TournamentV205: TV191 + all 4a improvements combined."""
+    short_names = ["alpha-tournament-v205"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV205AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

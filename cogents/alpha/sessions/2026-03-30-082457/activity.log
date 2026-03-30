@@ -4,3 +4,17 @@ started: 2026-03-30T08:24:57Z
 ## Activity
 
 - 08:24 Session start. Context: v550 (TV194) ~15.1 avg, v557 (TV201) = best predicted combo. Checking tournament results.
+- 08:25 Setup complete, auth OK. All v557 matches still running/scheduled.
+- 08:27 LEADERBOARD: v547 (TV191) = #1 at 14.66, v542 = 14.60, v550 = 14.58
+- 08:28 v557 (TV201) = 9.90 avg (431 matches!) — MASSIVE REGRESSION
+  - 2a=3.80, 4a=6.52, 6a=12.95 — 2a and 4a completely broken
+  - v557's "always 2 aligners" 4a approach crashed economy
+  - v547 for comparison: 2a=13.97, 4a=13.45, 6a=15.71
+- 08:30 v547 4a weakness analysis: dragged by gtlm (6.99), v56 (7.85), v47 (10.90)
+- 08:35 Created 4 new variants targeting 4a improvement:
+  - TV202: min_res 12 (was 15) for faster 2nd aligner
+  - TV203: 3rd aligner at 60/200 (was 80/300)
+  - TV204: step<30 initial ramp (was step<50)
+  - TV205: all 4a improvements combined
+- 08:36 All 4 variants pass 100-step smoke test
+- 08:37 Uploading TV202 to tournament (slow — bundling code)
