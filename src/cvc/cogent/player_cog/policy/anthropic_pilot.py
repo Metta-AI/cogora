@@ -26893,3 +26893,78 @@ class AlphaTournamentV169Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV170: TV166 + network-boundary-aware stagnation scramble ─────────────────
+
+class AlphaTournamentV170AgentPolicy(AlphaTournamentV166AgentPolicy):
+    """TournamentV170: TV166 + smarter stagnation scramble targeting.
+
+    TV166 uses the default scramble targeting (nearest enemy). This variant
+    instead prioritizes enemy junctions that are within alignment range (15)
+    of our friendly junctions or hub (25). When scrambled, these become
+    neutral and are immediately re-alignable, creating efficient network growth.
+    """
+
+    def _preferred_scramble_target(self, state: MettagridState) -> KnownEntity | None:
+        """Prioritize enemy junctions within alignment range of our network."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else current_pos
+
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        )
+        if not enemy_junctions:
+            return None
+
+        friendly_junctions = self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        )
+
+        def boundary_scramble_score(candidate: KnownEntity) -> float:
+            distance = float(_h.manhattan(current_pos, candidate.position))
+
+            # Strong bonus for junctions within alignment range of our network
+            within_network = any(
+                _h.manhattan(candidate.position, f.position) <= 15
+                for f in friendly_junctions
+            )
+            within_hub = _h.manhattan(candidate.position, hub_pos) <= 25
+            network_bonus = 50.0 if within_network else (30.0 if within_hub else 0.0)
+
+            return distance - network_bonus
+
+        best = min(enemy_junctions, key=boundary_scramble_score)
+
+        # Use sticky target
+        sticky = self._sticky_scramble_target(state)
+        if sticky is None:
+            return best
+
+        sticky_score = boundary_scramble_score(sticky)
+        best_score = boundary_scramble_score(best)
+
+        if best.position != sticky.position and best_score + 5.0 < sticky_score:
+            return best
+        return sticky
+
+
+class AlphaTournamentV170Policy(MettagridSemanticPolicy):
+    """TournamentV170: TV166 + network-boundary scramble targeting."""
+    short_names = ["alpha-tournament-v170"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV170AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
