@@ -16,3 +16,7 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
 13:38 — Created TV284-TV285, uploaded as v644-v645
   TV284 (v644): TV264 + capped 6 aligners (always keep 2 miners), lower threshold (50)
   TV285 (v645): TV272 + faster peak decay (300 steps instead of 500)
+
+13:43 — Created TV286-TV287, uploaded as v646-v647
+  TV286 (v646): TV272 + rush 3 aligners from step 0 (no early ramp delay)
+  TV287 (v647): TV278 (3-tier stag) + lower 7a (100) + faster decay (300) combo
