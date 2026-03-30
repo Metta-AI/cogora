@@ -82,3 +82,11 @@ started: 2026-03-30-070202
   #2: v548 (TV192) — good 4v4/2a, weak 6a
   #3: v554 (TV198) — good 4a always-2-aligners
   WORST: v549 (TV193), v551 (TV195), v553 (TV197)
+- v553 vs v17: 4v4=10.82, 2a=16.75, 6a=14.84 — 4a crashes, 2a/6a identical to v554
+- v554 vs v17: 4v4=14.69, 2a=16.75, 6a=14.84 — always-2-aligners 4a >> ultra-fast
+- v554 vs v30: 4v4=13.55
+- v555 (TV199) vs v30: 6a=15.57 — reactive defense decent
+- v556 (TV200) now in COMPETITION — playing vs gtlm, v29, v30, v31, v34
+- v557 (TV201) qualifying still running
+- BEST COMBO PREDICTION: v557 should combine v550's 2a/4a strength with v522's 6a
+  v550 avg vs v17: ~16.4 | v554 avg vs v17: 15.43 | v548 avg vs v17: 14.54
