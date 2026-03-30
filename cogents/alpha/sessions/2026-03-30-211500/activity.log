@@ -2,44 +2,32 @@ status: interrupted
 
 ## Actions
 - Session started, read memory and previous learnings
-- Checked tournament: all v798-v825 matches still running/scheduled
-- Ran local free-play comparisons:
-  - TV436 (2a fix) 2-agent 500 steps: 0.13 vs TV350 2-agent: 0.08 (+62%)
-  - TV436 8-agent 2000 steps: 1.74 vs TV350 8-agent: 1.37 (+27%)
-  - TV436 bug fix helps even in 8-agent games
-- Analyzed late-game decline: peak 11 junctions at step ~800, down to 5 by step 2000
-  - Enemy grows from 5→17 in same period
-  - No scramble claim coordination (agents pile on same target)
-  - Wasted time exploring when no neutrals exist
-- Created TV440-TV443 variants:
-  - TV440: proactive scramble when frontier=0
-  - TV441: scramble claim coordination (shared_claims for scramble targets)
-  - TV442: TV439 economy + proactive scramble + scramble claims (kitchen sink)
-  - TV443: mine instead of explore during stagnation
-- Local test results (8-agent, 2000 steps, sequential):
-  - TV436: 1.65 (baseline)
-  - TV440: 1.41 (proactive scramble too aggressive alone)
-  - TV441: 1.66 (scramble claims marginal)
-  - TV442: 2.11 (+28%!) — best local score
-  - TV443: 1.58 (mining doesn't help)
-- Analyzed competition results (v798-v825):
-  - All 6v2 format, opponent type dominates score
-  - modular-lstm-bc:v13 is strongest opponent (scores 0.14-3.47)
-  - gtlm-reactive allows 9.81-12.18
-  - Bug-fix variants weren't tested as 2-agent team
-- Uploaded TV440-TV443 to tournament:
-  - v826=TV440, v827=TV441, v828=TV442, v829=TV443
-- Studied match logs: v822 (6 agents) vs modular-lstm (2 agents) = 0.71
-  - DEATH SPIRAL: peak at 15 junctions (step 800), then collapse to 3
-  - Root cause: budget drops to (1, 0) during low resources → only 1 aligner
-  - 1 aligner can't keep up with enemy scrambling → economy never recovers
-- Created TV444-TV446 with aligner floor:
-  - TV444: floor of 2 aligners for 5+ agents
-  - TV445: kitchen sink + floor of 2
-  - TV446: floor of 3 for 6+ agents — best local (avg 2.28 vs 1.70 baseline)
-- Uploaded TV444-TV446:
-  - v830=TV444, v831=TV445, v832=TV446
-- All variants v826-v832 now in competition
-- Local 6-agent test: TV350=0.00 vs TV446=5.52 (aligner floor is critical for 6-agent)
-- First competition result: v831 (TV445) 4v4 vs Paz-Bot = 5.06
-- Waiting for more competition results
+- Created TV440-TV446 variants (proactive scramble, scramble claims, mine-when-idle, aligner floor)
+- Uploaded v826-v832 to tournament
+- Key discovery: ALIGNER FLOOR prevents death spiral
+  - v822 (TV436, no floor) vs modular-lstm 6v2: 0.71
+  - v832 (TV446, floor of 3) vs modular-lstm 6v2: 7.37, 3.24 (avg 5.31 = 7x improvement!)
+- Local testing: TV350 6a=0.00 vs TV446 6a=5.52
+
+## Competition Results (v831/v832)
+v832 (TV446, floor of 3 for 6+):
+- 6v2 vs modular-lstm: 7.37, 3.24
+- 6v2 vs Paz-Bot: 16.54
+- 6v2 vs swoopy: 12.73
+- 2v6 vs Paz-Bot: 9.23
+- 2v6 vs slanky: 6.16, 2.18
+
+v831 (TV445, kitchen sink + floor of 2):
+- 4v4 vs Paz-Bot: 5.06
+- 6v2 vs modular-lstm: 5.72
+- 6v2 vs mammet: 9.31
+- 6v2 vs slanky: 8.44
+- 6v2 vs gtlm: 7.47
+- 2v6 vs slanky: 4.44
+- 4v4 vs modular-lstm: 2.08
+
+Self-play: v831 vs v832 = 15.17, 15.91, 16.53
+
+## Version Map
+v826=TV440, v827=TV441, v828=TV442, v829=TV443
+v830=TV444, v831=TV445, v832=TV446
