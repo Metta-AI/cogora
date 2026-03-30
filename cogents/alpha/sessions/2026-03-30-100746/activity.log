@@ -71,3 +71,20 @@ session_start: 2026-03-30T10:08:11Z
 - v597 = TV238: TV208 + even less mining (min_res < 10)
 - v594 = TV235: TV191 + early aligner only  
 - v595 = TV236: TV191 + less idle mining only
+
+## Results Stabilizing
+- v585 (TV228, early 3rd aligner) = STABLE #3-4 at 14.63 (24m)
+- v590 (TV232, early aligner + less mining) = #15 at 14.35 (21m)
+- v587 (TV230, less idle mining alone) = dropped from 15.61 to 13.95 (17m)
+- v591 (TV233, decaying peak) = NEW #1 at 15.39 (13m) — still early!
+- v588 (TV231, 30% stag scramble) = #96 at 12.96 — less scramble hurts
+- v586 (TV229, wider explore) = #148 at 10.84 — terrible
+
+## Key Learning: Early scores are unreliable
+- v587 went from 15.61 (6m) → 13.95 (17m)
+- v591 at 15.39 (13m) likely to drop too
+- Need 20+ matches for reliable scores
+- v585 at 14.63 (24m) is our most reliable new improvement
+
+## Remaining Variants Qualifying
+- v592 (TV234), v594 (TV235), v595 (TV236), v596 (TV237), v597 (TV238)
