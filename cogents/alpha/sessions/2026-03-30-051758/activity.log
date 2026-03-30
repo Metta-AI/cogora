@@ -52,3 +52,9 @@ status: in-progress
 - Key lesson: network-aware scramble targeting HURTS performance
 - Waiting for v541 (TV185: pure TV160 + faster ramp, NO network-aware) to confirm
 - Top performers (v525, v522, v519) use simple TV142/TV160 behavior
+- Detailed comparison: v519(6a)=15.54 vs v535(6a)=11.52 — network-aware drops 6a by 4 points!
+- v519(2a)=14.95 vs v537(2a)=10.82 — 2a also hurt badly
+- Network-aware targeting causes agents to travel farther, reducing scrambles/game
+- The 20.0 alignable_bonus completely overrides distance-based targeting
+- Lesson: DISTANCE is the most important factor in scramble targeting
+- v541 (pure TV160 + faster ramp) will confirm if the targeting was the sole issue
