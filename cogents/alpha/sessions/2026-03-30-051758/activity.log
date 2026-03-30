@@ -1,3 +1,4 @@
+status: completed
 status: in-progress
 - Created TV179 (network-aware scramble), TV180 (75% stag + network-aware), TV181 (always-scramble + network-aware)
 - Uploaded v535 (TV179 network-aware scramble), v536 (TV181 always-scramble), v537 (TV180 75% stag scramble)
@@ -72,3 +73,9 @@ status: in-progress
 - Faster early expansion + pure TV160 idle = competitive with top performers
 - 41 matches still running
 status: interrupted
+- v541 CONVERGED: avg=13.78 (31m), rank #11
+  2a=14.45 (excellent), 4a=13.94 (solid), 6a=12.74 (weak)
+- Faster early ramp helps 2a/4a but hurts 6a (3 aligners at start = too few miners)
+- Top 3: v522=15.00 (6m), v525=14.83 (6m), v519=14.69 (6m)
+- v541 is best of all new session variants but below top performers
+- Heuristic ceiling confirmed at ~14.7-15.0

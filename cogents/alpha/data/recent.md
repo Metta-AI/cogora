@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-051758**: **Network-aware scramble HARMFUL** — v535-v540 all score 11-12 vs v519=14.69. Overriding scramble targeting drops score by 3-4 pts. Distance-based targeting optimal. v541 (faster early ramp only) = 13.78. Heuristic ceiling ~14.7-15.0. Uploaded v535-v541. [sessions/2026-03-30-051758/](sessions/2026-03-30-051758/)
 - **2026-03-30-040613**: **Idle scramble ESSENTIAL** — v526 (no idle) = 12.77 vs v519 = 13.99. Self-play misleading (TV166 best self-play = worst tournament). 50% stag optimal. Heuristic ceiling ~14.0 confirmed. Uploaded v526-v534. [sessions/2026-03-30-040613/](sessions/2026-03-30-040613/)
 - **2026-03-30-031321**: **v519 (TV160) = NEW #1 at 14.47!** Faster stagnation entry (200 steps, step>300) beats TV142 by +0.17. v522 (TV162) = #3 at 14.27. Adaptive scramble (TV163) confirmed terrible (8.82). Uploaded v517-v525, key insight: forced exploration + earlier stag detection. [sessions/2026-03-30-031321/](sessions/2026-03-30-031321/)
 - **2026-03-30-021109**: (interrupted) v509-v515 uploaded. v506 (TV142) = #1 at 14.30. v514 (TV154) = #2 at 13.76. 50% stag scramble confirmed key differentiator. [sessions/2026-03-30-021109/](sessions/2026-03-30-021109/)
