@@ -94,3 +94,21 @@ started: 2026-03-30T16:18:00Z
   Contradicts parallel session without fast stag (TV368=4.65).
   Stag + hotspot + density combo is synergistic.
   TV365 (density alone) still local best at 8.78.
+- [18:00] **LEADERBOARD RESULTS — CRITICAL FINDINGS:**
+  **#1: v716 (TV350, hotspot=-10) = 15.05 (20m)** ← MY VARIANT!
+  **#2: v711 (TV349, no idle scramble) = 14.96 (20m)** ← MY VARIANT!
+  #3: v632 (TV272 old best) = 14.94 (33m)
+  #37: v708 (TV346, fast stag) = 14.42 (21m)
+
+  **DENSITY VARIANTS ALL FAIL IN TOURNAMENT:**
+  v725 (TV365, net_wt=1.0, +86% local) = 9.76 (#291!) — TERRIBLE
+  v748 (TV376, density+stag+hotspot) = 10.80 (#272) — BAD
+  All v725-v756 score < 13. Network density is a LOCAL-ONLY improvement.
+
+  **LESSON: Local scores DON'T predict tournament performance.**
+  Dense networks vulnerable to real opponents. Existing balance wins.
+  
+  **Best innovations from this session:**
+  - TV350 (hotspot=-10): +0.11 vs old best (15.05 vs 14.94) — NEW #1!
+  - TV349 (no idle scramble): +0.02 (14.96 vs 14.94)
+  - Both still early (20m) — need 30+ matches to stabilize.
