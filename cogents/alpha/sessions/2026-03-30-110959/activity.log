@@ -61,6 +61,11 @@ status: in-progress
   - TV259 (v618): TV191 + adaptive scramble (no decay)
   - TV260 (v619): TV191 + decaying peak + adaptive scramble (best of both)
   v619 is the highest-potential variant: combines #1 and #2 innovations.
+[11:46] v603 still #1 at 14.96 (23m). Created TV261-TV262 (scramble window tuning).
+  - TV261 (v620): TV244 + more aggressive scramble (175/125/75 windows)
+  - TV262 (v621): TV244 + less aggressive scramble (125/75/25 windows)
+  Session summary: 24 variants created (TV239-TV262, v598-v621).
+  Best performers: v603 (#1, 14.96), v598 (#3, 14.78), v606 (#16, 14.43).
 [11:41] Created TV254-TV257 (all based on TV239, the new #2).
   - TV254 (v613): TV239 + early 3rd aligner at step 15
   - TV255 (v614): TV239 + faster 4a (min_res 12)
