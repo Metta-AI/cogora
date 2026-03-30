@@ -40,3 +40,20 @@ plan: Check tournament results for v797 cyborg and fine-tuning variants. Iterate
   - TV424: adaptive hotspot + no idle scramble combo
   - TV425: adaptive hotspot + collapse recovery combo
   - TV426: adaptive hotspot + faster 3a combo
+
+## Qualifying results update
+Key findings:
+- v808 (TV422 wider early window adaptive): 16.03 qualifying! 
+- v799 (TV413 two-hop expansion): 16.26 in one qualifying match!
+- v802 (TV416 adaptive hotspot): 15.96 and 10.21 (high variance)
+- v804 (TV418 collapse recovery): 14.90, 13.33 — solid
+- v805 (TV419 no idle scramble): 1.25 — catastrophic
+- v801 (TV415 early scramble): 13.93, 10.02 — below baseline
+- TV427-TV431 uploaded (v813-v817): more adaptive hotspot fine-tuning
+- Qualifying has high variance — need competition matches for reliable ranking
+
+Variant mapping:
+v798=TV412, v799=TV413, v800=TV414, v801=TV415, v802=TV416
+v803=TV417, v804=TV418, v805=TV419, v806=TV420, v807=TV421
+v808=TV422, v809=TV423, v810=TV424, v811=TV425, v812=TV426
+v813=TV427, v814=TV428, v815=TV429, v816=TV430, v817=TV431
