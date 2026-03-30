@@ -22,13 +22,25 @@ started: 2026-03-30-031321
 - v522 = TV162 (slightly lower 6a thresholds: 25/40/80 vs 30/50/100)
 - v523 = TV163 (adaptive stag scramble — scramble if targets visible, else explore)
 
-## Free-play Results (self-play 8v0, 5000 steps)
+## Free-play Results (self-play 8v0)
+
+### 5000 steps
 - TV142 baseline: 6.67
 - TV157 (aggressive 6a): 6.33 (-5%)
 - TV158 (carbon + aggressive 6a): 5.85 (-12%)
 - TV156-code (carbon mining): 4.04 (-39%)
-- TV163 (adaptive scramble): 0.00 first run (bad seed), re-running
-- NOTE: carbon mining HURTS because it over-corrects; silicon becomes bottleneck too
+
+### 2000 steps (5 runs, statistical)
+- TV142: avg 1.94 (2.05, 2.08, 1.91, 1.98, 1.70)
+- TV162 (lower 6a thresholds): avg 1.85 (2.16, 2.26, 1.13) — closest to TV142!
+- TV159 (30% stag scramble): avg 1.61 (2.64, 0.00, 2.19) — extreme variance
+- TV163 (adaptive scramble): avg 1.61 (1.69, 1.69, 1.22, 1.75, 1.70) — 17% worse
+
+### Conclusions
+- Carbon mining HURTS — silicon becomes bottleneck when carbon over-prioritized
+- Adaptive scramble hurts — world model remembers distant junctions → 100% scramble
+- TV162 matches TV142 in self-play — worth tournament comparison
+- 0.00 wipeout games are random map effects, not policy bugs
 
 ## Key Learnings
 1. 50% stagnation scramble (TV142) is the single most important feature
