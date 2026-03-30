@@ -59,3 +59,11 @@ started: 2026-03-30T15:22:21Z
   - v691 (TV330 = TV272 + re-align + mine-stag) = 12.83 — mine-stag hurts
   - Key: combining #1 economy (7a at 150) with #2 re-align bonus creates super-variant
   - Still early (5 matches) — need 30+ matches to stabilize. Could regress to mean.
+- [16:16] Created TV331-TV335: tune re-align weight (-4, -12, -16), 7a@120, bottleneck+re-align.
+  Uploaded v693-v697.
+- [16:20] v687 (TV326) stabilizing at **15.28 (#1, 18 matches)** — genuine improvement over 14.94!
+  - v688 (TV327 wider scramble) = 13.93 — wider scramble HURTS
+  - v692 (TV328 re-align+wider) = 13.58 — wider scramble kills it
+  - v690 (TV329 mine-stag) = 10.00 — mine during stagnation CATASTROPHIC
+  - v691 (TV330 re-align+mine-stag) = 9.90 — mine-stag even kills re-align advantage
+  - Conclusion: TV326 (TV272 + re-align) is the clean winner. Don't add other changes.
