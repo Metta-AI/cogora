@@ -1,11 +1,9 @@
-# Session 2026-03-30-170152 — INTERRUPTED
+# Session Summary — 2026-03-30-170152
 
-Session was interrupted while waiting for tournament results.
+**Main finding: Local testing against Clips AI is unreliable for predicting tournament performance.**
 
-## Key Findings
-- **network_weight=1.0 is a breakthrough**: +86% over baseline locally (8.78 vs 4.73)
-- Agents build denser networks closer to hub, more defensible
-- Sweet spot is exactly 1.0 — sharp dropoff above/below
-- Created TV361-TV375, uploaded v725-v742
-- Combos (scramblers, 7a@120, hotspot) all WORSE than pure density
-- Tournament results not yet available when session ended
+TV365 (network_weight=1.0) scored +86% locally but -35% in tournament. All density, directional, re-align, and budget optimization variants performed worse than the existing baseline (v632=14.94).
+
+Leaderboard unchanged: v716 (TV350) = 15.05 (#1). Heuristic ceiling at ~15.0.
+
+Uploaded 20+ variants (v725-v774), none beat baseline. Key lesson: always validate in tournament.
