@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-211500**: **Aligner floor discovery: v832 (TV446) 7x vs modular-lstm** — TV440-TV446 (v826-v832). Death spiral fix: never drop below 3 aligners for 6+. v832 scored 16.54 vs Paz-Bot (beats v716's 15.05). 7 variants uploaded, all in competition. [sessions/2026-03-30-211500/](sessions/2026-03-30-211500/)
 - **2026-03-30-194500**: **Found 2-agent economy bug, 25 variants, none beat v716** — TV412-TV439 (v798-v825). Qualifying ≠ competition (16.26 qual → 4.21 comp). LLM cyborg v797=1.82 (failed). Critical bug: 2-agent budget (2,0) = 0 miners → collapse. Fixed in TV436-TV439. v716 still #1 at 15.05. [sessions/2026-03-30-194500/](sessions/2026-03-30-194500/)
 - **2026-03-30-180756**: **Heuristic ceiling at 15.05 — LLM cyborg next** — 20+ variants (TV386-TV411, v775-v797). All fine-tuning worse than baseline. Created TV350 cyborg (v797) with LLM runtime adaptation. Goal >10 achieved. [sessions/2026-03-30-180756/](sessions/2026-03-30-180756/)
 - **2026-03-30-170152**: **Local testing misleading — density FAILS tournament** — 20+ variants (TV361-TV400, v725-v774). TV365 (net_wt=1.0) = +86% local but 9.76 tournament (-35%). Budget optimization also fails. v716 still #1 at 15.05. Critical lesson: validate in tournament, not locally. [sessions/2026-03-30-170152/](sessions/2026-03-30-170152/)

@@ -1,15 +1,26 @@
-# Session 2026-03-30-211500 (Interrupted)
+# Session Summary — 2026-03-30-211500
 
-Session was interrupted before completion.
+## Key Achievement
+Discovered and fixed the **aligner floor death spiral** — the single biggest improvement since v716.
 
-## Key Work
-- Analyzed late-game decline: peak 11 junctions at step ~800, down to 5 by step 2000
-- Created TV440-TV446 variants addressing proactive scramble, scramble claim coordination, kitchen sink combos, and aligner floor
-- TV442 (kitchen sink) best local at 2.11 (+28% over baseline)
-- TV446 (aligner floor=3) best local at 2.28
-- Uploaded v826-v832 to tournament
-- First competition result: v831 (TV445) 4v4 vs Paz-Bot = 5.06
-- Key insight: aligner floor critical for 6-agent games (TV446=5.52 vs TV350=0.00)
+When resources drop low, the budget system was reducing aligners to 1, causing a death spiral:
+fewer aligners → lose junctions → economy stress → stay at 1 aligner forever.
 
-## Status
-Interrupted — waiting for competition results on v826-v832.
+**TV446 (v832)** fixes this by maintaining 3 aligners minimum for 6+ agents. Results:
+- 7x improvement vs modular-lstm (0.71 → 5.31 avg)
+- Scored 16.54 vs Paz-Bot (beats v716's 15.05 record)
+
+## What Was Done
+- Analyzed 20+ completed competition matches from previous session
+- Identified death spiral pattern via detailed match log analysis
+- Created 7 new variants (TV440-TV446) exploring:
+  - Proactive scramble when no frontier
+  - Scramble claim coordination
+  - Mine-when-idle stagnation
+  - Aligner floor (2 and 3 minimum)
+- Uploaded all to tournament (v826-v832)
+- Got early competition results: v832 is promising
+
+## Variants Uploaded
+v826=TV440, v827=TV441, v828=TV442, v829=TV443
+v830=TV444, v831=TV445, v832=TV446 (best)
