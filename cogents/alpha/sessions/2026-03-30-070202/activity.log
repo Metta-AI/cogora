@@ -23,4 +23,11 @@ started: 2026-03-30-070202
 - Created 2 more 4a-focused variants:
   - TV197: ultra-fast 4a (min_res 10, step 30, 3a at 60/200) — v553
   - TV198: always 2 aligners in 4a (like 2a approach) — v554
-- Total uploads this session: v548-v554 (TV192-TV198)
+- Total uploads this session: v548-v555 (TV192-TV199)
+- Analyzed gtlm-reactive-v3 match: our agents collapse in late game
+  - By step 1000: 9 friendly junctions, doing great
+  - By step 9500: 0 friendly, 19+ enemy — total collapse
+  - gtlm has aggressive scramble strategy that overwhelms our stagnation mode
+- Created TV199 (v555): reactive defense — 75% scramble when losing junctions
+- v547 early results: 16.06 vs v17, 6.99 vs gtlm-reactive (both 4v4)
+- Multiple v547 competition matches now completing

@@ -29826,3 +29826,174 @@ class AlphaTournamentV198Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV199: TV186 + reactive re-alignment when under attack ─────────────────────
+
+class AlphaTournamentV199AgentPolicy(AlphaTournamentV186AgentPolicy):
+    """TournamentV199: Reactive defense when junctions are being scrambled.
+
+    Problem: when opponent aggressively scrambles, our agents enter stagnation
+    mode and waste time exploring/scrambling randomly. We lose all junctions
+    and score drops.
+
+    Solution: Track junction loss rate. When losing junctions rapidly,
+    switch from stagnation (explore/scramble) to re-alignment mode:
+    re-align the nearest neutral junction that was recently ours.
+    This keeps the network alive under attack.
+
+    Also: increase scramble pressure when under attack to slow enemy gains.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_friendly_count = 0
+        self._junction_loss_count = 0
+        self._defensive_mode = False
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        enemy_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        ))
+
+        # Track junction losses
+        if friendly_count < self._last_friendly_count:
+            self._junction_loss_count += self._last_friendly_count - friendly_count
+        self._last_friendly_count = friendly_count
+
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+            self._defensive_mode = False
+            self._junction_loss_count = 0
+
+        # Stagnation detection with team-size awareness (from TV186)
+        if num_agents <= 2:
+            stag_peak = 3
+            stag_steps = 200
+            stag_min_step = 300
+        else:
+            stag_peak = 5
+            stag_steps = 300
+            stag_min_step = 500
+
+        if (self._peak_junction_count >= stag_peak
+                and step - self._last_junction_growth_step > stag_steps
+                and step > stag_min_step):
+            self._stagnation_mode = True
+
+        # Defensive mode: triggered when we've lost many junctions from peak
+        if (self._peak_junction_count >= 5
+                and friendly_count <= self._peak_junction_count // 2
+                and enemy_count > friendly_count):
+            self._defensive_mode = True
+        elif friendly_count >= self._peak_junction_count * 0.8:
+            self._defensive_mode = False
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        # DEFENSIVE MODE: prioritize scramble to deny enemy + explore for re-alignment
+        if self._defensive_mode and hp > 50:
+            # More aggressive scramble (75%) when under attack
+            if step % 200 < 150 and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="defense_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="defense_find_junction")
+
+        # Normal stagnation behavior (50% scramble)
+        if self._stagnation_mode and hp > 50:
+            if step % 200 < 100 and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV199Policy(MettagridSemanticPolicy):
+    """TournamentV199: TV186 + reactive defense against aggressive scramble."""
+    short_names = ["alpha-tournament-v199"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV199AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
