@@ -31195,3 +31195,217 @@ class AlphaTournamentV214Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV215: TV209 + reduce aligners during stagnation ────────────────────────
+
+class AlphaTournamentV215AgentPolicy(AlphaTournamentV209AgentPolicy):
+    """TournamentV215: TV209 + reduce aligner budget during stagnation.
+
+    Observation: in stagnation mode (step 800+), 6 aligners scramble each
+    other in a zero-sum loop. Both teams decline from peak ~20 to ~10 junctions.
+
+    Hypothesis: reducing to 4 aligners + 4 miners during stagnation builds
+    economic advantage. The extra mining lets us sustain more heart refills
+    and recover faster from scrambles.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: EXACT TV142
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: TV202 faster ramp (min_res 12)
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 12:
+                return 1, 0
+            # In stagnation, reduce to 1 aligner to rebuild economy
+            if self._stagnation_mode:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV207's thresholds + stagnation reduction
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        # In stagnation, cap at 4 aligners (6a) to save economy
+        if self._stagnation_mode:
+            if min_res < 22:
+                return 2, 0
+            return min(4, team_size - 1), 0
+        if min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV215Policy(MettagridSemanticPolicy):
+    """TournamentV215: TV209 + reduced aligners during stagnation."""
+    short_names = ["alpha-tournament-v215"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV215AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV216: TV209 + heart hoarding before scramble push ──────────────────────
+
+class AlphaTournamentV216AgentPolicy(AlphaTournamentV209AgentPolicy):
+    """TournamentV216: TV209 + heart hoarding in stagnation.
+
+    Instead of immediately scrambling in stagnation, first accumulate 3+ hearts
+    on all aligners before switching to scramble mode. This lets us sustain
+    a longer scramble push without needing to retreat for hearts.
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        else:
+            if num_agents <= 2:
+                stag_peak, stag_steps, stag_min_step = 3, 200, 300
+            elif num_agents <= 4:
+                stag_peak, stag_steps, stag_min_step = 5, 300, 500
+            else:
+                stag_peak, stag_steps, stag_min_step = 4, 250, 400
+
+            if (self._peak_junction_count >= stag_peak
+                    and step - self._last_junction_growth_step > stag_steps
+                    and step > stag_min_step):
+                self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        if self._stagnation_mode and hp > 50:
+            # HEART HOARDING: accumulate 3+ hearts before scrambling
+            if hearts < 3 and _h.team_can_refill_hearts(state):
+                if hub is not None:
+                    return self._move_to_known(state, hub, summary="hoard_hearts", vibe="change_vibe_heart")
+            if step % 200 < 100 and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV216Policy(MettagridSemanticPolicy):
+    """TournamentV216: TV209 + heart hoarding in stagnation."""
+    short_names = ["alpha-tournament-v216"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV216AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

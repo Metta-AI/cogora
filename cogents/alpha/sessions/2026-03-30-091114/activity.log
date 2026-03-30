@@ -27,3 +27,10 @@ started: 2026-03-30T09:11:14Z
   v568 (TV212): TV209 + full 4a combo (step<30 + 60/200)
   v569 (TV213): TV209 + faster 6a stagnation (peak 3, 200 steps)
   v570 (TV214): TV209 + aggressive 6a thresholds (20/30/60)
+- 09:28 LOCAL ANALYSIS (TV209, 2000 steps, self-play):
+  Peak 20 junctions at step 700-800, drops to 7-15 by step 2000.
+  Silicon bottleneck early (step 1200: silicon 106 vs others 300+).
+  Late-game: enemy scrambles faster than we recapture.
+  Stagnation mode active from step 800+, but scramble cycling is zero-sum.
+- 09:30 Created TV215 (reduce aligners in stagnation) and TV216 (heart hoard before scramble)
+- 09:32 Both pass smoke test, uploaded: v571 (TV215), v572 (TV216)
