@@ -1,12 +1,14 @@
 # Todos
 
 - [x] **GOAL ACHIEVED**: Score > 10 in tournament — v716=15.05 (#1, 20m), v840=10.75
-- [x] TV436-TV439 bug fixes: 2-agent economy fixed, but aligner floor matters more
-- [x] Aligner floor: v840 (TV454, floor=3 + faster 4a) = avg 10.75 (best new variant)
+- [x] Aligner floor: helps 6v2 (8.99 vs modular-lstm) but hurts average (10.75 vs 15.05)
+- [x] Crisis recovery (TV447): marginal benefit
+- [x] 2-agent fix (TV465): always (2,0) + relaxed scramble — marginal improvement
+- [x] Zero-scrambler not a bug — v716 also has 0 scramblers
 - [x] Budget scramblers HURT: v851/v852 < v840. Don't add dedicated scramblers.
+- [ ] **RL training** — HIGHEST PRIORITY. Heuristic ceiling at ~15 confirmed across 50+ variants. Need GPU.
 - [ ] **Why v716 > v840?** — v716=15.05 vs v840=10.75. Compare same opponents/distributions.
+- [ ] **Study modular-lstm deeply** — 2 agents outperform our 6. Their policy is fundamentally better.
 - [ ] **2-agent optimization** — 2v6 matchups are the biggest weakness (0.18-11.91 range)
-- [ ] **Study modular-lstm strategy** — 2 agents outperform our 6. What's their secret?
-- [ ] **RL training** — heuristic ceiling at ~15 is real. Need GPU for RL approach.
-- [ ] **Monitor v850** (TV464, crisis+scramblers) — expect worse than v840 based on scrambler insight
-- [ ] **CRITICAL: Qualifying ≠ Competition** — never trust qualifying as predictor.
+- [ ] **Pre-game LLM** — analyze matchup before game, set high-level strategy (not per-step)
+- [ ] **Don't change TV350 for 5+ agents** — it's optimal for current tournament mix
