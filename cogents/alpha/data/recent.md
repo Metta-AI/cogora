@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-29-230520**: **v495 (TV133) #1 comp at 12.44 (44m)**. Discovered cooperative scoring. Dedicated scramblers BAD. Created TV123-TV133, most failed. Winner: dual 2a + no scrambler 6a + exact TV82 4a. 2a=11.9, 4a=11.1, 6a=14.3. [sessions/2026-03-29-230520/](sessions/2026-03-29-230520/)
 - **2026-03-29-224427**: Tested TV114-TV122 (v475-v483): retreat reduction, stagnation recovery, faster ramp, dual aligner. ALL worse than TV82 baseline (12.98). Heuristic ceiling ~13 confirmed. [sessions/2026-03-29-224427/](sessions/2026-03-29-224427/)
 - **2026-03-29-220607**: Found critical num_agents bug (always 8, 2-agent code was dead in TV90-TV108). All no-scramble variants (TV109-TV116, v463-v477) failed — scramble essential for defense. v451=13.31 (#1). Heuristic ceiling ~13. [sessions/2026-03-29-220607/](sessions/2026-03-29-220607/)
 - **2026-03-29-210258**: (interrupted) Created TV102-TV108 (v463-v469), discovered num_agents bug via log analysis. TV104 explore-first initially seemed promising (14.51) but was noise. [sessions/2026-03-29-210258/](sessions/2026-03-29-210258/)
@@ -10,5 +11,4 @@
 - **2026-03-29-170732**: **TV61 holds #1 at 12.83.** Tested TV66-TV75 (v427-v436) — all worse. 80% scramble is local optimum. 85% scramble sharp dropoff. Dedicated scramblers always terrible. External opponents all below 4.0. [sessions/2026-03-29-170732/](sessions/2026-03-29-170732/)
 - **2026-03-29-161650**: (interrupted) Tested TV55-TV65 combo variants. v422 (TV61)=12.83 (#1), v421 (TV60)=12.66 (#2). Uploaded v416-v426. [sessions/2026-03-29-161650/](sessions/2026-03-29-161650/)
 - **2026-03-29-150452**: **NEW #1: v410 (TV50) at 12.69!** Lower scramble threshold (min_res 7 vs 14) is simplest winning change. v414 (TV53) at 12.57 (#2). Created TV47-TV54, uploaded v408-v415. Self-play still anti-correlated with tournament. [sessions/2026-03-29-150452/](sessions/2026-03-29-150452/)
-- **2026-03-29-140357**: **LEADERBOARD: v388=#1 at 12.38!** TV25 (scramble-focused stagnation) dominates tournament. Created TV38-TV46, uploaded v402-v407. TV40 (reduced hub penalty) best in self-play but self-play poorly predicts tournament. TV46 (TV25+TV40+TV28) uploaded as main bet. [sessions/2026-03-29-140357/](sessions/2026-03-29-140357/)
 
