@@ -63,4 +63,12 @@ status: in-progress
 - TV134 vs v17: 2a=7.07, 4a=13.54, 6a=14.54
 - TV133 vs v29: 2a=13.91 (great partner), 4a=8.89, 6a=14.61
 - v500 (TV136) 4a vs v34 = 9.92 (first result)
-- Waiting for v500 2a results (critical: does ultra-fast start help?)
+- **v500 (TV136) results arriving:**
+  - 2a vs v34/v35/v38 6a = 12.54 (consistent across all partners!)
+  - 4a vs v31 = 8.09, vs v34/v35/v38 = 9.92
+  - 6a vs v35/v38 2a = 14.61
+- **TV134 vs TV136 comparison:**
+  - TV134 (v496) 2a vs v38 6a = 15.10 (BETTER than TV136's 12.54!)
+  - TV136 more consistent (always 12.54), TV134 more variable (7.07 to 15.10)
+  - TV134 2a vs gtlm 6a = 9.03 (TV136 vs gtlm pending)
+- Need more data before declaring winner between TV134 and TV136
