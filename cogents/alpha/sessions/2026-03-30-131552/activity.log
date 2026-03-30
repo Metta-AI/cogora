@@ -7,3 +7,8 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
   TV278 (v638): TV272 + 3-tier stagnation (2a/4a/6a+ differentiation)
   TV279 (v639): TV277 + TV278 combo (lower 7a + 3-tier stag)
   TV280 (v640): TV272 + earlier aligner ramp (step 10 instead of 15)
+
+13:30 — Created TV281-TV283, uploaded as v641-v643
+  TV281 (v641): TV272 + split stag response (even agents scramble, odd mine)
+  TV282 (v642): TV272 + wider stag scramble windows (200/150 instead of 150/100/50)
+  TV283 (v643): TV282 + lower 7a (100) + earlier ramp (step 10) — kitchen sink
