@@ -77,3 +77,8 @@ started: 2026-03-30T09:11:14Z
   CONCLUSION: 4a improvements (min_res 12, step<30) add ~0 on top of 6a improvements.
   v564 (just 6a thresholds + stagnation) is the real best. Focus on 6a optimization.
   v571 (reduced aligners) = 14.02, v572 (heart hoard) = 14.16 — both confirmed BAD.
+- 10:00 Created TV221-TV223, all on TV208 base (proven best):
+  v577 (TV221): TV208 + fast 6a stagnation (peak 3, 200 steps like 2a)
+  v578 (TV222): TV208 + intermediate 6a thresholds (21/33/65)
+  v579 (TV223): TV208 + faster 6a initial ramp (step<20)
+  All pass smoke test, uploaded.
