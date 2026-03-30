@@ -6,3 +6,12 @@ status: in-progress
 - Previous session: 2026-03-30-003249 (interrupted, TV134-TV136 variants, v496-v500)
 - Current best: v495 (TV133) #1 at 12.44 comp avg
 - Focus: Check v496-v500 results, continue improving policy
+
+## Actions
+- v496-v500 all running/scheduled in competition — no results yet
+- v500 (TV136) auto-promoted to competition already
+- Created TV137: faster 4a start (step 50 vs 100, min_res 20 vs 30, 3 aligners at 80/300 vs 100/500)
+- Created TV138: combined best — TV136 ultra-fast 2a + TV137 faster 4a + TV135 faster 6a ramp
+- Both TV137/TV138 pass 100-step validation
+- Uploaded v501 (TV137), v502 (TV138) — both in qualifying
+- Running 5000-step self-play for TV133 (baseline), TV136, TV137, TV138
