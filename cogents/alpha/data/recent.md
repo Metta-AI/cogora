@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-194500**: **Found 2-agent economy bug, 25 variants, none beat v716** — TV412-TV439 (v798-v825). Qualifying ≠ competition (16.26 qual → 4.21 comp). LLM cyborg v797=1.82 (failed). Critical bug: 2-agent budget (2,0) = 0 miners → collapse. Fixed in TV436-TV439. v716 still #1 at 15.05. [sessions/2026-03-30-194500/](sessions/2026-03-30-194500/)
 - **2026-03-30-180756**: **Heuristic ceiling at 15.05 — LLM cyborg next** — 20+ variants (TV386-TV411, v775-v797). All fine-tuning worse than baseline. Created TV350 cyborg (v797) with LLM runtime adaptation. Goal >10 achieved. [sessions/2026-03-30-180756/](sessions/2026-03-30-180756/)
 - **2026-03-30-170152**: **Local testing misleading — density FAILS tournament** — 20+ variants (TV361-TV400, v725-v774). TV365 (net_wt=1.0) = +86% local but 9.76 tournament (-35%). Budget optimization also fails. v716 still #1 at 15.05. Critical lesson: validate in tournament, not locally. [sessions/2026-03-30-170152/](sessions/2026-03-30-170152/)
 - **2026-03-30-161800**: **v716 (TV350 hotspot=-10) = 15.05 NEW #1** — 37 variants (TV344-TV385, v706-v762). Hotspot=-10 optimal. Network density is local-only trap. Combined innovations don't stack. [sessions/2026-03-30-161800/](sessions/2026-03-30-161800/)
@@ -10,5 +11,4 @@
 - **2026-03-30-122201**: **v632 (TV272) = NEW #1 at 15.17** — 16 variants (TV263-TV276, v622-v636). Combined adaptive scramble + early aligner + decay + 7 aligners. Capture scramble toxic. [sessions/2026-03-30-122201/](sessions/2026-03-30-122201/)
 - **2026-03-30-110959**: **v603 (TV244) = #2 at 14.73** — 24 variants (TV239-TV262, v598-v621). Adaptive scramble is best innovation (+0.16). Dedicated scramblers catastrophic. Decay helps on TV208 but not TV191 base. [sessions/2026-03-30-110959/](sessions/2026-03-30-110959/)
 - **2026-03-30-100746**: **v594 (TV235) = NEW #1 at 14.90!** 12 variants (TV228-TV238, v585-v597). Early 3rd aligner + decaying peak = top 4 slots. TV191 is true #1 base. Wider explore terrible. [sessions/2026-03-30-100746/](sessions/2026-03-30-100746/)
-- **2026-03-30-091114**: **v564 (TV208) = stable #1 at ~15.0** — 18 variants (TV210-TV227, v566-v583). Stagnation mods catastrophic. 4a changes hurt long-term. TV208 (6a thresholds 22/35/70 + 3-tier stag) is optimal. Heuristic ceiling ~15. [sessions/2026-03-30-091114/](sessions/2026-03-30-091114/)
 
