@@ -95,3 +95,21 @@ session_start: 2026-03-30T10:08:11Z
 - v595 (TV236, TV191 + less idle mining) = #2 at 14.84 (4m) — very early
 - Decaying peak seems to be a REAL improvement
 - v585 (TV228) stable at #6 at 14.63 (24m)
+
+## TOP 4 ARE ALL NEW SESSION VARIANTS!
+1. v594 (TV235, TV191 + early aligner) = #1 at 14.90 (23m)
+2. v592 (TV234, TV208 + early aligner + decaying peak) = #2 at 14.82 (24m)
+3. v597 (TV238, TV208 + even less mining) = #3 at 14.76 (9m)
+4. v591 (TV233, decaying peak) = #4 at 14.72 (24m)
+All beat v547 (14.69, 81m)!
+
+## What Worked
+- Early 3rd aligner (step 15): consistent improvement
+- Decaying peak junction count: genuine fix for stag recovery
+- TV191 base (higher 6a thresholds 25/40/80) better than TV208's 22/35/70
+
+## What Failed
+- v586 (wider stag explore) = 10.84 (23m) — terrible
+- v588 (30% stag scramble) = 12.96 (13m) — less scramble hurts
+- v596 (TV191 + both changes) = 13.87 (19m) — combined changes too aggressive
+- v595 (TV191 + less idle mining) = 14.25 (23m) — marginal/negative
