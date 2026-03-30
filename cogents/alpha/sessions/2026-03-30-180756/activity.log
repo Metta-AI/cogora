@@ -33,3 +33,7 @@ plan: Fine-tune around #1 (TV350) and improve tournament performance
   - Leaderboard stable: v716=15.05 (#1), top 36 all ours
   - **Conclusion**: heuristic ceiling ~15.05, marginal tuning can't break through
   - Next frontier: LLM cyborg or fundamentally new strategy
+- [18:48] Created TV411: LLM cyborg with TV350 base.
+  AlphaTV350CyborgPolicy: combines TV350 heuristics (hotspot=-10, 7a@120)
+  with Anthropic LLM runtime adaptation for stagnation breaking.
+  Uploaded as v797. This is the paradigm shift — LLM can adapt in real-time.

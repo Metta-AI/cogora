@@ -45316,3 +45316,53 @@ class AlphaTournamentV410Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV411: LLM Cyborg with TV350 base (hotspot=-10 + 7a@120)
+# Combines best heuristic (#1 at 15.05) with LLM runtime adaptation
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTV350CyborgAgentPolicy(PilotAgentPolicy):
+    """LLM cyborg using TV350's budgets and hotspot weight as base heuristic."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Use LLM directive when available, fall back to heuristic resource bias."""
+        try:
+            llm_directive = self._pilot_session.directive_for_state(state, memory=self._memory)
+            resources = _shared_resources(state)
+            least = _least_resource(resources)
+            llm_directive = MacroDirective(
+                resource_bias=least,
+                objective=llm_directive.objective,
+                note=llm_directive.note,
+            )
+            return llm_directive
+        except Exception:
+            resources = _shared_resources(state)
+            least = _least_resource(resources)
+            return MacroDirective(resource_bias=least)
+
+    def _pressure_budgets(self, state, *, objective=None):
+        """TV350's budget logic: TV272 + 7a@120."""
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTV350CyborgPolicy(PilotCyborgPolicy):
+    """TV411: LLM Cyborg with TV350 (hotspot=-10, 7a@120) as base."""
+    short_names = ["alpha-tv350-cyborg"]
+    _session_class = AnthropicPilotSession
+    _agent_policy_class = AlphaTV350CyborgAgentPolicy
+    _background_reviews_default = True
+
+    def _provider_session_kwargs(self, kwargs):
+        return {
+            "api_key": kwargs.get("api_key"),
+            "api_key_file": kwargs.get("api_key_file"),
+            "anthropic_api_key": kwargs.get("anthropic_api_key"),
+            "anthropic_api_key_file": kwargs.get("anthropic_api_key_file"),
+        }
