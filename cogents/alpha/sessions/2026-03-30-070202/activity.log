@@ -31,3 +31,16 @@ started: 2026-03-30-070202
 - Created TV199 (v555): reactive defense — 75% scramble when losing junctions
 - v547 early results: 16.06 vs v17, 6.99 vs gtlm-reactive (both 4v4)
 - Multiple v547 competition matches now completing
+- QUALIFYING RESULTS:
+  v548 (TV192): 18.55, 12.84 → avg ~15.7 (STRONG! lower 6a thresholds work)
+  v549 (TV193): 10.62, 7.62 → avg ~9.1 (scramble-on-sight BAD)
+  v550 (TV194): 12.23, 14.69 → avg ~13.5
+  v551 (TV195): 10.52, 14.18 → avg ~12.4 (adaptive scramble mediocre)
+  v552 (TV196): 12.23, 14.69 → avg ~13.5
+- v553 (TV197) and v554 (TV198) now in COMPETITION
+- NEW OPPONENT: slanky:v112 — matches running now
+- v547 (TV191) competition results: avg 13.77 overall, 15.46 vs alpha only
+  - gtlm-reactive drags average (6.99, 4.47, 11.37 in 4v4, 2v6, 6v2)
+  - Strong 15-17 scores against older alpha versions
+- KEY INSIGHT: TV192 (even lower 6a thresholds) is most promising new variant
+- TV193 (scramble-on-sight) confirmed BAD — fixed cycling is better
