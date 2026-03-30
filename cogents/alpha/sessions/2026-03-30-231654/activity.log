@@ -16,3 +16,17 @@ status: in-progress
   1. Focus scramble on junctions within alignment range of hub (capturable after scramble)
   2. Increase aligner budget in recovery (economy irrelevant at score=0)
   3. After scrambling junction to neutral, prioritize re-aligning it
+
+### Implementation Phase
+- TV467-TV470 already existed from previous session (budget-focused changes)
+- Added TV471: hub-focused recovery scramble (WHERE to scramble during collapse)
+- Added TV472: combined recovery + reactive budget + aligner floor (kitchen sink)
+
+### Upload Phase (qualifying)
+- v860 = TV467 (junction-differential-reactive budget)
+- v861 = TV471 (hub-focused recovery scramble) ← my new variant
+- v862 = TV472 (combined recovery + reactive + floor) ← my new variant
+- v863 = TV470 (reactive budget + aligner floor)
+- v864 = TV468 (explore-first idle, no idle scramble)
+- v865 = TV469 (aligner floor)
+- v858 = unknown (uploaded by prev session, running in competition)
