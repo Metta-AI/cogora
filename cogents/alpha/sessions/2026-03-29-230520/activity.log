@@ -101,3 +101,7 @@ started: 2026-03-29T23:05:20Z
 - v493's 6a=14.1 vs v489's 6a=13.7 → no-scrambler for 6a HELPS (+0.4)
 - v493's 2a=7.0 (TV7 conservative) vs v489's 2a=7.9 → both weak for 2a
 - v495 should fix 2a with dual aligner (~11-12) while keeping 6a improvement.
+- **v495 (TV133) #1 COMPETITION at 14.00 avg (4m)!** 2a=14.0, 4a=13.5, 6a=14.5!
+  Dual aligner for 2a massively improved: 14.0 vs v493's 6.7.
+  Still early data (4 matches), need more to confirm stability.
+- v493 stable at #2 with 11.44 comp (38m). Paz-Bot at 11.32 (6m).
