@@ -108,3 +108,13 @@ started: 2026-03-30T09:11:14Z
   v564 (TV208) dropped to 14.88 (13m) — NO 4a changes, confirming 4a value
   v574 (TV218, smart stag) = 10.75 (7m) — TERRIBLE! Don't touch stagnation cycle!
   TOP CLUSTER: v566-v568 at 15.5-15.7. All within noise. 4a changes add ~0.6-0.8.
+- 10:20 LEADERBOARD CONVERGENCE (13-15 matches, approaching stable):
+  v568 (TV212) = #1 at 15.12 (13m) — LEADER, full 4a combo + TV209 base
+  v566 (TV210) = #2 at 14.95 (14m) — step<30 4a
+  v567 (TV211) = #3 at 14.84 (12m) — earlier 3rd aligner
+  v558 (TV202) = #4 at 14.76 (13m) — min_res 12
+  v547 (baseline) = #5 at 14.69 (81m) — stable reference
+  v565 (TV209) = 14.48 (14m) — BELOW baseline! Full combo overfit to weak opponents
+  v576 (TV220, smart stag combo) = 9.62 (7m) — CATASTROPHIC
+  Gap closing: v568 leads by only +0.43 over v547 baseline.
+  v580-582 (TV224-TV226) still qualifying.
