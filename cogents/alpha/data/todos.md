@@ -7,9 +7,12 @@
 - [x] Discovered: TV82's 4a budget is optimal (don't change resource thresholds)
 - [x] Found: dual aligner for 2a = +5 improvement (11.8 vs 6.7)
 - [x] Found: no-scrambler for 6a = +0.5 improvement (14.3 vs 13.6)
-- [ ] **Investigate 4a=11.1** — lower than expected (~13.5); may be opponent variance
-- [ ] **Study gtlm-reactive-v3** — our weakest matchup (2a=4.64 against them)
-- [ ] **Improve 2v6 vs gtlm-reactive** — only matchup where we score <10
+- [x] **Improve 2v6 vs gtlm-reactive** — TV134 2a=9.03 vs TV133's 4.64 (+95%)
+- [x] **Investigate 4a=11.1** — confirmed opponent-dependent (8.89-13.54 range, map-seed-dependent)
+- [ ] **Collect more v499 (TV135-fixed) tournament data** — best candidate (TV134 2a + faster 6a ramp)
+- [ ] **Compare v499 vs TV133 average across all matchups** — confirm overall improvement
+- [ ] **Study gtlm-reactive-v3 strategy** — still weakest opponent (9.03 vs 14-15 vs good partners)
+- [ ] **Analyze Paz-Bot and slanky strategies** — pending match results
 - [ ] **Try RL training** — heuristic ceiling around 12-14; GPU needed for breakthrough
-- [ ] **Study what makes 4v4 score high** — some 4v4 matches hit 13.5+ (with old alpha partners)
 - [ ] **Consider entirely different architecture** — communication, map memory, etc.
+- [ ] **Optimize early game further** — first 500 steps disproportionately valuable

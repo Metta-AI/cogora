@@ -1,16 +1,22 @@
-# Session 2026-03-30-003249 — INTERRUPTED
+# Session Summary — 2026-03-30-003249
 
-Session was interrupted before completion.
+**Focus**: Improve 2a vs gtlm-reactive, investigate 4a variance
 
-## Key Work
-- Analyzed v53 tournament results: 14.97 in 2v6 (excellent), 13.41 in 4v4, 5.99 in 6v2
-- Created TV134-TV136 (v496-v500): faster start variants
-- Self-play improvements: TV134 +24%, TV135 +18% over baseline
-- Key insight: early expansion drives score (more ticks at high junction count)
-- TV136 (v500): ultra-fast 2a — align from step 1 with no mining wait
-- Uploaded v496-v500, some in competition, v500 in qualifying
-- Discovered germanium overproduction in self-play economy
+## Key Results
+- **TV134 (v496)**: 2a vs gtlm 9.03 (+95% over TV133's 4.64). Best 2a improvement.
+- **TV136 (v500)**: Ultra-fast 2a (step 1), consistent 12.54 but lower peak than TV134.
+- **TV135-fixed (v499)**: Faster 6a ramp → 16.00 in 6a (highest observed).
+- Early expansion is everything — score driven by first 500-1500 steps.
 
-## Status at Interruption
-- Waiting for v496-v500 tournament results
-- TV136 (ultra-fast 2a) was latest innovation
+## Variants Created & Uploaded
+- v496 (TV134): faster 2a start (step 100, dual at min_res 7) — **best 2a**
+- v497 (TV135-broken): _aligner_action override broke stagnation — DO NOT USE
+- v498 (TV133): baseline re-upload for fair comparison
+- v499 (TV135-fixed): TV134 2a + faster 6a ramp — **best 6a candidate**
+- v500 (TV136): ultra-fast 2a from step 1 — consistent but lower peak
+
+## Best Policy Candidate: v499 (TV135-fixed)
+Combines TV134's improved 2a with faster 6a ramp. Needs more tournament data
+to confirm superiority over TV133 baseline.
+
+## Matches vs External Opponents (Paz-Bot, slanky) in progress at session end.
