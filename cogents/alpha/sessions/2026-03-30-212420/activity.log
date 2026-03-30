@@ -28,3 +28,12 @@ status: in-progress
   - v837 = TV450 (TV350 + floor 3)
   - v838 = TV451 (TV447 crisis + floor 3)
   - v839 = TV448 (TV350 + floor 2, upstream version)
+- Resolved merge conflicts with concurrent session (their TV447-TV450 → renamed mine to TV452-TV453)
+- Analyzed 4v4 vs modular-lstm match logs:
+  - Death spiral cause: aligner stuck in "rebuild_hearts_mine" for 600 steps when economy bottlenecked
+  - Single aligner = single point of failure for 4-agent teams
+  - TV350's min_res < 15 threshold too restrictive → stays at 1 aligner
+- Created TV454: TV350 + floor 3 (5+) + faster 4a ramp (can_hearts → 2 aligners)
+- Uploaded:
+  - v840 = TV454 (floor 3 + faster 4a ramp)
+  - v841 = TV452 (floor 3 only, no 4a change)
