@@ -12,3 +12,7 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
   TV281 (v641): TV272 + split stag response (even agents scramble, odd mine)
   TV282 (v642): TV272 + wider stag scramble windows (200/150 instead of 150/100/50)
   TV283 (v643): TV282 + lower 7a (100) + earlier ramp (step 10) — kitchen sink
+
+13:38 — Created TV284-TV285, uploaded as v644-v645
+  TV284 (v644): TV264 + capped 6 aligners (always keep 2 miners), lower threshold (50)
+  TV285 (v645): TV272 + faster peak decay (300 steps instead of 500)
