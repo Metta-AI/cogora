@@ -53,3 +53,9 @@ started: 2026-03-30T15:22:21Z
   - v684 (TV322 hub-proximity) = 11.86 (1 match) — WORSE, as predicted
   - v687 (TV326), v691 (TV330), v692 (TV328) in competition, awaiting results
   - Leaderboard unchanged: v632 (#1, 14.94)
+- [16:12] **BREAKTHROUGH!** v687 (TV326 = TV272 + re-align) = **16.29 (#1, 5 matches)!**
+  - Broke previous ceiling of 14.94!
+  - v692 (TV328 = TV272 + re-align + wider scramble) = 14.95 (#2, 6 matches)
+  - v691 (TV330 = TV272 + re-align + mine-stag) = 12.83 — mine-stag hurts
+  - Key: combining #1 economy (7a at 150) with #2 re-align bonus creates super-variant
+  - Still early (5 matches) — need 30+ matches to stabilize. Could regress to mean.
