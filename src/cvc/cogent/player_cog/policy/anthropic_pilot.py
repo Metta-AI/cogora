@@ -44890,3 +44890,429 @@ class AlphaTournamentV400Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV401-TV410: Structural changes around TV350 (hotspot=-10 + 7a@120)
+# Different axes: retreat threshold, heart batching, target stickiness, late scramble
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV401AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV401: TV350 + lower aligner retreat (35 instead of 50).
+    Aligners stay in the field longer, aligning more before retreating."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+    def _should_retreat(self, state, role, safe_target):
+        if role == "aligner":
+            # Override: lower HP threshold for aligners (35 vs 50)
+            hp = int(state.self_state.inventory.get("hp", 0))
+            if safe_target is None:
+                threshold = 35
+                step = state.step or 0
+                if step >= 2500:
+                    threshold += 15
+                if not _h.has_role_gear(state, role):
+                    threshold += 10
+                return hp <= threshold
+            safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+            margin = 20
+            if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+                margin += 10
+            margin += int(state.self_state.inventory.get("heart", 0)) * 5
+            margin += min(_h.resource_total(state), 12) // 2
+            if not _h.has_role_gear(state, role):
+                margin += 10
+            if (state.step or 0) >= 2_500:
+                margin += 10
+            return hp <= safe_steps + margin - 15  # More aggressive
+        return super()._should_retreat(state, role, safe_target)
+
+
+class AlphaTournamentV401Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v401"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV401AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV402AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV402: TV350 + lower heart batch target for aligners (2 instead of 3).
+    Aligners return to field faster with fewer hearts."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+    def _aligner_action(self, state):
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        # Lower batch target: 2 instead of 3
+        if hearts < 2 and hub is not None and _h.team_can_refill_hearts(state):
+            if _h.manhattan(_h.absolute_position(state), hub.position) <= 1:
+                self._clear_target_claim()
+                self._clear_sticky_target()
+                return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV402Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v402"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV402AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV403AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV403: TV350 + hotspot=-12 + 7a@100 (more aggressive re-align + faster 7th)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -12.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=100)
+
+
+class AlphaTournamentV403Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v403"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV403AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV404AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV404: TV350 + higher target switch threshold (6.0 vs 3.0).
+    Agents stick to their targets more, reducing oscillation."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+    def _preferred_alignable_neutral_junction(self, state):
+        candidate = self._nearest_alignable_neutral_junction(state)
+        sticky = self._sticky_align_target(state)
+        if sticky is None:
+            return candidate
+        if candidate is None:
+            return sticky
+        current_pos = _h.absolute_position(state)
+        team_id = _h.team_id(state)
+        neutral_junctions = self._world_model.entities(
+            entity_type="junction",
+            predicate=lambda junction: junction.owner in {None, "neutral"},
+        )
+        enemy_junctions = self._world_model.entities(
+            entity_type="junction",
+            predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        friendly_junctions = self._world_model.entities(
+            entity_type="junction",
+            predicate=lambda junction: junction.owner == team_id,
+        )
+        sticky_score = _h.aligner_target_score(
+            current_position=current_pos, candidate=sticky,
+            unreachable=[e for e in neutral_junctions if e.position != sticky.position],
+            enemy_junctions=enemy_junctions, claimed_by_other=False,
+            hub_position=hub_pos, friendly_junctions=friendly_junctions,
+            hotspot_count=self._junction_hotspot_count(sticky, hub),
+            network_weight=self._network_weight, hotspot_weight=self._hotspot_weight,
+        )[0]
+        candidate_score = _h.aligner_target_score(
+            current_position=current_pos, candidate=candidate,
+            unreachable=[e for e in neutral_junctions if e.position != candidate.position],
+            enemy_junctions=enemy_junctions,
+            claimed_by_other=_h.is_claimed_by_other(
+                claims=self._shared_claims, candidate=candidate.position,
+                agent_id=self._agent_id, step=self._step_index,
+            ),
+            hub_position=hub_pos, friendly_junctions=friendly_junctions,
+            hotspot_count=self._junction_hotspot_count(candidate, hub),
+            network_weight=self._network_weight, hotspot_weight=self._hotspot_weight,
+        )[0]
+        # Higher threshold = more sticky (6.0 instead of 3.0)
+        if candidate.position != sticky.position and candidate_score + 6.0 < sticky_score:
+            return candidate
+        return sticky
+
+
+class AlphaTournamentV404Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v404"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV404AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV405AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV405: TV350 + expansion_weight=12 (slightly reward expansion more)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+        self._expansion_weight = 12.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV405Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v405"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV405AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV406AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV406: TV350 + hotspot=-10 + 1 scrambler from step 2000 (very late disruption)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        aligner_budget, _ = _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+        if step >= 2000 and aligner_budget >= 4:
+            return aligner_budget - 1, 1
+        return aligner_budget, 0
+
+
+class AlphaTournamentV406Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v406"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV406AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV407AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV407: TV350 + combine TV349's 4a tweaks (3a@60, step>=200) + hotspot=-10.
+    Exact combination of #1 and #2 features."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if objective == "resource_coverage":
+            return 0, 0
+        if team_size <= 2:
+            return (1, 0) if (not can_hearts and min_res < 7) else (2, 0)
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:  # TV349's 4a tweaks
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV407Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v407"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV407AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV408AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV408: TV350 + deposit_threshold=12 for miners (deposit more frequently).
+    More frequent deposits = resources available sooner for team."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+    def _should_deposit_resources(self, state):
+        cargo = _h.resource_total(state)
+        if cargo <= 0:
+            return False
+        # Lower threshold: 12 instead of 16 for miners
+        threshold = 12 if _h.has_role_gear(state, "miner") else 4
+        if cargo >= threshold:
+            return True
+        safe_target = self._nearest_friendly_depot(state)
+        if safe_target is None:
+            return cargo >= 4
+        safe_distance = _h.manhattan(_h.absolute_position(state), safe_target.position)
+        if cargo >= 16 and safe_distance > 18:
+            return True
+        if cargo >= 8 and self._should_retreat(state, "miner", safe_target):
+            return True
+        if cargo >= 12 and self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            return True
+        return False
+
+
+class AlphaTournamentV408Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v408"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV408AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV409AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV409: TV350 + hotspot=-10 + hotspot from scramble events only.
+    Combine hotspot re-align with higher claimed_target avoidance."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+        self._expansion_weight = 8.0  # Slightly lower expansion preference
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV409Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v409"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV409AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV410AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV410: TV350 + 8 aligners at min_res >= 200 (all-in alignment at very high resources)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if objective == "resource_coverage":
+            return 0, 0
+        if team_size <= 2:
+            return (1, 0) if (not can_hearts and min_res < 7) else (2, 0)
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        elif min_res < 200:
+            return min(team_size - 1, 7), 0
+        else:
+            return team_size, 0  # ALL agents become aligners
+
+
+class AlphaTournamentV410Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v410"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV410AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

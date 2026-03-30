@@ -14,3 +14,14 @@ plan: Fine-tune around #1 (TV350) and improve tournament performance
   Various hotspot/budget/expansion/scrambler tweaks
 - [18:25] Resolved conflict with parallel session TV396-TV400.
   Adding new variants as TV401+ on current base.
+- [18:35] Created and uploaded TV401-TV410 (v786-v796):
+  TV401: Lower aligner retreat (35 vs 50 HP)
+  TV402: Lower heart batch target (2 vs 3)
+  TV403: hotspot=-12 + 7a@100
+  TV404: Higher target switch threshold (6.0 vs 3.0)
+  TV405: expansion_weight=12
+  TV406: 1 scrambler from step 2000
+  TV407: Combine TV350 + TV349's 4a tweaks (3a@60, step>=200)
+  TV408: Lower deposit threshold (12 vs 16)
+  TV409: expansion_weight=8 (less expansion preference)
+  TV410: 8 aligners at min_res>=200 (all-in alignment)
