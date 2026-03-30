@@ -3,3 +3,12 @@ status: in-progress
 ## Actions
 - Session started. Previous session (2026-03-30-211500) was interrupted — closed it out.
 - Context: v716=15.05 is current #1. Goal >10 achieved. Last session uploaded v826-v832 (TV440-TV446) with aligner floor and kitchen sink fixes. Waiting for results.
+- Analyzed competition results for v831 (TV445) and v832 (TV446):
+  - v831 avg ~6.1 vs opponents, v832 avg ~8.0 — both much worse than v716 (15.05)
+  - Root cause: TV440-446 were built on TV436 base, not TV350 base
+  - TV436's 2-agent economy changes likely hurt common 6v2 and 4v4 scenarios
+- Downloaded and analyzed match logs:
+  - Death spiral pattern: peak ~10 junctions at step 800, then collapse to 1 by step 5000
+  - Trigger: when min_res < 10, budget drops to 1 aligner → can't keep pace with enemy
+  - Budget function `_tv334_pressure_budgets` drops to 1 aligner too aggressively
+- Plan: Create TV447 — TV350 base + aligner floor (min 3 aligners for 6+ agents during economy dips)
