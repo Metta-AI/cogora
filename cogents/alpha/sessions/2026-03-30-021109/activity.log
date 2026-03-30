@@ -2,29 +2,29 @@ status: interrupted
 started: 2026-03-30-021109
 
 ## Uploads This Session
-- v509 = TV145 (aggressive 4a step 50) → #3 at 13.57 ↑
-- v510 = TV147 (ultra-aggressive 4a step 1) → #16 at 13.44
-- v511 = TV151 (balanced 6a) → qualifying
-- v512 = TV152 (adaptive 2a) → competition, no leaderboard yet
+- v509 = TV145 (aggressive 4a step 50) → #4 at 13.57 (78 matches, converged)
+- v510 = TV147 (ultra-aggressive 4a step 1) → #9 at 13.49 (78 matches)
+- v511 = TV151 (balanced 6a) → in competition, no leaderboard yet
+- v512 = TV152 (adaptive 2a) → **#2 at 13.89 (12 matches, climbing!)**
 - v513 = TV153 (TV151 + TV142 stag) → qualifying
 - v514 = TV154 (TV145 4a + TV151 6a + TV142 stag) → qualifying
-- v515 = TV155 (exact TV142 + TV151 6a only) → qualifying ← best hypothesis
+- v515 = TV155 (exact TV142 + TV151 6a only) → qualifying
 
-## Current Leaderboard Top 5
-1. v506 (TV142) = 14.30 — 50% stag scramble + TV138 budgets
-2. v483 = 13.65
-3. v509 (TV145) = 13.57 — aggressive 4a step 50 ↑
-4. v464 = 13.55
-5. v448 = 13.54
+## Current Leaderboard
+1. v506 (TV142) = 14.30 (78 matches)
+2. **v512 (TV152) = 13.89 (12 matches) ← NEW, climbing!**
+3. v483 = 13.65 (78 matches)
+4. v509 (TV145) = 13.57 (78 matches)
+5. v464 = 13.55
 
-## Strategy
-v515 (TV155) is the best hypothesis: minimal change from #1 v506,
-only improving the 6a budget from TV135 to TV151. If it doesn't beat
-v506, then TV142's 6a was already optimal.
+## Key Results
+- v512 (TV152) adaptive 2a is #2 despite hurting in self-play!
+  Self-play can't test partner-dependent behavior (2a resilience)
+- Tournament validation >> self-play validation
+- v515 (TV155) still the top hypothesis — minimal change from #1
 
-## Key Learnings
-1. v506 (TV142) is the gold standard — 50% stag scramble is the key
-2. Economy gates (min_res 20) for 4a HELP in tournament
-3. Ultra-aggressive 4a (step 1, no gate) is worse than moderate (step 50, gate 20)
-4. Self-play doesn't predict tournament ranking well
-5. The best approach: minimal changes from proven #1
+## Strategy Going Forward
+- Wait for v512 to converge (12→78+ matches)
+- Wait for v513-v515 to enter competition
+- If v512 stabilizes above v506, it's the new champion
+- If v515 beats v506, the 6a improvement is validated
