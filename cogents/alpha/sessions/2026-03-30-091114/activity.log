@@ -95,3 +95,8 @@ started: 2026-03-30T09:11:14Z
     v573 (TV217, phase budgets) = 12.86 (5m)
   CONCLUSION: Don't touch stagnation! Focus on 4a early-game + 6a thresholds.
   v568 (TV212) is the proven #1 = TV209 + step<30 + earlier 3rd aligner (60/200).
+- 10:10 Created TV224-TV226 on TV212 base:
+  v580 (TV224): 3rd aligner at 40/100 (more aggressive)
+  v581 (TV225): 6a thresholds 21/33/65 (intermediate)
+  v582 (TV226): 6a initial ramp step<20
+  All uploaded.
