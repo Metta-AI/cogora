@@ -6,3 +6,10 @@ started: 2026-03-30T14:11:02Z
 - Study opponent strategies from match logs
 - Explore fundamental strategy improvements beyond heuristic ceiling
 - Consider LLM cyborg approach
+
+## Progress
+- [14:11] Session started. All v652-v663 matches still running/scheduled.
+- [14:15] Ran 500-step local game with TV277: 20 junctions aligned, score=0.46/step. Hub resources healthy (100+).
+- [14:20] Analyzing code for improvement opportunities. Current expansion scoring is 1-level deep.
+- [14:20] Considering 2-level expansion lookahead for junction targeting.
+- [14:20] Also considering: better coordination between aligners (zone assignment), smarter scramble timing.
