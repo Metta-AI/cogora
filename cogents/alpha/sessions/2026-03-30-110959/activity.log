@@ -66,6 +66,13 @@ status: in-progress
   - TV262 (v621): TV244 + less aggressive scramble (125/75/25 windows)
   Session summary: 24 variants created (TV239-TV262, v598-v621).
   Best performers: v603 (#1, 14.96), v598 (#3, 14.78), v606 (#16, 14.43).
+[11:48] LEADERBOARD UPDATE (24m mature data):
+  #1: v608 (TV249) = 14.92 (8m, EARLY!) — best combo surprisingly leading
+  #3: v603 (TV244) = 14.73 (24m) — adaptive scramble, settled score
+  #5: v609 (TV250) = 14.70 (6m, early) — TV240+faster4a
+  #16: v598 (TV239) = 14.46 (24m) — TV191+decay, settled
+  TV244 (adaptive scramble) is the most reliable at 14.73 (24m).
+  TV249 still needs more matches to confirm 14.92.
 [11:41] Created TV254-TV257 (all based on TV239, the new #2).
   - TV254 (v613): TV239 + early 3rd aligner at step 15
   - TV255 (v614): TV239 + faster 4a (min_res 12)
