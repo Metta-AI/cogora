@@ -23,3 +23,8 @@ status: in-progress
 - Key insight from log analysis: agents collapse in stagnation because explore radius ~22 too small
 - New approach: stagnation explore at radius 35, covers ~80% of 88x88 map
 - Also reduced stagnation scramble from 50% to 33% (step%300 < 100)
+- v542/v543 in competition (30 running), v544 qualifying (14.69), v545 qualifying (15.70!), v546 qualifying
+- v541 converged at 13.02 (77m) — below top 5
+- v545 (TV189 reduced 6a scramble) qualifying at 15.70 — surprisingly strong!
+- CAUTION: previous session proved 50% scramble optimal, but v545 qualifying score is very high
+- Need more data — qualifying is only 1-2 matches
