@@ -76,3 +76,9 @@ started: 2026-03-30T16:18:00Z
   - TV379: net_wt=1.0 + fast stag + 7a@100 + hotspot=-8
   - TV380: net_wt=1.0 + fast stag + fast decay (300) + hotspot=-8
 - [17:45] Uploaded: v752(TV376), v753(TV377), v754(TV378), v755(TV379), v756(TV380)
+- [17:50] LOCAL: TV372 (net_wt=1.0 + stag + 7a@120 + hotspot=-8) = 7.79
+  Compare: TV365 (net_wt=1.0 alone) = 8.78, TV346 (stag alone) = 7.23
+  Hotspot REDUCES density benefit — confirms parallel session finding.
+  TV377 (no hotspot + density + stag) test running.
+- [17:50] Tournament: v743, v747, v750, v754 in competition. New opponent: swoopy-v0.
+  Still no completed alpha competition matches.
