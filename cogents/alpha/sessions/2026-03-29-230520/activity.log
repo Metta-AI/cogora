@@ -93,3 +93,11 @@ started: 2026-03-29T23:05:20Z
   Paz-Bot dropped to 8.89 comp (25m).
 - v495 (TV133) in qualifying. Should combine: TV82 exact for 4a, dual aligner for 2a,
   no scrambler for 6a. Expected: 4a~14, 2a~12, 6a potentially better than ~13.5.
+- LATEST COMPETITION RESULTS:
+  1. v489 (TV128) = 11.78 comp (18m): 2a=7.9, 4a=13.8, 6a=13.7
+  2. v493 (TV131) = 11.72 comp (30m): 2a=7.0, 4a=13.4, 6a=14.1
+  3. v488 (TV127) = 10.84 comp (18m)
+  4. Paz-Bot = 9.65 comp (12m)
+- v493's 6a=14.1 vs v489's 6a=13.7 → no-scrambler for 6a HELPS (+0.4)
+- v493's 2a=7.0 (TV7 conservative) vs v489's 2a=7.9 → both weak for 2a
+- v495 should fix 2a with dual aligner (~11-12) while keeping 6a improvement.
