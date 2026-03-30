@@ -1,2 +1,11 @@
 status: in-progress
 session_start: 2026-03-30T10:08:11Z
+
+## Analysis Phase
+- Reviewed TV208 inheritance chain and policy structure
+- TV208 = TV206 (3-tier stagnation) + TV207 (6a thresholds 22/35/70)
+- Only overrides _pressure_budgets for 5+ agent teams
+- Ran local 500-step game: silicon bottleneck (77 vs 189+ others at step 500)
+- Mining logic already dynamically prioritizes lowest resource
+- Many matches running/scheduled (v561-v577), none completed yet
+- Investigating potential improvements to break ~15 ceiling
