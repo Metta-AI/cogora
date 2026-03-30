@@ -49931,6 +49931,7 @@ class AlphaTournamentV470Policy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+<<<<<<< HEAD
 # ── TV471: TV350 + hub-focused recovery scramble ────────────────────────────
 # Different approach from TV467-470 (budget-only). TV471 changes WHERE aligners
 # scramble during collapse. Analysis of 6v2 vs modular-lstm showed:
@@ -50160,6 +50161,79 @@ class AlphaTournamentV472Policy(MettagridSemanticPolicy):
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTournamentV472AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV473: TV350 + lower 5+ agent thresholds for faster aligner ramp ─────────
+# Key insight: v858 6v2 vs coglet scored 1.50 because only 2 aligners with
+# min_res stuck at 16-19 (below TV350's 22 threshold for 3rd aligner).
+# Fix: lower thresholds so 3rd aligner comes at min_res=15 instead of 22.
+
+def _tv473_pressure_budgets(self, state, *, objective=None, threshold_7a=100):
+    """Lower thresholds for 5+ agents. 3 aligners at min_res=15 (was 22)."""
+    step = state.step or self._step_index
+    min_res = _h.team_min_resource(state)
+    can_hearts = _h.team_can_refill_hearts(state)
+    team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+    if objective == "resource_coverage":
+        return 0, 0
+
+    if team_size <= 2:
+        if not can_hearts and min_res < 7:
+            return 1, 0
+        return 2, 0
+
+    if team_size <= 4:
+        if step < 30:
+            return 1, 0
+        if min_res < 7 and not can_hearts:
+            return 1, 0
+        aligner_budget = 2
+        if min_res >= 60 and step >= 200:
+            aligner_budget = min(3, team_size - 1)
+        return aligner_budget, 0
+
+    # 5+ agents: lowered thresholds
+    if step < 15:
+        return 2, 0
+    if step < 30 and min_res < 15:
+        return 2, 0
+    if min_res < 7 and not can_hearts:
+        return 2, 0  # Floor at 2 (was 1)
+    elif min_res < 15:
+        return 2, 0  # Was 22
+    elif min_res < 25:
+        return 3, 0  # Was 35
+    elif min_res < 50:
+        return min(4, team_size - 1), 0  # Was 70
+    elif min_res < threshold_7a:
+        return min(team_size - 1, 6), 0
+    else:
+        return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV473AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV473: TV350 + lower 5+ agent thresholds."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv473_pressure_budgets(self, state, objective=objective)
+
+
+class AlphaTournamentV473Policy(MettagridSemanticPolicy):
+    """TV473: TV350 + lower 5+ agent thresholds."""
+    short_names = ["alpha-tournament-v473"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV473AgentPolicy(
                 self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,

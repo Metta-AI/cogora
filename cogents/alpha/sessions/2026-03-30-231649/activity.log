@@ -12,3 +12,6 @@ started: 2026-03-30T23:16:49Z
 - Qualifying results: v858=13.36/11.82 (IN COMPETITION), v859=11.21, v857=9.27.
 - v858 in competition vs: Paz-Bot, coglet, gtlm-reactive, mammet, slanky, swoopy.
 - Key insight: 6v2 vs random-assay, budget dropped to 1 aligner at step 500 due to min_res < 10. The aligner floor fix addresses this.
+- v858 competition results: 14.84 (Paz-Bot), 13.28 (gtlm), 13.14 (slanky), 9.52 (modular-lstm), 6.81/1.50 (coglet), 4.74/4.24 (4v4), 2.55/2.68/2.18/0.48 (2v6).
+- Key finding: 6v2 vs coglet scored 1.50 — only 2 aligners at min_res=16-19 (TV350 needs 22 for 3rd). Economy equilibrium at 16 prevents ramp-up.
+- Created TV471: lower 5+ agent thresholds (3 aligners at min_res=15 vs 22). Uploaded as v866.
