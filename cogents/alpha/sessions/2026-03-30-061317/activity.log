@@ -89,3 +89,11 @@ status: in-progress
 - v545 (23m): avg=13.98, balanced
 - v547 (TV191) qualifying — combines TV186 2a advantage + TV188 4a advantage
 - If v547 gets v542's 2a(14.2) + v544's 4a(13.9) + v542's 6a(15.5) = 14.53 → new #1
+- CONVERGED RESULTS (all ~50+ matches):
+  v542 (TV186): 14.19 — #2, 2a=14.2, 4a=12.9, 6a=15.5
+  v543 (TV187): 14.06 — #5, 2a=13.6, 4a=13.3, 6a=15.2
+  v544 (TV188): 13.89 — #7, 2a=13.0, 4a=13.4, 6a=15.2
+  v545 (TV189): 14.00 — #10, 2a=14.1, 4a=13.2, 6a=14.7
+- v542 confirmed as best new variant, essentially tied for #1
+- v547 (TV191) still qualifying — combines TV186 + faster 4a
+- v546 has 60 comp matches running
