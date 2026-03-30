@@ -12,3 +12,7 @@ status: in-progress
   - TV244 (v603): TV235 + adaptive scramble (more when behind in junctions)
   All tested locally, uploaded to tournament.
 [11:19] Waiting for tournament matches to complete. All current matches still running.
+[11:25] Created TV245-TV246 (dedicated scrambler variants).
+  - TV245 (v604): TV235 + 1 dedicated scrambler for 6+ agent teams
+  - TV246 (v605): TV240 (TV235+decay) + 1 dedicated scrambler
+  Tested locally, uploaded to tournament.
