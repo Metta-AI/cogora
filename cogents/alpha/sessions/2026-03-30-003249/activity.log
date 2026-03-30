@@ -57,3 +57,10 @@ status: in-progress
     - 6a vs gtlm 2a: TV133=14.26, TV134=14.26 (same, 6a unchanged)
     - Avg vs gtlm: TV133=9.40, TV134=10.87 (+15%)
 - v500 (TV136, ultra-fast 2a from step 1) now in competition matches
+- More complete results vs v29:
+  - v498 (TV133): 2a=13.91, 4a=8.89, 6a=14.61
+  - v496 (TV134): 6a=14.61 (2a/4a vs v29 pending)
+- TV134 vs v17: 2a=7.07, 4a=13.54, 6a=14.54
+- TV133 vs v29: 2a=13.91 (great partner), 4a=8.89, 6a=14.61
+- v500 (TV136) 4a vs v34 = 9.92 (first result)
+- Waiting for v500 2a results (critical: does ultra-fast start help?)
