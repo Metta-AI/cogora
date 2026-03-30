@@ -43849,3 +43849,178 @@ class AlphaTournamentV370Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV371-TV375: Combine TV365 density with other proven innovations
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV371AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV371: TV365 (net_wt=1.0) + late scramblers (from TV341)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if objective == "resource_coverage":
+            return 0, 0
+        if team_size <= 2:
+            return (1, 0) if (not can_hearts and min_res < 7) else (2, 0)
+        if team_size <= 4:
+            if step < 50: return 1, 0
+            if min_res < 7 and not can_hearts: return 1, 0
+            if min_res < 15: return 1, 0
+            ab, sb = 2, 0
+            if step >= 2500 and min_res >= 20: sb = 1
+            if min_res >= 80 and step >= 300: ab = min(3, team_size - 1 - sb)
+            return ab, sb
+        if step < 15: return 2, 0
+        if step < 30 and min_res < 20: return 2, 0
+        if min_res < 10 and not can_hearts: return 1, 0
+        if step >= 2500 and min_res >= 30: return min(5, team_size - 3), min(2, team_size - 6)
+        if step >= 2000 and min_res >= 40: return min(5, team_size - 3), 1
+        if min_res < 22: return 2, 0
+        elif min_res < 35: return 3, 0
+        elif min_res < 70: return min(4, team_size - 1), 0
+        elif min_res < 150: return min(team_size - 1, 6), 0
+        else: return min(team_size - 1, 7), 0
+
+class AlphaTournamentV371Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v371"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV371AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV372AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV372: TV365 (net_wt=1.0) + 7a at 120 (from TV334)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if objective == "resource_coverage": return 0, 0
+        if team_size <= 2:
+            return (1, 0) if (not can_hearts and min_res < 7) else (2, 0)
+        if team_size <= 4:
+            if step < 50: return 1, 0
+            if min_res < 7 and not can_hearts: return 1, 0
+            if min_res < 15: return 1, 0
+            ab = 2
+            if min_res >= 80 and step >= 300: ab = min(3, team_size - 1)
+            return ab, 0
+        if step < 15: return 2, 0
+        if step < 30 and min_res < 20: return 2, 0
+        if min_res < 10 and not can_hearts: return 1, 0
+        elif min_res < 22: return 2, 0
+        elif min_res < 35: return 3, 0
+        elif min_res < 70: return min(4, team_size - 1), 0
+        elif min_res < 120: return min(team_size - 1, 6), 0  # 7a at 120
+        else: return min(team_size - 1, 7), 0
+
+class AlphaTournamentV372Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v372"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV372AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV373AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV373: TV366 (net_wt=0.75) + 7a at 120."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.75
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        if objective == "resource_coverage": return 0, 0
+        if team_size <= 2:
+            return (1, 0) if (not can_hearts and min_res < 7) else (2, 0)
+        if team_size <= 4:
+            if step < 50: return 1, 0
+            if min_res < 7 and not can_hearts: return 1, 0
+            if min_res < 15: return 1, 0
+            ab = 2
+            if min_res >= 80 and step >= 300: ab = min(3, team_size - 1)
+            return ab, 0
+        if step < 15: return 2, 0
+        if step < 30 and min_res < 20: return 2, 0
+        if min_res < 10 and not can_hearts: return 1, 0
+        elif min_res < 22: return 2, 0
+        elif min_res < 35: return 3, 0
+        elif min_res < 70: return min(4, team_size - 1), 0
+        elif min_res < 120: return min(team_size - 1, 6), 0
+        else: return min(team_size - 1, 7), 0
+
+class AlphaTournamentV373Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v373"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV373AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV374AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV374: net_wt=0.85 (fine-tune between 0.75 and 1.0)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.85
+
+class AlphaTournamentV374Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v374"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV374AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV375AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV375: net_wt=0.9 (fine-tune between 0.85 and 1.0)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.9
+
+class AlphaTournamentV375Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v375"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV375AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

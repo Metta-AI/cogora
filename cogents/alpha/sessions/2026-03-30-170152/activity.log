@@ -34,3 +34,8 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
 - [17:35] All v725-v736 in competition. No completed matches yet.
   Opponents: slanky, Paz-Bot, coglet-v0, gtlm-reactive, swoopy-v0, mammet, modular-lstm.
 - Waiting for results.
+- [17:40] Created TV371-TV375 (combo density + budget variants):
+  v737=TV371 (net=1.0+late scramblers), v738=TV372 (net=1.0+7a@120)
+  v739=TV373 (net=0.75+7a@120), v740=TV374 (net=0.85), v742=TV375 (net=0.9)
+- All uploaded. Running local tests in parallel.
+- Still no completed tournament matches for any of our variants.
