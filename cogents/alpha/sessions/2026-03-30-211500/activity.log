@@ -29,3 +29,14 @@ status: in-progress
   - Bug-fix variants weren't tested as 2-agent team
 - Uploaded TV440-TV443 to tournament:
   - v826=TV440, v827=TV441, v828=TV442, v829=TV443
+- Studied match logs: v822 (6 agents) vs modular-lstm (2 agents) = 0.71
+  - DEATH SPIRAL: peak at 15 junctions (step 800), then collapse to 3
+  - Root cause: budget drops to (1, 0) during low resources → only 1 aligner
+  - 1 aligner can't keep up with enemy scrambling → economy never recovers
+- Created TV444-TV446 with aligner floor:
+  - TV444: floor of 2 aligners for 5+ agents
+  - TV445: kitchen sink + floor of 2
+  - TV446: floor of 3 for 6+ agents — best local (avg 2.28 vs 1.70 baseline)
+- Uploaded TV444-TV446:
+  - v830=TV444, v831=TV445, v832=TV446
+- v826-v830 now in competition, v831-v832 still qualifying
