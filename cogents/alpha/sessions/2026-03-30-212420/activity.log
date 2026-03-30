@@ -46,3 +46,14 @@ status: in-progress
 - v840, v841 now in competition (scheduled/running)
 - Analyzed heart batching system: batch target=3→6 over game. Not the bottleneck.
   Real issue: economy can't sustain heart production → aligner spends 600+ steps mining
+- MORE competition results:
+  v840 (TV454 floor3+4a): avg 10.70 vs opponents (best new variant!)
+    - 4v4 vs slanky=16.01, 6v2 vs slanky=15.40, 6v2 vs mammet=11.47
+    - 2v6 vs Paz=11.91/10.28, 4v4 vs Paz=9.63
+    - 2v6 vs gtlm=0.18 (outlier)
+    - Without gtlm outlier: avg 12.45
+  v841 (TV452 floor3): avg 9.00
+    - 6v2 vs slanky=16.38, 6v2 vs mammet=11.47, 6v2 vs gtlm=9.76
+    - 2v6 vs lstm=3.57, 4v4 vs coglet=3.82
+- KEY: v840's faster 4a ramp (can_hearts → 2 aligners) makes big difference in 4v4 matchups
+- 2v6 matchups still weak (0.18 vs gtlm) — fundamental 2-agent limitation
