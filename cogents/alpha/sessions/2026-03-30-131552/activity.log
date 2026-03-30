@@ -60,3 +60,8 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
   TV293 (v653): TV264 + earlier 5a at min_res >= 50
   TV294 (v654): TV264 + earlier 4a at min_res >= 25
   TV295 (v656): TV264 + all aggressive: 4a@25, 5a@50, 7a@100
+
+14:12 — Created TV296-TV297, uploaded as v657-v658
+  TV296 (v657): TV264 + 5-tier thresholds (22/35/50/70/100) — smoother ramp
+  TV297 (v658): TV264 + higher 3a threshold (30) — more conservative early
+  v637 (TV277) climbed to 15.12 (#1, 18m) — lower 7a confirmed as real improvement
