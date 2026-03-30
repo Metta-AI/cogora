@@ -70,3 +70,15 @@ status: in-progress
 - CAUTION: only 7 matches, could be noise/lucky matchups
 - v544 (TV188) dropped to 14.21 (8m) — 2a=10.5 is the weak spot
 - Need to monitor v545 closely as it converges
+- LATEST LEADERBOARD:
+  #1: v522 (TV162) = 14.41 (78m) — stable
+  #2: v542 (TV186) = 14.39 (54m) — OUR NEW BEST
+  #3: v519 (TV160) = 14.37 (78m) — stable
+  #5: v543 (TV187) = 14.33 (54m) — also strong
+  #10: v545 (TV189) = 13.76 (11m) — settling down from initial hype
+- v544 (TV188) = 13.34 (11m) — 2a weakness
+- v542 (TV186) confirmed as our new best variant!
+- TV186 = team-size-specific stagnation + TV162 6a thresholds
+  Key: faster stagnation for 2a (peak>=3, 200 steps, step>300)
+  Combined with TV162's lower 6a thresholds (25/40/80)
+  While keeping TV142 conservative stagnation for 4a+
