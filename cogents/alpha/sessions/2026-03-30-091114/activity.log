@@ -100,3 +100,11 @@ started: 2026-03-30T09:11:14Z
   v581 (TV225): 6a thresholds 21/33/65 (intermediate)
   v582 (TV226): 6a initial ramp step<20
   All uploaded.
+- 10:15 LEADERBOARD (10-14 matches, scores settled):
+  v567 (TV211) = #1 at 15.73 (10m) — earlier 3rd aligner 60/200
+  v566 (TV210) = #2 at 15.68 (10m) — step<30 4a
+  v568 (TV212) = #3 at 15.52 (11m) — full 4a combo
+  v565 (TV209) = #4 at 15.52 (11m) — base combo
+  v564 (TV208) dropped to 14.88 (13m) — NO 4a changes, confirming 4a value
+  v574 (TV218, smart stag) = 10.75 (7m) — TERRIBLE! Don't touch stagnation cycle!
+  TOP CLUSTER: v566-v568 at 15.5-15.7. All within noise. 4a changes add ~0.6-0.8.
