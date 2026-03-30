@@ -75,3 +75,11 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
   TV396-TV400 (v769-v774) still in qualifying.
   All density variants (v725-v762) confirmed worse than baseline (9-13 range).
   Key learning: local testing vs Clips AI is unreliable for tournament prediction.
+- [18:40] Budget variant early results (VERY NOISY, few matches):
+  v772 (TV399, 5+ lower thresholds): 13.59 (2m) — PROMISING, close to baseline
+  v770 (TV397, always 2 aligners 4a): 12.58 (4m)
+  v773 (TV400, combined lower): 9.74 (3m)
+  v769 (TV396, 4a min_res 10): 7.37 (3m)
+  v774 (TV398, aggressive 4a step 30): 6.23 (5m) — BAD
+- 4a budget changes seem to HURT. 5+ budget changes (v772) look good.
+- Need more matches for reliable data (30+ minimum).
