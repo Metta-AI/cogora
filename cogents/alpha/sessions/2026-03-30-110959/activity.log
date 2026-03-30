@@ -7,3 +7,8 @@ status: in-progress
   - TV241 (v600): TV235 + faster decay (300 step interval)
   - TV242 (v601): TV235 + 3-tier stag with team-size-specific decay
   All tested locally (100 steps), all uploaded to tournament.
+[11:18] Created TV243-TV244 (behavioral variants on TV235 base).
+  - TV243 (v602): TV235 + explore-only idle (no idle mining)
+  - TV244 (v603): TV235 + adaptive scramble (more when behind in junctions)
+  All tested locally, uploaded to tournament.
+[11:19] Waiting for tournament matches to complete. All current matches still running.
