@@ -6,3 +6,13 @@ started: 2026-03-30-021109
 - Analyze and iterate based on results
 - Fix carbon bottleneck in 4a if applicable
 - Upload improved policy
+
+## Actions
+- Created TV145: aggressive 4a — 2 aligners from step 50, no economy gate
+- Created TV146: TV145 + carbon-priority mining (rejected — backfired in local tests)
+- Local tests (4a, 500 steps): TV145=0.31 vs TV143=0.25 (+24%)
+- Local tests (4a, 2000 steps): TV145=1.28 vs TV143=0.97 (+32%)
+- TV146 carbon priority made things worse (over-mined carbon, silicon dropped)
+- 2a and 6a unchanged from TV143, both working correctly
+- Uploaded TV145 as v509 to tournament
+- v506/v507/v508 matches still running/scheduled — no completed results yet
