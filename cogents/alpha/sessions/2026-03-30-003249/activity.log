@@ -16,3 +16,12 @@ status: in-progress
 - Created TV135: TV134 + idle aligners scramble instead of mine in 2a mode
 - Both pass 100-step validation
 - All v53 tournament matches still running/scheduled, no results yet
+- v53 match results completed:
+  - v53 (2a) vs v466 (6a): 14.97 — excellent
+  - v53 (4a) vs v466/v463/v464/v483 (4a): 13.41 consistently
+  - v53 (6a) vs v466/v463 (2a): 5.99 — dragged down by bad partner 2a
+- Uploaded v496 (TV134), v497 (TV135-broken), v498 (TV133 baseline)
+- TV134 self-play: 6.66 per cog (8v0)
+- TV135-broken self-play: 0.69 per cog — _aligner_action override removed stagnation logic!
+- Fixed TV135: replaced broken _aligner_action with budget-only change (faster 6a ramp)
+- Uploaded v499 (fixed TV135: faster 6a ramp at min_res thresholds 50/100 vs 80/200)

@@ -23805,79 +23805,66 @@ class AlphaTournamentV134Policy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
-# ── TV135: TV134 + idle aligners scramble in 2a mode ────────────────────────
+# ── TV135: TV134 + faster 6a ramp when economy is strong ─────────────────────
 
 class AlphaTournamentV135AgentPolicy(AlphaTournamentV134AgentPolicy):
-    """TournamentV135: TV134 + idle aligners scramble in 2-agent mode.
+    """TournamentV135: TV134 + more aggressive 6a expansion.
 
-    When 2 aligners run out of frontier junctions, instead of mining (which
-    partner's 6 agents already handle), scramble enemy junctions to protect score.
+    When 6a team has strong economy, ramp to max aligners faster.
+    Changes from TV134:
+    - 5+ agents: 4 aligners at min_res >= 50 (was 80 in TV134/TV133)
+    - 5+ agents: max aligners at min_res >= 100 (was 200)
     """
 
-    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
-        """Aligner with idle-scramble for 2-agent teams, idle-mine otherwise."""
-        hearts = int(state.self_state.inventory.get("heart", 0))
-        hub = self._nearest_hub(state)
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
 
-        if hearts <= 0:
-            self._clear_target_claim()
-            self._clear_sticky_target()
-            if not _h.team_can_refill_hearts(state):
-                return self._miner_action(state, summary_prefix="rebuild_hearts_")
-            if hub is not None:
-                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
-            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
-        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
-            self._clear_target_claim()
-            self._clear_sticky_target()
-            assert hub is not None
-            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+        if objective == "resource_coverage":
+            return 0, 0
 
-        target = self._preferred_alignable_neutral_junction(state)
-        if target is not None:
-            self._claim_target(target.position)
-            self._set_sticky_target(target.position, target.entity_type)
-            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+        # 2-agent: same as TV134 (fast start + dual aligner)
+        if team_size <= 2:
+            if step < 100 or (min_res < 7 and not can_hearts):
+                return 1, 0
+            if min_res >= 7:
+                return 2, 0
+            return 1, 0
 
-        self._clear_target_claim()
-        self._clear_sticky_target()
-        if _h.resource_total(state) > 0:
-            depot = self._nearest_friendly_depot(state)
-            if depot is not None:
-                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+        # 4-agent: EXACT TV82 (proven, don't touch)
+        if team_size <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 30:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 100 and step >= 500:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
 
-        # No frontier — expand toward unreachable junctions
-        team_id = _h.team_id(state)
-        current_pos = _h.absolute_position(state)
-        hp = int(state.self_state.inventory.get("hp", 0))
-        hub_pos = hub.position if hub is not None else current_pos
-        unreachable = self._known_junctions(
-            state, predicate=lambda j: j.owner in {None, "neutral"}
-        )
-        if unreachable:
-            safe_unreachable = [
-                j for j in unreachable
-                if _h.manhattan(current_pos, j.position) < hp - 30
-                and _h.manhattan(hub_pos, j.position) < 40
-            ]
-            targets = safe_unreachable if safe_unreachable else unreachable
-            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
-            dist = _h.manhattan(current_pos, nearest.position)
-            if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
-                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+        # 5+ agents: faster ramp than TV134 (carry harder as 6a)
+        if step < 30:
+            return 2, 0
 
-        # Idle: scramble if 2-agent team, mine otherwise
-        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
-        if team_size <= 2 and hearts > 0:
-            scramble_target = self._preferred_scramble_target(state)
-            if scramble_target is not None:
-                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
-
-        return self._miner_action(state, summary_prefix="idle_align_")
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 30:
+            return 2, 0
+        elif min_res < 50:
+            return 3, 0
+        elif min_res < 100:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
 
 
 class AlphaTournamentV135Policy(MettagridSemanticPolicy):
-    """TournamentV135: TV134 + idle-scramble for 2a teams."""
+    """TournamentV135: TV134 + faster 6a aligner ramp."""
     short_names = ["alpha-tournament-v135"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
