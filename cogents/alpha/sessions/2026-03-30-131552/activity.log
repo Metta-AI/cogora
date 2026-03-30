@@ -45,3 +45,12 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
   TV289 (v649): TV272 + split stag 2/3 scramble, 1/3 mine
   TV290 (v650): TV272 + adaptive split (all scramble when behind, split when even/ahead)
   TV291 (v651): TV290 + lower 7a (100) — best of everything
+
+14:00 — LEADERBOARD UPDATE — v641 (split stag) dropped to 13.56 (was 15.21 at 2m)!
+  v637 (TV277, lower 7a at 100) = 14.95 (#1, 16m) — TRUE best!
+  v632 (TV272) = 14.85 (#2, 30m) — stable
+  v640 (TV280, earlier ramp) = 14.46 (#12, 19m) — decent
+  v641 (TV281, split stag) = 13.56 (#86, 11m) — initial reading misleading
+  v644 (TV284, capped 6a) = 13.28 (#120, 2m) — not promising
+  INSIGHT: Split stag was noise. Lower 7a threshold is the real winner.
+  FOCUS: Build on TV277 (lower 7a at 100).
