@@ -1,3 +1,18 @@
 status: in-progress
 started: 2026-03-30-180756
 plan: Check tournament results for v725-v742 (density variants), iterate on best performers, push for score >10
+- [18:08] Session started. Previous session interrupted waiting for tournament results.
+- [18:08] All tournament matches still running (v725-v756). Waiting for results.
+- [18:12] TV365 baseline local test: 6.88 (vs 8.78 last session — variance expected)
+- [18:15] Created TV386-TV395 new density experiments:
+  TV386: Adaptive density (0.3→1.5 over game)
+  TV387: net_wt=1.0 + expansion_weight=15
+  TV388: net_wt=1.0 + zero scramble (all aligners/miners)
+  TV389: net_wt=1.0 + aggressive early budgets (3 aligners from step 10)
+  TV390: Resource-adaptive density (scales with team resources)
+  TV391: net_wt=1.0 + expansion_weight=20 + expansion_cap=80
+  TV392: net_wt=1.2 (re-test slightly above sweet spot)
+  TV393: net_wt=1.0 + 1 scrambler from step 500
+  TV394: Steeper adaptive density (0.2→2.0)
+  TV395: net_wt=1.0 + higher target switch threshold (10.0 vs 3.0)
+- [18:15] Running all 10 variants locally in parallel
