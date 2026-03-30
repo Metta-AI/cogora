@@ -48,3 +48,14 @@ session_start: 2026-03-30T10:08:11Z
 | v590 | TV232 | TV228 + TV230 combined |
 | v591 | TV233 | Decaying peak junction count |
 | v592 | TV234 | TV228 + TV233 combined |
+
+## Leaderboard Insight: TV191 is True #1
+- v547 (TV191) = #1 at 14.69 (81 matches) — uses TV162 thresholds 25/40/80
+- v564 (TV208) = #6 at 14.51 (24 matches) — lower 22/35/70 actually HURT
+- Previous assumption that lower 6a thresholds helped was wrong
+- TV208's 3-tier stagnation may also have hurt vs TV191's simpler 2-tier
+
+## New TV191-based Variants
+- v594 = TV235: TV191 + earlier 6a 3rd aligner (step 15)
+- v595 = TV236: TV191 + reduced idle mining (min_res < 15)
+- These are more likely to improve because they build on the true #1
