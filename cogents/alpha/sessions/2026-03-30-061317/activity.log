@@ -15,3 +15,7 @@ status: in-progress
 - Uploaded v542 (TV186), v543 (TV187), v544 (TV188)
 - Theory: team-size-specific stagnation gives 2a benefit of TV160 without 4a/6a cost
 - Theory: lower 4a min_res (15 vs 20) enables faster 2-aligner start
+- Log analysis: 6a vs gtlm catastrophic collapse — 11→0 junctions during stagnation mode
+- Stagnation scramble causes us to waste 50% of 6a time scrambling instead of aligning
+- Created TV189 (v545): TV186 + reduced 6a scramble (25% vs 50%)
+- Theory: 6a should leverage numbers advantage for alignment, not scrambling
