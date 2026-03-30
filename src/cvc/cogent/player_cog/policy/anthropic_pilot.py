@@ -32333,3 +32333,75 @@ class AlphaTournamentV226Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV227: TV212 4a + TV222 6a thresholds (21/33/65) + TV206 stag ───────────
+
+class AlphaTournamentV227AgentPolicy(AlphaTournamentV212AgentPolicy):
+    """TournamentV227: TV212 with even tighter 6a thresholds.
+
+    TV212 (#1 at 15.12) + TV222's 6a thresholds (21/33/65).
+    If v578 (TV222) holds at ~15 on TV208 base, combining with
+    TV212's 4a improvements should push higher.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: TV212 (step<30, min_res 12, 3rd aligner 60/200)
+        if team_size <= 4:
+            if step < 30:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 12:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: tighter thresholds (21/33/65)
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 21:
+            return 2, 0
+        elif min_res < 33:
+            return 3, 0
+        elif min_res < 65:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV227Policy(MettagridSemanticPolicy):
+    """TournamentV227: TV212 + tighter 6a (21/33/65)."""
+    short_names = ["alpha-tournament-v227"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV227AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
