@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-161800**: **v716 (TV350 hotspot=-10) = 15.05 NEW #1** — 37 variants (TV344-TV385, v706-v762). Hotspot=-10 optimal. Network density is local-only trap. Combined innovations don't stack. [sessions/2026-03-30-161800/](sessions/2026-03-30-161800/)
 - **2026-03-30-152221**: **Ceiling confirmed at 14.94 (v632/TV272)** — 19 variants (TV322-TV340, v684-v702). Re-align bonus marginal (+0.1). Hub-proximity, faster ramp, mine-stag, wider scramble all WORSE. All tuning converges to 14.6-14.9. Need LLM cyborg for paradigm shift. [sessions/2026-03-30-152221/](sessions/2026-03-30-152221/)
 - **2026-03-30-141102**: **v667 (TV305 bottleneck scramble) avg 16.83** — 20 new variants (TV302-TV321, v664-v683). Bottleneck scramble = best innovation: 17.27 in 4v4. Single innovations beat combos. 2-level lookahead 56% better locally. [sessions/2026-03-30-141102/](sessions/2026-03-30-141102/)
 - **2026-03-30-131552**: **v637 (TV277) = #1 at 14.88** — 25 variants (TV277-TV301, v637-v663). Lower 7a threshold (100) only confirmed improvement. Split stag was noise (15.21→13.02). Stag mods all harmful. Heuristic ceiling ~14.85-14.90. [sessions/2026-03-30-131552/](sessions/2026-03-30-131552/)

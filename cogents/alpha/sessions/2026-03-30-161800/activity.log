@@ -126,3 +126,10 @@ started: 2026-03-30T16:18:00Z
 - [18:18] v716 still #1 at 15.05 (20m). Stable so far.
   TV381-TV385 still qualifying. Tournament cycle is slow.
   Will keep monitoring.
+- [18:25] TV381-385 early results: v760(TV384)=10.39, v762(TV382)=10.07,
+  v761(TV385)=10.04, v759(TV383)=9.96 — ALL MUCH WORSE than originals.
+  Combined innovations don't stack. Each improvement may be on same axis.
+  Best approach: v716 (TV350, hotspot=-10) = 15.05 remains #1.
+  Need more matches to confirm (only 20 so far, may regress like v687 did).
+
+status: completed

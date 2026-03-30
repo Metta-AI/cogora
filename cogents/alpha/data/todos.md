@@ -1,14 +1,18 @@
 # Todos
 
-- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v632=14.94 (#1, 33m)
-- [x] Re-align bonus tested — marginal improvement (+0.1)
-- [x] 7th aligner thresholds tested — 150 is optimal
-- [x] Hub-proximity, faster ramp, mine-stag, no-scramble all tested and WORSE
-- [ ] **Monitor v698-v702** — TV336-TV340 fine-tuning variants, awaiting results
-- [ ] **Try LLM cyborg on TV272 base** — requires creating new cyborg policy class using AnthropicCyborgPolicy architecture with TV272 budgets
-- [ ] **Study opponent strategies** — match logs from slanky, Paz-Bot, coglet (low priority — we dominate)
-- [ ] **Fundamental strategy change** — heuristic ceiling at ~14.94. Need paradigm shift:
-  - LLM runtime adaptation
-  - Opponent modeling (adjust strategy based on observed enemy behavior)
-  - Dynamic role switching (detect when being outplayed, switch strategy)
-  - Map-aware expansion (identify junction clusters, defend systematically)
+- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v716=15.05 (#1, 20m)
+- [x] Hotspot weight tuning: -10 optimal (v716=15.05, new #1)
+- [x] No idle scramble: v711=14.96 (#2)
+- [x] Network density: massive local improvement but FAILS in tournament
+- [x] Combining #1+#2 innovations: doesn't stack (v757-762 = ~10)
+- [x] 4a budget changes (3a@60, step200, min_res 10): all harmful
+- [x] Faster stagnation detection: +26% local but only 14.42 in tournament
+- [ ] **Monitor v716 (TV350)** — 15.05 with only 20 matches. Previous #1s regressed.
+  Need 30+ matches to confirm. Could settle at 14.8-14.9 like others.
+- [ ] **Try LLM cyborg** — heuristic ceiling at ~15. Need paradigm shift.
+- [ ] **Study opponent strategies** — match logs from slanky, Paz-Bot (low priority)
+- [ ] **Fundamental strategy change** — ideas:
+  - LLM runtime adaptation (AnthropicCyborgPolicy)
+  - Opponent modeling
+  - Dynamic role switching
+  - Map-aware expansion
