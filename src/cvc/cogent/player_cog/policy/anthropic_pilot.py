@@ -46520,3 +46520,310 @@ class AlphaTournamentV431Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV432: COMBO — TV413 two-hop expansion + TV416 adaptive hotspot
+# Combines the two best qualifying ideas: v799=16.26 and v802=15.96
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV432AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV432: Two-hop expansion + adaptive hotspot."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity, hub):
+        return _adaptive_hotspot_count(self, entity, hub,
+            early_weight=-5.0, mid_weight=-10.0, late_weight=-15.0)
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        all_neutral = self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+        candidates = [e for e in all_neutral if _h.within_alignment_network(e.position, network_sources)]
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [e for e in all_neutral if e not in candidates]
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
+                )[0] - self._two_hop_bonus(entity, unreachable) * 5.0,
+            ),
+        )
+
+    def _two_hop_bonus(self, candidate: KnownEntity, unreachable: list[KnownEntity]) -> float:
+        one_hop = [
+            u for u in unreachable
+            if _h.manhattan(candidate.position, u.position) <= _h._JUNCTION_ALIGN_DISTANCE
+        ]
+        two_hop_set: set[tuple[int, int]] = set()
+        for hop1 in one_hop:
+            for u in unreachable:
+                if u.position != candidate.position and u not in one_hop:
+                    if _h.manhattan(hop1.position, u.position) <= _h._JUNCTION_ALIGN_DISTANCE:
+                        two_hop_set.add(u.position)
+        return float(len(two_hop_set))
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV432Policy(MettagridSemanticPolicy):
+    """TV432: Two-hop + adaptive hotspot combo."""
+    short_names = ["alpha-tournament-v432"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV432AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV433: COMBO — TV422 (wider early) + TV413 (two-hop)
+# v808=16.03 + v799=16.26 — combine the two highest single qualifying scores
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV433AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV433: Two-hop + wider-early adaptive hotspot (1500/3000)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity, hub):
+        return _adaptive_hotspot_count(self, entity, hub,
+            early_weight=-5.0, mid_weight=-10.0, late_weight=-15.0,
+            early_cutoff=1500, late_cutoff=3000)
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        all_neutral = self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+        candidates = [e for e in all_neutral if _h.within_alignment_network(e.position, network_sources)]
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [e for e in all_neutral if e not in candidates]
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
+                )[0] - self._two_hop_bonus(entity, unreachable) * 5.0,
+            ),
+        )
+
+    def _two_hop_bonus(self, candidate: KnownEntity, unreachable: list[KnownEntity]) -> float:
+        one_hop = [
+            u for u in unreachable
+            if _h.manhattan(candidate.position, u.position) <= _h._JUNCTION_ALIGN_DISTANCE
+        ]
+        two_hop_set: set[tuple[int, int]] = set()
+        for hop1 in one_hop:
+            for u in unreachable:
+                if u.position != candidate.position and u not in one_hop:
+                    if _h.manhattan(hop1.position, u.position) <= _h._JUNCTION_ALIGN_DISTANCE:
+                        two_hop_set.add(u.position)
+        return float(len(two_hop_set))
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV433Policy(MettagridSemanticPolicy):
+    """TV433: Two-hop + wider-early adaptive hotspot."""
+    short_names = ["alpha-tournament-v433"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV433AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV434: Two-hop with stronger bonus weight (7.0 instead of 5.0)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV434AgentPolicy(AlphaTournamentV413AgentPolicy):
+    """TV434: TV413 two-hop but with bonus weight 7.0."""
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        all_neutral = self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+        candidates = [e for e in all_neutral if _h.within_alignment_network(e.position, network_sources)]
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [e for e in all_neutral if e not in candidates]
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
+                )[0] - self._two_hop_bonus(entity, unreachable) * 7.0,
+            ),
+        )
+
+
+class AlphaTournamentV434Policy(MettagridSemanticPolicy):
+    """TV434: Two-hop with stronger bonus."""
+    short_names = ["alpha-tournament-v434"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV434AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV435: Two-hop with weaker bonus (3.0) — maybe 5.0 was too aggressive
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV435AgentPolicy(AlphaTournamentV413AgentPolicy):
+    """TV435: TV413 two-hop but with bonus weight 3.0."""
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        all_neutral = self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+        candidates = [e for e in all_neutral if _h.within_alignment_network(e.position, network_sources)]
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [e for e in all_neutral if e not in candidates]
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
+                )[0] - self._two_hop_bonus(entity, unreachable) * 3.0,
+            ),
+        )
+
+
+class AlphaTournamentV435Policy(MettagridSemanticPolicy):
+    """TV435: Two-hop with weaker bonus."""
+    short_names = ["alpha-tournament-v435"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV435AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
