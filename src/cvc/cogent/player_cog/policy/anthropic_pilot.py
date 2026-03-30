@@ -41933,3 +41933,319 @@ class AlphaTournamentV335Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV336-TV340: Fine-tune around TV334 (#1 at 15.45) ───────────────────────────
+# TV334 = TV272 + 7a@120 + hotspot=-8.0. Best so far.
+
+def _tv334_pressure_budgets(self, state, *, objective=None, threshold_7a=120):
+    """Shared budget logic for TV334 variants with configurable 7a threshold."""
+    step = state.step or self._step_index
+    min_res = _h.team_min_resource(state)
+    can_hearts = _h.team_can_refill_hearts(state)
+    num_agents = self.policy_env_info.num_agents
+    team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+    if objective == "resource_coverage":
+        return 0, 0
+
+    if team_size <= 2:
+        if not can_hearts and min_res < 7:
+            return 1, 0
+        return 2, 0
+
+    if team_size <= 4:
+        if step < 50:
+            return 1, 0
+        if min_res < 7 and not can_hearts:
+            return 1, 0
+        if min_res < 15:
+            return 1, 0
+        aligner_budget = 2
+        if min_res >= 80 and step >= 300:
+            aligner_budget = min(3, team_size - 1)
+        return aligner_budget, 0
+
+    if step < 15:
+        return 2, 0
+    if step < 30 and min_res < 20:
+        return 2, 0
+    if min_res < 10 and not can_hearts:
+        return 1, 0
+    elif min_res < 22:
+        return 2, 0
+    elif min_res < 35:
+        return 3, 0
+    elif min_res < 70:
+        return min(4, team_size - 1), 0
+    elif min_res < threshold_7a:
+        return min(team_size - 1, 6), 0
+    else:
+        return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV336AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TournamentV336: TV334 + hotspot=-12 (from #2 TV332)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -12.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV336Policy(MettagridSemanticPolicy):
+    """TournamentV336: 7a@120 + hotspot=-12."""
+    short_names = ["alpha-tournament-v336"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV336AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV337AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TournamentV337: 7a@110 + hotspot=-8."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -8.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=110)
+
+
+class AlphaTournamentV337Policy(MettagridSemanticPolicy):
+    """TournamentV337: 7a@110 + re-align."""
+    short_names = ["alpha-tournament-v337"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV337AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV338AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TournamentV338: 7a@130 + hotspot=-8."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -8.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=130)
+
+
+class AlphaTournamentV338Policy(MettagridSemanticPolicy):
+    """TournamentV338: 7a@130 + re-align."""
+    short_names = ["alpha-tournament-v338"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV338AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV339AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TournamentV339: 7a@120 + hotspot=-12 + 6a@80 (vs 70 in TV272)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -12.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 80:  # 6a@80 (vs 70 in TV272)
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV339Policy(MettagridSemanticPolicy):
+    """TournamentV339: 7a@120 + hp=-12 + 6a@80."""
+    short_names = ["alpha-tournament-v339"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV339AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV340AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TournamentV340: TV334 + decaying peak from 400 steps (vs 500)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -8.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Same as TV264 but with faster peak decay (400 steps vs 500)."""
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        enemy_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        ))
+
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        else:
+            # Faster peak decay: 400 steps (vs 500 in TV264)
+            if step - self._last_junction_growth_step > 400:
+                self._peak_junction_count = max(
+                    friendly_count,
+                    self._peak_junction_count - 1
+                )
+                self._last_junction_growth_step = step
+
+            if num_agents <= 2:
+                stag_peak, stag_steps, stag_min_step = 3, 200, 300
+            else:
+                stag_peak, stag_steps, stag_min_step = 5, 300, 500
+
+            if (self._peak_junction_count >= stag_peak
+                    and step - self._last_junction_growth_step > stag_steps
+                    and step > stag_min_step):
+                self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+        scramble_bias = enemy_count - friendly_count
+
+        if self._stagnation_mode and hp > 50:
+            scramble_window = 150 if scramble_bias >= 3 else (100 if scramble_bias >= 0 else 50)
+            if step % 200 < scramble_window and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV340Policy(MettagridSemanticPolicy):
+    """TournamentV340: TV334 + faster peak decay."""
+    short_names = ["alpha-tournament-v340"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV340AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
