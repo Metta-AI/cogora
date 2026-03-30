@@ -1,3 +1,11 @@
 status: in-progress
 started: 2026-03-30T19:14:59Z
 plan: Check tournament results for v797 cyborg and fine-tuning variants. Iterate on strategy.
+
+## Session observations
+
+- Leaderboard: v716 still #1 at 15.05 (20 matches). Opponents: slanky 6.80, Paz-Bot 6.77, swoopy 7.00
+- v797 (LLM cyborg): 2 qualifying matches still running (started 18:43, ~1h ago — slow due to LLM calls)
+- Fine-tuning variants v786-v796: mostly disappointing (3.36-13.80). v796 best at 13.80 (#102)
+- Local testing: TV350 works (13 junctions by step 700), AlphaCyborgPolicy doesn't (agents die immediately)
+- Exploring new improvement angles beyond parameter tuning
