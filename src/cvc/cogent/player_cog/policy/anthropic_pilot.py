@@ -46343,3 +46343,180 @@ class AlphaTournamentV426Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV427-TV431: Fine-tuning adaptive hotspot (TV416 base, v802=15.96)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _adaptive_hotspot_count(self, entity, hub, *, early_weight, mid_weight, late_weight,
+                             early_cutoff=1000, late_cutoff=2500):
+    """Shared adaptive hotspot implementation."""
+    if hub is None:
+        return 0
+    rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+    count = self._shared_hotspots.get(rel, 0)
+    step = self._step_index
+    if step < early_cutoff:
+        self._hotspot_weight = early_weight
+    elif step < late_cutoff:
+        self._hotspot_weight = mid_weight
+    else:
+        self._hotspot_weight = late_weight
+    return count
+
+
+class AlphaTournamentV427AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV427: No early penalty at all (0/-10/-15)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity, hub):
+        return _adaptive_hotspot_count(self, entity, hub,
+            early_weight=0.0, mid_weight=-10.0, late_weight=-15.0)
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV427Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v427"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV427AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV428AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV428: Same weights as TV416 but 4-phase (-5/-8/-12/-18)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity, hub):
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        step = self._step_index
+        if step < 500:
+            self._hotspot_weight = -5.0
+        elif step < 1500:
+            self._hotspot_weight = -8.0
+        elif step < 3500:
+            self._hotspot_weight = -12.0
+        else:
+            self._hotspot_weight = -18.0
+        return count
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV428Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v428"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV428AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV429AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV429: Continuous adaptive (linear interpolation from -3 to -18 over game)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity, hub):
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        step = self._step_index
+        # Linear from -3 (step 0) to -18 (step 5000)
+        progress = min(step / 5000.0, 1.0)
+        self._hotspot_weight = -3.0 - progress * 15.0
+        return count
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV429Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v429"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV429AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV430AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV430: TV416 but with late cutoff at 3500 instead of 2500."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity, hub):
+        return _adaptive_hotspot_count(self, entity, hub,
+            early_weight=-5.0, mid_weight=-10.0, late_weight=-15.0,
+            early_cutoff=1000, late_cutoff=3500)
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV430Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v430"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV430AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV431AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV431: TV416 but with early cutoff at 500 (very aggressive early expansion)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity, hub):
+        return _adaptive_hotspot_count(self, entity, hub,
+            early_weight=-5.0, mid_weight=-10.0, late_weight=-15.0,
+            early_cutoff=500, late_cutoff=2500)
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV431Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v431"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV431AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
