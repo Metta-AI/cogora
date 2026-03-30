@@ -67,3 +67,7 @@ status: in-progress
 - v541 first comp result: 12.50 (6a vs v11) — better than network-aware (11.0-11.5) but below v519 (14.62)
 - Only 1 match — need more data to determine if faster early ramp helps or hurts
 - Leaderboard stable: top 3 unchanged at v525=14.76, v522=14.74, v519=14.62
+- v541 LOOKING GOOD: avg=13.91 (4m), 4a=15.37, 2a=13.88, 6a=12.50
+- v541(4a)=15.37 beats v519(4a)=13.26!
+- Faster early expansion + pure TV160 idle = competitive with top performers
+- 41 matches still running
