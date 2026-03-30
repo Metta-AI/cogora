@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-110959**: **v603 (TV244) = #2 at 14.73** — 24 variants (TV239-TV262, v598-v621). Adaptive scramble is best innovation (+0.16). Dedicated scramblers catastrophic. Decay helps on TV208 but not TV191 base. [sessions/2026-03-30-110959/](sessions/2026-03-30-110959/)
 - **2026-03-30-100746**: **v594 (TV235) = NEW #1 at 14.90!** 12 variants (TV228-TV238, v585-v597). Early 3rd aligner + decaying peak = top 4 slots. TV191 is true #1 base. Wider explore terrible. [sessions/2026-03-30-100746/](sessions/2026-03-30-100746/)
 - **2026-03-30-091114**: **v564 (TV208) = stable #1 at ~15.0** — 18 variants (TV210-TV227, v566-v583). Stagnation mods catastrophic. 4a changes hurt long-term. TV208 (6a thresholds 22/35/70 + 3-tier stag) is optimal. Heuristic ceiling ~15. [sessions/2026-03-30-091114/](sessions/2026-03-30-091114/)
 - **2026-03-30-082457**: **v565 (TV209) early #1 at 16.33** — v557 confirmed broken (9.90). 8 new variants (v558-v565) targeting 4a/6a. 6a improvements most impactful. All vs v557 only — awaiting diverse matchups. [sessions/2026-03-30-082457/](sessions/2026-03-30-082457/)
@@ -10,5 +11,4 @@
 - **2026-03-30-040613**: **Idle scramble ESSENTIAL** — v526 (no idle) = 12.77 vs v519 = 13.99. 50% stag optimal. [sessions/2026-03-30-040613/](sessions/2026-03-30-040613/)
 - **2026-03-30-031321**: **v519 (TV160) = NEW #1 at 14.47!** Faster stagnation entry. v522 (TV162) = #3. [sessions/2026-03-30-031321/](sessions/2026-03-30-031321/)
 - **2026-03-30-021109**: (interrupted) v509-v515 uploaded. v506 (TV142) = #1 at 14.30. [sessions/2026-03-30-021109/](sessions/2026-03-30-021109/)
-- **2026-03-30-010306**: **v502 (TV138) = 14.19 avg**. Created TV134-TV144. [sessions/2026-03-30-010306/](sessions/2026-03-30-010306/)
 
