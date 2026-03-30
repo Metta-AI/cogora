@@ -13,3 +13,15 @@ status: in-progress
   - TV458: Floor 4 (6+ agents) + 1 scrambler @100
   - TV459: Crisis recovery + floor 3 + scramblers (combined)
 - [22:21] Running all 5 variants + TV452 baseline locally (2500 steps).
+- [22:30] Competition results for v840/v841 (all zero-scrambler):
+  v840: 6v2 gtlm=12.85, modular-lstm=8.99, mammet=11.47, slanky=15.40
+        4v4 slanky=16.01, Paz-Bot=9.63
+        2v6 Paz-Bot=11.91/10.28, gtlm=0.18
+  v841: 6v2 coglet=7.06, gtlm=9.76, slanky=16.38
+        4v4 coglet=3.82
+        2v6 modular-lstm=3.57, coglet=1.15
+  v840 avg ~10.75, v841 avg ~6.96 (neither beats v716=15.05)
+- [22:33] Local test results (self-play 8v8, 2500 steps):
+  TV452 (baseline, 0 scramblers): 2.68/cog, peak=19 friendly @600, crashed to 3 @2500
+  TV455 (floor 3 + 1 scrambler): 2.75/cog, peak=18 @1000, still 11 @2500 (MUCH better late-game)
+  TV457/458/459: still running
