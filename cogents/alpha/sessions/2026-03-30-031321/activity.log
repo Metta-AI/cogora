@@ -17,7 +17,7 @@ started: 2026-03-30-031321
 - v513-v516 still qualifying — these combine multiple proven features
 - v516 (TV156) = ultimate combo (TV142 stag + TV142 4a + TV151 6a + TV152 2a)
 
-## Uploads This Session
+## Uploads This Session (from previous interrupted session)
 - v509 = TV145 → #5 at 13.57
 - v510 = TV147 → #10 at 13.49
 - v511 = TV151 → **#2 at 13.70** ← best new upload!
@@ -26,3 +26,11 @@ started: 2026-03-30-031321
 - v514 = TV154 → qualifying
 - v515 = TV155 → qualifying
 - v516 = TV156 → qualifying ← ultimate combo
+
+## Actions This Session
+- Reviewed previous session learnings: v506 (TV142) = #1 at 14.30
+- Created TV156 (code): carbon-weighted mining (carbon consumed 3x faster by aligners)
+- Created TV157 (code): ultra-aggressive 6a (5 aligners from step 15)
+- Created TV158 (code): TV156 + TV157 combined
+- Running local free-play tests for all three
+- NOTE: v516 in tournament is a different TV156 (ultimate combo), not carbon-mining TV156 code

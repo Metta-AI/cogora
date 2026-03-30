@@ -25413,6 +25413,228 @@ class AlphaTournamentV153Policy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+# ── TV156: TV142 + carbon-weighted mining ─────────────────────────────────────
+
+class AlphaTournamentV156AgentPolicy(AlphaTournamentV142AgentPolicy):
+    """TournamentV156: TV142 + carbon-weighted mining priority.
+
+    Aligner costs carbon:3, oxygen:1, germanium:1, silicon:1.
+    Carbon depletes 3x faster. Weighting carbon 3x in mining priority
+    should keep hub better stocked for sustained alignment.
+    """
+
+    def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
+        """Override to weight carbon 3x in resource priority."""
+        if self._should_force_miner_explore_reset(state):
+            self._clear_sticky_target()
+            return None
+
+        current_pos = _h.absolute_position(state)
+        shared_inv = {} if state.team_summary is None else state.team_summary.shared_inventory
+
+        # Weight carbon by dividing its effective inventory by 3
+        # (since aligners consume 3x carbon vs other elements)
+        def _weighted_inv(resource: str) -> int:
+            raw = int(shared_inv.get(resource, 0))
+            if resource == "carbon":
+                return raw // 3  # Effective value is 1/3 since consumed 3x faster
+            return raw
+
+        priority = sorted(
+            _ELEMENTS,
+            key=lambda r: (
+                _weighted_inv(r),
+                0 if r == self._resource_bias else 1,
+                r,
+            ),
+        )
+
+        candidates: list[KnownEntity] = []
+        for resource_name in priority:
+            matches = self._world_model.entities(
+                entity_type=f"{resource_name}_extractor",
+                predicate=lambda entity: _h.is_usable_recent_extractor(entity, step=state.step or self._step_index),
+            )
+            candidates.extend(
+                sorted(
+                    matches,
+                    key=lambda entity: (_h.manhattan(current_pos, entity.position), entity.position),
+                )
+            )
+        if not candidates:
+            return None
+
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+
+        sticky = self._sticky_miner_target(state)
+        if sticky is None:
+            return candidates[0]
+
+        candidate = candidates[0]
+        sticky_distance = _h.manhattan(current_pos, sticky.position)
+        candidate_distance = _h.manhattan(current_pos, candidate.position)
+        if candidate.position != sticky.position and candidate_distance + 5 < sticky_distance:
+            return candidate
+        return sticky
+
+
+class AlphaTournamentV156Policy(MettagridSemanticPolicy):
+    """TournamentV156: TV142 + carbon-weighted mining."""
+    short_names = ["alpha-tournament-v156"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV156AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV157: TV142 + ultra-aggressive 6a (5 aligners from step 15) ─────────────
+
+class AlphaTournamentV157AgentPolicy(AlphaTournamentV142AgentPolicy):
+    """TournamentV157: TV142 + ultra-aggressive 6a.
+
+    TV142's 6a uses gradual ramp (1→2→3→4→6 based on min_res thresholds).
+    This variant pushes to 5 aligners from step 15 with minimal economy gate.
+    Theory: since early expansion is everything, max aligners ASAP.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: EXACT TV142/TV136 ultra-fast
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: EXACT TV142 (step 50, min_res 20 gate)
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 20:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: ULTRA-AGGRESSIVE — 5 aligners from step 15
+        if step < 15:
+            return 2, 0  # Brief bootstrap
+        if min_res < 1 and not can_hearts and step > 100:
+            return 2, 0  # Emergency only
+        aligner_budget = min(team_size - 1, 5)  # Max aligners immediately
+        if objective == "economy_bootstrap":
+            return 2, 0
+        return aligner_budget, 0
+
+
+class AlphaTournamentV157Policy(MettagridSemanticPolicy):
+    """TournamentV157: TV142 + ultra-aggressive 6a."""
+    short_names = ["alpha-tournament-v157"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV157AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV158: TV156 + TV157 combined (carbon mining + aggressive 6a) ────────────
+
+class AlphaTournamentV158AgentPolicy(AlphaTournamentV156AgentPolicy):
+    """TournamentV158: Carbon-weighted mining + ultra-aggressive 6a.
+
+    Combines TV156's carbon-priority mining with TV157's aggressive 6a budget.
+    Theory: more aligners need more carbon → carbon mining helps even more.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        # Use TV157's aggressive 6a budgets
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 20:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # Ultra-aggressive 6a
+        if step < 15:
+            return 2, 0
+        if min_res < 1 and not can_hearts and step > 100:
+            return 2, 0
+        aligner_budget = min(team_size - 1, 5)
+        if objective == "economy_bootstrap":
+            return 2, 0
+        return aligner_budget, 0
+
+
+class AlphaTournamentV158Policy(MettagridSemanticPolicy):
+    """TournamentV158: Carbon mining + aggressive 6a."""
+    short_names = ["alpha-tournament-v158"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV158AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 # ── TV154: TV153 with TV145's 4a (step 50 instead of step 1) ────────────────
 
 class AlphaTournamentV154AgentPolicy(AlphaTournamentV153AgentPolicy):
