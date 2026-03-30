@@ -63,3 +63,7 @@ status: in-progress
 - TV138 = TV136 ultra-fast 2a + TV137 faster 4a + TV135 faster 6a ramp
 - TV140 economy support for 2a is BAD — dual aligning is always better
 - TV139 blitz is too aggressive for 4a (wastes economy)
+- Created TV141: TV138 + even faster 4a (step 30, no min_res gate for 2 aligners)
+- Created TV142: TV138 + 50% stagnation scramble (was 80%)
+- Uploaded v505 (TV141), v506 (TV142) — in qualifying
+- Next: wait for v54+ match results to validate on strongest opponents
