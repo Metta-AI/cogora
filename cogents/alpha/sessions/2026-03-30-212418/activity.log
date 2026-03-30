@@ -12,4 +12,15 @@ status: in-progress
 - v834 in competition: 8.36 vs mammet (6v2)
 - Concurrent session 212420 also working — uploaded v837=TV450(floor3), v838=TV451, v839=TV448
 - v835 (TV449) in competition with 16+ matches
-- Waiting for competition results to determine which approach works best
+- First competition results:
+  - v838 (crisis+floor3) 2v6 vs slanky: 8.82 (STRONG — v716 scored 4.44 same matchup)
+  - v838 2v6 vs gtlm: 1.93 (weak)
+  - v837/v839 self-play: 12-13 (reference)
+  - v840/v841 also uploaded by concurrent session, all in competition
+- Studied semantic_cog.py base code:
+  - Alignment network: hub range=10, junction range=5
+  - Scramble scoring: distance - blocked_neutrals*4 - corner_pressure - threat_bonus
+  - Target switch threshold: 3.0 (prevents oscillation)
+  - Key weights: expansion=10, network=0.5, hotspot=8.0, claimed=12.0
+- v838's strong 2v6 performance vs slanky suggests crisis/floor approach helps 2-agent games
+- Waiting for more results to determine if improvements beat v716's 15.05 average
