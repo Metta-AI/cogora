@@ -25411,3 +25411,74 @@ class AlphaTournamentV153Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV154: TV153 with TV145's 4a (step 50 instead of step 1) ────────────────
+
+class AlphaTournamentV154AgentPolicy(AlphaTournamentV153AgentPolicy):
+    """TournamentV154: TV153 with TV145's proven 4a (step 50).
+
+    Leaderboard shows v509 (TV145, step 50) = 13.52 (#5) outperforms
+    v510 (TV147, step 1) = 13.45 (#14). So step 50 is better than step 1
+    for 4a in tournament. TV154 = TV153 but with step 50 for 4a.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: TV136 ultra-fast
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: TV145 (step 50, proven better than step 1 in tournament)
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0  # Brief economy bootstrap
+            if min_res < 1 and not can_hearts:
+                return 1, 0  # Emergency
+            aligner_budget = 2  # 2 from step 50
+            if min_res >= 80 and step >= 400:
+                aligner_budget = min(3, team_size - 1)
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, 0
+
+        # 5+ agents: TV151 balanced-aggressive
+        if step < 30:
+            return 2, 0
+        if min_res < 1 and not can_hearts and step > 200:
+            return 2, 0
+        aligner_budget = min(team_size - 2, 4)
+        if min_res >= 100 and step >= 500:
+            aligner_budget = min(team_size - 1, 5)
+        if objective == "economy_bootstrap":
+            return 2, 0
+        return aligner_budget, 0
+
+
+class AlphaTournamentV154Policy(MettagridSemanticPolicy):
+    """TournamentV154: TV153 with TV145's 4a (step 50)."""
+    short_names = ["alpha-tournament-v154"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV154AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
