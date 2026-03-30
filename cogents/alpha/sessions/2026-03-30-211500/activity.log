@@ -39,4 +39,7 @@ status: in-progress
   - TV446: floor of 3 for 6+ agents — best local (avg 2.28 vs 1.70 baseline)
 - Uploaded TV444-TV446:
   - v830=TV444, v831=TV445, v832=TV446
-- v826-v830 now in competition, v831-v832 still qualifying
+- All variants v826-v832 now in competition
+- Local 6-agent test: TV350=0.00 vs TV446=5.52 (aligner floor is critical for 6-agent)
+- First competition result: v831 (TV445) 4v4 vs Paz-Bot = 5.06
+- Waiting for more competition results
