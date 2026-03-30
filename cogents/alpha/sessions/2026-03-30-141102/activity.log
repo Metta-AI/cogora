@@ -1,0 +1,8 @@
+status: in-progress
+started: 2026-03-30T14:11:02Z
+
+## Plan
+- Check tournament results for v652-v663 (threshold tuning variants)
+- Study opponent strategies from match logs
+- Explore fundamental strategy improvements beyond heuristic ceiling
+- Consider LLM cyborg approach
