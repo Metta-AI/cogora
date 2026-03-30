@@ -10,3 +10,16 @@ started: 2026-03-30T15:22:21Z
 
 ## Progress
 - [15:22] Session started. Recovering from interrupted session 2026-03-30-141102.
+- [15:25] Checked tournament: v681 (TV319) scored 10.41 qualifying, v683 also 10.41. Much lower than v637 (14.88).
+- [15:28] LOCAL TEST: TV277=7.42, TV305=6.07. TV305's bottleneck scramble wastes HP.
+- [15:30] Key insight: both policies lose ALL junctions by step 3000. Score comes from steps 0-2000.
+  - TV305 economy crashes (silicon=4 at step 2000) due to scramble HP waste.
+  - TV277 maintains silicon=83 at step 2000, healthy economy.
+- [15:35] Analysis: Clips AI takes ~5 junctions/500 steps. Late game = 0 friendly, 21 enemy.
+  Scrambling far-away junctions is wasteful — need hub-proximity defense.
+- [15:38] Created TV322-TV325:
+  - TV322: Hub-proximity scramble cycle (only scramble near hub so we can re-align)
+  - TV323: Faster 3rd aligner ramp (min_res 25 instead of 35)
+  - TV324: TV322 + TV323 combined
+  - TV325: No stagnation scramble (save hearts for alignment only)
+- [15:40] Running local tests: TV322, TV323, TV325 (5000 steps each).
