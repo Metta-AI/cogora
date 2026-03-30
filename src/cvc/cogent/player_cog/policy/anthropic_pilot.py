@@ -48655,3 +48655,324 @@ class AlphaTournamentV454Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV455-TV459: Fix zero-scrambler bug in floor variants ──────────────────
+# TV452+ all return scrambler_budget=0, letting enemies take junctions unopposed.
+# Base semantic_cog uses 1 scrambler at step 100, 2 at step 3000.
+# These variants restore scramblers while keeping floor=3.
+
+def _floor3_with_scramblers(self, state, *, objective=None, scramble_step=100, late_scramblers=2):
+    """Floor 3 + scramblers (fix for TV452 zero-scrambler bug)."""
+    step = state.step or self._step_index
+    min_res = _h.team_min_resource(state)
+    can_hearts = _h.team_can_refill_hearts(state)
+    team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+    if objective == "resource_coverage":
+        return 0, 0
+
+    if team_size <= 2:
+        if not can_hearts and min_res < 7:
+            return 1, 0
+        return 2, 0
+
+    if team_size <= 4:
+        if step < 50:
+            return 1, 0
+        if min_res < 7 and not can_hearts:
+            return 1, 0
+        if min_res < 15:
+            return 1, 0
+        aligner_budget = 2
+        if min_res >= 80 and step >= 300:
+            aligner_budget = min(3, team_size - 1)
+        scrambler_budget = 1 if step >= scramble_step and team_size >= 4 else 0
+        return aligner_budget, scrambler_budget
+
+    # 5+ agents
+    floor = min(3, team_size - 1)
+
+    # Scrambler budget
+    scrambler_budget = 0
+    if step >= 3000:
+        scrambler_budget = late_scramblers
+    elif step >= scramble_step:
+        scrambler_budget = 1
+
+    if step < 100:
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+    if min_res < 10 and not can_hearts:
+        return floor, 0  # No scramblers in crisis
+    elif min_res < 22:
+        return max(floor, 2), scrambler_budget
+    elif min_res < 35:
+        return max(3, floor), scrambler_budget
+    elif min_res < 70:
+        return min(4, team_size - 1), scrambler_budget
+    elif min_res < 120:
+        return min(team_size - 1, 6), scrambler_budget
+    else:
+        return min(team_size - 1, 7), scrambler_budget
+
+
+class AlphaTournamentV455AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV455: Floor 3 + 1 scrambler at step 100, 2 at step 3000."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _floor3_with_scramblers(self, state, objective=objective)
+
+
+class AlphaTournamentV455Policy(MettagridSemanticPolicy):
+    """TV455: Floor 3 + scramblers (fix zero-scrambler bug)."""
+    short_names = ["alpha-tournament-v455"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV455AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV456AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV456: Floor 3 + early scrambler at step 50."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _floor3_with_scramblers(self, state, objective=objective, scramble_step=50)
+
+
+class AlphaTournamentV456Policy(MettagridSemanticPolicy):
+    """TV456: Floor 3 + early scrambler (step 50)."""
+    short_names = ["alpha-tournament-v456"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV456AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV457AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV457: Floor 3 + 2 scramblers from step 100 (more aggressive)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _floor3_with_scramblers(self, state, objective=objective, late_scramblers=2)
+
+    # Override to always use 2 scramblers after step 100 (not just at 3000)
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            scrambler_budget = 1 if step >= 100 else 0
+            return aligner_budget, scrambler_budget
+
+        floor = min(3, team_size - 1)
+        scrambler_budget = min(2, team_size - floor - 1) if step >= 100 else 0
+
+        if step < 100:
+            if step < 15:
+                return 2, 0
+            if step < 30 and min_res < 20:
+                return 2, 0
+            if min_res < 10 and not can_hearts:
+                return 1, 0
+            elif min_res < 22:
+                return 2, 0
+            elif min_res < 35:
+                return 3, 0
+            elif min_res < 70:
+                return min(4, team_size - 1), 0
+            else:
+                return min(team_size - 1, 6), 0
+
+        if min_res < 10 and not can_hearts:
+            return floor, 0
+        elif min_res < 22:
+            return max(floor, 2), scrambler_budget
+        elif min_res < 35:
+            return max(3, floor), scrambler_budget
+        elif min_res < 70:
+            return min(4, team_size - 1), scrambler_budget
+        elif min_res < 120:
+            return min(team_size - 1, 6), scrambler_budget
+        else:
+            return min(team_size - 1, 7), scrambler_budget
+
+
+class AlphaTournamentV457Policy(MettagridSemanticPolicy):
+    """TV457: Floor 3 + 2 scramblers from step 100."""
+    short_names = ["alpha-tournament-v457"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV457AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV458AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV458: Floor 4 + 1 scrambler at step 100. Higher floor for 6+ agents."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            scrambler_budget = 1 if step >= 100 and team_size >= 4 else 0
+            return aligner_budget, scrambler_budget
+
+        # 6+ agents: floor 4 (was 3)
+        if team_size >= 6:
+            floor = 4
+        else:
+            floor = min(3, team_size - 1)
+
+        scrambler_budget = 0
+        if step >= 3000:
+            scrambler_budget = 2
+        elif step >= 100:
+            scrambler_budget = 1
+
+        if step < 100:
+            if step < 15:
+                return 2, 0
+            if step < 30 and min_res < 20:
+                return 2, 0
+            if min_res < 10 and not can_hearts:
+                return 1, 0
+            elif min_res < 22:
+                return 2, 0
+            elif min_res < 35:
+                return 3, 0
+            elif min_res < 70:
+                return min(4, team_size - 1), 0
+            else:
+                return min(team_size - 1, 6), 0
+
+        if min_res < 10 and not can_hearts:
+            return floor, 0
+        elif min_res < 22:
+            return max(floor, 2), scrambler_budget
+        elif min_res < 35:
+            return max(floor, 3), scrambler_budget
+        elif min_res < 70:
+            return max(min(4, team_size - 1), floor), scrambler_budget
+        elif min_res < 120:
+            return min(team_size - 1, 6), scrambler_budget
+        else:
+            return min(team_size - 1, 7), scrambler_budget
+
+
+class AlphaTournamentV458Policy(MettagridSemanticPolicy):
+    """TV458: Floor 4 + 1 scrambler (higher floor for 6+ agents)."""
+    short_names = ["alpha-tournament-v458"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV458AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV459AgentPolicy(AlphaTournamentV447AgentPolicy):
+    """TV459: Crisis recovery + floor 3 + scramblers (best of all fixes)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _floor3_with_scramblers(self, state, objective=objective)
+
+
+class AlphaTournamentV459Policy(MettagridSemanticPolicy):
+    """TV459: Crisis + floor 3 + scramblers (combined fix)."""
+    short_names = ["alpha-tournament-v459"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV459AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

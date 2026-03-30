@@ -4,3 +4,12 @@ status: in-progress
 ## Activity
 - [22:12] Session started. Context: v716=15.05 (#1), v832 (TV446, aligner floor=3) latest upload with 7 variants in competition. Goal >10 achieved.
 - [22:12] Plan: Check v832+ match results, study modular-lstm, try higher aligner floor, iterate.
+- [22:20] **CRITICAL BUG FOUND**: TV452+ variants all return scrambler_budget=0! Base semantic_cog has 1 scrambler at step 100, 2 at step 3000, but TV452/TV453/TV454 override _pressure_budgets completely without scrambler logic.
+- [22:20] Match evidence: v840 vs mammet 6v2 = 11.47 (tied). Logs show 0 scramblers entire game. Enemy junctions grow from 0 to 10+ while we stagnate at 8.
+- [22:21] Created TV455-TV459: all variants of floor 3 + scramblers restored.
+  - TV455: Floor 3 + 1 scrambler @100, 2 @3000 (standard)
+  - TV456: Floor 3 + early scrambler @50
+  - TV457: Floor 3 + 2 scramblers from step 100 (aggressive)
+  - TV458: Floor 4 (6+ agents) + 1 scrambler @100
+  - TV459: Crisis recovery + floor 3 + scramblers (combined)
+- [22:21] Running all 5 variants + TV452 baseline locally (2500 steps).
