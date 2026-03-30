@@ -1,32 +1,40 @@
 status: in-progress
 started: 2026-03-30-021109
 
-## Plan
-- Collect tournament results for v506, v507, v508
-- Analyze and iterate based on results
-- Fix carbon bottleneck in 4a if applicable
-- Upload improved policy
+## Uploads This Session
+- v509 = TV145 (aggressive 4a, step 50)
+- v510 = TV147 (ultra-aggressive 4a, step 1) ← best 4a
+- v511 = TV151 (TV147 + balanced-aggressive 6a) ← expected overall best
+- v512 = TV152 (TV151 + adaptive 2a for bad partners)
 
-## Actions
-- Created TV145: aggressive 4a — 2 aligners from step 50, no economy gate → v509
-- Created TV146: carbon-priority mining (REJECTED — backfired)
-- Created TV147: ultra-aggressive 4a — 2 aligners from step 1 → v510
-- Created TV148: hub-proximity targeting (REJECTED — no improvement)
-- Created TV149: patrol defense (REJECTED — 0.88 vs TV147's 1.37)
-- Created TV150: ultra-aggressive 6a — 5 aligners (score 1.73, economy starved)
-- Created TV151: balanced-aggressive 6a — 4 aligners from step 30 → v511
-  - 6a self-play: TV151=2.01 > TV150=1.73 > TV147=1.52
-  - 4a self-play: TV147=1.37 > TV145=1.28 > TV143=0.97
+## Tournament Results (v510 complete)
+v510 (TV147) vs opponents:
+- vs v49: 4a×4a=13.02, 2a=14.14
+- vs v50: 4a×4a=14.59, 2a=8.59, 6a=16.00
+- vs v51: 4a×4a=14.59, 2a=14.32, 6a=16.00
+- vs v53: 4a×4a=13.20, 2a=13.60, 6a=16.00
+- Average: ~14.0
 
-## Tournament Results
-- v505 4a×4a vs v34 = 18.22 (no economy gate → validates TV145/TV147)
-- v508 4a×4a vs v34 = 11.10 (min_res 15 gate → economy gate hurts)
-- v510 4a×4a vs v49 = 13.02, vs v51 = 14.59 (TV147, early results)
-- v511 (TV151) uploaded — expected best combined policy
+v511/v512 in qualifying.
+
+## Self-Play Results (1000 steps)
+| Variant | 2a | 4a | 6a |
+|---------|-----|-----|-----|
+| TV147   | 0.27 | 0.68 | 0.00* |
+| TV151   | 0.27 | 0.68 | 1.09 |
+| TV152   | 0.13 | 0.58 | 1.05 |
+*bad seed
 
 ## Key Insights
-1. Removing economy gates dramatically improves early alignment
-2. TV147 ultra-aggressive 4a is 41% better than TV143 in self-play
-3. TV151 balanced-aggressive 6a is 32% better than TV147's 6a in self-play
-4. Patrol defense is counterproductive — offensive scrambling IS defense
-5. Carbon-priority mining backfires (over-mines carbon, other resources drop)
+1. Removing economy gates = best 4a improvement (v505=18.22)
+2. TV147 ultra-aggressive 4a (step 1) is consistently best
+3. TV151 balanced-aggressive 6a (4 aligners) beats gradual ramp by 32%
+4. TV152 adaptive 2a hurts in self-play — can't validate locally
+5. Patrol defense (TV149) is counterproductive
+6. Carbon-priority mining (TV146) backfires
+
+## Rejected Variants
+- TV146: carbon-priority mining (over-mines carbon)
+- TV148: hub-proximity targeting (no improvement)
+- TV149: patrol defense (0.88 vs TV147's 1.37)
+- TV150: ultra-aggressive 6a / 5 aligners (economy starved, 1.73 vs TV151's 2.01)
