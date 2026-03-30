@@ -64,3 +64,6 @@ status: in-progress
 - v540 (TV184, adaptive mining + network-aware) = 11.33 (16m) — also hurt by targeting
 - v541 entering competition — waiting for results
 - Leaderboard: v525=14.73, v522=14.61, v519=14.58, v533=14.14
+- v541 first comp result: 12.50 (6a vs v11) — better than network-aware (11.0-11.5) but below v519 (14.62)
+- Only 1 match — need more data to determine if faster early ramp helps or hurts
+- Leaderboard stable: top 3 unchanged at v525=14.76, v522=14.74, v519=14.62
