@@ -112,3 +112,10 @@ started: 2026-03-30T16:18:00Z
   - TV350 (hotspot=-10): +0.11 vs old best (15.05 vs 14.94) — NEW #1!
   - TV349 (no idle scramble): +0.02 (14.96 vs 14.94)
   - Both still early (20m) — need 30+ matches to stabilize.
+- [18:05] Created TV381-TV385: iterate on tournament winners
+  - TV381: hotspot=-10 + no idle scramble (combine #1 + #2)
+  - TV382: hotspot=-11 + 7a@120 (fine-tune around -10)
+  - TV383: hotspot=-9 + 7a@120 (fine-tune around -10)
+  - TV384: hotspot=-10 + no idle scramble + 7a@110
+  - TV385: hotspot=-10 + no idle scramble + 7a@130
+- [18:06] Uploaded: v757(TV381), v759(TV383), v760(TV384), v761(TV385), v762(TV382)
