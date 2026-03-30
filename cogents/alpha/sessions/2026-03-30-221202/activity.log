@@ -37,3 +37,10 @@ status: in-progress
 - [22:40] Strategy shift: Don't break TV350 for 5+ agents. Only improve small-team behavior.
   Created TV462 (TV350 for 5+, improved 2-4 agents) and TV463 (TV350 + delayed scrambler @500).
 - [22:42] Uploads: v842=TV455, v844=TV460, v845=TV461, v846=TV350(re-upload), v847=TV462, v848=TV463
+- [22:48] All v842-v848 in competition now. Many matches running vs all opponents.
+- [22:50] Created TV464: TV350 + aggressive stagnation scramble.
+  Key insight: base stagnation code REDUCES scramble to 33% (step%300<100).
+  TV464: always scramble in stag mode (100%), detect stag faster (150 vs 300 steps),
+  lower threshold (3 vs 5 junctions). Uploaded as v853.
+- [22:50] Analysis of 6v2 vs modular-lstm: their 2 agents hold 8+ junctions while our 6 hold 2.
+  Heuristic ceiling confirmed. RL training is the only way to fundamentally beat them.
