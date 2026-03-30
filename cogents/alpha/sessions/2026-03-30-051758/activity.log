@@ -4,3 +4,6 @@ status: in-progress
 - Tournament snapshot: v519=14.48 (#1, 6m), v512/v511=14.37 (3m), v534=14.27 (3m), v522=14.22 (6m)
 - Self-play: TV179=2.14, TV180=0.00-0.31, TV181=0.59 (baseline AlphaCyborg=2.27)
 - Self-play is misleading — uploading all three for tournament validation
+- Created TV182 (faster early expansion) and TV183 (low scramble threshold + network-aware)
+- Uploaded v538 (TV182) and v539 (TV183)
+- 5 new variants now in qualifying: v535-v539
