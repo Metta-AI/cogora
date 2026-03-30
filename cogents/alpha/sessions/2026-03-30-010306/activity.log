@@ -67,3 +67,13 @@ status: in-progress
 - Created TV142: TV138 + 50% stagnation scramble (was 80%)
 - Uploaded v505 (TV141), v506 (TV142) — in qualifying
 - Next: wait for v54+ match results to validate on strongest opponents
+- v54 results came in! Key findings:
+  - v502 (TV138) vs v54: 2a=14.59, 4a=11.97, 6a=16.00 → avg 14.19 (BEST vs v54)
+  - v500 (TV136) vs v54: 2a=14.59, 4a=12.21, 6a=14.61 → avg 13.80
+  - v501 (TV137) vs v54: 2a=14.59, 4a=11.97, 6a=14.61 → avg 13.72
+  - Key insight: TV137's faster 4a (11.97) is slightly WORSE than TV82's 4a (12.21) vs strong opponents!
+  - TV136's ultra-fast 2a is clearly best (14.59 vs 12.06)
+  - TV135's faster 6a is best (16.00 vs 14.61)
+- Created TV143: data-driven optimal — TV136 2a + TV82 4a + TV135 6a
+  - Expected: 14.59 + 12.21 + 16.00 = avg ~14.27 (vs v54)
+- Uploaded v507 (TV143) — in qualifying
