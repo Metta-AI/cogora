@@ -24912,3 +24912,165 @@ class AlphaTournamentV148Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV149: TV147 + patrol defense in stagnation mode ─────────────────────────
+
+class AlphaTournamentV149AgentPolicy(AlphaTournamentV147AgentPolicy):
+    """TournamentV149: TV147 + patrol defense during stagnation.
+
+    Problem: in stagnation mode (step 1000+), aligners roam to scramble
+    enemy junctions but our own junctions keep getting scrambled by Clips.
+    Friendly junction count drops from ~12 to ~3 by step 2000.
+
+    Fix: instead of scrambling, patrol near friendly junctions. When Clips
+    scrambles one of ours, we're nearby to immediately re-align it. This
+    should maintain junction count much better through the mid-late game.
+
+    Strategy: pick the nearest friendly junction (or hub) and move toward
+    it. Every few ticks check if there's a neutral junction in alignment
+    range (recently scrambled). If so, re-align it.
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        elif (self._peak_junction_count >= 5
+              and step - self._last_junction_growth_step > 300
+              and step > 500):
+            self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        # Always check for alignable junctions first (including recently scrambled ones)
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        # PATROL DEFENSE: in stagnation, patrol near friendly junctions
+        # instead of roaming to scramble. When Clips scrambles our junctions,
+        # we'll be nearby to immediately re-align.
+        if self._stagnation_mode and hp > 50:
+            friendly_junctions = self._known_junctions(
+                state, predicate=lambda j: j.owner == team_id
+            )
+            if friendly_junctions and hearts > 0:
+                # 60% patrol, 40% scramble (mixed defense/offense)
+                if step % 200 < 120:
+                    # Patrol: move toward nearest friendly junction
+                    nearest_friendly = min(
+                        friendly_junctions,
+                        key=lambda j: _h.manhattan(current_pos, j.position)
+                    )
+                    dist_to_friendly = _h.manhattan(current_pos, nearest_friendly.position)
+                    if dist_to_friendly > 5:
+                        return self._move_to_known(
+                            state, nearest_friendly,
+                            summary="patrol_defend", vibe="change_vibe_aligner"
+                        )
+                    # Already near a junction — scramble nearby enemies
+                    scramble_target = self._preferred_scramble_target(state)
+                    if scramble_target is not None:
+                        scramble_dist = _h.manhattan(current_pos, scramble_target.position)
+                        if scramble_dist < 20:  # Only scramble nearby
+                            return self._move_to_known(
+                                state, scramble_target,
+                                summary="patrol_scramble", vibe="change_vibe_scrambler"
+                            )
+                    return self._explore_action(state, role="aligner", summary="patrol_scan")
+                else:
+                    # Scramble phase
+                    if min_res >= 7:
+                        scramble_target = self._preferred_scramble_target(state)
+                        if scramble_target is not None:
+                            return self._move_to_known(
+                                state, scramble_target,
+                                summary="stag_scramble", vibe="change_vibe_scrambler"
+                            )
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV149Policy(MettagridSemanticPolicy):
+    """TournamentV149: TV147 + patrol defense in stagnation."""
+    short_names = ["alpha-tournament-v149"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV149AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
