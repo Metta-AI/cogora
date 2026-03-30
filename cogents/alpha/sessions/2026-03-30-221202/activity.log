@@ -44,3 +44,18 @@ status: in-progress
   lower threshold (3 vs 5 junctions). Uploaded as v853.
 - [22:50] Analysis of 6v2 vs modular-lstm: their 2 agents hold 8+ junctions while our 6 hold 2.
   Heuristic ceiling confirmed. RL training is the only way to fundamentally beat them.
+- [22:55] Merged with concurrent session (212420): they created TV464 (v850) and TV465 (v851).
+  My aggressive stag scramble renamed to TV466 (v854). Also got v849 from them.
+- [22:58] Local test results (self-play 8v8):
+  TV466 (aggressive stag scramble): 0.69/cog — self-play harmful (both sides scramble more)
+  BUT self-play is poor predictor. TV466 could help in asymmetric competition.
+- [23:00] Server down (503). All v842-v854 uploaded, most in competition.
+  Waiting for results. Key variants to watch:
+  - v846 (TV350 re-upload): baseline reference
+  - v847 (TV462): TV350 for 5+, improved small-team
+  - v848 (TV463): TV350 + delayed scrambler
+  - v849 (from concurrent session): unknown variant
+  - v850 (TV464): TV454+crisis+scramblers
+  - v851 (TV465): 2-agent fix
+  - v853 (TV466): aggressive stagnation scramble
+  - v854 (TV466): same as v853
