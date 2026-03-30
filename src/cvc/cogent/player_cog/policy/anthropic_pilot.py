@@ -45366,3 +45366,281 @@ class AlphaTV350CyborgPolicy(PilotCyborgPolicy):
             "anthropic_api_key": kwargs.get("anthropic_api_key"),
             "anthropic_api_key_file": kwargs.get("anthropic_api_key_file"),
         }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV412: TV350 + reactive defense — boost aligner budget when recently scrambled
+# Theory: when hotspot activity is high (we're getting scrambled), we need more
+# aligners to reclaim junctions faster. Budget +1 during active scramble periods.
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV412AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV412: TV350 + reactive aligner budget boost on hotspot detection."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        base_aligners, base_scramblers = _tv334_pressure_budgets(
+            self, state, objective=objective, threshold_7a=120
+        )
+        if objective == "resource_coverage":
+            return base_aligners, base_scramblers
+        # Check recent hotspot activity — if junctions being scrambled, boost aligners
+        total_hotspots = sum(self._shared_hotspots.values()) if self._shared_hotspots else 0
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else 8
+        if total_hotspots >= 3 and base_aligners < team_size - 1:
+            base_aligners = min(base_aligners + 1, team_size - 1)
+        return base_aligners, base_scramblers
+
+
+class AlphaTournamentV412Policy(MettagridSemanticPolicy):
+    """TV412: TV350 + reactive defense budget."""
+    short_names = ["alpha-tournament-v412"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV412AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV413: TV350 + two-hop expansion — value junctions that unlock chains
+# Theory: a junction adjacent to many other neutral junctions is more valuable
+# because aligning it opens up more frontier for future alignment.
+# Score bonus = (2-hop reachable count) * weight
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV413AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV413: TV350 + two-hop expansion scoring."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        all_neutral = self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+        candidates = [e for e in all_neutral if _h.within_alignment_network(e.position, network_sources)]
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [e for e in all_neutral if e not in candidates]
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
+                    expansion_weight=10.0,
+                    expansion_cap=60.0,
+                )[0] - self._two_hop_bonus(entity, unreachable) * 5.0,
+            ),
+        )
+
+    def _two_hop_bonus(self, candidate: KnownEntity, unreachable: list[KnownEntity]) -> float:
+        """Count junctions reachable via 2-hop chain from candidate."""
+        one_hop = [
+            u for u in unreachable
+            if _h.manhattan(candidate.position, u.position) <= _h._JUNCTION_ALIGN_DISTANCE
+        ]
+        two_hop_set: set[tuple[int, int]] = set()
+        for hop1 in one_hop:
+            for u in unreachable:
+                if u.position != candidate.position and u not in one_hop:
+                    if _h.manhattan(hop1.position, u.position) <= _h._JUNCTION_ALIGN_DISTANCE:
+                        two_hop_set.add(u.position)
+        return float(len(two_hop_set))
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV413Policy(MettagridSemanticPolicy):
+    """TV413: TV350 + two-hop expansion scoring."""
+    short_names = ["alpha-tournament-v413"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV413AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV414: TV350 + scramble-then-align — when stagnant, scramble nearby enemy
+# junction AND immediately try to align it (dual role in idle phase)
+# Theory: scrambling creates a neutral junction near our network that we can
+# immediately re-align. This is more efficient than scramble + wait + align.
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV414AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV414: TV350 + scramble-then-align targeting."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+        self._just_scrambled_position: tuple[int, int] | None = None
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        # If we just scrambled a junction, immediately try to align it
+        if self._just_scrambled_position is not None:
+            pos = self._just_scrambled_position
+            self._just_scrambled_position = None
+            # Check if it's now neutral and alignable
+            team_id = _h.team_id(state)
+            for j in self._known_junctions(state, predicate=lambda j: j.owner in {None, "neutral"}):
+                if j.position == pos:
+                    hubs = self._world_model.entities(entity_type="hub", predicate=lambda e: e.team == team_id)
+                    friendly = self._known_junctions(state, predicate=lambda e: e.owner == team_id)
+                    if _h.within_alignment_network(j.position, [*hubs, *friendly]):
+                        self._claim_target(j.position)
+                        self._set_sticky_target(j.position, j.entity_type)
+                        return self._move_to_known(state, j, summary="realign_scrambled", vibe="change_vibe_aligner")
+
+        result = super()._aligner_action(state)
+        # Track if we're about to scramble something
+        if result[1] in ("idle_align_scramble", "stag_scramble"):
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                self._just_scrambled_position = scramble_target.position
+        return result
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV414Policy(MettagridSemanticPolicy):
+    """TV414: TV350 + scramble-then-align."""
+    short_names = ["alpha-tournament-v414"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV414AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV415: TV350 + early scramble — allocate 1 scrambler from step 500 to
+# disrupt opponent economy before they build up
+# Theory: early disruption prevents opponent from building junction network.
+# Previous versions only scrambled during stagnation (late game).
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV415AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV415: TV350 + early scramble budget."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        base_aligners, _ = _tv334_pressure_budgets(
+            self, state, objective=objective, threshold_7a=120
+        )
+        if objective == "resource_coverage":
+            return base_aligners, 0
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else 8
+        # Add 1 scrambler from step 500 if economy is stable
+        scramble_budget = 0
+        if step >= 500 and min_res >= 35 and team_size >= 5:
+            scramble_budget = 1
+            base_aligners = max(base_aligners - 1, 1)
+        return base_aligners, scramble_budget
+
+
+class AlphaTournamentV415Policy(MettagridSemanticPolicy):
+    """TV415: TV350 + early scramble."""
+    short_names = ["alpha-tournament-v415"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV415AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV416: TV350 + adaptive hotspot weight — scale hotspot penalty with game
+# phase. Early: low penalty (expand freely). Late: high penalty (avoid waste).
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV416AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV416: TV350 + adaptive hotspot weight based on game phase."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        # Adaptive: early game weight is lower (explore freely), late game higher (protect)
+        step = self._step_index
+        if step < 1000:
+            self._hotspot_weight = -5.0
+        elif step < 2500:
+            self._hotspot_weight = -10.0
+        else:
+            self._hotspot_weight = -15.0
+        return count
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV416Policy(MettagridSemanticPolicy):
+    """TV416: TV350 + adaptive hotspot weight."""
+    short_names = ["alpha-tournament-v416"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV416AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

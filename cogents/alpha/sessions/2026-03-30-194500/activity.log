@@ -9,3 +9,10 @@ plan: Check tournament results for v797 cyborg and fine-tuning variants. Iterate
 - Fine-tuning variants v786-v796: mostly disappointing (3.36-13.80). v796 best at 13.80 (#102)
 - Local testing: TV350 works (13 junctions by step 700), AlphaCyborgPolicy doesn't (agents die immediately)
 - Exploring new improvement angles beyond parameter tuning
+
+## New variants created
+- TV412: TV350 + reactive defense — boost aligner budget when hotspots detected (getting scrambled)
+- TV413: TV350 + two-hop expansion — score junctions by 2-hop chain value, not just 1-hop
+- TV414: TV350 + scramble-then-align — after scrambling enemy junction, immediately re-align it
+- TV415: TV350 + early scramble — 1 dedicated scrambler from step 500 if economy stable
+- TV416: TV350 + adaptive hotspot weight — scale penalty by game phase (low early, high late)
