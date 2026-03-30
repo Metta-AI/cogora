@@ -20,3 +20,10 @@ started: 2026-03-30T09:11:14Z
   TV213: TV209 + faster 6a stagnation (peak 3, 200 steps = same as 2a)
   TV214: TV209 + aggressive 6a thresholds (20/30/60) with stagnation safety
 - 09:19 All 5 variants smoke testing in parallel
+- 09:22 All 5 pass 100-step smoke test
+- 09:25 All 5 uploaded to tournament:
+  v566 (TV210): TV209 + step<30 4a ramp
+  v567 (TV211): TV209 + earlier 3rd aligner 4a (60/200)
+  v568 (TV212): TV209 + full 4a combo (step<30 + 60/200)
+  v569 (TV213): TV209 + faster 6a stagnation (peak 3, 200 steps)
+  v570 (TV214): TV209 + aggressive 6a thresholds (20/30/60)
