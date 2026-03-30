@@ -27,3 +27,9 @@ status: in-progress
   - 6a: 3 aligners from step 1, faster ramp
 - Uploaded v503 (TV139) — in qualifying
 - Running TV139 self-play
+- Created TV140: economy support for 2a — 1 aligner + 1 miner (vs dual-align)
+  - Hypothesis: against 6-agent opponent, dual align gets scrambled fast
+  - Better to mine and feed partner's 6 agents
+- Uploaded v504 (TV140) — in qualifying
+- v501 (TV137), v502 (TV138) still in qualifying (no results yet)
+- v496-v500 all in competition (no completed matches yet)
