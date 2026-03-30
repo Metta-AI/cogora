@@ -1,36 +1,22 @@
 status: in-progress
 started: 2026-03-30-031321
 
-## Current Leaderboard (live, converging)
-1. v506 (TV142) = 14.30 (78 matches) — incumbent #1
-5. v511 (TV151) = 13.54 (50 matches, converging)
-7. v512 (TV152) = 13.53 (50 matches, converging)
-29. v513 (TV153) = 13.21 (8 matches, early)
-59. v514 (TV154) = 12.49 (1 match, very early)
-?. v515 (TV155) — not yet on leaderboard
-?. v516 (TV156) — not yet on leaderboard
+## Current Leaderboard (EXCITING — v514 at #2!)
+1. v506 (TV142) = 14.30 (78 matches)
+2. **v514 (TV154) = 13.82 (15 matches, climbing!)**
+4. v513 (TV153) = 13.65 (17 matches)
+5. v512 (TV152) = 13.56 (51 matches, converging)
+7. v511 (TV151) = 13.54 (50 matches, converging)
 
-## Analysis
-v511/v512 converging around 13.53-13.54 — both are #5-#7. These are
-good but not beating v506 (14.30). The gap is ~0.76.
+## KEY FINDING: 50% stag scramble is the #1 differentiator
+- Variants WITH TV142's 50% stag: v513=#4, v514=#2 (13.65-13.82)
+- Variants WITHOUT TV142's stag: v511=#7, v512=#5 (13.54-13.56)
+- The 50% stag scramble adds ~0.1-0.3 points consistently
 
-v513-v516 include TV142's 50% stag scramble which is the #1 feature.
-These are the real contenders to beat v506. Results still accumulating.
-
-## Uploads (v509-v516)
-- v509 (TV145) → #3 at 13.57 (converged)
-- v510 (TV147) → #9-14 (~13.49, converged)
-- v511 (TV151) → #5 at 13.54 (converging)
-- v512 (TV152) → #7 at 13.53 (converging)
-- v513 (TV153) → #29 at 13.21 (early, has TV142 stag!)
-- v514 (TV154) → #59 at 12.49 (1 match)
-- v515 (TV155) → qualifying
-- v516 (TV156) → qualifying ← ultimate combo
+## Still Qualifying
+- v515 (TV155) = exact TV142 + TV151 6a only
+- v516 (TV156) = ultimate combo (TV142 stag + 4a + TV151 6a + TV152 2a)
 
 ## Actions This Session
-- Reviewed previous session learnings: v506 (TV142) = #1 at 14.30
-- Created TV156 (code): carbon-weighted mining (carbon consumed 3x faster by aligners)
-- Created TV157 (code): ultra-aggressive 6a (5 aligners from step 15)
-- Created TV158 (code): TV156 + TV157 combined
-- Running local free-play tests for all three
-- NOTE: v516 in tournament is a different TV156 (ultimate combo), not carbon-mining TV156 code
+- Reviewed learnings, uploaded v509-v516
+- Created TV156-TV158 (code variants for further testing)
