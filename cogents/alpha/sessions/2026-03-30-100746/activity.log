@@ -9,3 +9,9 @@ session_start: 2026-03-30T10:08:11Z
 - Mining logic already dynamically prioritizes lowest resource
 - Many matches running/scheduled (v561-v577), none completed yet
 - Investigating potential improvements to break ~15 ceiling
+
+## New Variants Created
+- TV228: Earlier 6a 3rd aligner (step 15 instead of 30 when min_res >= 20)
+- TV229: Wider stagnation explore offsets (distance 32 vs 22) to cover map corners
+- TV230: Reduced idle mining threshold (min_res < 15 instead of < 30)
+- All validated locally (100-step test runs)
