@@ -23,3 +23,8 @@ started: 2026-03-30T14:11:02Z
 - [14:40] Created TV312-TV315: conservative 4a economy, carbon-weighted bias, lower deposits.
 - [14:42] Uploaded v674(TV312), v675(TV313), v676(TV314), v677(TV315).
 - [14:42] v664 (TV302 2-level lookahead) passed qualifying! Now in competition matches.
+- [14:46] v665(TV303), v667(TV305), v670(TV308), v671(TV309) also in competition. Matched vs v557.
+- [14:48] LOCAL TEST: TV302 scores 7.94 vs TV277's 5.09 — 56% improvement!
+  - Healthier economy at step 2000: carbon=156 vs 83, germanium=88 vs 149 inverted
+  - 2-level lookahead creates more efficient junction chains
+- [14:50] Created TV316(rush 500), TV317(rush 200), TV318(combo). Uploaded as v678-v680.
