@@ -26,3 +26,7 @@ started: 2026-03-30T08:24:57Z
 - 08:50 Created TV206 (3-tier stagnation) and TV207 (6a thresholds 22/35/70)
 - 08:52 Uploaded: v562 (TV206), v563 (TV207)
 - All 6 new variants now qualifying
+- 08:54 Local 4a analysis (TV191, 2000 steps): peak 16 junctions at step 700, stagnation at 1000, decline to 8 by 2000. Silicon bottleneck early (8 at step 100 while others 46-68).
+- 08:55 v558 (TV202) qualifying: 2 done, avg=13.46 (12.2, 14.7). Others still pending.
+- 08:57 Created TV208 (TV207 thresholds + TV206 stagnation) and TV209 (full combo)
+- 08:58 Uploaded: v564 (TV208), v565 (TV209). Total: 8 new variants this session (v558-v565).
