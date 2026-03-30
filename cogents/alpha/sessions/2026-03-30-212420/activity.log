@@ -37,3 +37,12 @@ status: in-progress
 - Uploaded:
   - v840 = TV454 (floor 3 + faster 4a ramp)
   - v841 = TV452 (floor 3 only, no 4a change)
+- Early competition results (v837-v839):
+  - v838 (crisis+floor3) 6v2 vs swoopy=15.90, 4v4 vs coglet=10.77, 2v6 vs slanky=8.82
+  - v838 2v6 vs mammet=0.35 (terrible), 2v6 vs gtlm=1.93
+  - v837 (floor3) 4v4 vs Paz-Bot=12.27
+  - v838 avg ~7.76 (similar to v832's ~8.04, not yet beating v716's 15.05)
+  - 2v6 vs mammet still a weak point (0.35)
+- v840, v841 now in competition (scheduled/running)
+- Analyzed heart batching system: batch target=3→6 over game. Not the bottleneck.
+  Real issue: economy can't sustain heart production → aligner spends 600+ steps mining
