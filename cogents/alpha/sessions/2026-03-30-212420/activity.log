@@ -67,3 +67,16 @@ status: in-progress
 - Concurrent session also created TV455-TV463 (v842-v849): scrambler fixes + more
 - Created TV464 (v850): combines TV454 budgets + crisis recovery + scramblers
 - Waiting for competition results (server had brief 503 outage, recovered)
+- Competition results for v851-v853 (scrambler variants from concurrent session):
+  v851: 2v6 mammet=2.89, 4v4 Paz=11.32, 6v2 lstm=7.87
+  v852: 6v2 Paz=12.94, 2v6 lstm=1.17, 4v4 lstm=0.80
+  v853: 2v6 coglet=3.39
+- KEY INSIGHT: scramblers HURT performance!
+  - v840 (no scramblers): avg 10.75, 6v2 vs lstm=8.99
+  - v851 (w/ scramblers): 6v2 vs lstm=7.87 — worse
+  - v852 4v4 vs lstm=0.80 — terrible with scramblers
+  - TV350 (v716=15.05) also had NO budget scramblers
+  - Budget scramblers take miners away → economy weakened → death spiral
+  - Scramblers only valuable as idle aligner behavior, not dedicated budget
+- Conclusion: v840 (TV454) remains best. Don't add budget scramblers.
+  Future work: improve 2-agent play and optimize aligner targeting.
