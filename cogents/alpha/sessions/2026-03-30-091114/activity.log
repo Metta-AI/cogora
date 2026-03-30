@@ -47,3 +47,14 @@ started: 2026-03-30T09:11:14Z
   TV215 has 2x resources but WORSE junction control. Reducing aligners = BAD.
 - 09:42 Created TV218 (smart stagnation: full scramble when no neutral junctions)
   v574 (TV218) uploaded. Based on insight that explore phase is wasted when no neutrals exist.
+- 09:44 LEADERBOARD UPDATE:
+  v569 (TV213, fast 6a stag) = #1 at 17.32 (1 match!) — very promising
+  v566 (TV210, step<30 4a) = #3 at 16.33 (3 matches) — tied with v565
+  v567 (TV211, earlier 3rd aligner) = #6 at 15.78 (2 matches)
+  All still vs v557 only. Waiting for diverse opponents.
+- 09:46 TV215 LOCAL ANALYSIS CONFIRMED: reducing aligners in stagnation = BAD
+  More resources (800+ vs 300+) but worse junction control (0-12 vs 7-15)
+- 09:48 Created combo variants:
+  TV219: TV213 (fast 6a stag) + TV210 (step<30 4a) → v575
+  TV220: TV219 + smart stagnation (TV218) → v576
+  Both pass smoke test and uploaded.
