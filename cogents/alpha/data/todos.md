@@ -1,17 +1,13 @@
 # Todos
 
-- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v594=14.90 (new #1, 23m)
-- [x] v547 (TV191) is true #1 base, not v564 (TV208)
-- [x] Early 3rd aligner at step 15 is a consistent improvement
-- [x] Decaying peak junction count improves stag recovery (on TV208 base)
-- [x] Wider explore and less scramble both hurt
-- [x] Try TV191 + decaying peak — v598 (TV239) = 14.46 (24m, #15)
-- [x] Adaptive scramble > decaying peak — v603 (TV244) = 14.73 (#2)
-- [x] Dedicated scramblers CATASTROPHIC — v604=12.02, v605=9.80
-- [ ] **Monitor v610-v621** — TV251-TV262 still qualifying or early matches
-- [ ] **Monitor v618 (TV259)** — adaptive scramble on TV191 base (could be best)
-- [ ] **Monitor v619 (TV260)** — decay + adaptive scramble on TV191 (best potential)
-- [ ] **Improve anti-gtlm strategy** — v547 scores 6.99 in 4v4 vs gtlm
-- [ ] **Consider RL training** — heuristic ceiling at ~15; GPU needed for breakthrough
-- [ ] **Try LLM cyborg on TV244 base** — AnthropicCyborgPolicy might break ceiling
-- [ ] **Study opponent strategies** — match logs from gtlm-reactive, coglet-v0, Paz-Bot
+- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v632=15.17 (new #1, 24m)
+- [x] Combine adaptive scramble with early aligner + decay — v632 is the result
+- [x] Test capture-optimized scramble — HARMFUL everywhere
+- [x] Test adaptive idle scramble — CATASTROPHIC
+- [x] Test 7 aligners at high resources — WORKS on TV264 base
+- [ ] **Monitor v632 (TV272)** — new #1 at 15.17 (24m), needs 40+ for stability
+- [ ] **Monitor v636 (TV276)** — TV264+thresholds 18/30/60, 14.52 at 10m
+- [ ] **Try TV272 + 7a at lower threshold** — min_res >= 100 instead of 150
+- [ ] **Try TV272 + 3-tier stagnation** — differentiate 2a/4a/6a+ thresholds
+- [ ] **Try LLM cyborg on TV272 base** — AnthropicCyborgPolicy might break 15 ceiling
+- [ ] **Study opponent strategies** — match logs from gtlm-reactive, coglet-v0
