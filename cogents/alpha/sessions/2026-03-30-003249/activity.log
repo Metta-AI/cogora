@@ -5,3 +5,14 @@ status: in-progress
 ## Session Start
 - Previous session: 2026-03-29-230520 (completed, v495 TV133 #1 at 12.44)
 - Focus: Investigate 4a=11.1 gap, improve 2v6 vs gtlm-reactive-v3
+
+## Actions
+- Reviewed current state: v495 (TV133) is #1 at 12.44 comp avg
+- New v53 uploaded between sessions, running in competition (no results yet)
+- Self-play 5000 steps with AlphaCyborgPolicy: score ~3.83 (8v0)
+  - Economy collapses by step 5000 (carbon=17, oxygen=7, germanium=259)
+  - Shows germanium overproduction issue
+- Created TV134: TV133 + faster 2a start (step 100 vs 200) + dual aligner at min_res >= 7 (vs 14)
+- Created TV135: TV134 + idle aligners scramble instead of mine in 2a mode
+- Both pass 100-step validation
+- All v53 tournament matches still running/scheduled, no results yet
