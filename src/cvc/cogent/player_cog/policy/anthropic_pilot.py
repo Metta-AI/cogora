@@ -40062,3 +40062,474 @@ class AlphaTournamentV301Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV302: TV277 (#1) + 2-level expansion lookahead ────────────────────────────
+
+class AlphaTournamentV302AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV302: TV277 + 2-level expansion lookahead.
+
+    Standard expansion scoring looks 1-level deep: how many unreachable junctions
+    become reachable by aligning this candidate? TV302 adds a 2nd level: among
+    those newly-reachable junctions, what's their best expansion potential?
+
+    This favors "gateway" junctions that open up chains of further alignment.
+    """
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        all_neutral = self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+        for entity in all_neutral:
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [e for e in all_neutral if e not in candidates]
+
+        # Precompute 2-level chain bonus for each candidate
+        chain_bonus = {}
+        for cand in candidates:
+            # Which unreachable junctions would become reachable if we align cand?
+            newly_reachable = [
+                u for u in unreachable
+                if _h.manhattan(cand.position, u.position) <= 15  # JUNCTION_ALIGN_DISTANCE
+            ]
+            # For each newly-reachable junction, count how many MORE unreachable
+            # junctions it would unlock (2nd level)
+            level2_expansion = 0
+            for nr in newly_reachable:
+                level2_expansion += sum(
+                    1 for u2 in unreachable
+                    if u2 is not nr and _h.manhattan(nr.position, u2.position) <= 15
+                )
+            chain_bonus[cand.position] = min(level2_expansion * 3.0, 30.0)
+
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
+                    expansion_weight=self._expansion_weight,
+                    expansion_cap=self._expansion_cap,
+                )[0] - chain_bonus.get(entity.position, 0.0),
+                entity.position,
+            ),
+        )
+
+
+class AlphaTournamentV302Policy(MettagridSemanticPolicy):
+    """TournamentV302: TV277 + 2-level expansion lookahead."""
+    short_names = ["alpha-tournament-v302"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV302AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV303: TV277 (#1) + zone-based aligner assignment ──────────────────────────
+
+class AlphaTournamentV303AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV303: TV277 + zone-based junction targeting.
+
+    Assigns each aligner a preferred quadrant based on agent_id to reduce
+    travel time and avoid multiple aligners competing for the same junctions.
+    Agent 0-1: NE, Agent 2-3: SE, Agent 4-5: SW, Agent 6: NW.
+    Only applies a soft bias (distance penalty reduction), not hard zones.
+    """
+
+    _ZONE_CENTERS = {
+        0: (20, -20), 1: (20, -20),
+        2: (20, 20), 3: (20, 20),
+        4: (-20, 20), 5: (-20, 20),
+        6: (-20, -20),
+    }
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        all_neutral = self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+        for entity in all_neutral:
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [e for e in all_neutral if e not in candidates]
+
+        # Zone bias: reduce score for junctions in our assigned zone
+        zone_center = self._ZONE_CENTERS.get(self._agent_id)
+        zone_bonus = {}
+        if zone_center and hub_pos:
+            abs_zone = (hub_pos[0] + zone_center[0], hub_pos[1] + zone_center[1])
+            for cand in candidates:
+                dist_to_zone = _h.manhattan(cand.position, abs_zone)
+                # Up to -15 bonus for junctions in our zone
+                zone_bonus[cand.position] = max(0, 15.0 - dist_to_zone * 0.5)
+
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
+                    expansion_weight=self._expansion_weight,
+                    expansion_cap=self._expansion_cap,
+                )[0] - zone_bonus.get(entity.position, 0.0),
+                entity.position,
+            ),
+        )
+
+
+class AlphaTournamentV303Policy(MettagridSemanticPolicy):
+    """TournamentV303: TV277 + zone-based aligner assignment."""
+    short_names = ["alpha-tournament-v303"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV303AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV304: TV277 (#1) + 2-level lookahead + zone bias combined ─────────────────
+
+class AlphaTournamentV304AgentPolicy(AlphaTournamentV302AgentPolicy):
+    """TournamentV304: TV302 (2-level lookahead) + TV303 zone bias combined.
+
+    Best of both: smarter junction sequencing + better spatial coordination.
+    """
+
+    _ZONE_CENTERS = AlphaTournamentV303AgentPolicy._ZONE_CENTERS
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        all_neutral = self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+        for entity in all_neutral:
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [e for e in all_neutral if e not in candidates]
+
+        # 2-level chain bonus
+        chain_bonus = {}
+        for cand in candidates:
+            newly_reachable = [
+                u for u in unreachable
+                if _h.manhattan(cand.position, u.position) <= 15
+            ]
+            level2_expansion = 0
+            for nr in newly_reachable:
+                level2_expansion += sum(
+                    1 for u2 in unreachable
+                    if u2 is not nr and _h.manhattan(nr.position, u2.position) <= 15
+                )
+            chain_bonus[cand.position] = min(level2_expansion * 3.0, 30.0)
+
+        # Zone bias
+        zone_center = self._ZONE_CENTERS.get(self._agent_id)
+        zone_bonus = {}
+        if zone_center and hub_pos:
+            abs_zone = (hub_pos[0] + zone_center[0], hub_pos[1] + zone_center[1])
+            for cand in candidates:
+                dist_to_zone = _h.manhattan(cand.position, abs_zone)
+                zone_bonus[cand.position] = max(0, 15.0 - dist_to_zone * 0.5)
+
+        return min(
+            candidates,
+            key=lambda entity: (
+                _h.aligner_target_score(
+                    current_position=current_pos,
+                    candidate=entity,
+                    unreachable=unreachable,
+                    enemy_junctions=enemy_junctions,
+                    claimed_by_other=_h.is_claimed_by_other(
+                        claims=self._shared_claims,
+                        candidate=entity.position,
+                        agent_id=self._agent_id,
+                        step=self._step_index,
+                    ),
+                    hub_position=hub_pos,
+                    friendly_junctions=friendly_junctions,
+                    hotspot_count=self._junction_hotspot_count(entity, hub),
+                    network_weight=self._network_weight,
+                    hotspot_weight=self._hotspot_weight,
+                    expansion_weight=self._expansion_weight,
+                    expansion_cap=self._expansion_cap,
+                )[0] - chain_bonus.get(entity.position, 0.0) - zone_bonus.get(entity.position, 0.0),
+                entity.position,
+            ),
+        )
+
+
+class AlphaTournamentV304Policy(MettagridSemanticPolicy):
+    """TournamentV304: TV302 (2-level lookahead) + TV303 (zone bias) combined."""
+    short_names = ["alpha-tournament-v304"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV304AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV305: TV277 (#1) + smarter stagnation recovery ────────────────────────────
+
+class AlphaTournamentV305AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV305: TV277 + smarter stagnation recovery.
+
+    Instead of scrambling during stagnation on a fixed window cycle,
+    target the enemy junction that blocks the most neutral junctions
+    from being aligned (the "bottleneck" enemy junction).
+    """
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+
+        friendly_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id
+        ))
+        enemy_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        ))
+
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        else:
+            if step - self._last_junction_growth_step > 500:
+                self._peak_junction_count = max(
+                    friendly_count,
+                    self._peak_junction_count - 1
+                )
+                self._last_junction_growth_step = step
+
+            if num_agents <= 2:
+                stag_peak, stag_steps, stag_min_step = 3, 200, 300
+            else:
+                stag_peak, stag_steps, stag_min_step = 5, 300, 500
+
+            if (self._peak_junction_count >= stag_peak
+                    and step - self._last_junction_growth_step > stag_steps
+                    and step > stag_min_step):
+                self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        # Smarter stagnation: target bottleneck enemy junctions
+        scramble_bias = enemy_count - friendly_count
+
+        if self._stagnation_mode and hp > 50:
+            if hearts > 0 and min_res >= 7:
+                # Find enemy junction that blocks the most neutral junctions
+                enemy_junctions = self._known_junctions(
+                    state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+                )
+                neutral_junctions = self._known_junctions(
+                    state, predicate=lambda j: j.owner in {None, "neutral"}
+                )
+                if enemy_junctions and neutral_junctions:
+                    # Score each enemy junction by how many neutrals it blocks
+                    best_target = max(
+                        enemy_junctions,
+                        key=lambda ej: sum(
+                            1 for nj in neutral_junctions
+                            if _h.manhattan(ej.position, nj.position) <= 15
+                        )
+                    )
+                    blocked = sum(
+                        1 for nj in neutral_junctions
+                        if _h.manhattan(best_target.position, nj.position) <= 15
+                    )
+                    if blocked >= 2:
+                        return self._move_to_known(state, best_target, summary="bottleneck_scramble", vibe="change_vibe_scrambler")
+
+                # Fallback to adaptive scramble
+                scramble_window = 150 if scramble_bias >= 3 else (100 if scramble_bias >= 0 else 50)
+                if step % 200 < scramble_window:
+                    scramble_target = self._preferred_scramble_target(state)
+                    if scramble_target is not None:
+                        return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV305Policy(MettagridSemanticPolicy):
+    """TournamentV305: TV277 + smarter stagnation recovery."""
+    short_names = ["alpha-tournament-v305"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV305AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV306: TV302 (2-level lookahead) + TV305 (bottleneck scramble) ──────────────
+
+class AlphaTournamentV306AgentPolicy(AlphaTournamentV305AgentPolicy, AlphaTournamentV302AgentPolicy):
+    """TournamentV306: 2-level lookahead targeting + bottleneck scramble.
+
+    Combines smarter junction selection (TV302) with smarter stagnation
+    recovery (TV305). MRO: V305._aligner_action + V302._nearest_alignable.
+    """
+    pass
+
+
+class AlphaTournamentV306Policy(MettagridSemanticPolicy):
+    """TournamentV306: TV302 + TV305 combined."""
+    short_names = ["alpha-tournament-v306"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV306AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
