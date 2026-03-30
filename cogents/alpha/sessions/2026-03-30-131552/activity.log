@@ -1,4 +1,4 @@
-status: in-progress
+status: completed
 started: 2026-03-30T13:15:52Z
 plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnation on TV272, study opponents.
 
@@ -86,3 +86,5 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
   Still waiting for v652-v663 to get tournament matches.
   KEY FINDING: Lower 7a threshold (100→150) gives ~0.03-0.05 improvement at best.
   The main score driver appears to be the base TV264 platform, not tweaks.
+
+14:30 — Session complete. Wrote learnings, summary, updated todos and recent.
