@@ -11,4 +11,21 @@ status: in-progress
   - Enemy grows from 5→17 in same period
   - No scramble claim coordination (agents pile on same target)
   - Wasted time exploring when no neutrals exist
-- Planning TV440-TV442 variants: scramble coordination + proactive scramble
+- Created TV440-TV443 variants:
+  - TV440: proactive scramble when frontier=0
+  - TV441: scramble claim coordination (shared_claims for scramble targets)
+  - TV442: TV439 economy + proactive scramble + scramble claims (kitchen sink)
+  - TV443: mine instead of explore during stagnation
+- Local test results (8-agent, 2000 steps, sequential):
+  - TV436: 1.65 (baseline)
+  - TV440: 1.41 (proactive scramble too aggressive alone)
+  - TV441: 1.66 (scramble claims marginal)
+  - TV442: 2.11 (+28%!) — best local score
+  - TV443: 1.58 (mining doesn't help)
+- Analyzed competition results (v798-v825):
+  - All 6v2 format, opponent type dominates score
+  - modular-lstm-bc:v13 is strongest opponent (scores 0.14-3.47)
+  - gtlm-reactive allows 9.81-12.18
+  - Bug-fix variants weren't tested as 2-agent team
+- Uploaded TV440-TV443 to tournament:
+  - v826=TV440, v827=TV441, v828=TV442, v829=TV443
