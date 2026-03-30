@@ -40,6 +40,14 @@ started: 2026-03-30-031321
 7. TV142's conservative 6a economy ramp is CRITICAL to its #1 ranking
    - TV154 (aggressive 6a + 50% stag) = #2 at 13.76, 0.54 behind TV142
    - Aggressive 6a depletes resources faster → aligners stall on hearts
+8. **FORCED exploration in stagnation is essential** (TV163 insight)
+   - Adaptive scramble (scramble when targets visible) → nearly 100% scramble
+   - World model remembers enemy junctions even far away
+   - step%200<100 FORCES exploration even when scramble targets known
+   - This prevents agents from burning all hearts on scrambling
+9. Carbon-weighted mining hurts — silicon bottleneck emerges when carbon over-prioritized
+   - Existing resource_priority (sort by lowest inventory) is already adaptive and optimal
+10. Self-play variance is HIGH — need 5+ runs to get reliable signal
 
 ## Actions This Session
 - Reviewed learnings, analyzed leaderboard data
