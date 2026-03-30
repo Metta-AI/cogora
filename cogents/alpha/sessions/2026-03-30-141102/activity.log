@@ -13,3 +13,9 @@ started: 2026-03-30T14:11:02Z
 - [14:20] Analyzing code for improvement opportunities. Current expansion scoring is 1-level deep.
 - [14:20] Considering 2-level expansion lookahead for junction targeting.
 - [14:20] Also considering: better coordination between aligners (zone assignment), smarter scramble timing.
+- [14:25] Created TV302-TV306: 2-level expansion lookahead, zone-based alignment, bottleneck scramble.
+- [14:28] Uploaded v664(TV302), v665(TV303), v666(TV304), v667(TV305), v668(TV306).
+- [14:30] Created TV307-TV311: late-game all-aligner, re-align bonus, expansion/network weight tuning.
+- [14:32] Uploaded v669(TV307), v670(TV308), v671(TV309), v672(TV310), v673(TV311).
+- [14:33] First results: vs gtlm-reactive: v663 4v4=7.47, v663 6+2=11.08, v663 2+6=11.83, v661 4v4=7.47.
+- [14:33] Local 5000-step analysis: junctions peak ~14 at step 1000, then decline to ~0 by step 5000. Clips dominate late game. Resource imbalance (carbon/oxygen drain).
