@@ -7,3 +7,10 @@ status: in-progress
 - Created TV182 (faster early expansion) and TV183 (low scramble threshold + network-aware)
 - Uploaded v538 (TV182) and v539 (TV183)
 - 5 new variants now in qualifying: v535-v539
+- Analyzed match logs: v51(4a) vs v532(4a)=17.71 — highest score because opponent v51 aggressively aligns 20 junctions
+- Cooperative scoring insight: the score depends ~50% on opponent quality
+- In the highest scoring match, v532 had only 4 friendly junctions but opponent had 20
+- This means being a good "teammate" (mining to feed economy) can produce high scores
+- v535-v539 all still in qualifying (running)
+- Created TV182 (faster early expansion), TV183 (low scramble threshold)
+- v538=TV182, v539=TV183 uploaded
