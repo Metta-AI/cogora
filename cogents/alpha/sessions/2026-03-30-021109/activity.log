@@ -16,5 +16,29 @@ started: 2026-03-30-021109
 - Created TV147: ultra-aggressive 4a — 2 aligners from step 1 (like TV136 2a)
 - Created TV148: TV145 + hub-proximity targeting (REJECTED — no improvement)
 - Local tests (4a, 2000 steps): TV147=1.37, TV145=1.28, TV148=1.26, TV143=0.97
-- TV147 is 41% better than TV143 baseline — uploaded as v510
-- Tournament matches still running — no completed results for v506-v510
+- TV147 uploaded as v510
+
+## Tournament Results (v505/v506/v508)
+
+### v505 (TV141 — faster 4a step 30, no min_res gate):
+- vs v31: 4a×4a=10.95, 6a×2a=7.20, 2a×6a=11.97
+- vs v34: 4a×4a=18.22, 2a×6a=16.00, 6a×2a=12.54
+- vs v35: 4a×4a=18.22, 2a×6a=16.00, 6a×2a=12.54
+
+### v506 (TV142 — 50% stag scramble):
+- vs v30: 6a×2a=13.87, 2a×6a=13.15
+- vs v31: 4a×4a=15.85, 6a×2a=13.87
+- vs v34: 4a×4a=13.13, 6a×2a=12.69, 2a×6a=16.29
+- vs v35: 4a×4a=13.13, 6a×2a=12.69, 2a×6a=16.29
+- vs v38: 4a×4a=13.13, 6a×2a=12.69, 2a×6a=16.29
+
+### v508 (TV144 — min_res 15 gate):
+- vs v29: 4a×4a=15.36, 6a×2a=15.11
+- vs v30: 2a×6a=11.97, 6a×2a=7.20, 4a×4a=8.14
+- vs v31: 2a×6a=11.97, 6a×2a=7.20, 4a×4a=8.14
+- vs v34: 2a×6a=16.00, 6a×2a=12.54, 4a×4a=11.10
+
+### Key Insight
+v505 4a×4a=18.22 vs v34/v35 is the BEST 4a score — uses no economy gate!
+v508 4a×4a=11.10 vs v34 is worse — economy gate hurts 4a.
+Validates TV145/TV147 approach (removing economy gates).
