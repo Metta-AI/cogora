@@ -18,3 +18,10 @@ started: 2026-03-30T16:18:00Z
   - TV352: 5+ faster 5a ramp
   - TV353: Kitchen sink 4a + faster peak decay
 - [16:36] Smoke tests passed for TV344, TV353
+- [16:42] Uploaded all 10 variants: v706-v716 (TV344-TV353)
+- [16:44] LOCAL RESULTS (5000 steps, 8 agents):
+  - TV334 (baseline): 5.71
+  - TV346 (faster stagnation peak=4, steps=250, min=400): 7.23 — BEST! +26%
+  - TV353 (kitchen sink 4a changes): 2.92 — WORSE. Aggressive 4a hurts.
+  - Key insight: faster stagnation detection is the winning change
+  - 4a budget tweaks (min_res 10, 3a@60, step200) are harmful
