@@ -47596,3 +47596,393 @@ class AlphaTournamentV443Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV444: TV436 + aligner floor of 2 for 5+ agents
+# Critical insight from match analysis: when resources drop, budget goes to
+# (1, 0) which triggers a death spiral. Only 1 aligner means junctions get
+# scrambled faster than we can re-align, economy stays bad forever.
+# Fix: never go below 2 aligners for 5+ team size.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _tv444_pressure_budgets(self, state, *, objective=None, threshold_7a=120):
+    """TV436 + aligner floor of 2 for 5+ agents."""
+    step = state.step or self._step_index
+    min_res = _h.team_min_resource(state)
+    can_hearts = _h.team_can_refill_hearts(state)
+    num_agents = self.policy_env_info.num_agents
+    team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+    if objective == "resource_coverage":
+        return 0, 0
+
+    if team_size <= 2:
+        if min_res < 7 and not can_hearts:
+            return 0, 0
+        return 1, 0
+
+    if team_size <= 4:
+        if step < 50:
+            return 1, 0
+        if min_res < 7 and not can_hearts:
+            return 1, 0
+        if min_res < 15:
+            return 1, 0
+        aligner_budget = 2
+        if min_res >= 80 and step >= 300:
+            aligner_budget = min(3, team_size - 1)
+        return aligner_budget, 0
+
+    # 5+ agents: FLOOR of 2 aligners always (never drop to 1)
+    if step < 15:
+        return 2, 0
+    if step < 30 and min_res < 20:
+        return 2, 0
+    if min_res < 10 and not can_hearts:
+        return 2, 0  # TV444: floor of 2 instead of 1
+    elif min_res < 22:
+        return 2, 0
+    elif min_res < 35:
+        return 3, 0
+    elif min_res < 70:
+        return min(4, team_size - 1), 0
+    elif min_res < threshold_7a:
+        return min(team_size - 1, 6), 0
+    else:
+        return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV444AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV444: TV436 + aligner floor of 2."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv444_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV444Policy(MettagridSemanticPolicy):
+    """TV444: TV436 + aligner floor of 2."""
+    short_names = ["alpha-tournament-v444"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV444AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV445: TV442 kitchen sink + aligner floor of 2
+# Best of everything: 2a+4a economy fix + proactive scramble + scramble claims
+# + aligner floor to prevent death spiral.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _tv445_pressure_budgets(self, state, *, objective=None, threshold_7a=120):
+    """TV439 (2a+4a fix) + aligner floor of 2 for 5+."""
+    step = state.step or self._step_index
+    min_res = _h.team_min_resource(state)
+    can_hearts = _h.team_can_refill_hearts(state)
+    num_agents = self.policy_env_info.num_agents
+    team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+    if objective == "resource_coverage":
+        return 0, 0
+
+    if team_size <= 2:
+        if min_res < 7 and not can_hearts:
+            return 0, 0
+        return 1, 0
+
+    if team_size <= 4:
+        if step < 50:
+            return 1, 0
+        if min_res < 7 and not can_hearts:
+            return 1, 0
+        if min_res < 15:
+            return 1, 0
+        return 2, 0  # Cap at 2 for 4 agents (from TV439)
+
+    # 5+ agents: floor of 2 aligners
+    if step < 15:
+        return 2, 0
+    if step < 30 and min_res < 20:
+        return 2, 0
+    if min_res < 10 and not can_hearts:
+        return 2, 0  # Floor of 2
+    elif min_res < 22:
+        return 2, 0
+    elif min_res < 35:
+        return 3, 0
+    elif min_res < 70:
+        return min(4, team_size - 1), 0
+    elif min_res < threshold_7a:
+        return min(team_size - 1, 6), 0
+    else:
+        return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV445AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV445: TV442 kitchen sink + aligner floor."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+        self._scramble_claimed_target = None
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv445_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+    def _claim_scramble_target(self, target_pos):
+        if self._scramble_claimed_target is not None:
+            claim = self._shared_claims.get(self._scramble_claimed_target)
+            if claim is not None and claim[0] == self._agent_id:
+                self._shared_claims.pop(self._scramble_claimed_target)
+        self._shared_claims[target_pos] = (self._agent_id, self._step_index)
+        self._scramble_claimed_target = target_pos
+
+    def _preferred_scramble_target(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        )
+        if not enemy_junctions:
+            return None
+
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda e: e.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda j: j.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        hub_pos = hub.position if hub else current_pos
+        neutral_junctions = self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner in {None, "neutral"},
+        )
+
+        best = None
+        best_score = float("inf")
+        for ej in enemy_junctions:
+            base_score = _h.scramble_target_score(
+                current_position=current_pos,
+                hub_position=hub_pos,
+                candidate=ej,
+                neutral_junctions=neutral_junctions,
+                friendly_junctions=friendly_junctions,
+            )[0]
+            if _h.within_alignment_network(ej.position, network_sources):
+                base_score -= 50.0
+            claim = self._shared_claims.get(ej.position)
+            if claim is not None and claim[0] != self._agent_id and self._step_index - claim[1] < 50:
+                base_score += 30.0
+            if base_score < best_score:
+                best_score = base_score
+                best = ej
+
+        if best is not None:
+            self._claim_scramble_target(best.position)
+        return best
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+
+        friendly_count = len(self._known_junctions(state, predicate=lambda j: j.owner == team_id))
+        enemy_count = len(self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        ))
+
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        else:
+            if step - self._last_junction_growth_step > 500:
+                self._peak_junction_count = max(friendly_count, self._peak_junction_count - 1)
+                self._last_junction_growth_step = step
+            if num_agents <= 2:
+                stag_peak, stag_steps, stag_min_step = 3, 200, 300
+            else:
+                stag_peak, stag_steps, stag_min_step = 5, 300, 500
+            if (self._peak_junction_count >= stag_peak
+                    and step - self._last_junction_growth_step > stag_steps
+                    and step > stag_min_step):
+                self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(state, predicate=lambda j: j.owner in {None, "neutral"})
+        if unreachable:
+            safe_unreachable = [j for j in unreachable if _h.manhattan(current_pos, j.position) < hp - 20]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            if _h.manhattan(current_pos, nearest.position) < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        # Proactive scramble when no frontier
+        if enemy_count > 0 and hearts > 0 and min_res >= 7 and hp > 50:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="proactive_scramble", vibe="change_vibe_scrambler")
+
+        scramble_bias = enemy_count - friendly_count
+        if self._stagnation_mode and hp > 50:
+            scramble_window = 150 if scramble_bias >= 3 else (100 if scramble_bias >= 0 else 50)
+            if step % 200 < scramble_window and hearts > 0 and min_res >= 7:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV445Policy(MettagridSemanticPolicy):
+    """TV445: kitchen sink + aligner floor."""
+    short_names = ["alpha-tournament-v445"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV445AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV446: TV436 + aligner floor of 3 for 6+ agents
+# More aggressive: even higher aligner floor to maximize junction control.
+# With 6 agents: 3 aligners + 3 miners minimum.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _tv446_pressure_budgets(self, state, *, objective=None, threshold_7a=120):
+    """TV436 + aligner floor of 3 for 6+ agents."""
+    step = state.step or self._step_index
+    min_res = _h.team_min_resource(state)
+    can_hearts = _h.team_can_refill_hearts(state)
+    num_agents = self.policy_env_info.num_agents
+    team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+    if objective == "resource_coverage":
+        return 0, 0
+
+    if team_size <= 2:
+        if min_res < 7 and not can_hearts:
+            return 0, 0
+        return 1, 0
+
+    if team_size <= 4:
+        if step < 50:
+            return 1, 0
+        if min_res < 7 and not can_hearts:
+            return 1, 0
+        if min_res < 15:
+            return 1, 0
+        aligner_budget = 2
+        if min_res >= 80 and step >= 300:
+            aligner_budget = min(3, team_size - 1)
+        return aligner_budget, 0
+
+    # 5 agents: floor of 2
+    if team_size == 5:
+        floor = 2
+    else:
+        # 6+: floor of 3
+        floor = 3
+
+    if step < 15:
+        return max(floor, 2), 0
+    if step < 30 and min_res < 20:
+        return max(floor, 2), 0
+    if min_res < 10 and not can_hearts:
+        return floor, 0  # Floor instead of 1
+    elif min_res < 22:
+        return max(floor, 2), 0
+    elif min_res < 35:
+        return max(floor, 3), 0
+    elif min_res < 70:
+        return min(4, team_size - 1), 0
+    elif min_res < threshold_7a:
+        return min(team_size - 1, 6), 0
+    else:
+        return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV446AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV446: TV436 + aligner floor of 3 for 6+."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv446_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV446Policy(MettagridSemanticPolicy):
+    """TV446: TV436 + aligner floor of 3 for 6+."""
+    short_names = ["alpha-tournament-v446"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV446AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
