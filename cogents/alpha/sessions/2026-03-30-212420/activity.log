@@ -64,3 +64,6 @@ status: in-progress
 - v841 avg: 7.60 (7 matches, floor 3 without 4a ramp)
 - Created TV455: TV454 + TV447 crisis recovery = combined best-of
   - v843 = TV455, uploaded to tournament
+- Concurrent session also created TV455-TV463 (v842-v849): scrambler fixes + more
+- Created TV464 (v850): combines TV454 budgets + crisis recovery + scramblers
+- Waiting for competition results (server had brief 503 outage, recovered)
