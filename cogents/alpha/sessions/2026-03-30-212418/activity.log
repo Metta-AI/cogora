@@ -23,4 +23,14 @@ status: in-progress
   - Target switch threshold: 3.0 (prevents oscillation)
   - Key weights: expansion=10, network=0.5, hotspot=8.0, claimed=12.0
 - v838's strong 2v6 performance vs slanky suggests crisis/floor approach helps 2-agent games
-- Waiting for more results to determine if improvements beat v716's 15.05 average
+- Full competition results for v840/v841:
+  - v840 avg: 10.75 (9 external matches) — key results:
+    - 6v2 vs slanky: 15.40, 4v4 vs slanky: 16.01 (beats v716!)
+    - 6v2 vs modular-lstm: 8.99 (was 2-5 before!)
+    - 6v2 vs gtlm: 12.85
+    - 2v6 vs Paz-Bot: 11.91, 10.28
+    - BUT 2v6 vs gtlm: 0.18 (catastrophic)
+  - v841 avg: 7.60 (7 matches) — weaker overall
+  - Key insight: aligner floor dramatically improves 6v2 (8.99 vs modular-lstm!) but 2-agent games still catastrophic vs strong opponents
+- Without the 0.18 outlier, v840 would avg 12.07 — approaching v716
+- Next focus: fix 2-agent weakness (specifically vs gtlm and modular-lstm as minority team)
