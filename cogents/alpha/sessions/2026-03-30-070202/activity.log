@@ -66,3 +66,19 @@ started: 2026-03-30-070202
   TV192 6a too aggressive (13.51) — TV162 (25/40/80) still better
   TV194 strong: 16.06 in 4v4, TV186+faster 4a+TV162 6a
   TV200 may not benefit from TV192 6a; should maybe use TV162 thresholds instead
+- Created TV201 (v557): safe best combo — TV162 6a + TV186 stag + TV198 4a
+- MORE COMPETITION RESULTS:
+  v549 (TV193) vs v12: 4v4=9.68, 2a=6.34, 6a=11.70 — TERRIBLE (scramble-on-sight)
+  v551 (TV195) vs v17: 4v4=12.47, 2a=13.14, 6a=13.85 — weak (adaptive scramble)
+  v548 (TV192) vs v17: 4v4=15.34, 2a=14.77, 6a=13.51 → avg=14.54
+  v550 (TV194) vs v17: 4v4=16.06, 2a=16.75 — VERY STRONG
+  v550 (TV194) vs v12: 4v4=16.06, 6a=14.84
+  v552 (TV196) vs v17: 4v4=15.34
+  v554 (TV198) vs v13: 4v4=14.69
+  v554 vs slanky: 4v4=11.87, 2a=12.81, 6a=13.10
+  v554 vs Paz-Bot: 2a=14.50
+- RANKING of new variants (early data):
+  #1: v550 (TV194) — consistently 14.8-16.8, fastest 4a with min_res 15
+  #2: v548 (TV192) — good 4v4/2a, weak 6a
+  #3: v554 (TV198) — good 4a always-2-aligners
+  WORST: v549 (TV193), v551 (TV195), v553 (TV197)
