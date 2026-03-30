@@ -6,3 +6,15 @@ started: 2026-03-30T16:18:00Z
 - v696 (TV334) was #1 at 15.45 — check if it held
 - Iterate on TV334 base: tune 7a threshold, re-align weight, new ideas
 - Study opponent strategies for inspiration
+- [16:35] Created TV344-TV353: 10 new variants (renumbered to avoid conflict with remote TV341-343)
+  - TV344: 4a 3a@60 (vs 80)
+  - TV345: 4a 3a@step200 (vs 300)
+  - TV346: Faster stagnation detection (peak 4, 250 steps, min 400)
+  - TV347: 4a faster 2nd aligner (min_res 10 vs 15)
+  - TV348: Faster peak decay (300 vs 500)
+  - TV349: 4a both tweaks (3a@60+step200)
+  - TV350: hotspot=-10 (between -8 and -12)
+  - TV351: No idle scramble (only stag scramble)
+  - TV352: 5+ faster 5a ramp
+  - TV353: Kitchen sink 4a + faster peak decay
+- [16:36] Smoke tests passed for TV344, TV353
