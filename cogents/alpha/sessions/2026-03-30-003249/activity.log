@@ -49,3 +49,11 @@ status: in-progress
 - v496/v497/v498 now playing vs gtlm-reactive-v3 and v17, v29 (results pending)
 - v499 entering competition, v500 (TV136) not yet scheduled
 - Score highly partner-dependent: v54 ranges from 0.93 (bad partner) to 14.65 (good partner)
+- **CRITICAL RESULT: TV134 (v496) 2a vs gtlm-reactive 6a = 9.03** (vs TV133's 4.64 = +95%!)
+  - TV134's faster 2a start (step 100, dual at min_res 7) nearly doubled 2a vs gtlm
+  - Full comparison vs gtlm-reactive:
+    - 2a vs gtlm 6a: TV133=4.64, TV134=9.03 (+95%)
+    - 4a vs gtlm 4a: TV133=9.31, TV134=9.31 (same, 4a unchanged)
+    - 6a vs gtlm 2a: TV133=14.26, TV134=14.26 (same, 6a unchanged)
+    - Avg vs gtlm: TV133=9.40, TV134=10.87 (+15%)
+- v500 (TV136, ultra-fast 2a from step 1) now in competition matches
