@@ -58,3 +58,13 @@ started: 2026-03-30T09:11:14Z
   TV219: TV213 (fast 6a stag) + TV210 (step<30 4a) → v575
   TV220: TV219 + smart stagnation (TV218) → v576
   Both pass smoke test and uploaded.
+- 09:52 LEADERBOARD UPDATE (scores converging with more matches):
+  v570 (TV214, aggressive 6a 20/30/60) = #1 at 17.32 (1m — likely outlier)
+  v566 (TV210, step<30 4a) = #2 at 16.45 (4m — STRONG and stable)
+  v564 (TV208, 6a combo) = #3 at 16.35 (6m — most reliable!)
+  v565 (TV209, full combo) = #4 at 16.33 (3m)
+  v569 (TV213, fast 6a stag) = #6 at 15.99 (2m — dropped from 17.32! outlier confirmed)
+  v572 (TV216, heart hoard) = 14.76 (4m)
+  v571 (TV215, reduced aligners) = 14.02 (3m — as predicted, BAD)
+  KEY INSIGHT: v564 has 6 matches and holding at 16.35. 6a improvements > 4a changes.
+  v569 initial 17.32 was outlier — real score ~16. single-match scores unreliable.
