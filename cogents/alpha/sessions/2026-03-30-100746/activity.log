@@ -32,3 +32,19 @@ session_start: 2026-03-30T10:08:11Z
 - In self-play, team with 0 junctions stays permanently in stag scramble
 - Decaying peak allows fresh expansion cycles when situation changes
 - Local V228 vs V208 comparison: V228 had 15 junctions at step 500 vs V208's 9 (promising)
+
+## TV234: Combined early aligner + decaying peak
+- v592 = TV234: TV228 (earlier 3rd aligner) + TV233 (decaying peak) combined
+- Total uploaded this session: TV228-TV234 (v585-v592)
+- Waiting for tournament results — all competition matches still running
+
+## Summary of variants this session
+| Version | TV# | Key Change |
+|---------|-----|-----------|
+| v585 | TV228 | Earlier 6a 3rd aligner (step 15) |
+| v586 | TV229 | Wider stag explore (dist 32) |
+| v587 | TV230 | Less idle mining (min_res < 15) |
+| v588 | TV231 | 30% stag scramble (vs 50%) |
+| v590 | TV232 | TV228 + TV230 combined |
+| v591 | TV233 | Decaying peak junction count |
+| v592 | TV234 | TV228 + TV233 combined |
