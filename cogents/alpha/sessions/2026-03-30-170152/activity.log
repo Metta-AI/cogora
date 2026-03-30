@@ -49,3 +49,6 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
 - None of the combos (late scramble, 7a@120) improve on pure density.
 - TV365 (net_wt=1.0 = 8.78) remains best local by wide margin.
 - [17:51] Waiting for tournament results. Matches started at 17:48, expect 5-10min per game.
+- [18:03] Still waiting for tournament results. 20 matches cycling (running/scheduled).
+  Matches take ~10min each. All v725-v755 variants in competition pool.
+  Opponents include: slanky, Paz-Bot, coglet-v0, gtlm-reactive, swoopy-v0, mammet, modular-lstm.
