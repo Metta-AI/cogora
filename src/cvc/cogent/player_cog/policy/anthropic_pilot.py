@@ -49217,3 +49217,93 @@ class AlphaTournamentV463Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV464: TV454 budgets + crisis recovery + scramblers ──────────────────────
+# v840 (TV454) scored avg 10.75 — best new variant.
+# Key feature: faster 4a ramp (can_hearts → 2 aligners).
+# Add crisis recovery (TV447) + scramblers. Uploaded as v850.
+
+class AlphaTournamentV464AgentPolicy(AlphaTournamentV447AgentPolicy):
+    """TV464: TV454 budgets + crisis recovery + scramblers."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            if can_hearts or min_res >= 15:
+                aligner_budget = 2
+                if min_res >= 80 and step >= 300:
+                    aligner_budget = min(3, team_size - 1)
+                return aligner_budget, 0
+            return 1, 0
+
+        floor = min(3, team_size - 1)
+
+        if step < 100:
+            if step < 15:
+                return 2, 0
+            if step < 30 and min_res < 20:
+                return 2, 0
+            if min_res < 10 and not can_hearts:
+                return 1, 0
+            elif min_res < 22:
+                return 2, 0
+            elif min_res < 35:
+                return 3, 0
+            elif min_res < 70:
+                return min(4, team_size - 1), 0
+            else:
+                return min(team_size - 1, 6), 0
+
+        scrambler_budget = 0
+        if step >= 100 and min_res >= 14:
+            scrambler_budget = 1
+        if step >= 3000 and min_res >= 35:
+            scrambler_budget = min(2, floor)
+
+        if min_res < 10 and not can_hearts:
+            return floor, 0
+        elif min_res < 22:
+            return max(floor, 2), scrambler_budget
+        elif min_res < 35:
+            return 3, scrambler_budget
+        elif min_res < 70:
+            return min(4, team_size - 1), scrambler_budget
+        elif min_res < 120:
+            return min(team_size - 1, 6), scrambler_budget
+        else:
+            return min(team_size - 1, 7), scrambler_budget
+
+
+class AlphaTournamentV464Policy(MettagridSemanticPolicy):
+    """TV464: TV454 + crisis + scramblers (v850)."""
+    short_names = ["alpha-tournament-v464"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV464AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

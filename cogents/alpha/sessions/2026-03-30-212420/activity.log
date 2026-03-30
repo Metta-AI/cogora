@@ -57,3 +57,10 @@ status: in-progress
     - 2v6 vs lstm=3.57, 4v4 vs coglet=3.82
 - KEY: v840's faster 4a ramp (can_hearts → 2 aligners) makes big difference in 4v4 matchups
 - 2v6 matchups still weak (0.18 vs gtlm) — fundamental 2-agent limitation
+- v840 updated avg: 10.75 (9 matches, best new variant)
+  - 6v2: gtlm=12.85, lstm=8.99, mammet=11.47, slanky=15.40
+  - 4v4: slanky=16.01, Paz=9.63
+  - 2v6: Paz=11.91/10.28, gtlm=0.18
+- v841 avg: 7.60 (7 matches, floor 3 without 4a ramp)
+- Created TV455: TV454 + TV447 crisis recovery = combined best-of
+  - v843 = TV455, uploaded to tournament
