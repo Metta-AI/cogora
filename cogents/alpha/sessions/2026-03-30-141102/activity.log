@@ -28,3 +28,5 @@ started: 2026-03-30T14:11:02Z
   - Healthier economy at step 2000: carbon=156 vs 83, germanium=88 vs 149 inverted
   - 2-level lookahead creates more efficient junction chains
 - [14:50] Created TV316(rush 500), TV317(rush 200), TV318(combo). Uploaded as v678-v680.
+- [14:52] LOCAL TEST: TV318 (2-level + re-align + carbon) = 6.57. Worse than TV302 (7.94). The re-align bonus + carbon bias HURT when combined with 2-level.
+- [14:52] Many new variants in competition now. v672(TV310), v677(TV315) vs internal; v669(TV307) vs slanky.
