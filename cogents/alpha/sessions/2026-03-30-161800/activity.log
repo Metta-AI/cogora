@@ -119,3 +119,7 @@ started: 2026-03-30T16:18:00Z
   - TV384: hotspot=-10 + no idle scramble + 7a@110
   - TV385: hotspot=-10 + no idle scramble + 7a@130
 - [18:06] Uploaded: v757(TV381), v759(TV383), v760(TV384), v761(TV385), v762(TV382)
+- [18:12] Leaderboard stable: v716 (TV350, hotspot=-10) = 15.05 (#1, 20m)
+  All opponents far below: slanky=6.67 (#370), Paz-Bot=6.62 (#372)
+  Density variants all below 13 in tournament. Confirmed local-only.
+  TV381-TV385 (v757-v762) still qualifying.
