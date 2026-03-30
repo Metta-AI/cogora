@@ -87,3 +87,12 @@ started: 2026-03-30T15:22:21Z
   - **CEILING CONFIRMED: 14.94 (v632/TV272) is the true heuristic maximum.**
   - Created TV336-TV340 (v698-v702) for more fine-tuning. Unlikely to break through.
   - Uploaded v698-v702. Awaiting results.
+- [16:55] v702 (TV340, faster peak decay) = **15.19 (#1, 14 matches)** — may be genuine improvement!
+- [16:58] Strategy analysis completed. Three paradigm-shift ideas:
+  1. Alignment Waves: coordinated burst alignment instead of drip-feeding
+  2. Keystone Junction Protection: guard graph-critical junctions
+  3. Surge Economy: early mining burst + convert miners to scramblers at step 2500
+- [17:00] Created TV341-TV343 (v703-v705): surge economy variants.
+  - TV341: convert 2 miners to scramblers at step 2500+
+  - TV342: all mine first 50 steps, then normal TV272
+  - TV343: full surge (early burst + late scramblers)
