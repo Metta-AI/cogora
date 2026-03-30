@@ -82,3 +82,6 @@ status: in-progress
   Key: faster stagnation for 2a (peak>=3, 200 steps, step>300)
   Combined with TV162's lower 6a thresholds (25/40/80)
   While keeping TV142 conservative stagnation for 4a+
+- Created TV191 (v547): TV186 + faster 4a (min_res 15 vs 20)
+- Theory: if v542's 4a improves from 12.9 to ~13.4, overall could reach 14.5+
+- v542 currently #2 at 14.39, very close to v522 #1 at 14.41
