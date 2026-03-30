@@ -1,1 +1,13 @@
 status: in-progress
+- Leaderboard check: v522=14.41 (#1), v519=14.37 (#2), v534=14.32 (#3), v506=14.30 (#4), v525=14.17 (#5)
+- v541=13.46 (41m) — settled below top 5, faster ramp didn't help as much as hoped
+- All network-aware variants confirmed bad: v535=11.82, v536=7.40, v537=11.93, v538=11.12, v539=11.55
+- Analyzed score breakdown for top 5 variants:
+  v522(TV162): 2a=12.75, 4a=13.24, 6a=15.75 → 14.41 (#1)
+  v519(TV160): 2a=13.73, 4a=13.20, 6a=15.37 → 14.37 (#2)
+  v534(TV178): 2a=12.70, 4a=13.40, 6a=15.48 → 14.32 (#3)
+  v525(TV165): 2a=13.73, 4a=12.95, 6a=15.14 → 14.17 (#5)
+- Confirmed cooperative scoring: both teams always get identical scores
+- TV162 wins via 6a dominance, TV160 wins via 2a improvement
+- Combo (TV165=v525) hurts 4a, net negative
+- Key opportunity: improve 2a without hurting 6a
