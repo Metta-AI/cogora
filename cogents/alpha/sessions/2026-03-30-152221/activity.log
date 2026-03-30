@@ -48,3 +48,8 @@ started: 2026-03-30T15:22:21Z
   - TV329: TV272 + mine during stagnation (not explore)
   - TV330: TV272 + re-align + mine-stag
 - [16:00] Uploaded v687(TV326), v688(TV327), v692(TV328), v690(TV329), v691(TV330).
+- [16:06] Early results:
+  - v685 (TV323 faster ramp) = 13.24 (rank 146, 14 matches) — WORSE, faster ramp hurts economy
+  - v684 (TV322 hub-proximity) = 11.86 (1 match) — WORSE, as predicted
+  - v687 (TV326), v691 (TV330), v692 (TV328) in competition, awaiting results
+  - Leaderboard unchanged: v632 (#1, 14.94)
