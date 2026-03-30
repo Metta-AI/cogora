@@ -87,3 +87,9 @@ started: 2026-03-29T23:05:20Z
   1. 2-agent: dual aligner (proven in v483)
   2. 5+ agents: replace dedicated scrambler with extra aligner
   3. 4-agent: EXACT SAME as TV82 (don't break what works)
+- LEADERBOARD SHIFT: v489 (TV128) now #1 comp at 11.86 (28m). 4a=14.2, 6a=13.6.
+  v488 #2 at 10.94. Both use EXACT TV82 for 4a/6a — confirming TV82 budgets optimal.
+  v494 (TV132) at 7.70 comp — aggressive 4a ramp confirmed harmful.
+  Paz-Bot dropped to 8.89 comp (25m).
+- v495 (TV133) in qualifying. Should combine: TV82 exact for 4a, dual aligner for 2a,
+  no scrambler for 6a. Expected: 4a~14, 2a~12, 6a potentially better than ~13.5.
