@@ -35,3 +35,17 @@ started: 2026-03-30T16:18:00Z
   - TV360: TV346 stag but keep peak=5, steps=200 (faster entry)
 - [16:50] Uploaded: v717(TV354), v719(TV356), v720(TV357), v721(TV358),
   v722(TV359), v723(TV360), v724(TV355). All in qualifying pool.
+- [16:55] LOCAL RESULTS (5000 steps, 8 agents):
+  | Variant | Description | Score | vs TV334 |
+  |---|---|---|---|
+  | TV334 | baseline | 5.71 | - |
+  | TV346 | faster stag (peak=4, 250, 400) | 7.23 | +26% |
+  | TV354 | aggressive stag (peak=3, 200, 300) | 7.00 | +23% |
+  | TV355 | TV346 + fast decay (300) | 5.74 | +1% |
+  | TV353 | kitchen sink 4a | 2.92 | -49% |
+  | TV357 | wider scramble | 5.23 | -8% |
+  KEY: TV346 stagnation settings are near-optimal.
+  Lower peak (3) slightly worse than 4.
+  Faster peak decay doesn't help on top of fast stag.
+  4a budget changes and wider scramble are harmful.
+- [16:55] Tournament: all matches still running/qualifying. Awaiting results.
