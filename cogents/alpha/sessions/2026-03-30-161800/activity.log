@@ -82,3 +82,15 @@ started: 2026-03-30T16:18:00Z
   TV377 (no hotspot + density + stag) test running.
 - [17:50] Tournament: v743, v747, v750, v754 in competition. New opponent: swoopy-v0.
   Still no completed alpha competition matches.
+- [17:55] LOCAL RESULTS (5000 steps, 8 agents):
+  | Variant | net_wt | stag | hotspot | 7a | Score |
+  | TV334 | 0.5 | default | -8 | 120 | 5.71 |
+  | TV346 | 0.5 | fast | -8 | 120 | 7.23 |
+  | TV365 | 1.0 | default | 0 | 150 | 8.78 |
+  | TV372 | 1.0 | fast | -8 | 120 | 7.79 |
+  | TV376 | 1.0 | fast | -8 | 120 | 7.79 |
+  | TV377 | 1.0 | fast | 0 | 120 | 5.51 |
+  KEY: With fast stag, hotspot HELPS density (7.79 vs 5.51)!
+  Contradicts parallel session without fast stag (TV368=4.65).
+  Stag + hotspot + density combo is synergistic.
+  TV365 (density alone) still local best at 8.78.
