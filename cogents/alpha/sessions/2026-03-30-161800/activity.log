@@ -1,0 +1,8 @@
+status: in-progress
+started: 2026-03-30T16:18:00Z
+
+## Plan
+- Check tournament results for v693-v697 (TV331-TV335)
+- v696 (TV334) was #1 at 15.45 — check if it held
+- Iterate on TV334 base: tune 7a threshold, re-align weight, new ideas
+- Study opponent strategies for inspiration

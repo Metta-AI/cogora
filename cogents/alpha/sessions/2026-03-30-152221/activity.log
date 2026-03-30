@@ -81,3 +81,5 @@ started: 2026-03-30T15:22:21Z
   - KEY FINDING: 7a@120 is the sweet spot! Not 100 (too early) or 150 (too late).
   - Re-align bonus helps at all weights but -8 is optimal.
   - TV334 (v696) = TV272 + 7a@120 + re-align=-8.0 = **new best strategy**.
+
+status: interrupted (container died)
