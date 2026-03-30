@@ -11,3 +11,7 @@ status: in-progress
 - TV162 wins via 6a dominance, TV160 wins via 2a improvement
 - Combo (TV165=v525) hurts 4a, net negative
 - Key opportunity: improve 2a without hurting 6a
+- Created TV186 (team-size stagnation + TV162 6a), TV187 (TV186 + 2a mining burst), TV188 (TV162 + faster 4a)
+- Uploaded v542 (TV186), v543 (TV187), v544 (TV188)
+- Theory: team-size-specific stagnation gives 2a benefit of TV160 without 4a/6a cost
+- Theory: lower 4a min_res (15 vs 20) enables faster 2-aligner start
