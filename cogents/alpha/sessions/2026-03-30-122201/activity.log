@@ -6,3 +6,25 @@ started: 2026-03-30-122201
 2. Analyze what's working and identify next improvements
 3. Run free-play experiments to validate changes
 4. Upload improved variants to tournament
+
+## Leaderboard Check (12:22)
+- v592 (TV234) = #1 at 14.82 (24m) — TV208+early aligner+decaying peak
+- v618 (TV259) = #2 at 14.81 (24m) — TV191+adaptive scramble, nearly tied!
+- v603 (TV244) = #3 at 14.73 (24m) — TV235+adaptive scramble
+- v591 (TV233) = #4 at 14.72 (24m)
+- v547 (TV191) = #5 at 14.69 (81m)
+- v617 = #6 at 14.69 (24m)
+- v619 (TV260) = #10 at 14.61 (24m) — decay+adaptive on TV191, worse than TV259
+
+Key insight: Top 2 use DIFFERENT feature combos. v592 has early aligner+decay, v618 has adaptive scramble.
+Natural experiment: combine all winning features.
+
+## New Variants Created & Uploaded (12:30)
+- v622 (TV263): TV259 (#2) + early 3rd aligner at step 15 — BEST POTENTIAL
+  Combines: TV191 base + adaptive scramble + early aligner
+- v623 (TV264): TV234 (#1) + adaptive scramble — add adaptive to #1 base
+  Combines: TV208 base + early aligner + decaying peak + adaptive scramble
+- v624 (TV265): TV259 + more aggressive scramble (175/125/75)
+- v625 (TV266): TV263 + TV208 lower thresholds (22/35/70)
+
+Free-play TV263 running in background (5000 steps).
