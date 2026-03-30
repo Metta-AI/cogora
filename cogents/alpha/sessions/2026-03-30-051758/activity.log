@@ -42,3 +42,13 @@ status: in-progress
 - v538=13.20, v539=13.18 (1m each) — promising but need more data
 - Created TV185 (v541): pure TV160 + faster early expansion (no network-aware)
 - Lesson: network-aware scramble targeting hurts more than helps (longer travel)
+- Converged results (13-15 matches each):
+  v535=11.38 (TV179 network-aware): below baseline
+  v536=7.75 (TV181 always-scramble): terrible
+  v537=11.95 (TV180 75% stag): below baseline
+  v538=11.29 (TV182 faster early + network-aware): below baseline
+  v539=10.67 (TV183 low threshold + network-aware): below baseline
+- ALL variants with network-aware scramble scoring 11-12, vs baseline 14.5+
+- Key lesson: network-aware scramble targeting HURTS performance
+- Waiting for v541 (TV185: pure TV160 + faster ramp, NO network-aware) to confirm
+- Top performers (v525, v522, v519) use simple TV142/TV160 behavior
