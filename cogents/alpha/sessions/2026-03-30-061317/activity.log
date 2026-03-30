@@ -45,3 +45,11 @@ status: in-progress
 - v542 looking like it could reach top 5 if it converges around 14.0-14.2
 - 4a noise confirmed (was 11.7 at 4m, now 13.2 at 7m)
 - v544/v545 still all matches running
+- CONVERGING RESULTS (27-30 matches):
+  v542 (TV186): avg=14.03 — 2a=14.6(10), 4a=13.1(11), 6a=14.5(9)
+  v543 (TV187): avg=14.03 — 2a=14.0(8), 4a=13.9(11), 6a=14.2(8)
+- Both at 14.03 — solidly in top 7-8 range
+- v542's 6a=14.5 lower than v522's 15.75 — this is the gap
+- v543 more balanced (4a=13.9 vs v542's 13.1)
+- v544/v545 in competition, results pending
+- v546 (TV190 wider exploration) qualified low (10.43) — might not work
