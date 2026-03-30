@@ -28334,3 +28334,90 @@ class AlphaTournamentV183Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV184: Adaptive mining — shift to mining when opponent is aggressively aligning ──
+
+class AlphaTournamentV184AgentPolicy(AlphaTournamentV179AgentPolicy):
+    """TournamentV184: TV179 + adaptive mining when opponent dominates alignment.
+
+    Key insight from match analysis: highest scores (17.71) happen when
+    the opponent aggressively aligns (~20 junctions). Being a good teammate
+    (mining to support shared economy) can boost cooperative score.
+
+    TV184: When enemy junction count > friendly junction count by 5+,
+    shift more agents to mining to feed the shared economy.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 20:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: check if opponent is dominating alignment
+        team_id = _h.team_id(state)
+        friendly_j = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner == team_id
+        ))
+        enemy_j = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}
+        ))
+
+        # If opponent has 5+ more junctions, shift to mining (be a better teammate)
+        opponent_dominates = enemy_j > friendly_j + 5 and step > 500
+
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 30:
+            return 1 if opponent_dominates else 2, 0
+        elif min_res < 50:
+            return 2 if opponent_dominates else 3, 0
+        elif min_res < 100:
+            budget = 3 if opponent_dominates else min(4, team_size - 1)
+            return budget, 0
+        else:
+            budget = min(4, team_size - 2) if opponent_dominates else min(team_size - 1, 6)
+            return budget, 0
+
+
+class AlphaTournamentV184Policy(MettagridSemanticPolicy):
+    """TournamentV184: TV179 + adaptive mining when opponent dominates."""
+    short_names = ["alpha-tournament-v184"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV184AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

@@ -14,3 +14,8 @@ status: in-progress
 - v535-v539 all still in qualifying (running)
 - Created TV182 (faster early expansion), TV183 (low scramble threshold)
 - v538=TV182, v539=TV183 uploaded
+- First qualifying results: v535=11.86 (1m), v536=9.73 (2m), v537=9.57 (2m)
+- v535 (TV179 network-aware scramble) looking promising
+- v536 (always-scramble) and v537 (75% stag) scored lower — consistent with self-play
+- Created and uploaded TV184 (v540) — adaptive mining when opponent dominates
+- v538-v540 still qualifying
