@@ -25,3 +25,17 @@ status: in-progress
 - TV135-broken self-play: 0.69 per cog — _aligner_action override removed stagnation logic!
 - Fixed TV135: replaced broken _aligner_action with budget-only change (faster 6a ramp)
 - Uploaded v499 (fixed TV135: faster 6a ramp at min_res thresholds 50/100 vs 80/200)
+- Self-play comparison:
+  - TV133 (baseline): 5.36 per cog
+  - TV134 (faster 2a): 6.66 per cog (+24%)
+  - TV135 (faster 6a): 6.32 per cog (+18%)
+- Key insight from 14.97 match logs: early expansion is everything
+  - v466 as 6a had 8-13 junctions by step 500 → high avg score
+  - By step 10K, all junctions lost to clips NPC
+  - Score driven by early dominance (more ticks of high score)
+- Created TV136 (v500): ultra-fast 2a — both agents align from step 1
+  - In 2v6, partner's 6 agents handle economy
+  - Initial hub has enough for 2 hearts immediately
+  - No mining wait (step 0 vs 100/200 in TV134/TV133)
+- v496 (TV134), v497 (TV135-broken), v498 (TV133), v499 (TV135-fixed) all in competition
+- v500 (TV136) in qualifying
