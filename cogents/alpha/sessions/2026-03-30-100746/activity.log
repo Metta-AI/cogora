@@ -25,3 +25,10 @@ session_start: 2026-03-30T10:08:11Z
 - All validated locally before upload
 - Key insight: cooperative scoring means both teams always get same score
 - Previous network-aware scramble HURT because it overrode distance
+
+## TV233: Decaying peak junction count
+- v591 = TV233: peak decays by 1 every 500 stagnation steps
+- Addresses: once peak is set high and we lose junctions, stagnation never exits
+- In self-play, team with 0 junctions stays permanently in stag scramble
+- Decaying peak allows fresh expansion cycles when situation changes
+- Local V228 vs V208 comparison: V228 had 15 junctions at step 500 vs V208's 9 (promising)
