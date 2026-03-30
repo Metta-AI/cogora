@@ -40834,3 +40834,126 @@ class AlphaTournamentV315Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV316: TV277 (#1) + early aligner rush ──────────────────────────────────────
+
+class AlphaTournamentV316AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV316: TV277 + early aligner rush.
+
+    Score = avg junctions per tick. Early junctions contribute more to average.
+    Rush: 5+ agents → put ALL agents on alignment for first 500 steps using
+    the initial hub resources (24 of each element = 3 hearts + 3 aligners).
+    After step 500, fall back to normal TV277 budgets.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # Early rush: all aligners for first 500 steps (5+ agent teams)
+        if step < 500 and team_size >= 5:
+            min_res = _h.team_min_resource(state)
+            can_hearts = _h.team_can_refill_hearts(state)
+            if min_res < 5 and not can_hearts:
+                # Economy depleted, need at least 1 miner
+                return max(1, team_size - 2), 0
+            return min(team_size, team_size), 0  # all aligners
+
+        # After rush, fall back to TV277 with slightly more conservative start
+        return super()._pressure_budgets(state, objective=objective)
+
+
+class AlphaTournamentV316Policy(MettagridSemanticPolicy):
+    """TournamentV316: TV277 + early aligner rush."""
+    short_names = ["alpha-tournament-v316"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV316AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV317: TV277 + early rush (shorter, 200 steps) ─────────────────────────────
+
+class AlphaTournamentV317AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV317: TV277 + shorter early aligner rush (200 steps).
+
+    Same idea as TV316 but shorter rush window. 200 steps may be enough
+    to capture nearby junctions without depleting economy.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if step < 200 and team_size >= 5:
+            min_res = _h.team_min_resource(state)
+            can_hearts = _h.team_can_refill_hearts(state)
+            if min_res < 5 and not can_hearts:
+                return max(1, team_size - 2), 0
+            return team_size, 0
+
+        return super()._pressure_budgets(state, objective=objective)
+
+
+class AlphaTournamentV317Policy(MettagridSemanticPolicy):
+    """TournamentV317: TV277 + shorter early rush (200 steps)."""
+    short_names = ["alpha-tournament-v317"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV317AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV318: TV302 (2-level) + TV308 (re-align bonus) + TV313 (carbon bias) ──────
+
+class AlphaTournamentV318AgentPolicy(AlphaTournamentV302AgentPolicy):
+    """TournamentV318: 2-level lookahead + re-align bonus + carbon bias.
+
+    Best combination of structural improvements.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -8.0
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        carbon = resources.get("carbon", 0)
+        others_min = min(resources.get(r, 0) for r in ("oxygen", "germanium", "silicon"))
+        if carbon < others_min * 1.5:
+            return MacroDirective(resource_bias="carbon")
+        least = _least_resource(resources)
+        if least == "silicon" or resources.get("silicon", 0) < 50:
+            return MacroDirective(resource_bias="silicon")
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaTournamentV318Policy(MettagridSemanticPolicy):
+    """TournamentV318: TV302 + TV308 + TV313 combined."""
+    short_names = ["alpha-tournament-v318"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV318AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
