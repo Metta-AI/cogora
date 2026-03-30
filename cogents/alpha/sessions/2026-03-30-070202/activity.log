@@ -14,3 +14,9 @@ started: 2026-03-30-070202
   - TV193: Scramble-on-sight idle (always try scramble first, explore fallback)
   - TV194: TV186 + faster 4a (min_res 15 for 2 aligners)
 - All 3 pass local 100-step smoke test
+- Uploaded TV192 as v548, TV193 as v549, TV194 as v550
+- Created 2 more variants:
+  - TV195: Adaptive idle scramble (75%/50%/25% based on enemy vs friendly junction count)
+  - TV196: Aggressive 2a (always 2 aligners, no economy gate)
+- Uploaded TV195 as v551, TV196 as v552
+- Running full TV192 local game (5000 steps) in background
