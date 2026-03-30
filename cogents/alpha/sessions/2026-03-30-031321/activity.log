@@ -19,7 +19,8 @@ started: 2026-03-30-031321
 - v519 = TV160 (faster stagnation entry)
 - v520 = TV157 (ultra-aggressive 6a)
 - v521 = TV161 (carbon-weighted mining)
-- v522 = TV162 (slightly lower 6a thresholds)
+- v522 = TV162 (slightly lower 6a thresholds: 25/40/80 vs 30/50/100)
+- v523 = TV163 (adaptive stag scramble — scramble if targets visible, else explore)
 
 ## Free-play Results (self-play 8v0, 5000 steps)
 - TV156-code (carbon mining): 4.04 (self-play predicts poorly)
