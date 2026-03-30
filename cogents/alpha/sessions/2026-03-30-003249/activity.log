@@ -39,3 +39,13 @@ status: in-progress
   - No mining wait (step 0 vs 100/200 in TV134/TV133)
 - v496 (TV134), v497 (TV135-broken), v498 (TV133), v499 (TV135-fixed) all in competition
 - v500 (TV136) in qualifying
+- Tournament results:
+  - v496 (TV134) 4a vs v11 4a = 13.54 (good, same as TV133 — 4a unchanged)
+  - v496 (TV134) 2a vs v11 6a = 7.07 (v11's 6a is weak partner)
+  - v497 (TV135-broken) 4a vs v11 4a = 1.20 (confirmed broken!)
+  - v498 (TV133) 4a vs v11 4a = 13.54 (baseline confirmed)
+  - v498 (TV133) 2a vs v13 6a = 11.34 (solid)
+  - v499 (TV135-fixed) qualifying: 10.93, 11.17 — passed!
+- v496/v497/v498 now playing vs gtlm-reactive-v3 and v17, v29 (results pending)
+- v499 entering competition, v500 (TV136) not yet scheduled
+- Score highly partner-dependent: v54 ranges from 0.93 (bad partner) to 14.65 (good partner)
