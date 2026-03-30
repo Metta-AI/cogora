@@ -1,38 +1,50 @@
 status: in-progress
 started: 2026-03-30-040613
 
-## Leaderboard (converging, all ~13.6-13.8)
-- v519 (TV160) = 13.60 (42 matches)
-- v522 (TV162) = 13.77 (35 matches)
-- v524 (TV164) = 13.77 (43 matches)
-- v525 (TV165) = 13.75 (43 matches)
+## Leaderboard (converging)
+- v525 (TV165) = 13.84 (68 matches) — TV160+TV162 combo
+- v524 (TV164) = 13.79 (68 matches) — faster stag 150/200
+- v519 (TV160) = 13.52 (27 matches) — faster stag 200/300
+- v522 (TV162) = 13.49 (27 matches) — lower 6a thresholds
+- v527 (TV167) = 13.15 (11 matches) — 25% stag + no idle scramble
+- v526 (TV166) = 11.12 (11 matches) — no idle scramble ← LESSON
+- v529 (TV170) = 9.29 (2 matches) — boundary scramble, very early
+- v528 (TV169) = 2.24 (2 matches) — zero scramble TERRIBLE
 
-## Cooperative Scoring Confirmed
-Both teams get identical scores in every match. Idle scramble is self-destructive.
+## CRITICAL LESSON: Idle scramble is ESSENTIAL
+v526 (no idle scramble) = 11.12 vs v519 (TV160) = 13.52.
+Despite cooperative scoring, idle scramble creates junction recycling
+that boosts scores. Theory: scramble creates turnover → more alignment
+events → higher cumulative score. NEVER remove idle scramble.
 
-## Self-play Results (2000 steps, 3-4 runs each)
+## Self-play Results (2000 steps)
 
 | Policy | Avg | Scores | Key Change |
 |--------|-----|--------|------------|
-| TV170 (boundary scramble) | 2.32 | 2.36, 2.36, 2.24 | Network-aware scramble targeting |
-| TV172 (hub explore) | 2.33 | 2.41, 2.31, 2.27 | Hub-radius exploration in stagnation |
-| TV166 (no idle scramble) | 2.13 | 2.14, 2.13, 2.13, 2.13 | Remove idle scramble |
-| TV160 (baseline) | 1.76 | 2.48, 1.16, 1.28, 2.12 | HIGH variance, wipeouts |
-| TV167 (25% stag) | 1.95 | single run | Reduced stag scramble |
-| TV171 (faster 4a) | 1.52 | 2.21, 2.35, 0.00 | Economy collapse on some maps |
-| TV169 (zero scramble) | 1.06 | 1.66, 0.00, 1.51 | Too little scramble |
+| TV172 (hub explore + no idle) | 2.33 | 2.41, 2.31, 2.27 | Best self-play but BAD idea |
+| TV170 (boundary + no idle) | 2.32 | 2.36, 2.36, 2.24 | Best self-play but BAD idea |
+| TV166 (no idle scramble) | 2.13 | 2.14, 2.13, 2.13, 2.13 | Consistent but 11.12 tournament |
+| TV174 (boundary + keep idle) | 1.85 | 2.11, 1.09, 2.16, 2.04 | Correct approach |
+| TV173 (zone explore) | 1.90 | 1.03, 2.51, 2.15 | Too variable |
+| TV160 (baseline) | 1.76 | 2.48, 1.16, 1.28, 2.12 | Reference |
+| TV167 (25% stag) | 1.95 | single run | 13.15 tournament |
+| TV171 (faster 4a) | 1.52 | 2.21, 2.35, 0.00 | Economy collapse |
+| TV169 (zero scramble) | 1.06 | 1.66, 0.00, 1.51 | 2.24 tournament |
 
-## Key Insights
-1. **No idle scramble + boundary-aware stag scramble = best combo** (TV170/TV172)
-2. **Network-boundary scramble targeting** gives 2.32 vs 2.13 without it
-3. **Hub-radius exploration** slightly better than random in stagnation
-4. **Zero scramble fails** — geometric constraint requires some scramble
-5. **Faster 4a ramp** causes economy collapse on some maps
-6. Removing idle scramble eliminates wipeout games (TV160's 1.16/1.28)
+## Self-play vs Tournament Correlation: VERY LOW
+TV166 best self-play (2.13) = WORST tournament (11.12)!
+Self-play removes idle scramble → less turnover → higher consistency
+But tournament needs idle scramble for junction recycling.
 
-## Uploads
-- v526 = TV166 (no idle scramble)
-- v527 = TV167 (25% stag + no idle)
-- v528 = TV169 (zero scramble — control experiment)
-- v529 = TV170 (boundary scramble)
-- v530 = TV172 (hub-radius explore + boundary scramble)
+## Score Breakdown by Agent Count (v524/v525)
+- 2a: 12.9-13.5 (weakest)
+- 4a: 12.9-14.0
+- 6a: 14.6-14.9 (strongest)
+
+## Uploads This Session
+- v526 = TV166 (no idle scramble) → 11.12 BAD
+- v527 = TV167 (25% stag + no idle) → 13.15
+- v528 = TV169 (zero scramble) → 2.24 TERRIBLE
+- v529 = TV170 (boundary scramble) → 9.29 (early, no idle=bad)
+- v530 = TV172 (hub explore) → qualifying
+- v531 = TV174 (boundary scramble + keep idle) → qualifying
