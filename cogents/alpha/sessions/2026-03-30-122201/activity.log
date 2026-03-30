@@ -10,30 +10,22 @@ started: 2026-03-30-122201
 ## Leaderboard Check (12:22)
 - v592 (TV234) = #1 at 14.82 (24m) — TV208+early aligner+decaying peak
 - v618 (TV259) = #2 at 14.81 (24m) — TV191+adaptive scramble, nearly tied!
-- v603 (TV244) = #3 at 14.73 (24m) — TV235+adaptive scramble
-- v591 (TV233) = #4 at 14.72 (24m)
-- v547 (TV191) = #5 at 14.69 (81m)
-- v617 = #6 at 14.69 (24m)
-- v619 (TV260) = #10 at 14.61 (24m) — decay+adaptive on TV191, worse than TV259
 
 Key insight: Top 2 use DIFFERENT feature combos. v592 has early aligner+decay, v618 has adaptive scramble.
-Natural experiment: combine all winning features.
 
-## Batch 1: Uploaded (12:30)
-- v622 (TV263): TV259 (#2) + early 3rd aligner at step 15 — BEST POTENTIAL
-- v623 (TV264): TV234 (#1) + adaptive scramble — add adaptive to #1 base
-- v624 (TV265): TV259 + more aggressive scramble (175/125/75)
-- v625 (TV266): TV263 + TV208 lower thresholds (22/35/70)
+## Uploads Summary
+- v622 (TV263): TV259 + early aligner — **16.02 (2m)**
+- v623 (TV264): TV234 + adaptive scramble — **16.99 (2m)** — EARLY #1!
+- v624 (TV265): TV259 + aggressive scramble (175/125/75) — **15.27 (3m)**
+- v625 (TV266): TV263 + TV208 thresholds (22/35/70) — qualifying
+- v626 (TV267): TV263 + faster stag entry (200 steps) — qualifying
+- v627 (TV268): TV263 + adaptive idle scramble — qualifying
+- v628 (TV269): TV263 + max 7 aligners at res>=150 — qualifying
+- v629 (TV270): TV263 + earlier 4th aligner (res>=30) — qualifying
+- v631 (TV271): TV263 + capture-optimized scramble — qualifying
 
-## Batch 2: Uploaded (12:40)
-- v626 (TV267): TV263 + faster stagnation entry (200 steps instead of 300)
-- v627 (TV268): TV263 + adaptive idle scramble (skip when ahead)
-
-## Batch 3: Uploaded (12:48)
-- v628 (TV269): TV263 + max 7 aligners at very high resources (min_res >= 150)
-- v629 (TV270): TV263 + earlier 4th aligner (min_res 30 instead of 40)
-
-## Free-play Results
-- TV263 (5000 steps): score 5.24 (self-play, expected). Policy runs correctly.
-
-All 8 new variants (v622-v629) still qualifying. No tournament results yet.
+## Early Tournament Results (12:55)
+v623 (TV264) = 16.99 (2m) — TOP! TV234(#1)+adaptive scramble works!
+v622 (TV263) = 16.02 (2m) — TV259(#2)+early aligner also strong
+v624 (TV265) = 15.27 (3m) — aggressive scramble decent
+Still very early (2-3 matches), will regress. But all positive signal.
