@@ -46,3 +46,18 @@ status: in-progress
   - TV252 (v611): TV240 + even earlier 3rd aligner (step 10 vs 15)
   - TV253 (v612): TV235 + 700-step decay (testing slower decay)
   All tested locally, uploaded to tournament.
+[11:38] LEADERBOARD UPDATE:
+  #2: v598 (TV239) = 14.83 (21m) — TV191+decay is RISING! Best new variant.
+  #3: v592 (TV234) = 14.82 (24m) — still solid
+  #21: v601 (TV242) = 14.30 (19m) — 3-tier+decay recovered (was 12.95)
+  #26: v603 (TV244) = 14.25 (10m) — adaptive scramble decent
+  #37: v599 (TV240) = 14.14 (16m) — TV235+decay DROPPED from 14.77
+  #45: v600 (TV241) = 13.86 (18m) — faster decay still worse
+  Key: TV191+decay (v598) > TV235+decay (v599). TV191 is the better base.
+  TV250-253 are on wrong base (TV240). Need TV239-based variants.
+[11:41] Created TV254-TV257 (all based on TV239, the new #2).
+  - TV254 (v613): TV239 + early 3rd aligner at step 15
+  - TV255 (v614): TV239 + faster 4a (min_res 12)
+  - TV256 (v615): TV191 + 700-step decay (slower than TV239's 500)
+  - TV257 (v616): TV239 + early aligner + faster 4a combined
+  All tested locally, uploaded to tournament.
