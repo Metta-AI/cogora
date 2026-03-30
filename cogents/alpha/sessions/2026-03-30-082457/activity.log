@@ -18,3 +18,11 @@ started: 2026-03-30T08:24:57Z
   - TV205: all 4a improvements combined
 - 08:36 All 4 variants pass 100-step smoke test
 - 08:37 Uploading TV202 to tournament (slow — bundling code)
+- 08:46 Fixed upload — exclude .venv-cogames from bundle. 671KB vs 7GB!
+- 08:47 All 4 variants uploaded: v558 (TV202), v559 (TV203), v560 (TV204), v561 (TV205)
+- 08:48 v547 vs gtlm analysis: 4v4=6.99, 2a(us)=4.47, 6a(us)=11.37
+  - gtlm scores are cooperative — both teams get same low score
+  - gtlm's aggro scrambling hurts both sides equally
+- 08:50 Created TV206 (3-tier stagnation) and TV207 (6a thresholds 22/35/70)
+- 08:52 Uploaded: v562 (TV206), v563 (TV207)
+- All 6 new variants now qualifying
