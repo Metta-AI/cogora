@@ -24,4 +24,16 @@ status: in-progress
 - [22:33] Local test results (self-play 8v8, 2500 steps):
   TV452 (baseline, 0 scramblers): 2.68/cog, peak=19 friendly @600, crashed to 3 @2500
   TV455 (floor 3 + 1 scrambler): 2.75/cog, peak=18 @1000, still 11 @2500 (MUCH better late-game)
-  TV457/458/459: still running
+  TV457 (floor 3 + 2 scramblers): 0.00/cog — too aggressive, 0 junctions all game
+  TV458 (floor 4 + 1 scrambler): 1.77/cog — floor 4 too high
+  TV459 (crisis + floor 3 + scramblers): 1.43/cog
+  TV460 (floor 3 + always 1 scrambler): 0.00/cog — self-play scramblers cancel
+  TV461 (TV350 + floor 3 + scramblers): 1.62/cog
+  NOTE: Self-play scores unreliable (same policy cancels itself). Tournament is what matters.
+- [22:38] KEY INSIGHT: TV350 (v716=15.05) ALSO has 0 scramblers via _tv334_pressure_budgets.
+  The zero-scrambler "bug" was present in ALL TV334+ variants including v716!
+  So the difference between v716 (15.05) and v840 (10.75) is NOT scramblers — it's the floor
+  constraint hurting resource recovery during crises.
+- [22:40] Strategy shift: Don't break TV350 for 5+ agents. Only improve small-team behavior.
+  Created TV462 (TV350 for 5+, improved 2-4 agents) and TV463 (TV350 + delayed scrambler @500).
+- [22:42] Uploads: v842=TV455, v844=TV460, v845=TV461, v846=TV350(re-upload), v847=TV462, v848=TV463

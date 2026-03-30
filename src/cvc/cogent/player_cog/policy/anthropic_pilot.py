@@ -48976,3 +48976,244 @@ class AlphaTournamentV459Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV460: Floor 3 + always 1 scrambler (no late bump to 2) ─────────────────
+# TV455 had late decline partly because 2 scramblers at step 3000 diverts
+# resources from alignment. TV460 keeps exactly 1 scrambler throughout.
+
+class AlphaTournamentV460AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV460: Floor 3 + exactly 1 scrambler from step 100 (never 2)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _floor3_with_scramblers(self, state, objective=objective, late_scramblers=1)
+
+
+class AlphaTournamentV460Policy(MettagridSemanticPolicy):
+    """TV460: Floor 3 + exactly 1 scrambler (no late bump)."""
+    short_names = ["alpha-tournament-v460"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV460AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV461: TV350 base (v716 champion) + scramblers fix ──────────────────────
+# v716 used TV350 which had scrambler logic via the base _pressure_budgets.
+# TV461 adds floor 3 to TV350 without losing scramblers — combine v716's
+# known-good base with the aligner floor fix.
+
+class AlphaTournamentV461AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV461: TV350 base + floor 3 + scramblers (v716 base + floor fix)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        """Use TV350 base logic but enforce floor of 3 for 5+ agents."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 1-2 agent teams: same as TV350
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 3-4 agent teams: same as TV350
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV350 budget + floor enforcement + scramblers
+        floor = min(3, team_size - 1)
+
+        # Scramblers: same as base semantic_cog
+        scrambler_budget = 0
+        if step >= 3000:
+            scrambler_budget = 2
+        elif step >= 100:
+            scrambler_budget = 1
+
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+
+        # TV350 budget calculation
+        if min_res < 10 and not can_hearts:
+            aligner_budget = max(floor, 1)
+        elif min_res < 22:
+            aligner_budget = max(floor, 2)
+        elif min_res < 35:
+            aligner_budget = max(floor, 3)
+        elif min_res < 70:
+            aligner_budget = min(4, team_size - 1)
+        elif min_res < 120:
+            aligner_budget = min(team_size - 1, 6)
+        else:
+            aligner_budget = min(team_size - 1, 7)
+
+        # Don't allow scramblers to eat into the floor
+        if aligner_budget <= floor and min_res < 10:
+            scrambler_budget = 0
+
+        return aligner_budget, scrambler_budget
+
+
+class AlphaTournamentV461Policy(MettagridSemanticPolicy):
+    """TV461: TV350 + floor 3 + scramblers (v716 base enhanced)."""
+    short_names = ["alpha-tournament-v461"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV461AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV462: TV350 unchanged for 5+ but improved 2-4 agent teams ──────────────
+# v716 (TV350) = 15.05 overall, but loses badly in 2v6 (0.18-4.44 range).
+# TV462: Keep TV350 logic for 5+ agents. For ≤4 agents: more aggressive
+# aligner budget + add a scrambler to disrupt enemy junctions.
+
+class AlphaTournamentV462AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV462: TV350 exact for 5+ agents, improved 2-4 agent behavior."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent team: always 2 aligners when possible, and scramble when ahead
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            # Both agents align — scramblers not worth it with only 2
+            return 2, 0
+
+        # 3-4 agent teams: more aggressive ramp, add scrambler
+        if team_size <= 4:
+            if step < 30:
+                return 1, 0
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            # Faster ramp: 2 aligners when can_hearts (not waiting for min_res >= 15)
+            if can_hearts or min_res >= 10:
+                aligner_budget = 2
+                if min_res >= 50 and step >= 200:
+                    aligner_budget = min(3, team_size - 1)
+                # Add scrambler when we can afford it
+                scrambler_budget = 1 if step >= 200 and min_res >= 20 and team_size >= 4 else 0
+                return aligner_budget, scrambler_budget
+            return 1, 0
+
+        # 5+ agents: EXACT TV350 logic (proven at 15.05)
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV462Policy(MettagridSemanticPolicy):
+    """TV462: TV350 for 5+, improved small-team behavior."""
+    short_names = ["alpha-tournament-v462"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV462AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV463: TV350 + scrambler for 5+ at step 500 only ────────────────────────
+# TV350 scores well but declines late-game due to enemy junction growth.
+# Adding just 1 scrambler starting at step 500 (when we've peaked and need defense)
+# may help defend without hurting early expansion.
+
+class AlphaTournamentV463AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV463: TV350 + delayed scrambler (step 500+) for 5+ agents."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # Small teams: same as TV350
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV350 budgets + 1 scrambler at step 500+
+        aligner_budget, _ = _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+        scrambler_budget = 1 if step >= 500 and min_res >= 15 else 0
+        return aligner_budget, scrambler_budget
+
+
+class AlphaTournamentV463Policy(MettagridSemanticPolicy):
+    """TV463: TV350 + delayed scrambler (step 500+)."""
+    short_names = ["alpha-tournament-v463"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV463AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
