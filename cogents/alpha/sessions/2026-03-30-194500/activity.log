@@ -57,3 +57,21 @@ v798=TV412, v799=TV413, v800=TV414, v801=TV415, v802=TV416
 v803=TV417, v804=TV418, v805=TV419, v806=TV420, v807=TV421
 v808=TV422, v809=TV423, v810=TV424, v811=TV425, v812=TV426
 v813=TV427, v814=TV428, v815=TV429, v816=TV430, v817=TV431
+
+## CRITICAL: Qualifying vs Competition mismatch
+Competition results are VERY different from qualifying:
+- v799 (TV413 two-hop): qualifying 16.26/13.68 → competition 4.21 (3 matches)
+- v802 (TV416 adaptive hotspot): qualifying 15.96/10.21 → competition 6.57 (1 match)
+- v809 (TV423 stronger adaptive): competition 4.83 (1 match)
+- v810 (TV424 adaptive+no scramble): competition 2.54 (1 match)
+- v806 (TV420 faster 3a): competition 14.28 (2 matches) — ONLY competitive one so far
+- v811 (TV425 adaptive+collapse): just entered competition, TBD
+
+The heuristic ceiling around 15.05 appears real in competition.
+Qualifying scores are completely unreliable predictors.
+
+## TV432-TV435 uploaded (v818-v821)
+- TV432 (v818): two-hop + adaptive hotspot combo
+- TV433 (v819): two-hop + wider-early adaptive
+- TV434 (v820): two-hop with stronger bonus (7.0)
+- TV435 (v821): two-hop with weaker bonus (3.0)
