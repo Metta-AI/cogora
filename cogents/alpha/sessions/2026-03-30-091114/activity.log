@@ -121,3 +121,13 @@ started: 2026-03-30T09:11:14Z
 - 10:22 v578 (TV222, 6a 21/33/65 on TV208) appeared at #2 at 14.98 (5m)
   Created TV227: TV212 4a combo + TV222's 6a thresholds (21/33/65)
   v583 (TV227) uploaded. Best-of-both combo.
+- 10:30 CRITICAL REVERSAL (18 matches, approaching stable):
+  v564 (TV208) = #1 at 14.96 (18m!) — NO 4a changes! Just 6a thresholds + stagnation
+  v566 (TV210) = #2 at 14.89 (16m)
+  v567 (TV211) = #3 at 14.77 (18m)
+  v578 (TV222, 21/33/65 6a) = #4 at 14.77 (6m)
+  v568 (TV212) DROPPED to 14.55 (18m) — from 15.12! Full 4a combo is BAD!
+  CONCLUSION: 4a aggressive changes hurt vs diverse opponents.
+  The winning formula is SIMPLE: TV208 = 6a thresholds 22/35/70 + 3-tier stagnation.
+  No 4a changes needed. Don't over-optimize 4a — it hurts when facing strong opponents.
+  v578 (intermediate 6a) competitive — need more data.
