@@ -34,3 +34,9 @@ started: 2026-03-30T09:11:14Z
   Stagnation mode active from step 800+, but scramble cycling is zero-sum.
 - 09:30 Created TV215 (reduce aligners in stagnation) and TV216 (heart hoard before scramble)
 - 09:32 Both pass smoke test, uploaded: v571 (TV215), v572 (TV216)
+- 09:33 Tournament format: 2+6, 6+2, 4+4 (8 agents total). Score is avg across all.
+  External opponents: slanky (5.24), Paz-Bot (5.19), gtlm-reactive (2.95) — all weak vs us.
+  Competition is mainly between our own variants!
+- 09:35 v566-v572 still qualifying (self-play matches). Tournament is slow.
+- 09:37 Created TV217 (phase-based dynamic budgets: reduce aligners in phase 3)
+  v573 (TV217) uploaded. Hypothesis: 3 aligners + 3 miners in late game > 5 aligners + 1 miner
