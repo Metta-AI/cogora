@@ -25,3 +25,13 @@ started: 2026-03-30T16:18:00Z
   - TV353 (kitchen sink 4a changes): 2.92 — WORSE. Aggressive 4a hurts.
   - Key insight: faster stagnation detection is the winning change
   - 4a budget tweaks (min_res 10, 3a@60, step200) are harmful
+- [16:48] Created TV354-TV360 (stagnation tuning around TV346):
+  - TV354: Even faster stag (peak=3, steps=200, min=300)
+  - TV355: TV346 stag + faster peak decay (300 vs 500)
+  - TV356: TV346 stag + hotspot=-12
+  - TV357: TV346 stag + wider scramble windows (200/150/100)
+  - TV358: TV346 stag + 7a@100 (faster 7th aligner)
+  - TV359: TV346 stag + peak decay 400 + hotspot=-10
+  - TV360: TV346 stag but keep peak=5, steps=200 (faster entry)
+- [16:50] Uploaded: v717(TV354), v719(TV356), v720(TV357), v721(TV358),
+  v722(TV359), v723(TV360), v724(TV355). All in qualifying pool.
