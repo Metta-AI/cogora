@@ -59,3 +59,8 @@ status: in-progress
   - v851 (TV465): 2-agent fix
   - v853 (TV466): aggressive stagnation scramble
   - v854 (TV466): same as v853
+- [23:10] First competition results (v850-v854):
+  v851 (TV465, 2-agent fix): 6v2 vs lstm=7.87, 2v6 vs mammet=2.89, 4v4 vs Paz=11.32
+  v852: 6v2 vs Paz=12.94, ?v? vs lstm=0.80
+  v853 (TV466, stag scramble): 2v6 vs coglet=3.39
+  v851 is best new result so far. 2v6 improved (2.89 vs old 0.18).
