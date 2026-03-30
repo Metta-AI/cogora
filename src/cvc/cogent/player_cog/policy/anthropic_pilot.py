@@ -40533,3 +40533,154 @@ class AlphaTournamentV306Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV307: TV277 (#1) + late-game all-aligner mode ─────────────────────────────
+
+class AlphaTournamentV307AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV307: TV277 + late-game all-aligner mode.
+
+    After step 2000 with min_res >= 50, put ALL agents on alignment/defense.
+    No miners needed — resources should be sufficient from earlier mining.
+    This maximizes junction control during the critical late game.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        # Late game: all aligners if economy is healthy
+        if step >= 2000 and min_res >= 50:
+            return team_size, 0
+
+        # Fall back to TV277 logic for early/mid game
+        return super()._pressure_budgets(state, objective=objective)
+
+
+class AlphaTournamentV307Policy(MettagridSemanticPolicy):
+    """TournamentV307: TV277 + late-game all-aligner mode."""
+    short_names = ["alpha-tournament-v307"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV307AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV308: TV277 (#1) + negative hotspot weight (re-align bonus) ───────────────
+
+class AlphaTournamentV308AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV308: TV277 + negative hotspot weight.
+
+    Flip hotspot_weight to -8.0 so recently scrambled junctions become
+    HIGHER priority for re-alignment. This is the re-align boost strategy
+    applied to the TV277 base (which is our best).
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -8.0
+
+
+class AlphaTournamentV308Policy(MettagridSemanticPolicy):
+    """TournamentV308: TV277 + negative hotspot (re-align bonus)."""
+    short_names = ["alpha-tournament-v308"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV308AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV309: TV302 (2-level) + TV307 (late-game all-aligner) + TV308 (re-align) ──
+
+class AlphaTournamentV309AgentPolicy(AlphaTournamentV307AgentPolicy, AlphaTournamentV302AgentPolicy):
+    """TournamentV309: kitchen sink of best ideas.
+
+    2-level lookahead + late-game all-aligner + re-align bonus.
+    MRO: V307._pressure_budgets + V302._nearest_alignable.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -8.0
+
+
+class AlphaTournamentV309Policy(MettagridSemanticPolicy):
+    """TournamentV309: 2-level + late-all-aligner + re-align bonus."""
+    short_names = ["alpha-tournament-v309"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV309AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV310: TV277 (#1) + higher expansion weight (15 instead of 10) ──────────────
+
+class AlphaTournamentV310AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV310: TV277 + higher expansion weight.
+
+    Default expansion_weight=10, cap=60. Try weight=15, cap=75.
+    Theory: valuing expansion more aggressively leads to faster network growth.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._expansion_weight = 15.0
+        self._expansion_cap = 75.0
+
+
+class AlphaTournamentV310Policy(MettagridSemanticPolicy):
+    """TournamentV310: TV277 + higher expansion weight (15/75)."""
+    short_names = ["alpha-tournament-v310"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV310AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV311: TV277 (#1) + lower network weight (0.3 instead of 0.5) ──────────────
+
+class AlphaTournamentV311AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV311: TV277 + lower network weight.
+
+    Default network_weight=0.5. Try 0.3 — less penalty for junctions
+    further from our network. Encourages more aggressive expansion.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.3
+
+
+class AlphaTournamentV311Policy(MettagridSemanticPolicy):
+    """TournamentV311: TV277 + lower network weight (0.3)."""
+    short_names = ["alpha-tournament-v311"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV311AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
