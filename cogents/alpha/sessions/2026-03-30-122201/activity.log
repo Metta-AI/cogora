@@ -19,7 +19,7 @@ started: 2026-03-30-122201
 Key insight: Top 2 use DIFFERENT feature combos. v592 has early aligner+decay, v618 has adaptive scramble.
 Natural experiment: combine all winning features.
 
-## New Variants Created & Uploaded (12:30)
+## Batch 1: Uploaded (12:30)
 - v622 (TV263): TV259 (#2) + early 3rd aligner at step 15 — BEST POTENTIAL
   Combines: TV191 base + adaptive scramble + early aligner
 - v623 (TV264): TV234 (#1) + adaptive scramble — add adaptive to #1 base
@@ -27,4 +27,10 @@ Natural experiment: combine all winning features.
 - v624 (TV265): TV259 + more aggressive scramble (175/125/75)
 - v625 (TV266): TV263 + TV208 lower thresholds (22/35/70)
 
-Free-play TV263 running in background (5000 steps).
+## Batch 2: Uploaded (12:40)
+- v626 (TV267): TV263 + faster stagnation entry (200 steps instead of 300)
+  Hypothesis: faster stag entry means adaptive scramble kicks in sooner
+- v627 (TV268): TV263 + adaptive idle scramble (only scramble when behind/even outside stag)
+  Hypothesis: saving hearts when ahead preserves alignment lead
+
+Free-play TV263 still running (5000 steps).
