@@ -1,13 +1,13 @@
 status: in-progress
 started: 2026-03-30-031321
 
-## Leaderboard (24 matches for v514)
-1. v506 (TV142) = 14.30 (78 matches) — incumbent #1
-2. v514 (TV154) = 13.76 (24 matches) — our best new upload
-4. v509 (TV145) = 13.57 (78 matches, converged)
-5. v513 (TV153) = 13.56 (25 matches)
-6. v512 (TV152) = 13.56 (51 matches)
-8. v511 (TV151) = 13.54 (50 matches)
+## LEADERBOARD — NEW #1!
+1. **v519 (TV160) = 14.46 (30 matches) ← NEW #1!!!**
+2. **v517 (TV156 combo) = 14.43 (33 matches)**
+3. v506 (TV142) = 14.30 (78 matches, converged)
+4. **v522 (TV162) = 14.05 (32 matches)**
+5. **v521 (TV161) = 13.75 (31 matches)**
+6. v515 = 13.65, v518 = 13.51, v523 = 8.82 (adaptive scramble TERRIBLE)
 
 ## Still Qualifying
 - v515 (TV155) = exact TV142 + TV151 6a only
@@ -43,26 +43,27 @@ started: 2026-03-30-031321
 - 0.00 wipeout games are random map effects, not policy bugs
 
 ## Key Learnings
-1. 50% stagnation scramble (TV142) is the single most important feature
-2. Aggressive 4a (step 50, no economy gate) is a real improvement
-3. Balanced 6a (4 aligners from step 30) is a real improvement
-4. Self-play predictions have ~50% tournament correlation
-5. Tournament scores normalize significantly after 50+ matches
-6. Early leaderboard positions (< 20 matches) are very volatile
-7. TV142's conservative 6a economy ramp is CRITICAL to its #1 ranking
-   - TV154 (aggressive 6a + 50% stag) = #2 at 13.76, 0.54 behind TV142
-   - Aggressive 6a depletes resources faster → aligners stall on hearts
-8. **FORCED exploration in stagnation is essential** (TV163 insight)
-   - Adaptive scramble (scramble when targets visible) → nearly 100% scramble
-   - World model remembers enemy junctions even far away
+1. **FASTER STAGNATION ENTRY BEATS TV142!** (TV160/v519 = 14.46 vs TV142/v506 = 14.30)
+   - TV160: 200 steps no growth + step>300 (vs TV142's 300 steps + step>500)
+   - Earlier detection of network plateau → earlier scramble response → +0.16 points
+2. 50% stagnation scramble remains essential (confirmed by TV163/v523 = 8.82)
+3. Conservative 6a economy ramp still matters (v522/TV162 = 14.05 vs v506/TV142 = 14.30)
+4. **FORCED exploration in stagnation is essential** (TV163 = 8.82)
+   - Adaptive scramble → 100% scramble (world model remembers distant junctions)
    - step%200<100 FORCES exploration even when scramble targets known
-   - This prevents agents from burning all hearts on scrambling
-9. Carbon-weighted mining hurts — silicon bottleneck emerges when carbon over-prioritized
-   - Existing resource_priority (sort by lowest inventory) is already adaptive and optimal
-10. Self-play variance is HIGH — need 5+ runs to get reliable signal
+5. Carbon-weighted mining hurts (v521/TV161 = 13.75) — adaptive priority already optimal
+6. Self-play predictions have ~50% tournament correlation
+   - TV160 scored 1.94 in self-play (same as TV142) but beats it in tournament
+   - TV163 scored 1.61 in self-play AND scored 8.82 in tournament (correlated)
+7. Self-play variance is HIGH — need 5+ runs for signal
+8. v519/v517 at 30-33 matches may still converge — need to monitor
 
 ## Actions This Session
 - Reviewed learnings, analyzed leaderboard data
 - Fixed TV156 naming collision (renamed carbon mining to TV161)
-- Created TV159-TV162 new policy variants
-- Uploaded v517-v522 to tournament
+- Created TV159-TV165 policy variants
+- Uploaded v517-v525 to tournament
+- **BREAKTHROUGH**: TV160 (faster stag entry) = #1 at 14.46!
+- Follow-up uploads:
+  - v524 = TV164 (even faster stag: 150 steps, step>200)
+  - v525 = TV165 (TV160 stag + TV162 6a thresholds combo)
