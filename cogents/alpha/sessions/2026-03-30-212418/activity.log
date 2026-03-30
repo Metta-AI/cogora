@@ -4,3 +4,12 @@ status: in-progress
 - Session started. Previous session (2026-03-30-211500) was interrupted.
 - Context: v716=15.05 is #1. Last session created TV440-TV446 (v826-v832) with aligner floor + scramble fixes.
 - Need to check v826-v832 tournament results and iterate.
+- Analyzed v831/v832 results: both worse than v716 (6.07/8.21 avg vs 15.05)
+- Root cause: TV436 base is worse than TV350 base
+- Created TV447 (crisis recovery), TV448 (floor 2), TV449 (crisis+floor), TV450 (adaptive aggression)
+- Local: TV350=1.37, TV447=2.19, TV448=2.38, TV449=1.28, TV450=2.08
+- Uploaded v833=TV447, v834=TV448, v835=TV449, v836=TV450
+- v834 in competition: 8.36 vs mammet (6v2)
+- Concurrent session 212420 also working — uploaded v837=TV450(floor3), v838=TV451, v839=TV448
+- v835 (TV449) in competition with 16+ matches
+- Waiting for competition results to determine which approach works best
