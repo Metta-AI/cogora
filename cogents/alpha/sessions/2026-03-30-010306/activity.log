@@ -77,3 +77,9 @@ status: in-progress
 - Created TV143: data-driven optimal — TV136 2a + TV82 4a + TV135 6a
   - Expected: 14.59 + 12.21 + 16.00 = avg ~14.27 (vs v54)
 - Uploaded v507 (TV143) — in qualifying
+- Analyzed actual 4a match logs (v499 vs v54): carbon bottleneck keeps min_res < 30
+  → only 1 aligner until step ~800! Peak at 14 junctions by step 500 with 1 aligner.
+- Created TV144: TV143 + lower 4a 2-aligner threshold (min_res 15 vs 30)
+  - Should get 2 aligners by step ~400 instead of ~800
+- Uploaded v505 (TV141), v506 (TV142), v507 (TV143), v508 (TV144)
+- v55 now running in competition against older versions
