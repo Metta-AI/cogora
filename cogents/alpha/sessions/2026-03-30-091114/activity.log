@@ -82,3 +82,16 @@ started: 2026-03-30T09:11:14Z
   v578 (TV222): TV208 + intermediate 6a thresholds (21/33/65)
   v579 (TV223): TV208 + faster 6a initial ramp (step<20)
   All pass smoke test, uploaded.
+- 10:05 MAJOR LEADERBOARD UPDATE (scores converged with diverse opponents):
+  v568 (TV212, full 4a combo) = #1 at 15.78 (10m) — step<30 + min_res 12 + 3rd aligner 60/200
+  v567 (TV211, earlier 3rd) = #2 at 15.68 (9m)
+  v565 (TV209, full combo) = #3 at 15.52 (11m)
+  v564 (TV208) dropped from 16.35→15.31 (9m) — inflated by easy opponents
+  v566 (TV210) dropped from 16.45→15.42 (8m) — same
+  ALL stagnation modifications FAILED:
+    v575 (TV219, fast stag combo) = 14.35 (10m)
+    v572 (TV216, heart hoard) = 13.99 (9m)
+    v571 (TV215, reduced aligners) = 13.50 (9m)
+    v573 (TV217, phase budgets) = 12.86 (5m)
+  CONCLUSION: Don't touch stagnation! Focus on 4a early-game + 6a thresholds.
+  v568 (TV212) is the proven #1 = TV209 + step<30 + earlier 3rd aligner (60/200).
