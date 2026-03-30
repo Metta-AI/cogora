@@ -37,3 +37,14 @@ started: 2026-03-30T15:22:21Z
   - #6: v683 = 14.79 (TV321 triple combo, 18 matches)
   - Top 310 positions are ALL alpha.0. Best opponent: slanky at 6.32 (#311).
   - Heuristic ceiling confirmed at ~14.94. Spread of top variants very tight.
+- [15:55] Key insight: v632 (#1, TV272) and v670 (#2, TV308) have different innovations.
+  - TV272 = best economy (7a at 150) + adaptive scramble
+  - TV308 = re-align bonus (hotspot=-8.0) on TV277 base
+  - These haven't been combined! TV326 = TV272 + re-align bonus.
+- [15:58] Created TV326-TV330:
+  - TV326: TV272 (#1) + re-align bonus — MOST PROMISING
+  - TV327: TV272 + wider scramble windows (175/125/75)
+  - TV328: TV272 + re-align + wider scramble
+  - TV329: TV272 + mine during stagnation (not explore)
+  - TV330: TV272 + re-align + mine-stag
+- [16:00] Uploaded v687(TV326), v688(TV327), v692(TV328), v690(TV329), v691(TV330).
