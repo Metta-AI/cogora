@@ -25413,14 +25413,15 @@ class AlphaTournamentV153Policy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
-# ── TV156: TV142 + carbon-weighted mining ─────────────────────────────────────
+# ── TV161: TV142 + carbon-weighted mining ─────────────────────────────────────
 
-class AlphaTournamentV156AgentPolicy(AlphaTournamentV142AgentPolicy):
-    """TournamentV156: TV142 + carbon-weighted mining priority.
+class AlphaTournamentV161AgentPolicy(AlphaTournamentV142AgentPolicy):
+    """TournamentV161: TV142 + carbon-weighted mining priority.
 
     Aligner costs carbon:3, oxygen:1, germanium:1, silicon:1.
     Carbon depletes 3x faster. Weighting carbon 3x in mining priority
     should keep hub better stocked for sustained alignment.
+    (Was TV156 but renamed to avoid collision with pre-existing TV156 ultimate combo.)
     """
 
     def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
@@ -25480,14 +25481,14 @@ class AlphaTournamentV156AgentPolicy(AlphaTournamentV142AgentPolicy):
         return sticky
 
 
-class AlphaTournamentV156Policy(MettagridSemanticPolicy):
-    """TournamentV156: TV142 + carbon-weighted mining."""
-    short_names = ["alpha-tournament-v156"]
+class AlphaTournamentV161Policy(MettagridSemanticPolicy):
+    """TournamentV161: TV142 + carbon-weighted mining."""
+    short_names = ["alpha-tournament-v161"]
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
-            self._agent_policies[agent_id] = AlphaTournamentV156AgentPolicy(
+            self._agent_policies[agent_id] = AlphaTournamentV161AgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
@@ -25808,7 +25809,7 @@ class AlphaTournamentV157Policy(MettagridSemanticPolicy):
 
 # ── TV158: TV156 + TV157 combined (carbon mining + aggressive 6a) ────────────
 
-class AlphaTournamentV158AgentPolicy(AlphaTournamentV156AgentPolicy):
+class AlphaTournamentV158AgentPolicy(AlphaTournamentV161AgentPolicy):
     """TournamentV158: Carbon-weighted mining + ultra-aggressive 6a.
 
     Combines TV156's carbon-priority mining with TV157's aggressive 6a budget.
@@ -26081,6 +26082,78 @@ class AlphaTournamentV156Policy(MettagridSemanticPolicy):
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTournamentV156AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV162: TV142 + slightly lower 6a thresholds ──────────────────────────────
+
+class AlphaTournamentV162AgentPolicy(AlphaTournamentV142AgentPolicy):
+    """TournamentV162: TV142 with slightly lower 6a resource thresholds.
+
+    TV142's 6a ramp: 10→30→50→100 (1→2→3→4→6 aligners).
+    TV162: 10→25→40→80 — slightly faster expansion, still conservative.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: EXACT TV142
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: EXACT TV142
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 20:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: slightly lower thresholds than TV142
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 25:  # Was 30
+            return 2, 0
+        elif min_res < 40:  # Was 50
+            return 3, 0
+        elif min_res < 80:  # Was 100
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV162Policy(MettagridSemanticPolicy):
+    """TournamentV162: TV142 + slightly lower 6a thresholds."""
+    short_names = ["alpha-tournament-v162"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV162AgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
