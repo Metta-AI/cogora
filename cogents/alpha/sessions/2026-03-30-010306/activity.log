@@ -15,3 +15,15 @@ status: in-progress
 - Both TV137/TV138 pass 100-step validation
 - Uploaded v501 (TV137), v502 (TV138) — both in qualifying
 - Running 5000-step self-play for TV133 (baseline), TV136, TV137, TV138
+- Self-play results (8v0, 5000 steps):
+  - TV133 (baseline): 5.38 per cog
+  - TV136 (ultra-fast 2a): 5.38 per cog (same — 2a changes irrelevant in 8v0)
+  - TV137 (faster 4a): 6.02 per cog (+12% over baseline!)
+  - TV138 (combined): 5.50 per cog (+2%)
+- Key insight from self-play: score peaks at step 500 (14 junctions) then declines
+  as Clips NPC catches up. Early expansion is everything.
+- Created TV139: blitz start — max aligners from step 1 for all team sizes
+  - 4a: 2 aligners from step 1 (was step 100), 3 at min_res 50/step 200
+  - 6a: 3 aligners from step 1, faster ramp
+- Uploaded v503 (TV139) — in qualifying
+- Running TV139 self-play
