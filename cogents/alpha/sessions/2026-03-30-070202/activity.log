@@ -51,3 +51,18 @@ started: 2026-03-30-070202
   v547 (TV191): strong vs alpha (15-17), weak vs gtlm (5-11)
 - NEW OPPONENTS: slanky:v112, Paz-Bot-9005:v1 — tournament getting competitive
 - Created TV200 (v556): best combo — TV192 6a + TV186 stag + TV198 4a
+- COMPETITION RESULTS (vs old alpha versions):
+  v548 (TV192) vs v12: 4v4=15.34, 2a=14.77, 6a=13.51 — 6a WEAK (lower thresholds hurt)
+  v550 (TV194) vs v12: 4v4=16.06, 6a=14.84 — STRONG
+  v551 (TV195) vs v12: 4v4=12.47, 2a=13.14 — adaptive scramble BAD
+  v553 (TV197) vs v13: 4v4=10.82 — ultra-fast 4a BAD (economy collapse)
+  v554 (TV198) vs v13: 4v4=14.69 — always-2-aligners 4a GOOD
+- vs EXTERNAL opponents:
+  v553 vs Paz-Bot: 4v4=11.01, 2a=13.40
+  v554 vs Paz-Bot: 2a=14.50
+  v554 vs slanky: 4v4=11.87, 2a=12.81, 6a=13.10
+- KEY LEARNINGS:
+  TV198 (always 2 aligners 4a) >> TV197 (min_res 10 4a)
+  TV192 6a too aggressive (13.51) — TV162 (25/40/80) still better
+  TV194 strong: 16.06 in 4v4, TV186+faster 4a+TV162 6a
+  TV200 may not benefit from TV192 6a; should maybe use TV162 thresholds instead
