@@ -1,1 +1,14 @@
 status: in-progress
+
+## Actions
+- Session started, read memory and previous learnings
+- Checked tournament: all v798-v825 matches still running/scheduled
+- Ran local free-play comparisons:
+  - TV436 (2a fix) 2-agent 500 steps: 0.13 vs TV350 2-agent: 0.08 (+62%)
+  - TV436 8-agent 2000 steps: 1.74 vs TV350 8-agent: 1.37 (+27%)
+  - TV436 bug fix helps even in 8-agent games
+- Analyzed late-game decline: peak 11 junctions at step ~800, down to 5 by step 2000
+  - Enemy grows from 5→17 in same period
+  - No scramble claim coordination (agents pile on same target)
+  - Wasted time exploring when no neutrals exist
+- Planning TV440-TV442 variants: scramble coordination + proactive scramble
