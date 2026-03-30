@@ -3,21 +3,15 @@
 - [x] **GOAL ACHIEVED**: Score > 10 in tournament — v716=15.05 (#1, 20m)
 - [x] Hotspot weight tuning: -10 optimal (v716=15.05, new #1)
 - [x] No idle scramble: v711=14.96 (#2)
-- [x] Network density: massive local improvement but FAILS in tournament
+- [x] Network density: LOCAL trap — +86% local but -35% in tournament
 - [x] Combining #1+#2 innovations: doesn't stack (v757-762 = ~10)
-- [x] 4a budget changes (3a@60, step200, min_res 10): all harmful
-- [x] Faster stagnation detection: +26% local but only 14.42 in tournament
-- [x] Budget optimization (TV396-TV400): all worse than baseline in tournament
-- [ ] **Monitor v716 (TV350)** — 15.05 with only 20 matches. Previous #1s regressed.
-  Need 30+ matches to confirm. Could settle at 14.8-14.9 like others.
-- [ ] **Try LLM cyborg** — heuristic ceiling at ~15. Need paradigm shift.
-  This is the most likely way to break through the ceiling.
-- [ ] **Study v716 match logs** — understand what makes #1 win specifically
+- [x] 4a budget changes: all variants harmful (v765-v774 = 6-13 range)
+- [x] Budget optimization (TV396-TV400): all worse than baseline
+- [x] Fine-tuning around TV350: TV401-TV410 uploaded (v786-v796)
+- [x] TV350 cyborg created and uploaded (v797)
+- [ ] **Monitor TV350 cyborg (v797)** — first LLM-enhanced variant. Could be paradigm shift.
+- [ ] **Monitor TV401-TV410** — v786-v796 in qualifying pipeline
+- [ ] **Confirm v716 stability** — 15.05 with 20 matches. Need 30+ to confirm.
 - [ ] **IMPORTANT: Local testing is misleading** — always validate in tournament.
-  Local vs Clips AI doesn't predict tournament performance.
+- [ ] **LLM cyborg iteration** — if v797 shows promise, iterate on LLM parameters
 - [ ] **Study opponent strategies** — match logs from slanky, Paz-Bot (low priority)
-- [ ] **Fundamental strategy change** — ideas:
-  - LLM runtime adaptation (AnthropicCyborgPolicy)
-  - Opponent modeling (adjust based on observed enemy behavior)
-  - Asymmetric team strategies (different for 2v6 vs 4v4 vs 6v2)
-  - Map-aware expansion (junction cluster detection)
