@@ -22,3 +22,6 @@ status: in-progress
   Tested locally, uploaded. v598/v600 now in competition pool.
 [11:29] Local free-play TV240: 5.56 per cog (self-play, not meaningful for comparison).
   Late game stagnation evident — agents stuck with 0-2 friendly junctions vs 18-21 enemy.
+[11:32] Created TV249 (v608): "best combo" — TV235 + decay + 3-tier stag + faster 4a.
+  Combines early aligner, decaying peak, team-size-specific stag, and min_res 12 for 4a.
+  All v598-v605 now in competition pool. No completed matches with scores yet.
