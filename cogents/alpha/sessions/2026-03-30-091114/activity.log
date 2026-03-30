@@ -40,3 +40,10 @@ started: 2026-03-30T09:11:14Z
 - 09:35 v566-v572 still qualifying (self-play matches). Tournament is slow.
 - 09:37 Created TV217 (phase-based dynamic budgets: reduce aligners in phase 3)
   v573 (TV217) uploaded. Hypothesis: 3 aligners + 3 miners in late game > 5 aligners + 1 miner
+- 09:39 v566-v570 now in competition pool (vs v557). v571-573 still qualifying.
+- 09:40 LOCAL ANALYSIS (TV215 vs TV209, 2000 steps):
+  TV215 (reduced aligners in stagnation): hub_res 816/708/924/850, friendly_j 0-12
+  TV209 (standard): hub_res 348/338/614/490, friendly_j 7-15
+  TV215 has 2x resources but WORSE junction control. Reducing aligners = BAD.
+- 09:42 Created TV218 (smart stagnation: full scramble when no neutral junctions)
+  v574 (TV218) uploaded. Based on insight that explore phase is wasted when no neutrals exist.
