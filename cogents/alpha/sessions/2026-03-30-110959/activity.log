@@ -25,3 +25,24 @@ status: in-progress
 [11:32] Created TV249 (v608): "best combo" — TV235 + decay + 3-tier stag + faster 4a.
   Combines early aligner, decaying peak, team-size-specific stag, and min_res 12 for 4a.
   All v598-v605 now in competition pool. No completed matches with scores yet.
+[11:33] LEADERBOARD CHECK:
+  #1: v592 (TV234) = 14.82 (24m) — previous champion holds
+  #2: v599 (TV240) = 14.77 (7m) — TV235+decay, EARLY LEAD!
+  #3: v591 (TV233) = 14.72 (24m)
+  #4: v547 (TV191) = 14.69 (81m)
+  #9: v598 (TV239) = 14.60 (8m) — TV191+decay, solid
+  #11: v594 (TV235) = 14.57 (24m) — DROPPED from 14.90 to 14.57!
+  #31: v600 (TV241) = 14.19 (7m) — faster decay (300) worse than 500
+  #106: v601 (TV242) = 12.95 (8m) — 3-tier stag BAD
+  #169: v604 (TV245) = 9.58 (3m) — dedicated scrambler TERRIBLE
+  Key insight: TV235 (#1 at 14.90 with 23m) has dropped to 14.57 with 24m.
+  v592 (TV234) is the real #1. v599 (TV240) is promising at #2 early.
+  3-tier stag and dedicated scrambler are both harmful.
+  TV249 (v608) will likely fail due to 3-tier stag component.
+  Refocusing on TV240 (v599) as the best base going forward.
+[11:36] Created TV250-TV253 (focused on TV240 base, the new #2).
+  - TV250 (v609): TV240 + faster 4a (min_res 12)
+  - TV251 (v610): TV240 + lower 6a thresholds (20/35/70)
+  - TV252 (v611): TV240 + even earlier 3rd aligner (step 10 vs 15)
+  - TV253 (v612): TV235 + 700-step decay (testing slower decay)
+  All tested locally, uploaded to tournament.
