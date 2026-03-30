@@ -54,3 +54,12 @@ status: in-progress
   2. TV134 faster 2a also helps (15.10 vs 12.19)
   3. TV135 faster 6a ramp: mixed (better vs v34, worse vs v31)
   4. v14/v17 are weak opponents → inflated scores
+- MORE tournament results (vs v49 — stronger opponent):
+  - v501 (TV137): 2a=14.14, 4a=11.90, 6a=14.61 → avg 13.55
+  - v502 (TV138): 2a=14.14, 4a=11.90, 6a=16.00 → avg 14.01 ← **BEST**
+  - v503 (TV139): 2a=14.14, 4a=11.43 → blitz too aggressive for 4a
+  - v504 (TV140): 2a=7.45, 4a=11.90, 6a=14.61 → economy 2a TERRIBLE
+- **v502 (TV138) = best at 14.01 avg** vs v49 (+12.6% over v495 baseline)
+- TV138 = TV136 ultra-fast 2a + TV137 faster 4a + TV135 faster 6a ramp
+- TV140 economy support for 2a is BAD — dual aligning is always better
+- TV139 blitz is too aggressive for 4a (wastes economy)
