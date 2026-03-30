@@ -1,3 +1,9 @@
 status: in-progress
 started: 2026-03-30T13:15:52Z
 plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnation on TV272, study opponents.
+
+13:20 — Created TV277-TV280, uploaded as v637-v640
+  TV277 (v637): TV272 + lower 7a threshold (min_res >= 100 instead of 150)
+  TV278 (v638): TV272 + 3-tier stagnation (2a/4a/6a+ differentiation)
+  TV279 (v639): TV277 + TV278 combo (lower 7a + 3-tier stag)
+  TV280 (v640): TV272 + earlier aligner ramp (step 10 instead of 15)
