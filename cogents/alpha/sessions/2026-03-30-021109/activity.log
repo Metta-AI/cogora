@@ -2,39 +2,27 @@ status: in-progress
 started: 2026-03-30-021109
 
 ## Uploads This Session
-- v509 = TV145 (aggressive 4a, step 50)
-- v510 = TV147 (ultra-aggressive 4a, step 1) ← best 4a
-- v511 = TV151 (TV147 + balanced-aggressive 6a) ← expected overall best
-- v512 = TV152 (TV151 + adaptive 2a for bad partners)
+- v509 = TV145 (aggressive 4a step 50) → #5 at 13.52
+- v510 = TV147 (ultra-aggressive 4a step 1) → #14 at 13.45
+- v511 = TV151 (TV147 + balanced-aggressive 6a) → qualifying
+- v512 = TV152 (TV151 + adaptive 2a) → qualifying
+- v513 = TV153 (TV151 budgets + TV142 50% stag scramble) → qualifying
+- v514 = TV154 (TV153 with TV145 4a step 50) → qualifying ← expected best
 
-## Tournament Results (v510 complete)
-v510 (TV147) vs opponents:
-- vs v49: 4a×4a=13.02, 2a=14.14
-- vs v50: 4a×4a=14.59, 2a=8.59, 6a=16.00
-- vs v51: 4a×4a=14.59, 2a=14.32, 6a=16.00
-- vs v53: 4a×4a=13.20, 2a=13.60, 6a=16.00
-- Average: ~14.0
+## Leaderboard (current)
+1. v506 (TV142) = 14.23 (50% stag scramble)
+5. v509 (TV145) = 13.52 (aggressive 4a step 50)
+14. v510 (TV147) = 13.45 (ultra-aggressive 4a step 1)
 
-v511/v512 in qualifying.
-
-## Self-Play Results (1000 steps)
-| Variant | 2a | 4a | 6a |
-|---------|-----|-----|-----|
-| TV147   | 0.27 | 0.68 | 0.00* |
-| TV151   | 0.27 | 0.68 | 1.09 |
-| TV152   | 0.13 | 0.58 | 1.05 |
-*bad seed
-
-## Key Insights
-1. Removing economy gates = best 4a improvement (v505=18.22)
-2. TV147 ultra-aggressive 4a (step 1) is consistently best
-3. TV151 balanced-aggressive 6a (4 aligners) beats gradual ramp by 32%
-4. TV152 adaptive 2a hurts in self-play — can't validate locally
-5. Patrol defense (TV149) is counterproductive
-6. Carbon-priority mining (TV146) backfires
+## Strategy: Combine Best Features
+TV154 (v514) combines all proven-best components:
+- 2a: TV136 ultra-fast (both align from step 1)
+- 4a: TV145 aggressive (step 50, no economy gate)
+- 6a: TV151 balanced (4 aligners from step 30)
+- Stagnation: TV142 50% scramble (key to #1 ranking)
 
 ## Rejected Variants
-- TV146: carbon-priority mining (over-mines carbon)
-- TV148: hub-proximity targeting (no improvement)
-- TV149: patrol defense (0.88 vs TV147's 1.37)
-- TV150: ultra-aggressive 6a / 5 aligners (economy starved, 1.73 vs TV151's 2.01)
+- TV146: carbon-priority (backfired)
+- TV148: hub-proximity (no improvement)
+- TV149: patrol defense (offensive scramble = defense)
+- TV150: 5 aligners 6a (economy starved)
