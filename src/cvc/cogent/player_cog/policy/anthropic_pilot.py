@@ -43693,3 +43693,159 @@ class AlphaTournamentV365Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV366-TV370: Fine-tune around TV365 (network_weight=1.0 = +86% local)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV366AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV366: network_weight=0.75 (between default 0.5 and TV365's 1.0)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.75
+
+
+class AlphaTournamentV366Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v366"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV366AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV367AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV367: network_weight=1.25 (slightly above TV365)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.25
+
+
+class AlphaTournamentV367Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v367"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV367AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV368AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV368: TV365 + re-align hotspot_weight=-8.0 (combine density + re-align)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+        self._hotspot_weight = -8.0
+
+
+class AlphaTournamentV368Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v368"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV368AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV369AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV369: TV365 + reduced expansion (expansion_weight=5.0 vs 10.0)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+        self._expansion_weight = 5.0
+
+
+class AlphaTournamentV369Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v369"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV369AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV370AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV370: TV365 + directional spreading (combine density + spreading)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+        team_ids = sorted(self._shared_team_ids) if self._shared_team_ids else list(range(8))
+        my_index = team_ids.index(self._agent_id) if self._agent_id in team_ids else 0
+        dir_idx = my_index % len(_DIRECTION_VECTORS)
+        dx_pref, dy_pref = _DIRECTION_VECTORS[dir_idx]
+
+        def _score(entity):
+            base = _h.aligner_target_score(
+                current_position=current_pos, candidate=entity, unreachable=unreachable,
+                enemy_junctions=enemy_junctions,
+                claimed_by_other=_h.is_claimed_by_other(
+                    claims=self._shared_claims, candidate=entity.position,
+                    agent_id=self._agent_id, step=self._step_index,
+                ),
+                hub_position=hub_pos, friendly_junctions=friendly_junctions,
+                hotspot_count=self._junction_hotspot_count(entity, hub),
+                network_weight=self._network_weight, hotspot_weight=self._hotspot_weight,
+            )
+            dir_penalty = 0.0
+            if hub_pos is not None:
+                rx, ry = entity.position[0] - hub_pos[0], entity.position[1] - hub_pos[1]
+                dist = _math.sqrt(rx * rx + ry * ry) + 0.001
+                dir_penalty = -(rx * dx_pref + ry * dy_pref) / dist * 8.0
+            return (base[0] + dir_penalty, base[1]), entity.position
+        return min(candidates, key=_score)
+
+
+class AlphaTournamentV370Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v370"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV370AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

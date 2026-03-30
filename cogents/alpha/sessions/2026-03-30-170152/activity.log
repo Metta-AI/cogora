@@ -8,3 +8,16 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
   - TV364: Compact network (network_weight=3.0, expansion_weight=2.0)
   - TV365: Moderate density (network_weight=1.0, 2x default)
 - [17:08] Running local tests: TV272 (baseline), TV361, TV362, TV363
+- [17:20] LOCAL RESULTS (5000 steps, 8 agents vs Clips AI):
+  TV272 (baseline): 4.73
+  TV361 (net_wt=2.0): 4.97 (+5%)
+  TV362 (directional): 6.49 (+37%)
+  TV363 (re-align): 6.69 (+41%)
+  TV364 (compact): 6.73 (+42%)
+  **TV365 (net_wt=1.0): 8.78 (+86%)** ← BEST
+- [17:22] Created TV366-TV370 fine-tuning around TV365 sweet spot
+- [17:25] Uploaded all variants to tournament:
+  v725=TV365, v728=TV363, v729=TV364, v730=TV366, v731=TV367,
+  v732=TV368, v733=TV369, v734=TV370, v735=TV361, v736=TV362
+- Key finding: network_weight=1.0 (2x default) = massive improvement.
+  Agents build denser networks closer to hub → more defensible.
