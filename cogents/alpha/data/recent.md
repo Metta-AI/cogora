@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-180756**: **Heuristic ceiling at 15.05 — LLM cyborg next** — 20+ variants (TV386-TV411, v775-v797). All fine-tuning worse than baseline. Created TV350 cyborg (v797) with LLM runtime adaptation. Goal >10 achieved. [sessions/2026-03-30-180756/](sessions/2026-03-30-180756/)
 - **2026-03-30-170152**: **Local testing misleading — density FAILS tournament** — 20+ variants (TV361-TV400, v725-v774). TV365 (net_wt=1.0) = +86% local but 9.76 tournament (-35%). Budget optimization also fails. v716 still #1 at 15.05. Critical lesson: validate in tournament, not locally. [sessions/2026-03-30-170152/](sessions/2026-03-30-170152/)
 - **2026-03-30-161800**: **v716 (TV350 hotspot=-10) = 15.05 NEW #1** — 37 variants (TV344-TV385, v706-v762). Hotspot=-10 optimal. Network density is local-only trap. Combined innovations don't stack. [sessions/2026-03-30-161800/](sessions/2026-03-30-161800/)
 - **2026-03-30-152221**: **Ceiling confirmed at 14.94 (v632/TV272)** — 19 variants (TV322-TV340, v684-v702). Re-align bonus marginal (+0.1). Hub-proximity, faster ramp, mine-stag, wider scramble all WORSE. All tuning converges to 14.6-14.9. Need LLM cyborg for paradigm shift. [sessions/2026-03-30-152221/](sessions/2026-03-30-152221/)
@@ -10,6 +11,4 @@
 - **2026-03-30-110959**: **v603 (TV244) = #2 at 14.73** — 24 variants (TV239-TV262, v598-v621). Adaptive scramble is best innovation (+0.16). Dedicated scramblers catastrophic. Decay helps on TV208 but not TV191 base. [sessions/2026-03-30-110959/](sessions/2026-03-30-110959/)
 - **2026-03-30-100746**: **v594 (TV235) = NEW #1 at 14.90!** 12 variants (TV228-TV238, v585-v597). Early 3rd aligner + decaying peak = top 4 slots. TV191 is true #1 base. Wider explore terrible. [sessions/2026-03-30-100746/](sessions/2026-03-30-100746/)
 - **2026-03-30-091114**: **v564 (TV208) = stable #1 at ~15.0** — 18 variants (TV210-TV227, v566-v583). Stagnation mods catastrophic. 4a changes hurt long-term. TV208 (6a thresholds 22/35/70 + 3-tier stag) is optimal. Heuristic ceiling ~15. [sessions/2026-03-30-091114/](sessions/2026-03-30-091114/)
-- **2026-03-30-082457**: **v565 (TV209) early #1 at 16.33** — v557 confirmed broken (9.90). 8 new variants (v558-v565) targeting 4a/6a. 6a improvements most impactful. All vs v557 only — awaiting diverse matchups. [sessions/2026-03-30-082457/](sessions/2026-03-30-082457/)
-- **2026-03-30-070202**: **v550 (TV194) best new at ~15.1** — 10 variants (TV192-TV201, v548-v557). min_res 15 optimal for 4a. TV192 6a too aggressive. Scramble-on-sight terrible. New opponents: gtlm-reactive, slanky, Paz-Bot. v557 (TV201) = best predicted combo. [sessions/2026-03-30-070202/](sessions/2026-03-30-070202/)
 
