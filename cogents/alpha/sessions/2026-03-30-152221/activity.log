@@ -23,3 +23,17 @@ started: 2026-03-30T15:22:21Z
   - TV324: TV322 + TV323 combined
   - TV325: No stagnation scramble (save hearts for alignment only)
 - [15:40] Running local tests: TV322, TV323, TV325 (5000 steps each).
+- [15:45] LOCAL RESULTS (5000 steps, 8 agents):
+  - TV277 (baseline): 7.42
+  - TV322 (hub-proximity scramble): 2.81 — WORSE. Hub restriction too limiting.
+  - TV323 (faster ramp): 5.27 — WORSE. Over-investing in aligners early.
+  - TV325 (no stag scramble): 2.08 — MUCH WORSE. Confirms scramble IS essential.
+  - Note: TV322 agents THINK they have 12 junctions (stale world model data) but actual score is 2.81.
+- [15:50] Uploaded v684(TV322), v685(TV323), v686(TV324) to tournament.
+- [15:52] LEADERBOARD CHECK:
+  - #1: v632 = 14.94 (TV272, 33 matches)
+  - #2: v670 = 14.91 (TV308 re-align bonus, 30 matches)
+  - #5: v681 = 14.80 (TV319 bottleneck+re-align, 27 matches)
+  - #6: v683 = 14.79 (TV321 triple combo, 18 matches)
+  - Top 310 positions are ALL alpha.0. Best opponent: slanky at 6.32 (#311).
+  - Heuristic ceiling confirmed at ~14.94. Spread of top variants very tight.
