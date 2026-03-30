@@ -75,3 +75,14 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
 14:23 — Created TV301, uploaded as v663
   TV301 (v663): TV277 + hysteresis on 7a (up at 100, down at 80)
   Prevents oscillation between 6 and 7 aligners.
+
+14:25 — LEADERBOARD UPDATE
+  v651 (TV291, adaptive split + lower 7a) = 15.18 (#1, 6m) — early data, likely noise
+  v637 (TV277, lower 7a at 100) = 14.88 (#2, 24m) — settling down from 15.39
+  v632 (TV272) = 14.85 (#3, 30m) — stable reference
+  v640 (TV280, earlier ramp) = 14.21 (#30, 25m) — below TV272
+  All split stag variants confirmed bad (v641=13.02, v648=13.52, v650=13.81)
+  Kitchen sink combos terrible (v643=9.55, v642=10.40, v645=10.18)
+  Still waiting for v652-v663 to get tournament matches.
+  KEY FINDING: Lower 7a threshold (100→150) gives ~0.03-0.05 improvement at best.
+  The main score driver appears to be the base TV264 platform, not tweaks.
