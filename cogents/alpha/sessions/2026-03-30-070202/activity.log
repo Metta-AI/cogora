@@ -1,0 +1,7 @@
+status: in-progress
+started: 2026-03-30-070202
+
+## Plan
+- Check current tournament standings and latest match results
+- Work on remaining todos: 6a regression fix, threshold tuning, opponent analysis
+- Upload improved policies and enter tournament
