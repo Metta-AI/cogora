@@ -1,16 +1,13 @@
-# Session 2026-03-30-141102 — INTERRUPTED
+# Session Summary — 2026-03-30-141102
 
-Session was interrupted before completion.
+**v667 (TV305 bottleneck scramble) = avg 16.83 (4m internal)** — potential new #1.
 
-## Key Progress
-- Created TV302-TV318 variants (v664-v680): 2-level lookahead, zone alignment, bottleneck scramble, economy tuning
-- **Best discovery: v667 (TV305 bottleneck scramble) = 17.27 in 4v4 vs v11** — strongest innovation
-- 2-level expansion lookahead (TV302) scored 56% better locally (7.94 vs 5.09)
-- v670 (TV308 re-align bonus) strong at 16.77/16.57 vs v11
-- 4-agent economy identified as key weakness (oxygen crashes at step 2000)
-- Created conservative economy variants TV312-TV315
+Created 20 new variants (TV302-TV321, v664-v683) exploring:
+- 2-level expansion lookahead (TV302): 56% better locally, competitive in tournament
+- Bottleneck scramble (TV305): 17.27 in 4v4 vs v11, far above v637's 14.88 ceiling
+- Zone-based alignment, re-align bonus, economy fixes, deposit tuning, early rush
 
-## Outstanding
-- Many v664-v680 matches still pending full results
-- Need to analyze which innovations combine well
-- Bottleneck scramble (TV305) is the most promising single innovation
+Key finding: **single innovations beat combinations**. TV305 alone scored 17.27,
+but adding 2-level lookahead dropped it to 14.02.
+
+Awaiting more matches for v667 (TV305) and v681-v683 (TV305 combos).
