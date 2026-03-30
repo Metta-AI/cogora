@@ -59,3 +59,15 @@ session_start: 2026-03-30T10:08:11Z
 - v594 = TV235: TV191 + earlier 6a 3rd aligner (step 15)
 - v595 = TV236: TV191 + reduced idle mining (min_res < 15)
 - These are more likely to improve because they build on the true #1
+
+## TV230 (v587) = NEW #1 at 15.61!
+- Less idle mining (min_res < 15 instead of < 30) is the winning change
+- v585 (TV228, early aligner) = #4 at 14.63 (24m) — also strong
+- v586 (TV229, wider stag explore) = #148 at 10.50 — TERRIBLE, wider explore hurts
+- TV191 is true #1 at 14.69 (81m), not TV208
+
+## New Uploads Doubling Down
+- v596 = TV237: TV191 + early aligner + less idle mining (combined best)
+- v597 = TV238: TV208 + even less mining (min_res < 10)
+- v594 = TV235: TV191 + early aligner only  
+- v595 = TV236: TV191 + less idle mining only
