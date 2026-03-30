@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-091114**: **v564 (TV208) = stable #1 at ~15.0** — 18 variants (TV210-TV227, v566-v583). Stagnation mods catastrophic. 4a changes hurt long-term. TV208 (6a thresholds 22/35/70 + 3-tier stag) is optimal. Heuristic ceiling ~15. [sessions/2026-03-30-091114/](sessions/2026-03-30-091114/)
 - **2026-03-30-082457**: **v565 (TV209) early #1 at 16.33** — v557 confirmed broken (9.90). 8 new variants (v558-v565) targeting 4a/6a. 6a improvements most impactful. All vs v557 only — awaiting diverse matchups. [sessions/2026-03-30-082457/](sessions/2026-03-30-082457/)
 - **2026-03-30-070202**: **v550 (TV194) best new at ~15.1** — 10 variants (TV192-TV201, v548-v557). min_res 15 optimal for 4a. TV192 6a too aggressive. Scramble-on-sight terrible. New opponents: gtlm-reactive, slanky, Paz-Bot. v557 (TV201) = best predicted combo. [sessions/2026-03-30-070202/](sessions/2026-03-30-070202/)
 - **2026-03-30-061317**: **v542 (TV186) = #2 at 14.39!** Team-size-specific stagnation thresholds (2a: fast, 4a+: conservative) + TV162 6a thresholds. Created TV186-TV191 (v542-v547). [sessions/2026-03-30-061317/](sessions/2026-03-30-061317/)
@@ -10,4 +11,4 @@
 - **2026-03-30-021109**: (interrupted) v509-v515 uploaded. v506 (TV142) = #1 at 14.30. [sessions/2026-03-30-021109/](sessions/2026-03-30-021109/)
 - **2026-03-30-010306**: **v502 (TV138) = 14.19 avg**. Created TV134-TV144. [sessions/2026-03-30-010306/](sessions/2026-03-30-010306/)
 - **2026-03-30-003249**: **TV134 2a vs gtlm = 9.03 (+95% over TV133)**. [sessions/2026-03-30-003249/](sessions/2026-03-30-003249/)
-- **2026-03-29-230520**: **v495 (TV133) #1 at 12.44**. Discovered cooperative scoring. [sessions/2026-03-29-230520/](sessions/2026-03-29-230520/)
+

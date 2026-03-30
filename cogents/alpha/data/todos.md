@@ -1,14 +1,13 @@
 # Todos
 
-- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v547=14.66 (#1)
-- [x] v557 (TV201) confirmed BROKEN at 9.90 — "always-2-aligners" crashes 4a economy
-- [x] v550 (TV194) converged to 14.58 (#3) — solid but below v547
-- [ ] **Monitor v565 (TV209) convergence** — full combo, early 16.33 (vs v557 only, will drop)
-- [ ] **Monitor v564 (TV208) convergence** — 6a combo, early 16.21 (vs v557 only)
-- [ ] **Monitor v563 (TV207) convergence** — lower 6a thresholds, early 16.04
-- [ ] **Monitor v558 (TV202) convergence** — 4a min_res 12, early 15.51
+- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v564=14.96 (stable #1, 18m)
+- [x] v564 (TV208) confirmed as best: 6a thresholds 22/35/70 + 3-tier stagnation = 14.96
+- [x] 4a aggressive changes (min_res 12, step<30, 3rd aligner 60/200) all hurt long-term
+- [x] Stagnation modifications are catastrophic (10-14 scores)
+- [x] 6a thresholds 22/35/70 are optimal — tighter or looser both hurt
+- [ ] **Validate v566 vs v564** — v566=15.09, v564=14.96, within noise. Monitor convergence.
 - [ ] **Improve anti-gtlm strategy** — v547 scores 6.99 in 4v4 vs gtlm
 - [ ] **Study slanky and Paz-Bot logs** — understand external opponent strategies
-- [ ] **Consider RL training** — heuristic ceiling likely ~15; GPU needed for breakthrough
+- [ ] **Consider RL training** — heuristic ceiling at ~15; GPU needed for breakthrough
 - [ ] **Try LLM cyborg policy** — AnthropicCyborgPolicy might break heuristic ceiling
-- [ ] **Upload efficiency**: use `-f src/cvc/__init__.py -f src/cvc/cogent -f src/cvc/setup_policy.py` to avoid bundling .venv-cogames
+- [ ] **Monitor v580-v583** — TV224-TV227 still qualifying, results pending
