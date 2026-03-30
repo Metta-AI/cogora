@@ -19,3 +19,7 @@ started: 2026-03-30T14:11:02Z
 - [14:32] Uploaded v669(TV307), v670(TV308), v671(TV309), v672(TV310), v673(TV311).
 - [14:33] First results: vs gtlm-reactive: v663 4v4=7.47, v663 6+2=11.08, v663 2+6=11.83, v661 4v4=7.47.
 - [14:33] Local 5000-step analysis: junctions peak ~14 at step 1000, then decline to ~0 by step 5000. Clips dominate late game. Resource imbalance (carbon/oxygen drain).
+- [14:37] Analyzed 4v4 match vs gtlm-reactive. Economy crashes at step 2000 (oxygen=3!). Identified 4-agent economy as key weakness.
+- [14:40] Created TV312-TV315: conservative 4a economy, carbon-weighted bias, lower deposits.
+- [14:42] Uploaded v674(TV312), v675(TV313), v676(TV314), v677(TV315).
+- [14:42] v664 (TV302 2-level lookahead) passed qualifying! Now in competition matches.
