@@ -39979,3 +39979,86 @@ class AlphaTournamentV300Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV301: TV277 (#1) + hysteresis on 7a transition ────────────────────────────
+
+class AlphaTournamentV301AgentPolicy(AlphaTournamentV264AgentPolicy):
+    """TournamentV301: TV264 + hysteresis on 6→7 aligner transition.
+
+    7a at 100, but once at 7 aligners, only drop back to 6 at min_res < 80.
+    Prevents oscillation between 6 and 7 aligners.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._at_seven_aligners = False
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: hysteresis on 7a
+        if step < 15:
+            self._at_seven_aligners = False
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            self._at_seven_aligners = False
+            return 1, 0
+        elif min_res < 22:
+            self._at_seven_aligners = False
+            return 2, 0
+        elif min_res < 35:
+            self._at_seven_aligners = False
+            return 3, 0
+        elif min_res < 70:
+            self._at_seven_aligners = False
+            return min(4, team_size - 1), 0
+        elif self._at_seven_aligners and min_res >= 80:
+            # Stay at 7 with lower drop threshold
+            return min(team_size - 1, 7), 0
+        elif min_res < 100:
+            self._at_seven_aligners = False
+            return min(team_size - 1, 6), 0
+        else:
+            self._at_seven_aligners = True
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV301Policy(MettagridSemanticPolicy):
+    """TournamentV301: TV277 + hysteresis on 7a."""
+    short_names = ["alpha-tournament-v301"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV301AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

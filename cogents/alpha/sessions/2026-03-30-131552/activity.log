@@ -71,3 +71,7 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
   TV299 (v662): 7a at 90
   TV300 (v661): 7a at 110
   v637 (TV277) still climbing: 15.39 (#1, 21m)!
+
+14:23 — Created TV301, uploaded as v663
+  TV301 (v663): TV277 + hysteresis on 7a (up at 100, down at 80)
+  Prevents oscillation between 6 and 7 aligners.
