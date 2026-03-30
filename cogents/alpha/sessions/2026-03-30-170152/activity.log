@@ -48,3 +48,4 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
 - Sweet spot confirmed: network_weight=1.0 exactly. Sharp dropoff above/below.
 - None of the combos (late scramble, 7a@120) improve on pure density.
 - TV365 (net_wt=1.0 = 8.78) remains best local by wide margin.
+- [17:51] Waiting for tournament results. Matches started at 17:48, expect 5-10min per game.
