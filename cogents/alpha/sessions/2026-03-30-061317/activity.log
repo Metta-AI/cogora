@@ -59,3 +59,10 @@ status: in-progress
 - Per-size breakdown v542: 2a=14.2(17), 4a=12.9(18), 6a=15.4(17)
 - v545 (TV189) at 15.34 but only 1 match
 - Team-size-specific stagnation + TV162 6a thresholds = winning combination
+- ROUND 1 COMPLETE (54 matches each):
+  v542 (TV186): 14.19 — 2a=14.2, 4a=12.9, 6a=15.5
+  v543 (TV187): 14.06 — 2a=13.6, 4a=13.3, 6a=15.2
+- v544 (TV188): #2 at 14.52 (6m)! TV162 + faster 4a very promising!
+- v545 (TV189): 15.34 (1m) — too early
+- Leaderboard: v545 #1, v544 #2, v522 #3, v542 #4, v519 #5
+- v544's faster 4a expansion (min_res 15 vs 20) may be the key improvement
