@@ -52,3 +52,17 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
 - [18:03] Still waiting for tournament results. 20 matches cycling (running/scheduled).
   Matches take ~10min each. All v725-v755 variants in competition pool.
   Opponents include: slanky, Paz-Bot, coglet-v0, gtlm-reactive, swoopy-v0, mammet, modular-lstm.
+- [18:08] **TOURNAMENT RESULTS AVAILABLE — CRITICAL FINDING:**
+  v725 (TV365, net_wt=1.0, +86% local): **9.76** (rank 294) — WORSE than baseline!
+  v736 (TV362, directional): **12.87** (rank 198) — best new variant
+  v738 (TV372, net=1.0+7a@120): 12.63 (rank 220)
+  v731 (TV367, net=1.25): 12.03 (rank 250)
+  All density variants WORSE than v632 (14.94, rank 3).
+  **LESSON: Local testing vs Clips AI does NOT predict tournament performance.**
+  Dense clusters help locally but hurt in tournament (less expansion = less junctions).
+  
+  Leaderboard top: v716=15.05 (#1), v711=14.96 (#2), v632=14.94 (#3).
+  Best non-alpha: slanky at 6.69 (rank 370).
+  We dominate #1 through #369 — massive competitive advantage.
+  
+- Need new strategy: tournament is the ground truth, not local testing.
