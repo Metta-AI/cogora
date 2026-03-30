@@ -26,3 +26,7 @@ status: in-progress
 - Competition leaderboard: v525=14.73 (#1), v522=14.61, v519=14.58
 - v535-v537 each have 9 running competition matches
 - v538/v539 have scheduled competition matches
+- First competition results: v536=9.34 avg (2m: 8.2 vs v13, 10.5 vs v11)
+- v535-v539 all have 10-12 running competition matches
+- v540 still qualifying
+- Leaderboard stable: v525=14.73, v522=14.61, v519=14.58
