@@ -43,3 +43,9 @@ status: in-progress
 - Concurrent session created TV455-TV464, uploaded v842-v854
 - v851-v853 all in competition, waiting for results
 - Heuristic ceiling confirmed: RL training needed to fundamentally beat modular-lstm
+- Competition results:
+  - v852 (TV465) 6v2 vs Paz-Bot: 12.94, 4v4 vs modular-lstm: 0.80
+  - v851 (TV464) 4v4 vs Paz-Bot: 11.32, 2v6 vs mammet: 2.89/4.40, 6v2 vs modular-lstm: 7.87
+  - v853 2v6 vs coglet: 3.39
+  - Neither v851 nor v852 beat v716's average — floor changes help 6-agent but hurt overall
+  - The 2-agent fix (always 2,0) gives marginal improvement at best
