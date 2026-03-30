@@ -21,3 +21,13 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
   v732=TV368, v733=TV369, v734=TV370, v735=TV361, v736=TV362
 - Key finding: network_weight=1.0 (2x default) = massive improvement.
   Agents build denser networks closer to hub → more defensible.
+- [17:30] TV366-TV370 local results:
+  TV366 (net_wt=0.75): 8.16 (+73%)
+  TV367 (net_wt=1.25): 6.52 (+38%)
+  TV368 (net_wt=1.0+hotspot=-8): 4.65 (-2%) — hotspot HURTS with density!
+  TV369 (net_wt=1.0+exp=5.0): 6.53 (+38%)
+  TV370 (net_wt=1.0+directional): 7.55 (+60%)
+- Sweet spot: network_weight between 0.75-1.0. TV365 (1.0) best, TV366 (0.75) close.
+- Hotspot re-align penalty actively harmful when combined with density.
+- New competitors in tournament: coglet-v0, modular-lstm.
+- v725-v736 entering qualifying matches.
