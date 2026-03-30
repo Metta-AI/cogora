@@ -24587,6 +24587,7 @@ class AlphaTournamentV143Policy(MettagridSemanticPolicy):
 
 
 # ── TV144: TV143 + lower 4a 2-aligner threshold (min_res 15 vs 30) ──────────
+# NOTE: TV144 tests min_res 15 for 4a 2nd aligner. Results pending.
 
 class AlphaTournamentV144AgentPolicy(AlphaTournamentV82AgentPolicy):
     """TournamentV144: TV143 with lower 4a threshold.
@@ -24648,6 +24649,128 @@ class AlphaTournamentV144Policy(MettagridSemanticPolicy):
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTournamentV144AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV145: Aggressive 4a — no economy gate for 2nd aligner ──────────────────
+
+class AlphaTournamentV145AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV145: Aggressive 4a — trust partner economy.
+
+    Carbon bottleneck analysis shows 4a stuck at 1 aligner until step ~800
+    because min_res stays below 30 (carbon consumed at 3x rate).
+
+    TV144 lowered threshold to 15. TV145 goes further: start 2 aligners
+    at step 50 unconditionally. Rationale:
+    - Both players share the cogs network (cooperative scoring)
+    - Partner's miners contribute to hub economy
+    - Each alignment-tick matters more than each resource
+    - 2a (TV136) proved that ultra-fast alignment beats economy-first
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: TV136 ultra-fast (both align from step 1)
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: aggressive — 2 aligners from step 50 regardless of economy
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0  # Brief economy bootstrap
+            if min_res < 1 and not can_hearts:
+                return 1, 0  # Emergency only: zero resources, can't make hearts
+            aligner_budget = 2  # Always 2 from step 50 — trust partner economy
+            if min_res >= 80 and step >= 400:
+                aligner_budget = min(3, team_size - 1)
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, 0
+
+        # 5+ agents: TV135 faster ramp
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 30:
+            return 2, 0
+        elif min_res < 50:
+            return 3, 0
+        elif min_res < 100:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV145Policy(MettagridSemanticPolicy):
+    """TournamentV145: Aggressive 4a (no economy gate for 2nd aligner)."""
+    short_names = ["alpha-tournament-v145"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV145AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV146: Carbon-priority mining + aggressive 4a ────────────────────────────
+
+class AlphaTournamentV146AgentPolicy(AlphaTournamentV145AgentPolicy):
+    """TournamentV146: TV145 + carbon-priority mining.
+
+    Carbon is consumed at 3x rate (aligner costs carbon:3 vs 1 each for others).
+    By pre-emptively biasing miners toward carbon, we keep the economy flowing
+    and avoid the carbon bottleneck that stalls aligner ramp-up.
+    """
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        """Carbon-priority: bias toward carbon when it's within 2x of min resource."""
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        carbon = resources.get("carbon", 0)
+        min_amount = min(resources.values())
+
+        # If carbon is within 2x of the minimum resource, prioritize it
+        # because it depletes 3x faster due to aligner costs
+        if carbon <= min_amount * 2 + 10:
+            return MacroDirective(resource_bias="carbon")
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaTournamentV146Policy(MettagridSemanticPolicy):
+    """TournamentV146: Aggressive 4a + carbon-priority mining."""
+    short_names = ["alpha-tournament-v146"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV146AgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
