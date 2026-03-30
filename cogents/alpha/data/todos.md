@@ -1,17 +1,16 @@
 # Todos
 
-- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v495=12.44, v502=14.19
-- [x] v502 (TV138) = 14.19 avg vs v54 — combined TV136 2a + TV137 4a + TV135 6a
-- [x] v507 (TV143) uploaded — optimal combo TV136 2a + TV82 4a + TV135 6a
-- [x] Discovered: ultra-fast 2a (step 1) = 14.59 vs 12.06 (+21%)
-- [x] Discovered: faster 4a is opponent-dependent (slight loss vs strong opponents)
-- [x] Discovered: economy support for 2a (TV140) fails — dual align always better
-- [x] Confirmed: cooperative scoring (cogs vs clips NPC)
-- [ ] **Collect v507 (TV143) tournament results** — expected best combo
-- [ ] **Collect v508 (TV144) results** — lower 4a threshold test
-- [ ] **Collect v506 (TV142) competition results** — 50% stag scramble (best qualifying 13.59)
-- [ ] **Fix carbon bottleneck in 4a** — carbon always limiting resource, try carbon-priority mining
-- [ ] **Study gtlm-reactive-v3 strategy** — still weakest opponent
-- [ ] **Try RL training** — heuristic ceiling around 14; GPU needed for breakthrough
+- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v519=14.46 (NEW #1!)
+- [x] v519 (TV160) = 14.46 — faster stagnation entry (200 steps, step>300)
+- [x] v517 (TV156 combo) = 14.43 — #2
+- [x] v506 (TV142) = 14.30 — previous #1
+- [x] Discovered: faster stagnation entry (+0.16 over TV142)
+- [x] Discovered: adaptive scramble TERRIBLE (8.82) — world model persists junctions
+- [ ] **Collect v524 (TV164) results** — even faster stag (150 steps, step>200)
+- [ ] **Collect v525 (TV165) results** — TV160 stag + TV162 lower 6a thresholds
+- [ ] **Monitor v519 convergence** — 30 matches, may still shift
+- [ ] **Monitor v517 convergence** — 33 matches, may still shift
+- [ ] **Study why v521 (carbon mining) outperformed self-play** — 13.75 in tournament vs 4.04 self-play
+- [ ] **Try even faster stagnation** — 100 steps, step>150?
+- [ ] **Try RL training** — heuristic ceiling may be ~14.5; GPU needed
 - [ ] **Consider entirely different architecture** — communication, map memory, etc.
-- [ ] **Test hub-proximity targeting for 2a** — compact network might resist scrambling better

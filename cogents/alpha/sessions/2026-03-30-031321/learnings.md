@@ -44,11 +44,33 @@ TV163 (adaptive scramble) performed 17% worse than TV142 because:
 - Conservative 6a: +0.54 over aggressive 6a
 - TV142 at 14.30 may be near the heuristic ceiling
 
-## Uploads and Expected Results
-- v517: TV156 ultimate combo — baseline comparison
-- v518: TV159 (30% stag scramble) — test if less scramble is better
-- v519: TV160 (faster stagnation) — test earlier detection
-- v520: TV157 (aggressive 6a) — expected worse (confirmed in self-play)
-- v521: TV161 (carbon mining) — expected worse (confirmed in self-play)
-- v522: TV162 (lower 6a thresholds) — most promising, matches TV142 in self-play
-- v523: TV163 (adaptive scramble) — expected worse (confirmed in self-play)
+## Tournament Results (Leaderboard)
+
+| Rank | Version | Policy | Score | Matches |
+|------|---------|--------|-------|---------|
+| **1** | **v519** | **TV160 (faster stag entry)** | **14.46** | 30 |
+| **2** | **v517** | **TV156 (ultimate combo)** | **14.43** | 33 |
+| 3 | v506 | TV142 (previous #1) | 14.30 | 78 |
+| **4** | **v522** | **TV162 (lower 6a thresholds)** | **14.05** | 32 |
+| **5** | **v521** | **TV161 (carbon mining)** | **13.75** | 31 |
+| 13 | v518 | TV159 (30% stag scramble) | 13.51 | 33 |
+| 23 | v520 | TV157 (aggressive 6a) | 13.46 | 31 |
+| 100 | v523 | TV163 (adaptive scramble) | 8.82 | 30 |
+
+## Key Breakthrough: Faster Stagnation Entry
+- TV160 (v519) = **14.46** at #1 — 200 steps no growth && step>300
+- TV142 (v506) = 14.30 at #3 — 300 steps no growth && step>500
+- The earlier detection of network plateau (+100 steps earlier) gives
+  agents more time to scramble clips junctions and explore for new ones.
+- Follow-ups uploaded: TV164 (150 steps, step>200), TV165 (TV160+TV162)
+
+## Uploads Summary
+- v517: TV156 ultimate combo = **#2 at 14.43** (carbon mining helped despite self-play!)
+- v518: TV159 (30% stag scramble) = #13 at 13.51 (too little scrambling)
+- v519: TV160 (faster stagnation) = **#1 at 14.46!**
+- v520: TV157 (aggressive 6a) = #23 at 13.46 (confirmed worse)
+- v521: TV161 (carbon mining) = #5 at 13.75 (better than expected!)
+- v522: TV162 (lower 6a thresholds) = **#4 at 14.05**
+- v523: TV163 (adaptive scramble) = #100 at 8.82 (TERRIBLE, as predicted)
+- v524: TV164 (even faster stag, 150/200) — qualifying
+- v525: TV165 (TV160+TV162 combo) — qualifying
