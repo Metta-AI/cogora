@@ -24780,3 +24780,135 @@ class AlphaTournamentV146Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV147: Ultra-aggressive 4a — 2 aligners from step 1 ─────────────────────
+
+class AlphaTournamentV147AgentPolicy(AlphaTournamentV82AgentPolicy):
+    """TournamentV147: Ultra-aggressive 4a — align from step 1 like 2a.
+
+    TV136 proved ultra-fast works for 2a (14.59 vs 12.06). TV145 showed
+    step 50 start is better than step 100 for 4a. TV147 pushes further:
+    start 2 aligners from step 1. With 4 agents, 2 align + 2 mine from
+    the very start. Partner economy should compensate for lost mining time.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: TV136 ultra-fast
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: ultra-aggressive — 2 aligners from step 1
+        if team_size <= 4:
+            if min_res < 1 and not can_hearts and step > 100:
+                return 1, 0  # Emergency only after initial phase
+            aligner_budget = 2  # Always 2 from step 1
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, 0
+
+        # 5+ agents: TV135 faster ramp
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 30:
+            return 2, 0
+        elif min_res < 50:
+            return 3, 0
+        elif min_res < 100:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV147Policy(MettagridSemanticPolicy):
+    """TournamentV147: Ultra-aggressive 4a (2 aligners from step 1)."""
+    short_names = ["alpha-tournament-v147"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV147AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV148: TV145 + hub-proximity bias for aligner targeting ──────────────────
+
+class AlphaTournamentV148AgentPolicy(AlphaTournamentV145AgentPolicy):
+    """TournamentV148: TV145 + hub-proximity targeting for compact network.
+
+    Idea: prioritize junctions closer to hub for a compact, dense network
+    that's harder to scramble and easier to re-align. The hub_penalty was
+    part of v65's original scoring — let's add a stronger version.
+    """
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        """Override: bias toward junctions closer to hub for compact network."""
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+
+        # Score candidates: distance from self + hub proximity bonus
+        # Closer to hub = lower score = preferred
+        def _target_score(entity: KnownEntity) -> float:
+            dist_to_self = _h.manhattan(current_pos, entity.position)
+            dist_to_hub = _h.manhattan(hub_pos, entity.position) if hub_pos else 0
+            # Weight hub proximity: each step from hub adds 0.5 to score
+            return dist_to_self + dist_to_hub * 0.5
+
+        return min(candidates, key=lambda e: (_target_score(e), e.position))
+
+
+class AlphaTournamentV148Policy(MettagridSemanticPolicy):
+    """TournamentV148: TV145 + hub-proximity targeting."""
+    short_names = ["alpha-tournament-v148"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV148AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
