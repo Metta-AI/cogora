@@ -42249,3 +42249,156 @@ class AlphaTournamentV340Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV341: TV272 (#1) + late-game scramblers (surge economy phase 3) ─────────
+
+class AlphaTournamentV341AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TournamentV341: TV272 + convert miners to scramblers at step 2500.
+
+    Insight: by step 2500, all junctions are lost to Clips. Miners are
+    wasted producing resources for a dead economy. Convert them to
+    scramblers to maximize disruption in the late game.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            scrambler_budget = 0
+            # Late game: convert 1 miner to scrambler
+            if step >= 2500 and min_res >= 20:
+                scrambler_budget = 1
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1 - scrambler_budget)
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: TV272 base + late-game scrambler conversion
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+
+        # Late game: convert miners to scramblers
+        if step >= 2500 and min_res >= 30:
+            # 5 aligners, 2 scramblers, 1 miner
+            return min(5, team_size - 3), min(2, team_size - 6)
+        elif step >= 2000 and min_res >= 40:
+            # 5 aligners, 1 scrambler, 2 miners
+            return min(5, team_size - 3), 1
+
+        # Normal TV272 economy
+        if min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 150:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV341Policy(MettagridSemanticPolicy):
+    """TournamentV341: TV272 + late-game scramblers."""
+    short_names = ["alpha-tournament-v341"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV341AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV342: TV272 + early mining burst (all mine for first 50 steps) ──────────
+
+class AlphaTournamentV342AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TournamentV342: TV272 + early mining burst.
+
+    For the first 50 steps, ALL agents mine to build economy fast.
+    Then normal TV272 ramp kicks in with a stockpile of resources.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+
+        # Early burst: all mine for 50 steps
+        if step < 50:
+            return 0, 0
+
+        # Then normal TV272 budgets
+        return AlphaTournamentV272AgentPolicy._pressure_budgets(self, state, objective=objective)
+
+
+class AlphaTournamentV342Policy(MettagridSemanticPolicy):
+    """TournamentV342: TV272 + early mining burst."""
+    short_names = ["alpha-tournament-v342"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV342AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV343: TV272 + surge economy (early burst + late scramblers) ─────────────
+
+class AlphaTournamentV343AgentPolicy(AlphaTournamentV341AgentPolicy):
+    """TournamentV343: Full surge economy = early burst + late scramblers.
+
+    Phase 1 (steps 0-50): All mine to build stockpile.
+    Phase 2 (steps 50-2500): Normal TV272 ramp.
+    Phase 3 (steps 2500+): Convert miners to scramblers.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+
+        # Phase 1: early burst mining
+        if step < 50:
+            return 0, 0
+
+        # Phase 2+3: TV341 handles normal + late-game conversion
+        return AlphaTournamentV341AgentPolicy._pressure_budgets(self, state, objective=objective)
+
+
+class AlphaTournamentV343Policy(MettagridSemanticPolicy):
+    """TournamentV343: Full surge economy."""
+    short_names = ["alpha-tournament-v343"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV343AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
