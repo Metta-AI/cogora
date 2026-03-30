@@ -75,3 +75,15 @@ Qualifying scores are completely unreliable predictors.
 - TV433 (v819): two-hop + wider-early adaptive
 - TV434 (v820): two-hop with stronger bonus (7.0)
 - TV435 (v821): two-hop with weaker bonus (3.0)
+
+## BUG FOUND: 2-agent economy collapse
+Analyzed v806 vs gtlm-reactive (1.51 score). Root cause: with 2 agents, 
+budget returns (2, 0) — both agents align, nobody mines. Hub depletes.
+- silicon hit 0 by step 700 → can't make hearts → game over
+- Same bug affects all TV350 variants in 2-agent games
+
+Created TV436-TV439 fixes:
+- TV436 (v822): TV350 + fixed 2a (max 1 aligner with 2 agents)
+- TV437 (v823): TV436 + adaptive hotspot
+- TV438 (v824): TV436 + adaptive hotspot + collapse recovery
+- TV439 (v825): TV436 + also fix 4a (cap at 2 aligners for 4 agents)

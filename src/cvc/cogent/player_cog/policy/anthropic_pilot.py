@@ -46827,3 +46827,248 @@ class AlphaTournamentV435Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV436: TV350 + FIXED 2-agent economy — never have 0 miners with 2 agents
+# BUG: current code returns (2, 0) for team_size<=2, meaning both agents
+# align and nobody mines. Hub resources deplete and game collapses.
+# FIX: always keep at least 1 miner with 2 agents. Max 1 aligner.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _tv436_pressure_budgets(self, state, *, objective=None, threshold_7a=120):
+    """TV350 budgets with FIXED 2-agent economy."""
+    step = state.step or self._step_index
+    min_res = _h.team_min_resource(state)
+    can_hearts = _h.team_can_refill_hearts(state)
+    num_agents = self.policy_env_info.num_agents
+    team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+    if objective == "resource_coverage":
+        return 0, 0
+
+    if team_size <= 2:
+        # FIXED: always keep 1 miner. Max 1 aligner.
+        if min_res < 7 and not can_hearts:
+            return 0, 0  # Both mine to rebuild economy
+        if min_res < 20:
+            return 1, 0  # 1 aligner, 1 miner
+        return 1, 0  # Always 1+1, never 2 aligners
+
+    if team_size <= 4:
+        if step < 50:
+            return 1, 0
+        if min_res < 7 and not can_hearts:
+            return 1, 0
+        if min_res < 15:
+            return 1, 0
+        aligner_budget = 2
+        if min_res >= 80 and step >= 300:
+            aligner_budget = min(3, team_size - 1)
+        return aligner_budget, 0
+
+    # 5+ agents: same as TV334
+    if step < 15:
+        return 2, 0
+    if step < 30 and min_res < 20:
+        return 2, 0
+    if min_res < 10 and not can_hearts:
+        return 1, 0
+    elif min_res < 22:
+        return 2, 0
+    elif min_res < 35:
+        return 3, 0
+    elif min_res < 70:
+        return min(4, team_size - 1), 0
+    elif min_res < threshold_7a:
+        return min(team_size - 1, 6), 0
+    else:
+        return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV436AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV436: TV350 + fixed 2-agent economy."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv436_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV436Policy(MettagridSemanticPolicy):
+    """TV436: TV350 + fixed 2-agent economy."""
+    short_names = ["alpha-tournament-v436"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV436AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV437: TV436 (fixed 2a) + TV416 adaptive hotspot
+# Best of both: fix the 2-agent economy bug AND use adaptive hotspot
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV437AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV437: Fixed 2a + adaptive hotspot."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity, hub):
+        return _adaptive_hotspot_count(self, entity, hub,
+            early_weight=-5.0, mid_weight=-10.0, late_weight=-15.0)
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv436_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV437Policy(MettagridSemanticPolicy):
+    """TV437: Fixed 2a + adaptive hotspot."""
+    short_names = ["alpha-tournament-v437"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV437AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV438: TV436 + TV425 combo (fixed 2a + adaptive hotspot + collapse recovery)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV438AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV438: Fixed 2a + adaptive hotspot + collapse recovery."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+        self._collapse_recovery_mode = False
+
+    def _junction_hotspot_count(self, entity, hub):
+        return _adaptive_hotspot_count(self, entity, hub,
+            early_weight=-5.0, mid_weight=-10.0, late_weight=-15.0)
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        team_id = _h.team_id(state)
+        friendly_count = len(self._known_junctions(state, predicate=lambda j: j.owner == team_id))
+        step = state.step or self._step_index
+        if (self._peak_junction_count >= 6
+                and friendly_count <= self._peak_junction_count * 0.5
+                and step > 500):
+            self._collapse_recovery_mode = True
+        elif friendly_count >= self._peak_junction_count * 0.8:
+            self._collapse_recovery_mode = False
+        return super()._aligner_action(state)
+
+    def _pressure_budgets(self, state, *, objective=None):
+        base_aligners, base_scramblers = _tv436_pressure_budgets(
+            self, state, objective=objective, threshold_7a=120
+        )
+        if objective == "resource_coverage":
+            return base_aligners, base_scramblers
+        if self._collapse_recovery_mode:
+            team_size = len(self._shared_team_ids) if self._shared_team_ids else 8
+            base_aligners = min(base_aligners + 2, team_size - 1)
+        return base_aligners, base_scramblers
+
+
+class AlphaTournamentV438Policy(MettagridSemanticPolicy):
+    """TV438: Kitchen sink — fixed 2a + adaptive + collapse recovery."""
+    short_names = ["alpha-tournament-v438"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV438AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV439: TV436 + also fix 4-agent economy (ensure at least 1 miner)
+# The 4-agent case can assign 3 aligners when min_res>=80, leaving just 1 miner.
+# Keep max 2 aligners for 4 agents to maintain stable economy.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _tv439_pressure_budgets(self, state, *, objective=None, threshold_7a=120):
+    """TV436 + also cap 4-agent aligners at 2."""
+    step = state.step or self._step_index
+    min_res = _h.team_min_resource(state)
+    can_hearts = _h.team_can_refill_hearts(state)
+    num_agents = self.policy_env_info.num_agents
+    team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+    if objective == "resource_coverage":
+        return 0, 0
+
+    if team_size <= 2:
+        if min_res < 7 and not can_hearts:
+            return 0, 0
+        return 1, 0
+
+    if team_size <= 4:
+        if step < 50:
+            return 1, 0
+        if min_res < 7 and not can_hearts:
+            return 1, 0
+        if min_res < 15:
+            return 1, 0
+        return 2, 0  # Cap at 2 aligners for 4 agents (always 2 miners)
+
+    # 5+ agents: same as TV334
+    if step < 15:
+        return 2, 0
+    if step < 30 and min_res < 20:
+        return 2, 0
+    if min_res < 10 and not can_hearts:
+        return 1, 0
+    elif min_res < 22:
+        return 2, 0
+    elif min_res < 35:
+        return 3, 0
+    elif min_res < 70:
+        return min(4, team_size - 1), 0
+    elif min_res < threshold_7a:
+        return min(team_size - 1, 6), 0
+    else:
+        return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV439AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV439: Fixed 2a+4a economy."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv439_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV439Policy(MettagridSemanticPolicy):
+    """TV439: Fixed 2a+4a economy."""
+    short_names = ["alpha-tournament-v439"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV439AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
