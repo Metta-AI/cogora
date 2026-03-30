@@ -16,3 +16,16 @@ plan: Check tournament results for v797 cyborg and fine-tuning variants. Iterate
 - TV414: TV350 + scramble-then-align — after scrambling enemy junction, immediately re-align it
 - TV415: TV350 + early scramble — 1 dedicated scrambler from step 500 if economy stable
 - TV416: TV350 + adaptive hotspot weight — scale penalty by game phase (low early, high late)
+
+## v797 cyborg results: POOR (1.82 score)
+- LLM cyborg scored 1.82 in qualifying — worse than basic heuristic
+- 82 API calls per agent, extremely slow
+- No useful strategy adjustments — just overhead
+- Conclusion: LLM cyborg approach needs fundamental rethinking
+
+## Additional variants created (TV417-TV421)
+- TV417: TV350 + hub-anchor priority — prefer hub-proximate junctions for resilient core network
+- TV418: TV350 + network collapse recovery — boost aligners when junction count drops 50% from peak
+- TV419: TV350 + no idle/stagnation scramble — pure alignment focus, never waste hearts on scramble
+- TV420: TV350 + faster 3a ramp — 3rd aligner at min_res>=25 instead of 35
+- TV421: TV350 + burst 2-scramble during stagnation — 2 scramblers for 100-step windows
