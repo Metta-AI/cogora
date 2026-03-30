@@ -71,3 +71,7 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
   v774=TV398 (4a aggressive step 30), v772=TV399 (5+ lower thresholds),
   v773=TV400 (combined 4a+5+ lower)
 - Direct to tournament, no local testing.
+- [18:30] Leaderboard stable: v716=15.05 (#1), v711=14.96 (#2), v632=14.94 (#3).
+  TV396-TV400 (v769-v774) still in qualifying.
+  All density variants (v725-v762) confirmed worse than baseline (9-13 range).
+  Key learning: local testing vs Clips AI is unreliable for tournament prediction.
