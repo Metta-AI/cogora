@@ -54,3 +54,9 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
   v644 (TV284, capped 6a) = 13.28 (#120, 2m) — not promising
   INSIGHT: Split stag was noise. Lower 7a threshold is the real winner.
   FOCUS: Build on TV277 (lower 7a at 100).
+
+14:05 — Created TV292-TV295, uploaded as v652-v654, v656
+  TV292 (v652): TV264 + 7a at min_res >= 80 (more aggressive)
+  TV293 (v653): TV264 + earlier 5a at min_res >= 50
+  TV294 (v654): TV264 + earlier 4a at min_res >= 25
+  TV295 (v656): TV264 + all aggressive: 4a@25, 5a@50, 7a@100
