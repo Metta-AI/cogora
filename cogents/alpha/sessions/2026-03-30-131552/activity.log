@@ -20,3 +20,8 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
 13:43 — Created TV286-TV287, uploaded as v646-v647
   TV286 (v646): TV272 + rush 3 aligners from step 0 (no early ramp delay)
   TV287 (v647): TV278 (3-tier stag) + lower 7a (100) + faster decay (300) combo
+
+13:48 — Waiting for match results. All matches still running.
+  Analyzed TV272 local 1000-step: min_res oscillates 100-200, 7a threshold matters.
+  TV277 2000-step local: bad map, all agents died early (map-dependent issue).
+  Investigated alignment targeting — already well-optimized via expansion scoring.
