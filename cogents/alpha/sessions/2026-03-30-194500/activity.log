@@ -87,3 +87,22 @@ Created TV436-TV439 fixes:
 - TV437 (v823): TV436 + adaptive hotspot
 - TV438 (v824): TV436 + adaptive hotspot + collapse recovery
 - TV439 (v825): TV436 + also fix 4a (cap at 2 aligners for 4 agents)
+
+## Competition results summary (all new variants)
+Best established: v716 = 15.05 (#1, 20 matches)
+
+New variants competition scores (with sufficient matches):
+- v811 (TV425 adaptive+collapse): 7.67 (5m) — dropped from initial 14.54
+- v817 (TV431 early cutoff): 11.20 (2m)
+- v802 (TV416 adaptive hotspot): 10.97 (9m)
+- v801 (TV415 early scramble): 10.72 (11m)
+- v804 (TV418 collapse recovery): 10.17 (7m)
+- v806 (TV420 faster 3a): 10.08 (9m)
+- v803 (TV417 hub-anchor): 9.94 (6m)
+- v807 (TV421 burst scramble): 9.90 (8m)
+- v798 (TV412 reactive defense): 8.94 (16m)
+- v800 (TV414 scramble-then-align): 8.52 (9m)
+- v799 (TV413 two-hop): 8.40 (9m)
+
+None beat v716 in competition. The 2-agent economy bug is dragging scores.
+TV436-TV439 (v822-v825) fix this bug — waiting for qualifying.
