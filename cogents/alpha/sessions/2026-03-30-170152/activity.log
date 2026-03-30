@@ -66,3 +66,8 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
   We dominate #1 through #369 — massive competitive advantage.
   
 - Need new strategy: tournament is the ground truth, not local testing.
+- [18:22] Created TV396-TV400: better 4-agent budgets (renumbered from TV386-390 due to conflict).
+  v769=TV396 (4a min_res 10), v770=TV397 (4a always 2 aligners),
+  v774=TV398 (4a aggressive step 30), v772=TV399 (5+ lower thresholds),
+  v773=TV400 (combined 4a+5+ lower)
+- Direct to tournament, no local testing.
