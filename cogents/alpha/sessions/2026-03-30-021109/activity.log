@@ -8,37 +8,25 @@ started: 2026-03-30-021109
 - Upload improved policy
 
 ## Actions
-- Created TV145: aggressive 4a — 2 aligners from step 50, no economy gate
-- Created TV146: TV145 + carbon-priority mining (REJECTED — backfired)
-- Local tests (4a, 500 steps): TV145=0.31 vs TV143=0.25 (+24%)
-- Local tests (4a, 2000 steps): TV145=1.28 vs TV143=0.97 (+32%)
-- Uploaded TV145 as v509
-- Created TV147: ultra-aggressive 4a — 2 aligners from step 1 (like TV136 2a)
-- Created TV148: TV145 + hub-proximity targeting (REJECTED — no improvement)
-- Local tests (4a, 2000 steps): TV147=1.37, TV145=1.28, TV148=1.26, TV143=0.97
-- TV147 uploaded as v510
+- Created TV145: aggressive 4a — 2 aligners from step 50, no economy gate → v509
+- Created TV146: carbon-priority mining (REJECTED — backfired)
+- Created TV147: ultra-aggressive 4a — 2 aligners from step 1 → v510
+- Created TV148: hub-proximity targeting (REJECTED — no improvement)
+- Created TV149: patrol defense (REJECTED — 0.88 vs TV147's 1.37)
+- Created TV150: ultra-aggressive 6a — 5 aligners (score 1.73, economy starved)
+- Created TV151: balanced-aggressive 6a — 4 aligners from step 30 → v511
+  - 6a self-play: TV151=2.01 > TV150=1.73 > TV147=1.52
+  - 4a self-play: TV147=1.37 > TV145=1.28 > TV143=0.97
 
-## Tournament Results (v505/v506/v508)
+## Tournament Results
+- v505 4a×4a vs v34 = 18.22 (no economy gate → validates TV145/TV147)
+- v508 4a×4a vs v34 = 11.10 (min_res 15 gate → economy gate hurts)
+- v510 4a×4a vs v49 = 13.02, vs v51 = 14.59 (TV147, early results)
+- v511 (TV151) uploaded — expected best combined policy
 
-### v505 (TV141 — faster 4a step 30, no min_res gate):
-- vs v31: 4a×4a=10.95, 6a×2a=7.20, 2a×6a=11.97
-- vs v34: 4a×4a=18.22, 2a×6a=16.00, 6a×2a=12.54
-- vs v35: 4a×4a=18.22, 2a×6a=16.00, 6a×2a=12.54
-
-### v506 (TV142 — 50% stag scramble):
-- vs v30: 6a×2a=13.87, 2a×6a=13.15
-- vs v31: 4a×4a=15.85, 6a×2a=13.87
-- vs v34: 4a×4a=13.13, 6a×2a=12.69, 2a×6a=16.29
-- vs v35: 4a×4a=13.13, 6a×2a=12.69, 2a×6a=16.29
-- vs v38: 4a×4a=13.13, 6a×2a=12.69, 2a×6a=16.29
-
-### v508 (TV144 — min_res 15 gate):
-- vs v29: 4a×4a=15.36, 6a×2a=15.11
-- vs v30: 2a×6a=11.97, 6a×2a=7.20, 4a×4a=8.14
-- vs v31: 2a×6a=11.97, 6a×2a=7.20, 4a×4a=8.14
-- vs v34: 2a×6a=16.00, 6a×2a=12.54, 4a×4a=11.10
-
-### Key Insight
-v505 4a×4a=18.22 vs v34/v35 is the BEST 4a score — uses no economy gate!
-v508 4a×4a=11.10 vs v34 is worse — economy gate hurts 4a.
-Validates TV145/TV147 approach (removing economy gates).
+## Key Insights
+1. Removing economy gates dramatically improves early alignment
+2. TV147 ultra-aggressive 4a is 41% better than TV143 in self-play
+3. TV151 balanced-aggressive 6a is 32% better than TV147's 6a in self-play
+4. Patrol defense is counterproductive — offensive scrambling IS defense
+5. Carbon-priority mining backfires (over-mines carbon, other resources drop)
