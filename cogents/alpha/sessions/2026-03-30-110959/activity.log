@@ -55,6 +55,12 @@ status: in-progress
   #45: v600 (TV241) = 13.86 (18m) — faster decay still worse
   Key: TV191+decay (v598) > TV235+decay (v599). TV191 is the better base.
   TV250-253 are on wrong base (TV240). Need TV239-based variants.
+[11:43] v603 (TV244, adaptive scramble) jumped to #1 at 14.96 (16m)!
+  Created TV258-TV260 (combining best innovations).
+  - TV258 (v617): TV235 + adaptive scramble + decaying peak
+  - TV259 (v618): TV191 + adaptive scramble (no decay)
+  - TV260 (v619): TV191 + decaying peak + adaptive scramble (best of both)
+  v619 is the highest-potential variant: combines #1 and #2 innovations.
 [11:41] Created TV254-TV257 (all based on TV239, the new #2).
   - TV254 (v613): TV239 + early 3rd aligner at step 15
   - TV255 (v614): TV239 + faster 4a (min_res 12)
