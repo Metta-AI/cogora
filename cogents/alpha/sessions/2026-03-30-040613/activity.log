@@ -1,50 +1,51 @@
 status: in-progress
 started: 2026-03-30-040613
 
-## Leaderboard (converging)
-- v525 (TV165) = 13.84 (68 matches) — TV160+TV162 combo
-- v524 (TV164) = 13.79 (68 matches) — faster stag 150/200
-- v519 (TV160) = 13.52 (27 matches) — faster stag 200/300
-- v522 (TV162) = 13.49 (27 matches) — lower 6a thresholds
-- v527 (TV167) = 13.15 (11 matches) — 25% stag + no idle scramble
-- v526 (TV166) = 11.12 (11 matches) — no idle scramble ← LESSON
-- v529 (TV170) = 9.29 (2 matches) — boundary scramble, very early
-- v528 (TV169) = 2.24 (2 matches) — zero scramble TERRIBLE
+## CONVERGED LEADERBOARD (30+ matches)
+1. **v519 (TV160) = 13.99 (67 matches) ← BEST**
+2. v525 (TV165) = 13.84 (68 matches)
+3. v524 (TV164) = 13.79 (68 matches)
+4. v522 (TV162) = 13.78 (68 matches)
+5. v517 (TV156) = 13.34 (66 matches)
+6. v520 (TV157) = 13.31 (66 matches)
+--- below here: new uploads this session ---
+7. v526 (TV166, no idle) = 12.77 (38 matches) ← -1.22 from removing idle scramble
+8. v527 (TV167) = 12.69 (38 matches)
+9. v529 (TV170) = 10.18 (28 matches) ← no idle scramble penalty
+10. v528 (TV169, zero scramble) = 3.02 (38 matches) ← TERRIBLE
 
-## CRITICAL LESSON: Idle scramble is ESSENTIAL
-v526 (no idle scramble) = 11.12 vs v519 (TV160) = 13.52.
-Despite cooperative scoring, idle scramble creates junction recycling
-that boosts scores. Theory: scramble creates turnover → more alignment
-events → higher cumulative score. NEVER remove idle scramble.
+## KEY LEARNINGS THIS SESSION
 
-## Self-play Results (2000 steps)
+### 1. Idle Scramble is ESSENTIAL (not destructive)
+v526 (no idle scramble) = 12.77 vs v519 = 13.99. Removing idle scramble
+loses 1.22 points despite both teams sharing cooperative scores.
+Junction recycling (scramble → re-align) creates more alignment events.
 
-| Policy | Avg | Scores | Key Change |
-|--------|-----|--------|------------|
-| TV172 (hub explore + no idle) | 2.33 | 2.41, 2.31, 2.27 | Best self-play but BAD idea |
-| TV170 (boundary + no idle) | 2.32 | 2.36, 2.36, 2.24 | Best self-play but BAD idea |
-| TV166 (no idle scramble) | 2.13 | 2.14, 2.13, 2.13, 2.13 | Consistent but 11.12 tournament |
-| TV174 (boundary + keep idle) | 1.85 | 2.11, 1.09, 2.16, 2.04 | Correct approach |
-| TV173 (zone explore) | 1.90 | 1.03, 2.51, 2.15 | Too variable |
-| TV160 (baseline) | 1.76 | 2.48, 1.16, 1.28, 2.12 | Reference |
-| TV167 (25% stag) | 1.95 | single run | 13.15 tournament |
-| TV171 (faster 4a) | 1.52 | 2.21, 2.35, 0.00 | Economy collapse |
-| TV169 (zero scramble) | 1.06 | 1.66, 0.00, 1.51 | 2.24 tournament |
+### 2. Self-play Correlation is NEAR ZERO
+TV166 (no idle) had BEST self-play (2.13 avg, consistent) but WORST
+tournament (12.77). TV160 (baseline) had WORSE self-play (1.76 avg,
+high variance) but BEST tournament (13.99). Self-play results are
+MISLEADING for strategy decisions.
 
-## Self-play vs Tournament Correlation: VERY LOW
-TV166 best self-play (2.13) = WORST tournament (11.12)!
-Self-play removes idle scramble → less turnover → higher consistency
-But tournament needs idle scramble for junction recycling.
+### 3. 50% Stagnation Scramble is Optimal
+- 0% (TV169/v528) = 3.02 ← TERRIBLE
+- 25% (TV167/v527) = 12.69
+- 50% (TV160/v519) = 13.99 ← BEST
+- 75% (TV176, not uploaded) = 1.35 self-play with wipeouts
 
-## Score Breakdown by Agent Count (v524/v525)
-- 2a: 12.9-13.5 (weakest)
-- 4a: 12.9-14.0
-- 6a: 14.6-14.9 (strongest)
+### 4. Heuristic Ceiling at ~14.0
+Top 4 converged versions all within 0.21 points (13.78-13.99).
+Marginal changes (stag timing, 6a thresholds) make <0.2 point differences.
+
+### 5. Score Depends on Opponent Strength
+Against gtlm (weak): 4-11 pts. Against strong alphas: 14-17 pts.
+Both teams share cooperative scores, so weak opponents = low overall score.
 
 ## Uploads This Session
-- v526 = TV166 (no idle scramble) → 11.12 BAD
-- v527 = TV167 (25% stag + no idle) → 13.15
-- v528 = TV169 (zero scramble) → 2.24 TERRIBLE
-- v529 = TV170 (boundary scramble) → 9.29 (early, no idle=bad)
-- v530 = TV172 (hub explore) → qualifying
-- v531 = TV174 (boundary scramble + keep idle) → qualifying
+- v526 = TV166 (no idle) → 12.77
+- v527 = TV167 (25% stag) → 12.69
+- v528 = TV169 (zero scramble) → 3.02
+- v529 = TV170 (boundary, no idle) → 10.18
+- v530 = TV172 (hub explore, no idle) → 10.91 (2 matches)
+- v531 = TV174 (boundary + keep idle) → qualifying
+- v532 = TV175 (earlier hearts) → qualifying
