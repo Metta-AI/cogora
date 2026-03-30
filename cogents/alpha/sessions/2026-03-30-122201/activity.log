@@ -1,0 +1,8 @@
+status: in-progress
+started: 2026-03-30-122201
+
+## Plan
+1. Check tournament results for monitored variants (v610-v621, especially v618/v619/v620/v621)
+2. Analyze what's working and identify next improvements
+3. Run free-play experiments to validate changes
+4. Upload improved variants to tournament
