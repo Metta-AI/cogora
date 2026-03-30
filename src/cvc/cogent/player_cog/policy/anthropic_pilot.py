@@ -40957,3 +40957,110 @@ class AlphaTournamentV318Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV319: TV305 (bottleneck scramble) + TV308 (re-align bonus) ─────────────────
+
+class AlphaTournamentV319AgentPolicy(AlphaTournamentV305AgentPolicy):
+    """TournamentV319: bottleneck scramble + re-align bonus.
+
+    TV305 scored 17.27 in 4v4 — the best result. TV308 (re-align) also strong.
+    Combine: use bottleneck scramble for stagnation AND prioritize re-aligning
+    recently scrambled junctions via negative hotspot weight.
+    NOTE: Do NOT add 2-level lookahead — it hurt TV305 (14.02 vs 17.27).
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -8.0
+
+
+class AlphaTournamentV319Policy(MettagridSemanticPolicy):
+    """TournamentV319: TV305 (bottleneck) + TV308 (re-align)."""
+    short_names = ["alpha-tournament-v319"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV319AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV320: TV305 (bottleneck) + TV312 (conservative 4a economy) ─────────────────
+
+class AlphaTournamentV320AgentPolicy(AlphaTournamentV305AgentPolicy):
+    """TournamentV320: bottleneck scramble + conservative 4-agent economy.
+
+    TV305 = best innovation. TV312 = best 4a economy fix.
+    Combine for stronger overall performance across all team sizes.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 25:
+                return 1, 0
+            return 2, 0
+
+        # 5+ agents: TV277 budgets
+        return AlphaTournamentV277AgentPolicy._pressure_budgets(self, state, objective=objective)
+
+
+class AlphaTournamentV320Policy(MettagridSemanticPolicy):
+    """TournamentV320: TV305 (bottleneck) + TV312 (conservative 4a)."""
+    short_names = ["alpha-tournament-v320"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV320AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV321: TV305 (bottleneck) + TV308 (re-align) + TV312 (conservative 4a) ─────
+
+class AlphaTournamentV321AgentPolicy(AlphaTournamentV320AgentPolicy):
+    """TournamentV321: bottleneck + re-align + conservative 4a.
+
+    Full combination of the three best innovations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -8.0
+
+
+class AlphaTournamentV321Policy(MettagridSemanticPolicy):
+    """TournamentV321: TV305 + TV308 + TV312."""
+    short_names = ["alpha-tournament-v321"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV321AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
