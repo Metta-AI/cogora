@@ -1,0 +1,8 @@
+status: in-progress
+started: 2026-03-30-021109
+
+## Plan
+- Collect tournament results for v506, v507, v508
+- Analyze and iterate based on results
+- Fix carbon bottleneck in 4a if applicable
+- Upload improved policy
