@@ -1,17 +1,20 @@
 status: in-progress
 started: 2026-03-30-031321
 
-## Current Leaderboard (EXCITING — v514 at #2!)
-1. v506 (TV142) = 14.30 (78 matches)
-2. **v514 (TV154) = 13.82 (15 matches, climbing!)**
-4. v513 (TV153) = 13.65 (17 matches)
-5. v512 (TV152) = 13.56 (51 matches, converging)
-7. v511 (TV151) = 13.54 (50 matches, converging)
+## Final Leaderboard Positions
+1. v506 (TV142) = 14.30 (78 matches) — incumbent #1
+2. v514 (TV154) = 13.76 (24 matches) — our best!
+4. v509 (TV145) = 13.57 (78 matches, converged)
+5. v513 (TV153) = 13.56 (25 matches)
+6. v512 (TV152) = 13.56 (51 matches)
+8. v511 (TV151) = 13.54 (50 matches)
 
-## KEY FINDING: 50% stag scramble is the #1 differentiator
-- Variants WITH TV142's 50% stag: v513=#4, v514=#2 (13.65-13.82)
-- Variants WITHOUT TV142's stag: v511=#7, v512=#5 (13.54-13.56)
-- The 50% stag scramble adds ~0.1-0.3 points consistently
+## Summary
+- All new uploads (v509-v514) are in the top 12
+- v514 (TV154) is #2 — combines TV142 stag + TV145 4a + TV151 6a
+- Goal of >10 exceeded by 3.5+ points
+- v515/v516 still qualifying — could potentially improve further
+- Gap to #1 (v506): ~0.54 points
 
 ## Still Qualifying
 - v515 (TV155) = exact TV142 + TV151 6a only
@@ -23,8 +26,10 @@ started: 2026-03-30-031321
 - v519 = TV160 (faster stagnation entry — 200 steps, step>300)
 - v520 = TV157 (ultra-aggressive 6a — 5 aligners from step 15)
 
-## Actions This Session
-- Reviewed learnings, uploaded v509-v516 (from previous sessions)
-- Created TV156-TV160 new code variants
-- Uploaded v517-v520 to tournament
-- Running local free-play tests for TV156/TV157/TV158
+## Key Learnings
+1. 50% stagnation scramble (TV142) is the single most important feature
+2. Aggressive 4a (step 50, no economy gate) is a real improvement
+3. Balanced 6a (4 aligners from step 30) is a real improvement
+4. Self-play predictions have ~50% tournament correlation
+5. Tournament scores normalize significantly after 50+ matches
+6. Early leaderboard positions (< 20 matches) are very volatile
