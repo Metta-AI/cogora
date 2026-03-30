@@ -40684,3 +40684,153 @@ class AlphaTournamentV311Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV312: TV277 (#1) + conservative 4-agent economy ───────────────────────────
+
+class AlphaTournamentV312AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV312: TV277 + conservative 4-agent economy.
+
+    In 4v4 matches, economy crashes (oxygen=3 at step 2000) because
+    2 aligners consume hearts too fast for 2 miners to sustain.
+    Fix: stay at 1 aligner longer in 4-agent mode (min_res >= 25 for 2a).
+    Also: never go to 3a in 4-team (always keep 2 miners).
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            # More conservative: need min_res >= 25 for 2nd aligner (was 15)
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 25:
+                return 1, 0
+            # Never go to 3a in 4-team — keep 2 miners always
+            return 2, 0
+
+        # 5+ agents: same as TV277
+        return super()._pressure_budgets(state, objective=objective)
+
+
+class AlphaTournamentV312Policy(MettagridSemanticPolicy):
+    """TournamentV312: TV277 + conservative 4-agent economy."""
+    short_names = ["alpha-tournament-v312"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV312AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV313: TV277 + carbon-weighted resource bias ────────────────────────────────
+
+class AlphaTournamentV313AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV313: TV277 + carbon-weighted resource bias.
+
+    Carbon is consumed 3x more by aligners (the dominant gear type).
+    Standard _least_resource doesn't account for consumption rates.
+    TV313: if carbon < min(oxygen, germanium, silicon) * 1.5, prioritize carbon.
+    """
+
+    def _macro_directive(self, state: MettagridState) -> MacroDirective:
+        resources = _shared_resources(state)
+        carbon = resources.get("carbon", 0)
+        others_min = min(resources.get(r, 0) for r in ("oxygen", "germanium", "silicon"))
+
+        # Carbon consumed 3x more by aligners — bias toward it when it's relatively low
+        if carbon < others_min * 1.5:
+            return MacroDirective(resource_bias="carbon")
+
+        # Fall back to standard least resource
+        least = _least_resource(resources)
+        if least == "silicon" or resources.get("silicon", 0) < 50:
+            return MacroDirective(resource_bias="silicon")
+        return MacroDirective(resource_bias=least)
+
+
+class AlphaTournamentV313Policy(MettagridSemanticPolicy):
+    """TournamentV313: TV277 + carbon-weighted resource bias."""
+    short_names = ["alpha-tournament-v313"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV313AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV314: TV312 (conservative 4a) + TV302 (2-level lookahead) ──────────────────
+
+class AlphaTournamentV314AgentPolicy(AlphaTournamentV312AgentPolicy, AlphaTournamentV302AgentPolicy):
+    """TournamentV314: conservative 4-agent economy + 2-level junction targeting.
+
+    MRO: V312._pressure_budgets + V302._nearest_alignable.
+    """
+    pass
+
+
+class AlphaTournamentV314Policy(MettagridSemanticPolicy):
+    """TournamentV314: TV312 + TV302 combined."""
+    short_names = ["alpha-tournament-v314"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV314AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV315: TV277 + deposit threshold reduction ──────────────────────────────────
+
+class AlphaTournamentV315AgentPolicy(AlphaTournamentV277AgentPolicy):
+    """TournamentV315: TV277 + lower deposit threshold.
+
+    Default deposit threshold is 20 (or 12 with miner gear). Lower it to 10
+    for faster economy cycles — miners deposit sooner, keeping hub stocked.
+    """
+
+    def _should_deposit_resources(self, state: MettagridState) -> bool:
+        cargo = _h.resource_total(state)
+        if cargo <= 0:
+            return False
+        has_miner_gear = bool(state.self_state.inventory.get("miner", 0))
+        threshold = 8 if has_miner_gear else 15
+        return cargo >= threshold
+
+
+class AlphaTournamentV315Policy(MettagridSemanticPolicy):
+    """TournamentV315: TV277 + lower deposit threshold."""
+    short_names = ["alpha-tournament-v315"]
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV315AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
