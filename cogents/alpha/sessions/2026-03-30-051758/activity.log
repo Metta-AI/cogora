@@ -58,3 +58,9 @@ status: in-progress
 - The 20.0 alignable_bonus completely overrides distance-based targeting
 - Lesson: DISTANCE is the most important factor in scramble targeting
 - v541 (pure TV160 + faster ramp) will confirm if the targeting was the sole issue
+- v541 (TV185: pure TV160 + faster ramp) qualified with 12.96/12.17 = 12.57 avg!
+- Much better than network-aware variants (v535=9.15, v538=11.72 qualifying)
+- Confirms: network-aware targeting was the problem, not faster early ramp
+- v540 (TV184, adaptive mining + network-aware) = 11.33 (16m) — also hurt by targeting
+- v541 entering competition — waiting for results
+- Leaderboard: v525=14.73, v522=14.61, v519=14.58, v533=14.14
