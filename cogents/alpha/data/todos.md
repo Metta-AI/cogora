@@ -1,14 +1,13 @@
 # Todos
 
-- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v522=15.00 (#1!)
+- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v522=14.41 (#1), v542=14.39 (#2)
+- [x] Discovered: team-size-specific stagnation thresholds improve 2a by +1.45
 - [x] Discovered: idle scramble ESSENTIAL (-1.2 pts when removed)
-- [x] Discovered: self-play does NOT predict tournament performance
-- [x] Confirmed: 50% stag scramble optimal
 - [x] Discovered: network-aware scramble targeting HARMFUL (-3 to -4 pts)
-- [x] Confirmed: heuristic ceiling at ~14.7-15.0
-- [x] v541 (faster early ramp) = 13.78, rank #11 — helps 4a, hurts 6a
-- [ ] **Fix 6a regression in faster ramp** — only use 3 aligners for <=4 agents, keep 2 for 5+
-- [ ] **Study v522 (TV162) vs v525 (TV165)** — lower thresholds (25/40/80) might be optimal
-- [ ] **Consider RL training** — heuristic ceiling confirmed; GPU needed for breakthrough
+- [x] Confirmed: 50% stag scramble optimal, wider exploration doesn't help
+- [ ] **Collect v547 (TV191) results** — TV186 + faster 4a, could be new #1
+- [ ] **Collect v546 (TV190) results** — wider exploration, 63 matches running
+- [ ] **Consider RL training** — heuristic ceiling confirmed at ~14.4; GPU needed for breakthrough
 - [ ] **Try LLM cyborg policy** — AnthropicCyborgPolicy might break heuristic ceiling
-- [ ] **Analyze opponent strategies** — study match logs for unexploited approaches
+- [ ] **Explore cooperative scoring optimization** — study how to maximize junction turnover rate
+- [ ] **Analyze 4a weakness** — v542's 4a=12.9 is the main gap vs v522's 13.24
