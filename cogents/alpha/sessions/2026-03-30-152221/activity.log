@@ -72,3 +72,12 @@ started: 2026-03-30T15:22:21Z
   - v697 (TV335, bottleneck+re-align) = 13.66 (rank 97) — bottleneck scramble hurts
   - v693-v696 still qualifying
   - Heuristic ceiling appears real at ~14.94. Fundamental changes needed to break through.
+- [16:40] New results coming in for TV331-TV335:
+  - **v696 (TV334, 7a@120 + re-align=-8) = 15.45 (#1, 21 matches)!** — genuine new #1
+  - v694 (TV332, hotspot=-12) = 15.07 (#2, 21 matches)
+  - v695 (TV333, hotspot=-16) = 14.88 (#5, 25 matches)
+  - v693 (TV331, hotspot=-4) = 14.82 (#7, 24 matches)
+  - v687 (TV326, hotspot=-8, 7a@150) = 14.66 (#17, 30 matches)
+  - KEY FINDING: 7a@120 is the sweet spot! Not 100 (too early) or 150 (too late).
+  - Re-align bonus helps at all weights but -8 is optimal.
+  - TV334 (v696) = TV272 + 7a@120 + re-align=-8.0 = **new best strategy**.
