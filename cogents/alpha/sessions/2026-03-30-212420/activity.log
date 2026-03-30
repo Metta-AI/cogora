@@ -12,3 +12,19 @@ status: in-progress
   - Trigger: when min_res < 10, budget drops to 1 aligner → can't keep pace with enemy
   - Budget function `_tv334_pressure_budgets` drops to 1 aligner too aggressively
 - Plan: Create TV447 — TV350 base + aligner floor (min 3 aligners for 6+ agents during economy dips)
+- Created TV447 (floor 2), TV448 (floor 3), TV449 (floor 3 + stag scramble)
+- Bug fix: floor was applying at step 1, draining initial hub resources → agents die immediately
+  - Fix: only apply floor after step 100 (economy bootstrap)
+- Local test results (2000 steps):
+  - TV350: 8a=2.31, 6a=1.26 (baseline)
+  - TV448: 8a=1.63, 6a=1.82 (+44% in 6a!)
+  - TV449: 8a=1.69
+  - TV447: 8a=0.00 (bad seed or remaining bug)
+- 6-agent test is what matters for competition (6v2 format common)
+- Upstream already has TV447 (crisis recovery), TV448 (floor 2), TV449 (crisis+floor 2) as v833-v835
+- Created TV450 (floor 3 + early-game protection) and TV451 (crisis + floor 3) on top
+- Local test TV450: 6a=1.70 (+35% vs TV350), 8a=1.20
+- Uploaded to tournament:
+  - v837 = TV450 (TV350 + floor 3)
+  - v838 = TV451 (TV447 crisis + floor 3)
+  - v839 = TV448 (TV350 + floor 2, upstream version)
