@@ -1,21 +1,28 @@
 status: in-progress
 started: 2026-03-30-031321
 
-## Continuing from session 021109 (same Claude instance)
-
 ## Current Leaderboard (live)
 1. v506 (TV142) = 14.30 (78 matches)
-2. **v512 (TV152) = 13.99 (21 matches, climbing!)**
-4. v509 (TV145) = 13.57 (78 matches)
-9. v510 (TV147) = 13.49 (78 matches)
-48. v511 (TV151) = 12.61 (6 matches, very early)
+2. **v511 (TV151) = 13.70 (25 matches, climbing!)**
+4. v512 (TV152) = 13.59 (26 matches)
+5. v509 (TV145) = 13.57 (78 matches)
+10. v510 (TV147) = 13.49 (78 matches)
+
+## Key Insights
+- v511 (TV151, balanced 6a) at #2 — 6a improvement validated in tournament!
+- v512 (TV152, adaptive 2a) at #4 — adaptive 2a helps but less than 6a fix
+- Both are chasing v506 (14.30) — need ~0.6 more
 
 ## Pending
-- v513 (TV153) → qualifying/early competition
-- v514 (TV154) → qualifying
-- v515 (TV155) → qualifying
+- v513-v516 still qualifying — these combine multiple proven features
+- v516 (TV156) = ultimate combo (TV142 stag + TV142 4a + TV151 6a + TV152 2a)
 
-## Key Insight
-v512 (TV152, adaptive 2a) is at #2 at 13.99! Only 0.31 behind #1.
-The adaptive 2a that HURT in self-play is HELPING in tournament.
-This confirms: self-play can't validate partner-dependent strategies.
+## Uploads This Session
+- v509 = TV145 → #5 at 13.57
+- v510 = TV147 → #10 at 13.49
+- v511 = TV151 → **#2 at 13.70** ← best new upload!
+- v512 = TV152 → #4 at 13.59
+- v513 = TV153 → qualifying
+- v514 = TV154 → qualifying
+- v515 = TV155 → qualifying
+- v516 = TV156 → qualifying ← ultimate combo
