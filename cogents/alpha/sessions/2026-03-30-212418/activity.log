@@ -33,4 +33,13 @@ status: in-progress
   - v841 avg: 7.60 (7 matches) — weaker overall
   - Key insight: aligner floor dramatically improves 6v2 (8.99 vs modular-lstm!) but 2-agent games still catastrophic vs strong opponents
 - Without the 0.18 outlier, v840 would avg 12.07 — approaching v716
-- Next focus: fix 2-agent weakness (specifically vs gtlm and modular-lstm as minority team)
+- Analyzed 2v6 vs gtlm (v840, 0.18): budget (1,0) → miner dies, economy dead 8000 steps
+- Created TV465: TV350 + crisis + always (2,0) for 2-agent + relaxed scramble gate
+- Uploaded v851=TV464(earlier naming), v852=TV465 — both now in competition
+- KEY INSIGHT from concurrent session: TV350 (v716=15.05) ALSO has 0 scramblers!
+  Zero-scrambler "bug" is present in ALL TV334+ including the champion.
+  Difference between v716 and v840 isn't scramblers — it's floor hurting resource recovery.
+- v846 (TV350 re-upload) scored 8.42 vs mammet 6v2 — below v716's 15.05 (variance or env change?)
+- Concurrent session created TV455-TV464, uploaded v842-v854
+- v851-v853 all in competition, waiting for results
+- Heuristic ceiling confirmed: RL training needed to fundamentally beat modular-lstm
