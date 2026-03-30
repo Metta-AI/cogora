@@ -39,3 +39,9 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
   INSIGHT: Split stag (odd mine, even scramble) = best innovation
   INSIGHT: Wider stag windows and faster decay HARMFUL
   INSIGHT: Lower 7a threshold helps modestly
+
+13:55 — Created TV288-TV291, uploaded as v648-v651 (building on TV281 split stag success)
+  TV288 (v648): TV281 (split stag) + lower 7a (100)
+  TV289 (v649): TV272 + split stag 2/3 scramble, 1/3 mine
+  TV290 (v650): TV272 + adaptive split (all scramble when behind, split when even/ahead)
+  TV291 (v651): TV290 + lower 7a (100) — best of everything
