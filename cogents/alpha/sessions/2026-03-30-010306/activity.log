@@ -33,3 +33,11 @@ status: in-progress
 - Uploaded v504 (TV140) — in qualifying
 - v501 (TV137), v502 (TV138) still in qualifying (no results yet)
 - v496-v500 all in competition (no completed matches yet)
+- TV139 self-play: 6.40 per cog — BEST so far (+19% over TV133 baseline)
+  - Blitz start with 3 aligners from step 1 works well
+  - Peak 15 junctions at step 500, then NPC decline same as others
+- Confirmed: scoring IS cooperative (cogs vs clips). Both teams share score.
+  - Scrambling = clips junctions only (can't scramble partner)
+  - Dual aligning is direct contribution to shared score
+- All v496-v504 matches still running/scheduled, no completed results yet
+- Waiting for tournament results to validate self-play findings
