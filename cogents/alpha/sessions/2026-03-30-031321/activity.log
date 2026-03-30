@@ -23,9 +23,12 @@ started: 2026-03-30-031321
 - v523 = TV163 (adaptive stag scramble — scramble if targets visible, else explore)
 
 ## Free-play Results (self-play 8v0, 5000 steps)
-- TV156-code (carbon mining): 4.04 (self-play predicts poorly)
-- TV157 (aggressive 6a): 6.33
-- TV158 (carbon + aggressive 6a): 5.85
+- TV142 baseline: 6.67
+- TV157 (aggressive 6a): 6.33 (-5%)
+- TV158 (carbon + aggressive 6a): 5.85 (-12%)
+- TV156-code (carbon mining): 4.04 (-39%)
+- TV163 (adaptive scramble): 0.00 first run (bad seed), re-running
+- NOTE: carbon mining HURTS because it over-corrects; silicon becomes bottleneck too
 
 ## Key Learnings
 1. 50% stagnation scramble (TV142) is the single most important feature
