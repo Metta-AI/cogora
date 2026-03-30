@@ -32,3 +32,11 @@ started: 2026-03-30T14:11:02Z
 - [14:52] Many new variants in competition now. v672(TV310), v677(TV315) vs internal; v669(TV307) vs slanky.
 - [15:00] Tournament cycling through variants. Now matching vs Paz-Bot-9005: v674, v675, v676, v680. Also vs v12: v671, v672, v677, v679.
 - [15:00] Awaiting first completed competition results for new variants.
+- [15:07] RESULTS IN! 12 matches for v664 (TV302 2-level lookahead):
+  - vs gtlm-reactive: 4v4=6.32, 2+6=11.08, 6+2=16.03
+  - vs v17: 4v4=14.02, 2+6=16.57, 6+2=14.21
+  - vs coglet-v0: 4v4=7.12, 2+6=11.33, 6+2=12.57
+  - vs v14: 4v4=14.02, 2+6=16.57, 6+2=14.21
+  - Average: 12.84 (12 matches)
+- [15:07] v674 (TV312 conservative 4a): avg 13.11 vs Paz-Bot (3m)
+- [15:07] v680 (TV318 2-level+re-align+carbon): 16.50 in 6+2 but 5.69 in 4v4. Polarizing.
