@@ -25,3 +25,17 @@ plan: Continue from v632 (#1 at 15.17). Try lower 7a threshold, 3-tier stagnatio
   Analyzed TV272 local 1000-step: min_res oscillates 100-200, 7a threshold matters.
   TV277 2000-step local: bad map, all agents died early (map-dependent issue).
   Investigated alignment targeting — already well-optimized via expansion scoring.
+
+13:50 — LEADERBOARD CHECK — Major findings!
+  v641 (TV281) = 15.21 (#1, 2m) — split stag response is the winner!
+  v632 (TV272) = 14.85 (#2, 30m) — previous best, stabilized
+  v637 (TV277) = 14.64 (#6, 5m) — lower 7a decent
+  v639 (TV279) = 14.51 (#11, 30m) — lower 7a + 3-tier stag
+  v640 (TV280) = 14.17 (#30, 9m) — earlier ramp, not great
+  v638 (TV278) = 14.11 (#34, 7m) — 3-tier stag alone, mediocre
+  v642 (TV282) = 13.88 (#47, 1m) — wider stag, BAD trend
+  v645 (TV285) = 13.00 (#134, 3m) — faster decay, BAD
+  v643 (TV283) = 10.25 (#202, 4m) — kitchen sink combo, TERRIBLE
+  INSIGHT: Split stag (odd mine, even scramble) = best innovation
+  INSIGHT: Wider stag windows and faster decay HARMFUL
+  INSIGHT: Lower 7a threshold helps modestly
