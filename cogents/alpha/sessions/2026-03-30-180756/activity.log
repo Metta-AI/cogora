@@ -25,3 +25,11 @@ plan: Fine-tune around #1 (TV350) and improve tournament performance
   TV408: Lower deposit threshold (12 vs 16)
   TV409: expansion_weight=8 (less expansion preference)
   TV410: 8 aligners at min_res>=200 (all-in alignment)
+- [18:42] Tournament analysis:
+  - Parallel session's budget variants (v765-v774) ALL worse: 6.23-13.59
+  - 4-agent budget changes are harmful — TV272 budgets already near-optimal
+  - v781 only new variant with results: 11.48 (still qualifying)
+  - v786-v796 (my TV401-TV410) still in qualifying pipeline
+  - Leaderboard stable: v716=15.05 (#1), top 36 all ours
+  - **Conclusion**: heuristic ceiling ~15.05, marginal tuning can't break through
+  - Next frontier: LLM cyborg or fundamentally new strategy
