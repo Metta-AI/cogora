@@ -69,3 +69,10 @@ started: 2026-03-30T16:18:00Z
   Diverse opponent pool = better signal.
 - [17:35] 10 matches running, 10 scheduled. Parallel session created v725-v736.
   Still no alpha.0 competition results completed.
+- [17:44] Created TV376-TV380: density + stagnation combos (unique to this session)
+  - TV376: net_wt=1.0 + fast stag + 7a@120 + hotspot=-8 (MOST PROMISING)
+  - TV377: net_wt=1.0 + fast stag + 7a@120 + no hotspot
+  - TV378: net_wt=0.85 + fast stag + 7a@120 + hotspot=-8
+  - TV379: net_wt=1.0 + fast stag + 7a@100 + hotspot=-8
+  - TV380: net_wt=1.0 + fast stag + fast decay (300) + hotspot=-8
+- [17:45] Uploaded: v752(TV376), v753(TV377), v754(TV378), v755(TV379), v756(TV380)

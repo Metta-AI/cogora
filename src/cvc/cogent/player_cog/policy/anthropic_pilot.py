@@ -44024,3 +44024,132 @@ class AlphaTournamentV375Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV376-TV380: Network density + stagnation tuning (unique combinations)
+# Combining TV365 density with TV346 fast stagnation — not yet tested
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class AlphaTournamentV376AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV376: net_wt=1.0 + fast stag (peak=4, 250, 400) + 7a@120 + hotspot=-8."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+        self._hotspot_weight = -8.0
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+    def _aligner_action(self, state):
+        return _stag_aligner_action(self, state, stag_peak_5p=4, stag_steps_5p=250, stag_min_step_5p=400)
+
+class AlphaTournamentV376Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v376"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV376AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV377AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV377: net_wt=1.0 + fast stag + 7a@120 + NO hotspot.
+    Parallel session found hotspot HURTS with density (TV368=4.65).
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+        self._hotspot_weight = 0.0
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+    def _aligner_action(self, state):
+        return _stag_aligner_action(self, state, stag_peak_5p=4, stag_steps_5p=250, stag_min_step_5p=400)
+
+class AlphaTournamentV377Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v377"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV377AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV378AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV378: net_wt=0.85 + fast stag + 7a@120 + hotspot=-8."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 0.85
+        self._hotspot_weight = -8.0
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+    def _aligner_action(self, state):
+        return _stag_aligner_action(self, state, stag_peak_5p=4, stag_steps_5p=250, stag_min_step_5p=400)
+
+class AlphaTournamentV378Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v378"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV378AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV379AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV379: net_wt=1.0 + fast stag + 7a@100 (faster 7th) + hotspot=-8."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+        self._hotspot_weight = -8.0
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=100)
+    def _aligner_action(self, state):
+        return _stag_aligner_action(self, state, stag_peak_5p=4, stag_steps_5p=250, stag_min_step_5p=400)
+
+class AlphaTournamentV379Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v379"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV379AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV380AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV380: net_wt=1.0 + fast stag + fast peak decay (300) + hotspot=-8."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+        self._hotspot_weight = -8.0
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+    def _aligner_action(self, state):
+        return _stag_aligner_action(self, state, stag_peak_5p=4, stag_steps_5p=250,
+                                    stag_min_step_5p=400, peak_decay=300)
+
+class AlphaTournamentV380Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v380"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV380AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
