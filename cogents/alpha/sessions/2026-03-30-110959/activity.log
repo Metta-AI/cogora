@@ -16,3 +16,9 @@ status: in-progress
   - TV245 (v604): TV235 + 1 dedicated scrambler for 6+ agent teams
   - TV246 (v605): TV240 (TV235+decay) + 1 dedicated scrambler
   Tested locally, uploaded to tournament.
+[11:28] Created TV247-TV248 (team-size specific tweaks on TV240/TV235).
+  - TV247 (v606): TV240 + faster 6a stag entry (4/250/400 vs 5/300/500)
+  - TV248 (v607): TV235 + faster 4a expansion (min_res 12 vs 15)
+  Tested locally, uploaded. v598/v600 now in competition pool.
+[11:29] Local free-play TV240: 5.56 per cog (self-play, not meaningful for comparison).
+  Late game stagnation evident — agents stuck with 0-2 friendly junctions vs 18-21 enemy.
