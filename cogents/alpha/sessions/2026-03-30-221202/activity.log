@@ -64,3 +64,11 @@ status: in-progress
   v852: 6v2 vs Paz=12.94, ?v? vs lstm=0.80
   v853 (TV466, stag scramble): 2v6 vs coglet=3.39
   v851 is best new result so far. 2v6 improved (2.89 vs old 0.18).
+- [23:15] More competition results:
+  v847 (TV462, TV350 for 5+): 6v2 vs Paz=13.59 — CLOSE TO v716!
+  v851 (TV465): 6v2 mammet=9.31, 4v4 Paz=11.32, 4v4 lstm=0.99, 2v6 mammet=2.89/4.40
+  v852: 6v2 Paz=12.94, 6v2 mammet=9.31, 4v4 mammet=10.59, 2v6 lstm=1.17
+  v853 (TV466, stag scramble): 6v2 slanky=6.82, 4v4 gtlm=6.80, 2v6 coglet=3.39, 2v6 gtlm=2.04
+  v854: 6v2 vs random=9.41
+  KEY FINDING: v847 (13.59) proves TV350 is the right 5+ base. v853 (stag scramble) hurts.
+  Pattern confirmed: "any change to TV350 hurts" — the base is near-optimal for heuristics.
