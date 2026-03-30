@@ -1,37 +1,32 @@
 status: in-progress
 started: 2026-03-30-122201
 
-## Leaderboard at Session Start (12:22)
-- v592 (TV234) = #1 at 14.82 (24m)
-- v618 (TV259) = #2 at 14.81 (24m)
+## Session Summary
+Created 16 tournament variants (TV263-TV276, v622-v636) exploring combinations
+of proven features on the strongest bases.
 
-## Variants Uploaded (16 total: v622-v636, TV263-TV276)
-All on TV191 or TV234/TV208 base with various combinations of:
-adaptive scramble, early aligner, 7-aligner option, capture scramble, faster stag
+## Best Results (22-24 matches each)
+| Rank | Variant | TV# | Description | Score | Matches |
+|------|---------|-----|-------------|-------|---------|
+| #1 | v625 | TV266 | TV263 (TV191+adaptive+early aligner) + TV208 thresholds | **15.30** | 22 |
+| #2 | v623 | TV264 | TV234 (TV208+early aligner+decay) + adaptive scramble | **15.12** | 23 |
+| #3 | v628 | TV269 | TV263 + 7 aligners at res>=150 | **14.98** | 23 |
+| - | v624 | TV265 | TV259 + aggressive scramble (175/125/75) | 14.58 | 24 |
+| - | v626 | TV267 | TV263 + faster stag entry (200 steps) | 14.56 | 24 |
+| - | v622 | TV263 | TV259 + early aligner | 14.49 | 23 |
+| - | v629 | TV270 | TV263 + earlier 4th aligner | 13.75 | 22 |
+| BAD | v631 | TV271 | TV263 + capture scramble | 12.61 | 24 |
+| BAD | v627 | TV268 | TV263 + adaptive idle (skip when ahead) | 11.98 | 24 |
 
-## Tournament Results (13:05, 14+ matches each)
-CLEAR IMPROVEMENT over old #1 (v592 = 14.82):
-
-| Variant | TV# | Base | Changes | Score | Matches |
-|---------|-----|------|---------|-------|---------|
-| v625 | TV266 | TV263 (TV191) | +TV208 thresholds (22/35/70) | **15.23** | 14 |
-| v623 | TV264 | TV234 (TV208) | +adaptive scramble | **15.21** | 14 |
-| v628 | TV269 | TV263 (TV191) | +7 aligners at res>=150 | **15.07** | 14 |
-| v626 | TV267 | TV263 (TV191) | +faster stag (200 steps) | **14.95** | 15 |
-| v624 | TV265 | TV259 (TV191) | +aggressive scramble 175/125/75 | **14.89** | 17 |
-| v622 | TV263 | TV259 (TV191) | +early aligner | 14.13 | 15 |
-| v629 | TV270 | TV263 | +earlier 4th aligner (30) | 13.88 | 7 |
-| v631 | TV271 | TV263 | +capture scramble | 13.69 | 12 |
-| v627 | TV268 | TV263 | +adaptive idle (SKIP ahead) | **11.75** | 13 |
-
-## Key Learnings
-1. **v625/v623 tied for #1 at ~15.2** — combining adaptive scramble with optimized base breaks the 14.8 ceiling
-2. **v627 CATASTROPHIC at 11.75** — never skip idle scramble when ahead! Opportunistic scrambling always helps
-3. **TV208 thresholds (22/35/70)** on TV191 base = slightly better than TV208+decay base
-4. **Early aligner alone (TV263)** = 14.13, doesn't help much on TV191 base without other changes
-5. **7 aligners at high res** = solid improvement (+0.25 over TV263)
-6. **Faster stag entry** = moderate improvement (+0.82 over TV263)
-7. **Capture-optimized scramble** = actually HURTS (13.69 vs 14.13)
+## Key Findings
+1. **All top variants beat old #1 (v592=14.82)**: v625=15.30, v623=15.12, v628=14.98
+2. **TV208 thresholds (22/35/70) on TV191 base** = best combo (v625)
+3. **Adaptive scramble on TV234 base** = 2nd best (v623)
+4. **7 aligners at high resources** = solid improvement
+5. **Capture-optimized scramble = HARMFUL** (12.61, 8.72)
+6. **Skip idle scramble when ahead = CATASTROPHIC** (11.98)
 
 ## Still Qualifying
-v632 (TV272), v633 (TV273), v634 (TV274), v635 (TV275), v636 (TV276)
+v632 (TV272: TV264+7a), v633 (TV273: TV264+capture, 8.72 early),
+v634 (TV274: kitchen sink), v635 (TV275: TV264+faster stag),
+v636 (TV276: TV264+lower thresholds 18/30/60)
