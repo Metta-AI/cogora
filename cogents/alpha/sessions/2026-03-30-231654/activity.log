@@ -29,4 +29,21 @@ status: in-progress
 - v863 = TV470 (reactive budget + aligner floor)
 - v864 = TV468 (explore-first idle, no idle scramble)
 - v865 = TV469 (aligner floor)
-- v858 = unknown (uploaded by prev session, running in competition)
+- v858 = TV469 (uploaded by prev session 231649, qualified at 13.36/11.82)
+- v855 = TV350 re-upload, v856 = TV467, v857 = TV468, v859 = TV470 (from prev session)
+- NOTE: v860-v865 are duplicate uploads of same policies, but v861 (TV471) and v862 (TV472) are genuinely new
+
+### Competition Results (partial)
+All v860-v865 qualified and entered competition!
+- v856 (TV467) 2v6 vs mammet: 1.13 (bad, expected for 2v6)
+- v856 (TV467) 2v6 vs gtlm: 0.18 (terrible, expected)
+- v856 (TV467) 4v4 vs random-assay: 9.92
+- v855 (TV350) 6v2 vs gtlm: 11.33
+- v859 (TV470) 2v6 vs gtlm: 2.04, 1.52
+- Waiting for more 6v2 and 4v4 results (the informative matchups)
+
+### Key Analysis Insights
+- At step 1500 (collapse point), min_res=6 triggers TV350 budget to drop to 1 aligner
+- Hub resources: carbon=6, oxygen=47 — huge imbalance causing budget collapse
+- Aligner floor (TV469/v858/v865) prevents this specific failure mode
+- RL agents (modular-lstm) are fundamentally more efficient at scramble/align cycles
