@@ -30,3 +30,10 @@ status: in-progress
 - v535-v539 all have 10-12 running competition matches
 - v540 still qualifying
 - Leaderboard stable: v525=14.73, v522=14.61, v519=14.58
+- Competition results in!
+  v535 (TV179): avg=12.16 (3m) — network-aware scramble working well
+  v536 (TV181): avg=7.30 (9m) — always-scramble TERRIBLE, kills 2a performance
+  v537 (TV180): avg=11.91 (8m) — 75% stag + network-aware is competitive!
+- v537 best of the 3 network-aware variants. 6a=13.82, 4a=10-13.6, 2a=7.8-12.5
+- Key finding: always-scramble (v536) kills cooperative score with weak opponents
+- v535/v537 are above goal (>10) but below top 3 (14.5+)
