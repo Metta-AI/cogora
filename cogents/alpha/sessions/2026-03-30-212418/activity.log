@@ -17,4 +17,13 @@ status: in-progress
   - TV447: TV350 + crisis recovery mode (always scramble when friendly_j=0 for 300+ steps, prefer hub-proximal enemy junctions)
   - TV448: TV350 + aligner floor of 2 only (minimal change)
   - TV449: TV447 + TV448 combined
-- Running local tests...
+- Local test results (8-agent, 2000 steps):
+  - TV350 (baseline): 1.37
+  - TV447 (crisis recovery): 2.19 (+60%)
+  - TV448 (aligner floor only): 2.38 (+74%)
+  - TV449 (crisis + floor): 1.28 (-7%) — combined features don't stack
+  - TV450 (adaptive aggression + crisis): 2.08 (+52%)
+- Uploaded v833=TV447, v834=TV448, v835=TV449, v836=TV450
+- v833 (TV447) qualifying: 10.25 (one match failed=pod issue)
+- Created TV450: adaptive aggression — wider scramble windows when losing junction war + crisis recovery from TV447
+- Waiting for more qualifying/competition results
