@@ -17,6 +17,14 @@ started: 2026-03-30-031321
 - v515 (TV155) = exact TV142 + TV151 6a only
 - v516 (TV156) = ultimate combo (TV142 stag + 4a + TV151 6a + TV152 2a)
 
+## Uploads This Session
+- v517 = TV156-code (carbon-weighted mining — 3x carbon priority)
+- v518 = TV159 (30% stag scramble — testing if less scramble is even better)
+- v519 = TV160 (faster stagnation entry — 200 steps, step>300)
+- v520 = TV157 (ultra-aggressive 6a — 5 aligners from step 15)
+
 ## Actions This Session
-- Reviewed learnings, uploaded v509-v516
-- Created TV156-TV158 (code variants for further testing)
+- Reviewed learnings, uploaded v509-v516 (from previous sessions)
+- Created TV156-TV160 new code variants
+- Uploaded v517-v520 to tournament
+- Running local free-play tests for TV156/TV157/TV158
