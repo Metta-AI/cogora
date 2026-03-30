@@ -37,3 +37,8 @@ status: in-progress
 - v537 best of the 3 network-aware variants. 6a=13.82, 4a=10-13.6, 2a=7.8-12.5
 - Key finding: always-scramble (v536) kills cooperative score with weak opponents
 - v535/v537 are above goal (>10) but below top 3 (14.5+)
+- Results converging: v535=11.74 (9m), v537=11.44 (11m) — network-aware scramble WORSE than baseline
+- v536=7.47 (11m) — always-scramble TERRIBLE
+- v538=13.20, v539=13.18 (1m each) — promising but need more data
+- Created TV185 (v541): pure TV160 + faster early expansion (no network-aware)
+- Lesson: network-aware scramble targeting hurts more than helps (longer travel)

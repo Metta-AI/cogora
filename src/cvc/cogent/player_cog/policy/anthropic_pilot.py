@@ -28421,3 +28421,82 @@ class AlphaTournamentV184Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV185: TV160 exact + faster early expansion (no network-aware) ──────
+
+class AlphaTournamentV185AgentPolicy(AlphaTournamentV160AgentPolicy):
+    """TournamentV185: Pure TV160 behavior + faster early pressure budgets.
+
+    TV182's faster early expansion (v538) scored 13.20 (1m) while
+    TV179's network-aware scramble (v535) scored 11.74 (9m).
+    The network-aware targeting might hurt by causing longer travel.
+
+    TV185: Keep TV160's exact idle behavior (50% scramble at min_res>=7)
+    but use faster early ramp: 3 aligners at start, 4 at step 50.
+    No network-aware targeting changes.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2a and 4a: same as TV142/TV160
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 20:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: FASTER early ramp (from TV182)
+        if step < 10:
+            return 3, 0  # 3 aligners immediately
+        if step < 50:
+            return min(4, team_size - 2), 0  # 4 aligners at step 50
+        # Then use TV142/TV160 steady-state budgets
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 30:
+            return 2, 0
+        elif min_res < 50:
+            return 3, 0
+        elif min_res < 100:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV185Policy(MettagridSemanticPolicy):
+    """TournamentV185: TV160 + faster early expansion only."""
+    short_names = ["alpha-tournament-v185"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV185AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
