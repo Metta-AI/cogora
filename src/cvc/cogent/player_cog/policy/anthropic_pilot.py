@@ -43440,3 +43440,256 @@ class AlphaTournamentV360Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV361: Dense Fortress — high network_weight keeps aligners hub-proximal
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV361AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV361: TV272 + network_weight=2.0 (4x default).
+
+    Strong preference for junctions close to existing network/hub.
+    Creates dense, defensible clusters instead of sparse expansion.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 2.0
+
+
+class AlphaTournamentV361Policy(MettagridSemanticPolicy):
+    """TV361: Dense fortress via high network_weight."""
+    short_names = ["alpha-tournament-v361"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV361AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV362: Directional Spreading — each aligner assigned a direction
+# ══════════════════════════════════════════════════════════════════════════════
+
+import math as _math
+
+# Direction vectors for 8 agents (N, NE, E, SE, S, SW, W, NW)
+_DIRECTION_VECTORS = [
+    (0, -1), (1, -1), (1, 0), (1, 1),
+    (0, 1), (-1, 1), (-1, 0), (-1, -1),
+]
+
+
+class AlphaTournamentV362AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV362: TV272 + directional spreading.
+
+    Each aligner is assigned a direction based on team-relative index.
+    Junction scoring adds a directional bonus for junctions in the agent's
+    assigned direction (relative to hub). This prevents aligner clustering.
+    """
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+        directed_candidate = self._directive_target_candidate(candidates)
+        if directed_candidate is not None:
+            return directed_candidate
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda junction: junction.owner not in {None, "neutral", team_id},
+        )
+        unreachable = [
+            entity for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"})
+            if entity not in candidates
+        ]
+
+        # Compute directional bonus
+        team_ids = sorted(self._shared_team_ids) if self._shared_team_ids else list(range(8))
+        my_index = team_ids.index(self._agent_id) if self._agent_id in team_ids else 0
+        num_aligners = len(team_ids)
+        dir_idx = my_index % len(_DIRECTION_VECTORS)
+        dx_pref, dy_pref = _DIRECTION_VECTORS[dir_idx]
+
+        def _score_with_direction(entity):
+            base_score = _h.aligner_target_score(
+                current_position=current_pos,
+                candidate=entity,
+                unreachable=unreachable,
+                enemy_junctions=enemy_junctions,
+                claimed_by_other=_h.is_claimed_by_other(
+                    claims=self._shared_claims, candidate=entity.position,
+                    agent_id=self._agent_id, step=self._step_index,
+                ),
+                hub_position=hub_pos,
+                friendly_junctions=friendly_junctions,
+                hotspot_count=self._junction_hotspot_count(entity, hub),
+                network_weight=self._network_weight,
+                hotspot_weight=self._hotspot_weight,
+            )
+            # Direction bonus: junctions in agent's preferred direction get lower score (better)
+            if hub_pos is not None:
+                jx, jy = entity.position
+                rel_x = jx - hub_pos[0]
+                rel_y = jy - hub_pos[1]
+                dist = _math.sqrt(rel_x * rel_x + rel_y * rel_y) + 0.001
+                # Dot product with preferred direction (normalized)
+                alignment = (rel_x * dx_pref + rel_y * dy_pref) / dist
+                # Bonus: up to -15 for perfect alignment, 0 for perpendicular, +15 for opposite
+                direction_penalty = -alignment * 15.0
+            else:
+                direction_penalty = 0.0
+            return (base_score[0] + direction_penalty, base_score[1]), entity.position
+
+        return min(candidates, key=_score_with_direction)
+
+
+class AlphaTournamentV362Policy(MettagridSemanticPolicy):
+    """TV362: Directional spreading."""
+    short_names = ["alpha-tournament-v362"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV362AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV363: Re-align Specialist — agent 0 prioritizes recently-scrambled junctions
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV363AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV363: TV272 + re-align specialist.
+
+    The lowest-index aligner (agent 0 in team) becomes a re-align specialist.
+    Instead of exploring for new junctions, it strongly prioritizes re-aligning
+    junctions that were recently scrambled (detected via shared_junctions data).
+    Other agents behave normally.
+    """
+
+    def _nearest_alignable_neutral_junction(self, state: MettagridState) -> KnownEntity | None:
+        # Check if this agent is the re-align specialist (lowest team index)
+        team_ids = sorted(self._shared_team_ids) if self._shared_team_ids else []
+        is_specialist = team_ids and team_ids[0] == self._agent_id
+
+        if not is_specialist:
+            return super()._nearest_alignable_neutral_junction(state)
+
+        # Specialist: strongly prefer recently-scrambled junctions (from shared_junctions)
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+        hub_pos = hub.position if hub is not None else None
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda entity: entity.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda entity: entity.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+
+        candidates = []
+        for entity in self._known_junctions(state, predicate=lambda junction: junction.owner in {None, "neutral"}):
+            if not _h.within_alignment_network(entity.position, network_sources):
+                continue
+            candidates.append(entity)
+        if not candidates:
+            return None
+
+        # Check for recently-scrambled junctions (hotspot count > 0 = was scrambled)
+        hotspot_candidates = []
+        for entity in candidates:
+            hotspot_count = self._junction_hotspot_count(entity, hub)
+            if hotspot_count > 0:
+                hotspot_candidates.append(entity)
+
+        # If there are hotspot junctions, strongly prefer closest one
+        if hotspot_candidates:
+            return min(hotspot_candidates, key=lambda e: _h.manhattan(current_pos, e.position))
+
+        # Otherwise fall back to normal behavior
+        return super()._nearest_alignable_neutral_junction(state)
+
+
+class AlphaTournamentV363Policy(MettagridSemanticPolicy):
+    """TV363: Re-align specialist."""
+    short_names = ["alpha-tournament-v363"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV363AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV364: Compact Network — high network_weight + no expansion bonus
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV364AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV364: TV272 + network_weight=3.0 + expansion_weight=2.0.
+
+    Maximum density focus. Agents build tight hub-proximal network.
+    Reduced expansion bonus prevents chasing distant neutral clusters.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 3.0
+        self._expansion_weight = 2.0
+        self._expansion_cap = 20.0
+
+
+class AlphaTournamentV364Policy(MettagridSemanticPolicy):
+    """TV364: Compact network (high net weight, low expansion)."""
+    short_names = ["alpha-tournament-v364"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV364AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV365: Moderate density — network_weight=1.0 (2x default, gentler than TV361)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV365AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV365: TV272 + network_weight=1.0 (double default)."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._network_weight = 1.0
+
+
+class AlphaTournamentV365Policy(MettagridSemanticPolicy):
+    """TV365: Moderate density via network_weight=1.0."""
+    short_names = ["alpha-tournament-v365"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV365AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

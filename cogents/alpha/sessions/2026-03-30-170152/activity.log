@@ -1,3 +1,10 @@
 status: in-progress
 started: 2026-03-30-170152
 plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental strategy changes
+- [17:07] Created TV361-TV365 paradigm-shift variants:
+  - TV361: Dense fortress (network_weight=2.0, 4x default)
+  - TV362: Directional spreading (each aligner assigned direction)
+  - TV363: Re-align specialist (agent 0 prioritizes scrambled junctions)
+  - TV364: Compact network (network_weight=3.0, expansion_weight=2.0)
+  - TV365: Moderate density (network_weight=1.0, 2x default)
+- [17:08] Running local tests: TV272 (baseline), TV361, TV362, TV363
