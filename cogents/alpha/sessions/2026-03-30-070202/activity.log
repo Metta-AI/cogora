@@ -20,3 +20,7 @@ started: 2026-03-30-070202
   - TV196: Aggressive 2a (always 2 aligners, no economy gate)
 - Uploaded TV195 as v551, TV196 as v552
 - Running full TV192 local game (5000 steps) in background
+- Created 2 more 4a-focused variants:
+  - TV197: ultra-fast 4a (min_res 10, step 30, 3a at 60/200) — v553
+  - TV198: always 2 aligners in 4a (like 2a approach) — v554
+- Total uploads this session: v548-v554 (TV192-TV198)
