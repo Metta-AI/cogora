@@ -3,3 +3,7 @@ started: 2026-03-30T23:16:49Z
 
 ## Activity Log
 - Session started. Context: v716=15.05 (#1), goal >10 achieved. Todos: RL training, study modular-lstm, 2-agent optimization.
+- Analyzed recent matches: v847-v854 active, v716 likely out of rotation. Scores vary: 0.99-14.89.
+- Studied match logs: 4v4 vs modular-lstm (0.99) - stuck at 1 friendly junction all game. 6v2 vs Paz-Bot (13.59) - early expansion then stagnation scramble.
+- Created TV467 (junction-differential-reactive budget) and TV468 (explore-first idle).
+- Uploaded v855 (TV350 re-upload), v856 (TV467), v857 (TV468) to qualifying.
