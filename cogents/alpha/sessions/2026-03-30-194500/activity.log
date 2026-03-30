@@ -29,3 +29,14 @@ plan: Check tournament results for v797 cyborg and fine-tuning variants. Iterate
 - TV419: TV350 + no idle/stagnation scramble — pure alignment focus, never waste hearts on scramble
 - TV420: TV350 + faster 3a ramp — 3rd aligner at min_res>=25 instead of 35
 - TV421: TV350 + burst 2-scramble during stagnation — 2 scramblers for 100-step windows
+
+## BREAKTHROUGH: v802 (TV416 adaptive hotspot) = 15.96 qualifying!
+- TV416 adaptive hotspot weight scored 15.96 in qualifying (vs v716=15.05 #1)
+- Key idea: early=-5, mid=-10, late=-15 hotspot penalty by game phase
+- Still only 1 qualifying match — need 2nd to confirm
+- Created TV422-TV426 combinations around TV416's success:
+  - TV422: wider early window (1500 instead of 1000)
+  - TV423: stronger adaptive (-3/-10/-20)
+  - TV424: adaptive hotspot + no idle scramble combo
+  - TV425: adaptive hotspot + collapse recovery combo
+  - TV426: adaptive hotspot + faster 3a combo

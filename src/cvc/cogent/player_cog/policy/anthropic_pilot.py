@@ -46010,3 +46010,336 @@ class AlphaTournamentV421Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TV422-TV426: Variants around TV416's adaptive hotspot (v802=15.96 qualifying)
+# TV416 uses: early=-5, mid=-10, late=-15 adaptive hotspot weight
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AlphaTournamentV422AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV422: TV416 + wider early window (expand freely until step 1500)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        step = self._step_index
+        if step < 1500:
+            self._hotspot_weight = -5.0
+        elif step < 3000:
+            self._hotspot_weight = -10.0
+        else:
+            self._hotspot_weight = -15.0
+        return count
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV422Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v422"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV422AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV423AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV423: Stronger adaptive hotspot (-3 early, -10 mid, -20 late)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        step = self._step_index
+        if step < 1000:
+            self._hotspot_weight = -3.0
+        elif step < 2500:
+            self._hotspot_weight = -10.0
+        else:
+            self._hotspot_weight = -20.0
+        return count
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV423Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v423"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV423AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV424AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV424: TV416 adaptive hotspot + no idle scramble (TV419 combo).
+    Theory: adaptive hotspot for targeting + no wasted hearts on scramble."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        step = self._step_index
+        if step < 1000:
+            self._hotspot_weight = -5.0
+        elif step < 2500:
+            self._hotspot_weight = -10.0
+        else:
+            self._hotspot_weight = -15.0
+        return count
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+        friendly_count = len(self._known_junctions(state, predicate=lambda j: j.owner == team_id))
+
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        else:
+            if step - self._last_junction_growth_step > 500:
+                self._peak_junction_count = max(friendly_count, self._peak_junction_count - 1)
+                self._last_junction_growth_step = step
+            if num_agents <= 2:
+                stag_peak, stag_steps, stag_min_step = 3, 200, 300
+            else:
+                stag_peak, stag_steps, stag_min_step = 5, 300, 500
+            if (self._peak_junction_count >= stag_peak
+                    and step - self._last_junction_growth_step > stag_steps
+                    and step > stag_min_step):
+                self._stagnation_mode = True
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(state, predicate=lambda j: j.owner in {None, "neutral"})
+        if unreachable:
+            safe_unreachable = [j for j in unreachable if _h.manhattan(current_pos, j.position) < hp - 20]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # NO scramble — just mine/explore
+        min_res = _h.team_min_resource(state)
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+
+class AlphaTournamentV424Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v424"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV424AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV425AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV425: TV416 adaptive hotspot + collapse recovery (TV418 combo)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+        self._collapse_recovery_mode = False
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        step = self._step_index
+        if step < 1000:
+            self._hotspot_weight = -5.0
+        elif step < 2500:
+            self._hotspot_weight = -10.0
+        else:
+            self._hotspot_weight = -15.0
+        return count
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        team_id = _h.team_id(state)
+        friendly_count = len(self._known_junctions(state, predicate=lambda j: j.owner == team_id))
+        step = state.step or self._step_index
+        if (self._peak_junction_count >= 6
+                and friendly_count <= self._peak_junction_count * 0.5
+                and step > 500):
+            self._collapse_recovery_mode = True
+        elif friendly_count >= self._peak_junction_count * 0.8:
+            self._collapse_recovery_mode = False
+        return super()._aligner_action(state)
+
+    def _pressure_budgets(self, state, *, objective=None):
+        base_aligners, base_scramblers = _tv334_pressure_budgets(
+            self, state, objective=objective, threshold_7a=120
+        )
+        if objective == "resource_coverage":
+            return base_aligners, base_scramblers
+        if self._collapse_recovery_mode:
+            team_size = len(self._shared_team_ids) if self._shared_team_ids else 8
+            base_aligners = min(base_aligners + 2, team_size - 1)
+        return base_aligners, base_scramblers
+
+
+class AlphaTournamentV425Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v425"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV425AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+class AlphaTournamentV426AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV426: TV416 adaptive hotspot + faster 3a (TV420 combo).
+    Theory: adaptive hotspot helps targeting + faster 3a captures territory."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        step = self._step_index
+        if step < 1000:
+            self._hotspot_weight = -5.0
+        elif step < 2500:
+            self._hotspot_weight = -10.0
+        else:
+            self._hotspot_weight = -15.0
+        return count
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+        if team_size <= 4:
+            if step < 50:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            if min_res < 15:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 80 and step >= 300:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 25:  # Faster 3a (25 instead of 35)
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV426Policy(MettagridSemanticPolicy):
+    short_names = ["alpha-tournament-v426"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV426AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
