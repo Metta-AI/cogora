@@ -85,3 +85,7 @@ status: in-progress
 - Created TV191 (v547): TV186 + faster 4a (min_res 15 vs 20)
 - Theory: if v542's 4a improves from 12.9 to ~13.4, overall could reach 14.5+
 - v542 currently #2 at 14.39, very close to v522 #1 at 14.41
+- v544 (25m): 4a=13.9 — confirms faster 4a helps! But 2a=12.5 weak
+- v545 (23m): avg=13.98, balanced
+- v547 (TV191) qualifying — combines TV186 2a advantage + TV188 4a advantage
+- If v547 gets v542's 2a(14.2) + v544's 4a(13.9) + v542's 6a(15.5) = 14.53 → new #1
