@@ -1,2 +1,6 @@
 status: in-progress
 - Created TV179 (network-aware scramble), TV180 (75% stag + network-aware), TV181 (always-scramble + network-aware)
+- Uploaded v535 (TV179 network-aware scramble), v536 (TV181 always-scramble), v537 (TV180 75% stag scramble)
+- Tournament snapshot: v519=14.48 (#1, 6m), v512/v511=14.37 (3m), v534=14.27 (3m), v522=14.22 (6m)
+- Self-play: TV179=2.14, TV180=0.00-0.31, TV181=0.59 (baseline AlphaCyborg=2.27)
+- Self-play is misleading — uploading all three for tournament validation
