@@ -1,1 +1,18 @@
 status: in-progress
+
+## Activity Log
+
+### Analysis Phase
+- Reviewed recent matches: v851/v853 in tournament
+- Key weakness: vs modular-lstm (0.99 in 4v4, 7.87 in 6v2)
+- Downloaded and analyzed match logs for 6v2 vs modular-lstm (match 4ec5e0a3)
+- CRITICAL FINDING: We start strong (10 friendly junctions at step 1000) but modular-lstm's 2 agents systematically scramble us down to 1 junction by step 2100
+- Our stag_scramble/crisis_scramble behaviors are ineffective at recovery — agents oscillate between scrambling and retreating for 8000+ steps
+- TV350 inherits _preferred_scramble_target from SemanticCogAgentPolicy base (not overridden in chain)
+
+### Strategy Formulation
+- Issue: when losing junctions, our agents scramble enemy junctions but can't re-align because modular-lstm re-scrambles faster
+- Approach: create TV467 with recovery mode — when friendly_j drops to <30% of peak:
+  1. Focus scramble on junctions within alignment range of hub (capturable after scramble)
+  2. Increase aligner budget in recovery (economy irrelevant at score=0)
+  3. After scrambling junction to neutral, prioritize re-aligning it
