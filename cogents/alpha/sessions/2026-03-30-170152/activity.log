@@ -39,3 +39,12 @@ plan: Check tournament results for v698-v702, explore LLM cyborg or fundamental 
   v739=TV373 (net=0.75+7a@120), v740=TV374 (net=0.85), v742=TV375 (net=0.9)
 - All uploaded. Running local tests in parallel.
 - Still no completed tournament matches for any of our variants.
+- [17:45] TV371-TV375 local results:
+  TV371 (net=1.0+scramblers): 7.43 — scramblers hurt
+  TV372 (net=1.0+7a@120): 5.39 — 7a@120 HURTS with density
+  TV373 (net=0.75+7a@120): 6.38 — bad combo
+  TV374 (net=0.85): 6.74 — worse than 1.0
+  TV375 (net=0.9): 6.35 — worse than 1.0
+- Sweet spot confirmed: network_weight=1.0 exactly. Sharp dropoff above/below.
+- None of the combos (late scramble, 7a@120) improve on pure density.
+- TV365 (net_wt=1.0 = 8.78) remains best local by wide margin.
