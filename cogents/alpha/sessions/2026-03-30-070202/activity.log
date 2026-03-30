@@ -44,3 +44,10 @@ started: 2026-03-30-070202
   - Strong 15-17 scores against older alpha versions
 - KEY INSIGHT: TV192 (even lower 6a thresholds) is most promising new variant
 - TV193 (scramble-on-sight) confirmed BAD — fixed cycling is better
+- COMPETITION RESULTS emerging:
+  v546 (TV190 wider explore): TERRIBLE — 8.24/8.82/12.27 vs v51, 10.28/8.07/12.27 vs v56
+  v545 (TV189): decent — 13.07/13.58/14.92 vs v51
+  v544 (TV188): good — 15.91/14.26 vs v51
+  v547 (TV191): strong vs alpha (15-17), weak vs gtlm (5-11)
+- NEW OPPONENTS: slanky:v112, Paz-Bot-9005:v1 — tournament getting competitive
+- Created TV200 (v556): best combo — TV192 6a + TV186 stag + TV198 4a

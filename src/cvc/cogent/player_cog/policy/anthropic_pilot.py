@@ -29997,3 +29997,74 @@ class AlphaTournamentV199Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV200: Best combo — TV192 6a thresholds + TV186 stag + TV198 4a ────────────
+
+class AlphaTournamentV200AgentPolicy(AlphaTournamentV186AgentPolicy):
+    """TournamentV200: Best elements combined.
+
+    - TV192's even lower 6a thresholds (20/30/60) — strongest qualifying at 15.7
+    - TV186's team-size-specific stagnation (fast 2a, conservative 4a+)
+    - TV198's aggressive 4a (always 2 aligners, economy-gate only)
+
+    This should combine the best performing elements from each variant.
+    """
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2-agent: EXACT TV142
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        # 4-agent: TV198 aggressive (always 2 aligners)
+        if team_size <= 4:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV192's even lower thresholds (20/30/60)
+        if step < 30:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 20:
+            return 2, 0
+        elif min_res < 30:
+            return 3, 0
+        elif min_res < 60:
+            return min(4, team_size - 1), 0
+        else:
+            return min(team_size - 1, 6), 0
+
+
+class AlphaTournamentV200Policy(MettagridSemanticPolicy):
+    """TournamentV200: TV192 6a + TV186 stag + TV198 4a — best combo."""
+    short_names = ["alpha-tournament-v200"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV200AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
