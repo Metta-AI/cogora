@@ -4,3 +4,19 @@ started: 2026-03-30T09:11:14Z
 ## Activity
 
 - 09:11 Session start. Previous session (082457) interrupted — recovered. Context: v558 (TV202) at 15.51 early, v562 (TV206) at 15.39. Need to check converged results for all 8 new variants (v558-v565).
+- 09:12 LEADERBOARD CHECK:
+  v565 (TV209, full combo) = #1 at 17.32 (1 match!) — potential outlier
+  v563 (TV207, 6a 22/35/70) = #2 at 16.04 (3 matches)
+  v558 (TV202, min_res 12) = #3 at 15.51 (3 matches)
+  v560 (TV204, step<30) = #4 at 15.39 (3 matches)
+  v561 (TV205, all 4a combo) = #5 at 15.05 (3 matches)
+  v562 (TV206, 3-tier stag) = #6 at 14.83 (3 matches)
+  v547 (TV191, prev best) = #7 at 14.66 (78 matches)
+  All new variants above v547! TV209's combo approach validated.
+- 09:18 Created 5 new variants building on TV209:
+  TV210: TV209 + step<30 4a initial ramp
+  TV211: TV209 + earlier 3rd aligner 4a (60/200)
+  TV212: TV209 + full 4a combo (step<30 + 60/200)
+  TV213: TV209 + faster 6a stagnation (peak 3, 200 steps = same as 2a)
+  TV214: TV209 + aggressive 6a thresholds (20/30/60) with stagnation safety
+- 09:19 All 5 variants smoke testing in parallel
