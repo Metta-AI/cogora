@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-040613**: **Idle scramble ESSENTIAL** — v526 (no idle) = 12.77 vs v519 = 13.99. Self-play misleading (TV166 best self-play = worst tournament). 50% stag optimal. Heuristic ceiling ~14.0 confirmed. Uploaded v526-v534. [sessions/2026-03-30-040613/](sessions/2026-03-30-040613/)
 - **2026-03-30-031321**: **v519 (TV160) = NEW #1 at 14.47!** Faster stagnation entry (200 steps, step>300) beats TV142 by +0.17. v522 (TV162) = #3 at 14.27. Adaptive scramble (TV163) confirmed terrible (8.82). Uploaded v517-v525, key insight: forced exploration + earlier stag detection. [sessions/2026-03-30-031321/](sessions/2026-03-30-031321/)
 - **2026-03-30-021109**: (interrupted) v509-v515 uploaded. v506 (TV142) = #1 at 14.30. v514 (TV154) = #2 at 13.76. 50% stag scramble confirmed key differentiator. [sessions/2026-03-30-021109/](sessions/2026-03-30-021109/)
 - **2026-03-30-010306**: **v502 (TV138) = 14.19 avg vs v54 (+14% over baseline)**. Created TV134-TV144 (v496-v508). Ultra-fast 2a (TV136) = 14.59. TV82 4a slightly better than faster variants vs strong opponents. TV135 6a = 16.00. Carbon bottleneck limits 4a. [sessions/2026-03-30-010306/](sessions/2026-03-30-010306/)
@@ -10,4 +11,3 @@
 - **2026-03-29-220607**: Found critical num_agents bug (always 8, 2-agent code was dead in TV90-TV108). All no-scramble variants (TV109-TV116, v463-v477) failed — scramble essential for defense. v451=13.31 (#1). Heuristic ceiling ~13. [sessions/2026-03-29-220607/](sessions/2026-03-29-220607/)
 - **2026-03-29-210258**: (interrupted) Created TV102-TV108 (v463-v469), discovered num_agents bug via log analysis. TV104 explore-first initially seemed promising (14.51) but was noise. [sessions/2026-03-29-210258/](sessions/2026-03-29-210258/)
 - **2026-03-29-200453**: Created TV90-TV101 (v451-v462). Tested 2-agent improvements, zero-scramble, stagnation tuning. Zero-scramble fails qualifying. Reduced heart batch kills 2v6. v451 (TV90)=12.83, v449 (TV88)=12.93 remain best. Heuristic ceiling ~13.0. [sessions/2026-03-29-200453/](sessions/2026-03-29-200453/)
-- **2026-03-29-190418**: Created TV82-TV89 (v443-v450). Chain-value targeting, coordinated scramble (hurts!), 2-agent budget fix. v443 (TV82)=12.82, v446 (TV85)=13.32. Found budget inheritance bug. [sessions/2026-03-29-190418/](sessions/2026-03-29-190418/)
