@@ -37297,3 +37297,75 @@ class AlphaTournamentV270Policy(MettagridSemanticPolicy):
                 shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV271: TV263 + capture-optimized scramble targeting ─────────────────────────
+
+class AlphaTournamentV271AgentPolicy(AlphaTournamentV263AgentPolicy):
+    """TournamentV271: TV263 + capture-optimized scramble targeting.
+
+    Base TV263 scrambles the nearest enemy junction. This variant
+    strongly prefers enemy junctions within alignment range of our
+    network (hub or friendly junctions), since we can immediately
+    realign them after scrambling. Net effect: scramble -> realign
+    is +2 junction swing vs scramble -> neutral is +0.
+    """
+
+    def _preferred_scramble_target(self, state: MettagridState) -> KnownEntity | None:
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        )
+        if not enemy_junctions:
+            return None
+
+        hubs = self._world_model.entities(entity_type="hub", predicate=lambda e: e.team == team_id)
+        friendly_junctions = self._known_junctions(state, predicate=lambda j: j.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+
+        hub_pos = hub.position if hub else current_pos
+        neutral_junctions = self._world_model.entities(
+            entity_type="junction",
+            predicate=lambda e: e.owner in {None, "neutral"},
+        )
+
+        best = None
+        best_score = float("inf")
+        for ej in enemy_junctions:
+            base_score = _h.scramble_target_score(
+                current_position=current_pos,
+                hub_position=hub_pos,
+                candidate=ej,
+                neutral_junctions=neutral_junctions,
+                friendly_junctions=friendly_junctions,
+            )[0]
+            # Massive bonus for capturable junctions (within our alignment range)
+            if _h.within_alignment_network(ej.position, network_sources):
+                base_score -= 50.0
+            if base_score < best_score:
+                best_score = base_score
+                best = ej
+
+        return best
+
+
+class AlphaTournamentV271Policy(MettagridSemanticPolicy):
+    """TournamentV271: TV263 + capture-optimized scramble."""
+    short_names = ["alpha-tournament-v271"]
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV271AgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
