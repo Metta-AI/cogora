@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-152221**: **Ceiling confirmed at 14.94 (v632/TV272)** — 19 variants (TV322-TV340, v684-v702). Re-align bonus marginal (+0.1). Hub-proximity, faster ramp, mine-stag, wider scramble all WORSE. All tuning converges to 14.6-14.9. Need LLM cyborg for paradigm shift. [sessions/2026-03-30-152221/](sessions/2026-03-30-152221/)
 - **2026-03-30-141102**: **v667 (TV305 bottleneck scramble) avg 16.83** — 20 new variants (TV302-TV321, v664-v683). Bottleneck scramble = best innovation: 17.27 in 4v4. Single innovations beat combos. 2-level lookahead 56% better locally. [sessions/2026-03-30-141102/](sessions/2026-03-30-141102/)
 - **2026-03-30-131552**: **v637 (TV277) = #1 at 14.88** — 25 variants (TV277-TV301, v637-v663). Lower 7a threshold (100) only confirmed improvement. Split stag was noise (15.21→13.02). Stag mods all harmful. Heuristic ceiling ~14.85-14.90. [sessions/2026-03-30-131552/](sessions/2026-03-30-131552/)
 - **2026-03-30-122201**: **v632 (TV272) = NEW #1 at 15.17** — 16 variants (TV263-TV276, v622-v636). Combined adaptive scramble + early aligner + decay + 7 aligners. Capture scramble toxic. [sessions/2026-03-30-122201/](sessions/2026-03-30-122201/)
@@ -10,5 +11,4 @@
 - **2026-03-30-082457**: **v565 (TV209) early #1 at 16.33** — v557 confirmed broken (9.90). 8 new variants (v558-v565) targeting 4a/6a. 6a improvements most impactful. All vs v557 only — awaiting diverse matchups. [sessions/2026-03-30-082457/](sessions/2026-03-30-082457/)
 - **2026-03-30-070202**: **v550 (TV194) best new at ~15.1** — 10 variants (TV192-TV201, v548-v557). min_res 15 optimal for 4a. TV192 6a too aggressive. Scramble-on-sight terrible. New opponents: gtlm-reactive, slanky, Paz-Bot. v557 (TV201) = best predicted combo. [sessions/2026-03-30-070202/](sessions/2026-03-30-070202/)
 - **2026-03-30-061317**: **v542 (TV186) = #2 at 14.39!** Team-size-specific stagnation thresholds (2a: fast, 4a+: conservative) + TV162 6a thresholds. Created TV186-TV191 (v542-v547). [sessions/2026-03-30-061317/](sessions/2026-03-30-061317/)
-- **2026-03-30-051758**: **Network-aware scramble HARMFUL** — v535-v540 all score 11-12 vs v519=14.69. v541 (faster early ramp) = 13.02. [sessions/2026-03-30-051758/](sessions/2026-03-30-051758/)
 
