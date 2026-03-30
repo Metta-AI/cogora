@@ -40,4 +40,17 @@ status: in-progress
   - Scrambling = clips junctions only (can't scramble partner)
   - Dual aligning is direct contribution to shared score
 - All v496-v504 matches still running/scheduled, no completed results yet
-- Waiting for tournament results to validate self-play findings
+- Tournament results arriving! Matches were completed but scrolled off visible list.
+- **v499 (TV135-fixed) vs v34**: 2a=15.10, 4a=9.92, 6a=16.00 → avg 13.67 (BEST vs v34)
+- **v496 (TV134) vs v34**: 2a=15.10, 6a=14.61 → avg 14.86
+- **v498 (TV133-baseline) vs v34**: 2a=12.19, 4a=9.92, 6a=14.61 → avg 12.24
+- **v500 (TV136) vs v49**: 2a=14.14, 4a=10.65, 6a=14.61 → avg 13.13
+- **v501 (TV137) vs v14/v17**: 4a=14.85! 2a=14.95, 6a=14.54 → ALL excellent
+- **v502 (TV138) vs v14**: 2a=14.95, 4a=14.85, 6a=12.61
+- v501 TV137 4a=14.85 is MASSIVE improvement over v495 TV133 4a=11.1 (+34%)!
+- v503 (TV139) qualifying: 11.60, 12.91 (avg 12.26)
+- Key findings:
+  1. Faster 4a start (TV137) is the biggest improvement (+34% in 4a)
+  2. TV134 faster 2a also helps (15.10 vs 12.19)
+  3. TV135 faster 6a ramp: mixed (better vs v34, worse vs v31)
+  4. v14/v17 are weak opponents → inflated scores
