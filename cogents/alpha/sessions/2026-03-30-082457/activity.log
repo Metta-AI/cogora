@@ -1,4 +1,4 @@
-status: interrupted
+status: in-progress
 started: 2026-03-30T08:24:57Z
 
 ## Activity
@@ -47,3 +47,7 @@ started: 2026-03-30T08:24:57Z
   v564 (TV208, 6a combo): 0 completed yet
   CAVEAT: All vs v557 only. Real test when matched vs strong opponents.
 - 0 pending competition matches — waiting for scheduler to add more opponents.
+- 09:17 All 8 variants scored. Top 3 (all vs v557 only):
+  v565=16.33, v564=16.21, v563=16.04, v558=15.51, v560=15.39
+  All vs v557 only — scores will drop with diverse opponents.
+  0 pending matches for any variant — scheduler not adding more yet.
