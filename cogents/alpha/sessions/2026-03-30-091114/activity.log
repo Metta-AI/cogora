@@ -131,3 +131,10 @@ started: 2026-03-30T09:11:14Z
   The winning formula is SIMPLE: TV208 = 6a thresholds 22/35/70 + 3-tier stagnation.
   No 4a changes needed. Don't over-optimize 4a — it hurts when facing strong opponents.
   v578 (intermediate 6a) competitive — need more data.
+- 10:35 FINAL CONVERGENCE:
+  v564 (TV208) STABLE #1 at 14.96 (18m) — the proven winner
+  v579 (TV223, step<20 6a) = 14.70 (4m) — still early but close to v547
+  v578 (TV222, 21/33/65 6a) = 14.29 (17m) — BELOW baseline, tighter thresholds HURT
+  v577 (TV221, fast 6a stag) = 14.24 (10m) — BELOW baseline, fast stag on TV208 HURTS
+  ALL MODIFICATIONS TO TV208 FAIL. TV208 is near-optimal within this architecture.
+  The heuristic ceiling appears to be ~15.0. Further improvement needs new approaches.
