@@ -15,3 +15,13 @@ session_start: 2026-03-30T10:08:11Z
 - TV229: Wider stagnation explore offsets (distance 32 vs 22) to cover map corners
 - TV230: Reduced idle mining threshold (min_res < 15 instead of < 30)
 - All validated locally (100-step test runs)
+
+## Uploads
+- v585 = TV228 (earlier 6a 3rd aligner, step 15 when min_res >= 20)
+- v586 = TV229 (wider stag explore, offsets at distance 32)
+- v587 = TV230 (reduced idle mining, min_res < 15 instead of < 30)
+- v588 = TV231 (30% stag scramble instead of 50%)
+- v590 = TV232 (TV228 + TV230 combined)
+- All validated locally before upload
+- Key insight: cooperative scoring means both teams always get same score
+- Previous network-aware scramble HURT because it overrode distance
