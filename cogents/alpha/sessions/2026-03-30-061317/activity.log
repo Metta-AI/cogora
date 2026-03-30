@@ -38,3 +38,10 @@ status: in-progress
   v543 (TV187): avg=13.74 (7m) — 2a=15.4(3), 4a=13.0(2), 6a=12.1(2)
 - v542's 2a=16.2 validates team-size-specific stagnation!
 - BUT only 5 matches — could be noise. Need more data.
+- UPDATED RESULTS (21-23 matches):
+  v542 (TV186): avg=14.11 — 2a=14.5(8), 4a=13.2(7), 6a=14.6(6) — STRONG!
+  v543 (TV187): avg=13.88 — 2a=13.9(7), 4a=13.7(9), 6a=14.0(7) — balanced
+- v542 now #7 on leaderboard at 13.88 with 18m (leaderboard lags)
+- v542 looking like it could reach top 5 if it converges around 14.0-14.2
+- 4a noise confirmed (was 11.7 at 4m, now 13.2 at 7m)
+- v544/v545 still all matches running
