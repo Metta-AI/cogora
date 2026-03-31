@@ -1,17 +1,15 @@
 # Todos
 
-- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v716=15.05 (#1, 20m), v840=10.75
-- [x] Aligner floor: helps specific matchups but doesn't beat v716 average
-- [x] Recovery mode HURTS: TV471/472 (v861/v862) terrible in 6v2
-- [x] Capture-optimized scramble HURTS: TV475 (v870) bad for 6v2
-- [x] Lower thresholds HURT: TV476 (v871) bad 6v2 vs mammet
-- [x] Combined innovations don't stack (TV474/v869=5.58 < TV473/v866=8.71)
-- [x] TV470 budget helps 4v4 vs modular-lstm (11.42 vs 0.99) but uncertain average
+- [x] **GOAL ACHIEVED**: Score > 10 in tournament — v873 (TV478) avg 10.13
+- [x] 2-agent optimization: TV478 faster stagnation + always-2-aligners = 2v6 scores 8-12 (was 1-3)
 - [x] Heuristic ceiling at ~15 confirmed across 60+ variants
+- [x] Capture-optimized scramble HURTS 6v2 (TV475/v870)
+- [x] "Always 2 aligners" without faster stagnation HURTS (TV477/v872=0.31 in 2v6)
+- [x] TV350 budget + faster stagnation = inferior to always-2-aligners + faster stagnation (v877=8.97 < v873=10.13)
 - [ ] **RL training** — HIGHEST PRIORITY. Heuristic ceiling confirmed. Need GPU.
-- [ ] **Study modular-lstm deeply** — 2 agents outperform our 6 in scramble efficiency.
-- [ ] **Don't change TV350 behavior** — all behavior mods hurt average performance.
-- [ ] **2-agent optimization** — 2v6 matchups are biggest weakness.
-- [ ] **Study mammet:v12** — new version appeared in tournament.
+- [ ] **Study modular-lstm deeply** — even 2 of their agents beat our 6 (v874 6v2=2.82). RL fundamentally better.
+- [ ] **Improve 4v4 performance** — currently 5-12 range, very opponent-dependent.
+- [ ] **TV478 is current best** — v873 avg 10.13. Don't change 5+ agent behavior (TV350 sacred).
 - [ ] **Pre-game LLM** — analyze matchup before game, set high-level strategy.
 - [ ] **CRITICAL: Qualifying ≠ Competition** — never trust qualifying as predictor.
+- [ ] **Study swoopy-v0** — new opponent in tournament.

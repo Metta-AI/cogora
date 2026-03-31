@@ -1,13 +1,21 @@
-# Session 2026-03-31-002058 — Interrupted
+# Session 2026-03-31-002058 — Completed
 
-## Summary
-Session was interrupted before completion. Key progress:
+## Headline
+**v873 (TV478) avg 10.13 — breakthrough via faster stagnation detection for 2-agent games. Goal >10 sustained.**
 
-- **v873 (TV478) breakthrough: avg 10.13** — faster stagnation detection (peak=2, 150 steps, min_step 200) + lower scramble threshold (min_res=3) massively improved 2v6 scores (8-12 range vs previous 1-3).
-- **v877 (TV481) created**: TV350 budget (sacred) + TV478 faster stagnation. Qualifying avg 11.07. Competition results pending.
-- Confirmed: faster stagnation is the key breakthrough. "Always 2 aligners" without faster stagnation HURTS.
-- v872/v875/v876 all underperform without faster stagnation.
-- TV350 budget (1,0 when low) is BETTER than always (2,0) for 2 agents.
+## What Happened
+- Recovered interrupted session 2026-03-30-231649
+- Analyzed 2v6 match losses: identified budget (1,0) trap where 1 agent becomes permanent miner
+- Created 7 new variants (TV477-TV481) testing different budget and stagnation combinations
+- Uploaded v872-v877 to tournament; all qualified and competed
 
-## Status
-Interrupted — v877 competition results were pending.
+## Key Results
+- **v873 (TV478)**: avg 10.13 across 11 matches. 2v6 scores: 8.19-11.72 (massive improvement from 1-3)
+- **v877 (TV481)**: avg 8.97 across 13 matches. TV350 budget + faster stagnation = inferior
+- **v874 (TV350 baseline)**: avg 7.06 across 13 matches. Confirmed lower than TV478
+
+## Key Insight
+Faster stagnation detection (peak=2, 150 steps, min_step=200) + "always 2 aligners" (budget 2,0) for 2-agent games = both agents can scramble = 2x scramble pressure = disrupts enemy expansion effectively.
+
+## Versions Uploaded
+v872 (TV477), v873 (TV478), v874 (TV350), v875 (TV479), v876 (TV480), v877 (TV481)

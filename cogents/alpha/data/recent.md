@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-31-002058**: **v873 (TV478) avg 10.13 — faster stagnation breakthrough for 2v6** — TV477-TV481 (v872-v877). Faster stagnation detection (peak=2, 150 steps) + always-2-aligners = 2v6 scores 8-12 (was 1-3). TV350 budget inferior without dual-scramble. v873 best variant. [sessions/2026-03-31-002058/](sessions/2026-03-31-002058/)
 - **2026-03-30-231654**: **Recovery mode hurts — TV470 budget best, heuristic ceiling firm** — TV471-TV476 (v860-v871). Deep modular-lstm analysis: scramble collapse at step 1500 when budget drops to 1 aligner. TV470 (reactive budget + floor) = 11.42 vs modular-lstm 4v4. But recovery mode, capture scramble, lower thresholds ALL hurt 6v2. [sessions/2026-03-30-231654/](sessions/2026-03-30-231654/)
 - **2026-03-30-231649**: **v866 (TV473) avg 8.71 — lower 5+ thresholds = faster aligner ramp** — TV467-TV474 (v855-v869). Economy trap fix: 3 aligners at min_res=15 (was 22). Peak 15.75 (4v4 Paz-Bot), 12.98 (2v6 slanky!). Combined variants don't stack (TV474=5.58). [sessions/2026-03-30-231649/](sessions/2026-03-30-231649/)
 - **2026-03-30-221202**: **TV350 base sacred — v847 (TV462) = 13.59 closest to v716** — TV455-TV466 (v842-v854). Zero-scrambler is by design. All TV350 mods regress. v847 preserves TV350 for 5+. Stag scramble (TV466) hurts. [sessions/2026-03-30-221202/](sessions/2026-03-30-221202/)
