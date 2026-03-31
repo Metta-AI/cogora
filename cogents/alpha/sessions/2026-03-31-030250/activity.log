@@ -10,11 +10,14 @@ status: in-progress
 ## Activity
 - [03:03] Session started. Previous session (032500) interrupted. v884 (TV488) best at avg 9.58. Key: 4v4 aligner floor.
 - [03:05] Continuing from previous session. v885 (TV489, aggressive stagnation scramble) qualifying still running. Checking results.
-- [03:12] v885 (TV489) competition results: avg 5.90 (18 matches) — REGRESSION from v884's 9.58.
-  - 4v4 avg 4.77 (was 8.66) — always-scramble wastes hearts/mining time
-  - 2v6 avg 4.99 (was 8.72) — same problem
-  - 6v2 avg 7.95 (was 11.07) — still worse
-  - CONCLUSION: stagnation scramble changes hurt. TV488 (v884) remains best.
-  - Key lesson: the step%200 time window and min_res>=7 threshold are IMPORTANT for stagnation balance.
-- [03:18] Created TV490: TV488 + faster 3-aligner ramp (4v4: 30 instead of 60, 5+: 22→3 aligners instead of 35).
-- [03:19] Uploaded v888 (TV490) to qualifying. (v886-v887 created by parallel session)
+- [03:10] Compiled v884 full results: 6v2 avg 11.07, 4v4 avg 10.13, 2v6 avg 7.87, overall avg ~9.80.
+- [03:12] Analyzed worst matches: 6v2 vs coglet (2.03), 4v4 vs mammet (3.95) — severe resource imbalance (oxygen 764, germanium 0). Can't make hearts.
+- [03:12] v885 (TV489) competition results: avg ~5.4-5.9 — CLEAR REGRESSION from v884. Aggressive stagnation scramble hurts ALL matchup types.
+  - Key lesson: step%200 time window and min_res>=7 threshold are IMPORTANT for stagnation balance.
+- [03:16] Created TV490 (TV488 + resource imbalance awareness): when max>50*(min+1), reduce aligners, mine bottleneck only. v886.
+- [03:16] Created TV491 (TV488 + scorched earth): on economy collapse, spend hearts on scrambling. v887.
+- [03:17] TV490 local test: 11.35 score (8v0 self-play). Imbalance detection triggered late game, correctly dropped to 1 aligner.
+- [03:18] Also created TV490-alt (v888): faster 3-aligner ramp (from parallel session).
+- [03:22] Created TV492 (TV488 + early 4v4 scrambler): 1 aligner + 1 scrambler in 4v4 after step 500. v889.
+- [03:22] Created TV493 (TV490 + TV492 combined): imbalance + 4v4 scrambler. v890.
+- [03:23] Uploaded v886, v887, v889, v890 to qualifying.

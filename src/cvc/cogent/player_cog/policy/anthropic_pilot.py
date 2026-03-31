@@ -52127,3 +52127,145 @@ class AlphaTournamentV491Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV492: TV488 + early scrambler for 4v4 defense ───────────────────────────
+# In 4v4 vs mammet (3.95), we had 11 junctions at step 1000 but no scrambler.
+# Mammet scrambled us from 11 to 3 in 500 steps. With a scrambler, we could
+# counter-attack and force them to re-align instead of pressing us.
+#
+# Change: In 4v4, when step >= 500 and min_res >= 14, assign 1 scrambler.
+# Budget: 1 aligner + 1 scrambler + 2 miners = 4 agents.
+
+class AlphaTournamentV492AgentPolicy(AlphaTournamentV488AgentPolicy):
+    """TV492: TV488 + early scrambler for 4v4 defense."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2 agents: always both aligners
+        if team_size <= 2:
+            return 2, 0
+
+        # 4 agents: add scrambler after economy stabilizes
+        if team_size <= 4:
+            if step < 30:
+                return 2, 0
+            if step >= 500 and min_res >= 14:
+                # 1 aligner + 1 scrambler + 2 miners
+                return 1, 1
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: same as TV488
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 2, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV492Policy(MettagridSemanticPolicy):
+    """TV492: TV488 + early scrambler for 4v4 defense."""
+    short_names = ["alpha-tournament-v492"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV492AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV493: TV490 + TV492 combined (imbalance + 4v4 scrambler) ────────────────
+# Combine the two most promising fixes:
+# 1. Resource imbalance awareness (TV490)
+# 2. Early scrambler for 4v4 (TV492)
+
+class AlphaTournamentV493AgentPolicy(AlphaTournamentV490AgentPolicy):
+    """TV493: TV490 + TV492 combined."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2 agents: always both aligners
+        if team_size <= 2:
+            return 2, 0
+
+        severe = self._has_severe_imbalance(state) and step > 300
+
+        # 4 agents: add scrambler + imbalance awareness
+        if team_size <= 4:
+            if step < 30:
+                return 2, 0
+            if severe and not can_hearts:
+                return 1, 0  # Economy collapsed: max miners
+            if step >= 500 and min_res >= 14:
+                return 1, 1  # 1 aligner + 1 scrambler + 2 miners
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV490's imbalance-aware budgets
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+
+        if severe and not can_hearts:
+            return 1, 0
+
+        if min_res < 10 and not can_hearts:
+            return 2, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV493Policy(MettagridSemanticPolicy):
+    """TV493: TV490 + TV492 combined."""
+    short_names = ["alpha-tournament-v493"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV493AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
