@@ -50614,3 +50614,140 @@ class AlphaTournamentV478Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV479: TV477 + aggressive 4v4 (2 aligners from step 0) ───────────────────
+# In 4v4, TV350 starts with 1 aligner for 50 steps. TV477 already lowered to
+# step<30. But why wait at all? With 4 agents, starting with 2 aligners
+# immediately gives us faster territory control. The economy can handle it
+# since 2 miners start bringing resources back quickly.
+
+class AlphaTournamentV479AgentPolicy(AlphaTournamentV477AgentPolicy):
+    """TV479: TV477 + instant 2-aligner start for 4v4."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            return 2, 0
+
+        # 4 agents: start with 2 aligners immediately (no warmup)
+        if team_size <= 4:
+            if min_res < 7 and not can_hearts and step > 100:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV350 sacred base
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV479Policy(MettagridSemanticPolicy):
+    """TV479: TV477 + aggressive 4v4 start."""
+    short_names = ["alpha-tournament-v479"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV479AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV480: TV477 + reactive 4v4 budget (junction differential) ───────────────
+# v871 (TV476) scored 10.56 in 4v4 vs gtlm with reactive budget.
+# Apply the same reactive approach: when behind by 5+ junctions, boost aligners.
+# Keep TV350 base for 5+.
+
+class AlphaTournamentV480AgentPolicy(AlphaTournamentV477AgentPolicy):
+    """TV480: TV477 + reactive 4v4 budget with junction differential."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            return 2, 0
+
+        # 4 agents: reactive budget with junction differential
+        if team_size <= 4:
+            team_id = _h.team_id(state)
+            friendly_j = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner == team_id))
+            enemy_j = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+            behind = enemy_j - friendly_j
+
+            if step < 30:
+                return 1, 0
+            # When behind, push harder with aligners
+            if behind >= 5 and can_hearts:
+                return min(3, team_size - 1), 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV350 sacred base
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 1, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV480Policy(MettagridSemanticPolicy):
+    """TV480: TV477 + reactive 4v4 budget."""
+    short_names = ["alpha-tournament-v480"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV480AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

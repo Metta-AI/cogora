@@ -17,3 +17,7 @@ started: 2026-03-31T00:20:58Z
 - v871 (TV476 reactive budget) is better: 14.41 6v2 vs mammet, 10.56 4v4 vs gtlm.
 - Competition avg across v870/v871 ~14 matches: ~7.5. Need to improve 2v6 and 4v4 scores.
 - v872/v873/v874 qualifying matches running.
+- Created TV479 (instant 2-aligner for 4v4, no warmup) and TV480 (reactive 4v4 budget with junction differential).
+- Uploaded v875 (TV479) and v876 (TV480) to qualifying.
+- Summary of variants in qualifying: v872=TV477 (always-2a+faster4v4), v873=TV478 (faster stagnation),
+  v874=TV350 (baseline), v875=TV479 (instant 4v4), v876=TV480 (reactive 4v4).
