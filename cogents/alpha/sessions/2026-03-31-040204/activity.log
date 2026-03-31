@@ -8,3 +8,17 @@
 - Goal achieved once: v873 (TV478) avg 10.13
 - All budget/stagnation mods regress from v884 baseline
 - Key todos: RL training (need GPU), resource imbalance awareness, pre-game LLM, study opponents
+
+### Analysis: Tournament Match Logs (v892)
+- Downloaded and analyzed Paz-Bot 4v4 match (score 6.50) and slanky matches (13.76, 9.23)
+- KEY FINDING: Policy logs show aligners=3, scramblers=0 throughout Paz-Bot match
+  - We peak at 12 friendly junctions by step 800
+  - Enemy grows to 9 junctions unopposed (no scrambling)
+  - By step 4000, friendly drops to 3 — territory collapse
+  - Hub resources stockpile massively (oxygen >500) — unused
+- Bug investigation: PilotCyborgPolicy.agent_policy() does NOT pass shared_team_ids to agents
+  - This means role assignment falls back to global priority with raw agent IDs
+  - Could cause wrong roles when we're team 2 (IDs 4-7)
+- [COG] logging exists in AlphaCogAgentPolicy.evaluate_state but NOT in AnthropicPilotAgentPolicy
+  - Unclear if tournament v892 is actually using AnthropicCyborgPolicy or AlphaCyborgPolicy
+- Next: Test scrambler variants locally, fix shared_team_ids bug in PilotCyborgPolicy
