@@ -48,3 +48,14 @@ Status: in-progress
   - Idle-mine fallback (was just exploring aimlessly)
   - Lower retreat margins (15 instead of 20)
   Will upload as v913.
+- 06:53 Uploaded v913 (AnthropicCyborg with all improvements). In qualifying.
+- 06:55 v911 and v912 passed qualifying, now in competition!
+  v912 qualifying scores: 1.15, 2.77 (high variance from map RNG).
+  ~20 competition matches running for v911/v912.
+  Local multi-run (5k steps x3): Baseline avg 3.36, V3 avg 3.16 (within variance).
+- 06:56 Waiting for competition results. Key improvements in v911-v913:
+  1. Team-size miner cap (prevent economy crashes in tournament)
+  2. Lower resource thresholds for scramblers (min_res >= 5 vs 7/14)
+  3. Improved aligner: expansion + hotspot patrol + idle-mine (v913 only)
+  4. More aggressive mining stall detection (20/30/50 thresholds)
+  5. Lower retreat margins (15 instead of 20)
