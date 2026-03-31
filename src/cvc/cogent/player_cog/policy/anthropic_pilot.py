@@ -1373,28 +1373,33 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 return 1, 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: economy-responsive with aggressive peak
+        # 5+ agents: economy-responsive — NEVER ramp faster than economy supports
         if step < 30:
             return 2, 0
-        elif step < 100:
-            pressure_budget = 3  # Ramp up slowly
+        elif step < 200:
+            # Slow ramp: stay at 2-3 pressure, let economy build
+            pressure_budget = 2 if min_res < 14 else 3
         elif step < 3000:
+            # Full ramp only when economy is healthy
+            if min_res < 3 and not can_hearts:
+                pressure_budget = 2  # Emergency: save economy
+            elif min_res < 7:
+                pressure_budget = min(3, num_agents - 2)  # Conservative
+            elif min_res < 14:
+                pressure_budget = min(4, num_agents - 2)
+            else:
+                pressure_budget = min(5, num_agents - 2)
+        else:
             pressure_budget = min(5, num_agents - 2)
             if min_res < 3 and not can_hearts:
-                pressure_budget = max(2, num_agents // 3)
-            elif min_res < 7:
-                pressure_budget = min(4, num_agents - 2)
-        else:
-            pressure_budget = min(6, num_agents - 2)
-            if min_res < 3 and not can_hearts:
-                pressure_budget = max(2, num_agents // 3)
+                pressure_budget = 2
 
-        # Scramblers: delay until economy can support it
+        # Scramblers: only when economy is truly healthy
         scrambler_budget = 0
-        if step >= 3000 and min_res >= 14:
-            scrambler_budget = min(2, pressure_budget // 3)
-        elif step >= 200 and min_res >= 7:
+        if step >= 500 and min_res >= 14:
             scrambler_budget = min(1, pressure_budget // 3)
+        if step >= 3000 and min_res >= 20:
+            scrambler_budget = min(2, pressure_budget // 3)
         aligner_budget = max(pressure_budget - scrambler_budget, 0)
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
