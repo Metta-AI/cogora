@@ -50264,3 +50264,154 @@ class AlphaTournamentV474Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV475: TV470 budget + capture-optimized scramble ────────────────────────
+# TV470 has the best budget (reactive + floor). Add capture-optimized scramble
+# from TV274: prioritize enemy junctions within our alignment network (so after
+# scrambling → immediate re-alignment is possible). This is a gentler approach
+# than TV471's full recovery mode — it only changes targeting, not behavior.
+
+class AlphaTournamentV475AgentPolicy(AlphaTournamentV470AgentPolicy):
+    """TV475: TV470 budget + capture-optimized scramble targeting."""
+
+    def _preferred_scramble_target(self, state):
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hub = self._nearest_hub(state)
+
+        enemy_junctions = self._known_junctions(
+            state, predicate=lambda j: j.owner not in {None, "neutral", team_id}
+        )
+        if not enemy_junctions:
+            return None
+
+        hubs = self._world_model.entities(
+            entity_type="hub", predicate=lambda e: e.team == team_id)
+        friendly_junctions = self._known_junctions(
+            state, predicate=lambda j: j.owner == team_id)
+        network_sources = [*hubs, *friendly_junctions]
+
+        hub_pos = hub.position if hub else current_pos
+        neutral_junctions = self._world_model.entities(
+            entity_type="junction",
+            predicate=lambda e: e.owner in {None, "neutral"},
+        )
+
+        best = None
+        best_score = float("inf")
+        for ej in enemy_junctions:
+            base_score = _h.scramble_target_score(
+                current_position=current_pos,
+                hub_position=hub_pos,
+                candidate=ej,
+                neutral_junctions=neutral_junctions,
+                friendly_junctions=friendly_junctions,
+            )[0]
+            # Massive bonus for capturable junctions (within our alignment range)
+            if _h.within_alignment_network(ej.position, network_sources):
+                base_score -= 50.0
+            if base_score < best_score:
+                best_score = base_score
+                best = ej
+
+        return best
+
+
+class AlphaTournamentV475Policy(MettagridSemanticPolicy):
+    """TV475: TV470 budget + capture-optimized scramble."""
+    short_names = ["alpha-tournament-v475"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV475AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV476: TV470 budget + TV473 lower thresholds (faster ramp) ──────────────
+# TV470 + lower resource thresholds for faster aligner ramp-up.
+# TV470's reactive budget + aligner floor is the best so far.
+# Adding TV473's lower thresholds could help ramp faster in 5+ agent games.
+
+class AlphaTournamentV476AgentPolicy(AlphaTournamentV272AgentPolicy):
+    """TV476: TV470 reactive budget + lower thresholds + aligner floor."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hotspot_weight = -10.0
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # Junction differential
+        team_id = _h.team_id(state)
+        friendly_j = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner == team_id))
+        enemy_j = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+        behind = enemy_j - friendly_j
+
+        if team_size <= 2:
+            if not can_hearts and min_res < 7:
+                return 1, 0
+            return 2, 0
+
+        if team_size <= 4:
+            if step < 30:
+                return 1, 0
+            if behind >= 5 and can_hearts:
+                return min(3, team_size - 1), 0
+            if min_res < 7 and not can_hearts:
+                return max(1, min(2, team_size - 1)), 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: lower thresholds + floor + reactive boost
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 15:
+            return 2, 0
+        if min_res < 7 and not can_hearts:
+            base_a = 2  # Floor at 2
+        elif min_res < 15:
+            base_a = 2  # Was 22
+        elif min_res < 25:
+            base_a = 3  # Was 35
+        elif min_res < 50:
+            base_a = min(4, team_size - 1)  # Was 70
+        elif min_res < 120:
+            base_a = min(team_size - 1, 6)
+        else:
+            base_a = min(team_size - 1, 7)
+
+        # Reactive boost when behind
+        if behind >= 5 and can_hearts and step >= 200:
+            boost = min(1, team_size - 1 - base_a)
+            base_a += boost
+        return base_a, 0
+
+
+class AlphaTournamentV476Policy(MettagridSemanticPolicy):
+    """TV476: TV470 + TV473 combined (reactive + floor + lower thresholds)."""
+    short_names = ["alpha-tournament-v476"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV476AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
