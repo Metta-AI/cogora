@@ -52390,3 +52390,68 @@ class AlphaTournamentV495Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV496: TV488 + truly shared world model ──────────────────────────────────
+# DISCOVERY: Each agent has its OWN WorldModel instance. When miner 3 finds a
+# germanium extractor, miners 0,1,2,4,5,6,7 DON'T KNOW ABOUT IT. Each agent
+# only knows about entities it has personally observed.
+#
+# Fix: Pass the SAME SharedWorldModel instance to all agents. This means:
+# - When any agent discovers an extractor, ALL agents can navigate to it
+# - Miners benefit from each other's exploration
+# - Resource bottleneck extractors found faster
+#
+# Risk: The prune_missing_extractors method removes extractors not in current
+# view. With shared model, one agent pruning could remove another agent's
+# known extractor. However, prune only removes extractors within the agent's
+# VISIBLE AREA that aren't actually there, so this should be safe.
+
+class AlphaTournamentV496Policy(MettagridSemanticPolicy):
+    """TV496: TV488 + truly shared world model."""
+    short_names = ["alpha-tournament-v496"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._shared_world_model = SharedWorldModel()
+
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV488AgentPolicy(
+                self.policy_env_info, agent_id=agent_id,
+                world_model=self._shared_world_model,  # SAME instance for ALL agents
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+    def reset(self):
+        self._shared_world_model.reset()
+        super().reset()
+
+
+# ── TV497: TV496 + TV490 combined (shared model + imbalance awareness) ───────
+
+class AlphaTournamentV497Policy(MettagridSemanticPolicy):
+    """TV497: shared world model + imbalance awareness."""
+    short_names = ["alpha-tournament-v497"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._shared_world_model = SharedWorldModel()
+
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV490AgentPolicy(
+                self.policy_env_info, agent_id=agent_id,
+                world_model=self._shared_world_model,
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+    def reset(self):
+        self._shared_world_model.reset()
+        super().reset()
