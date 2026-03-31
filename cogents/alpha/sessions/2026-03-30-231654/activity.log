@@ -47,3 +47,25 @@ All v860-v865 qualified and entered competition!
 - Hub resources: carbon=6, oxygen=47 — huge imbalance causing budget collapse
 - Aligner floor (TV469/v858/v865) prevents this specific failure mode
 - RL agents (modular-lstm) are fundamentally more efficient at scramble/align cycles
+
+### Competition Results (updated)
+v863 (TV470 = reactive budget + aligner floor) — BEST NEW VARIANT:
+- 4v4 vs modular-lstm: 11.42 (HUGE improvement over v851's 0.99!)
+- 6v2 vs Paz-Bot: 14.60
+- 4v4 vs Paz-Bot: 11.49
+- 2v6 vs Paz-Bot: 10.62 (excellent for 2v6!)
+- 2v6 vs mammet: 1.13
+- 2v6 vs random-assay: 0.16
+- 6v2 vs v865 (self): 13.64
+
+v864 (TV468 = explore-first idle) — WORSE:
+- 4v4 vs modular-lstm: 2.48 (bad)
+- 6v2 vs slanky: 9.51
+- 2v6 vs slanky: 6.24
+
+v862 (TV472 = my combined recovery+reactive+floor):
+- 2v6 vs random-assay: 0.26 (expected bad for 2v6)
+
+KEY FINDING: v863 (TV470) 4v4 vs modular-lstm = 11.42 vs v851's 0.99!
+The aligner floor + reactive budget prevents the death spiral.
+Explore-first (v864/TV468) performs worse — idle scramble IS useful.
