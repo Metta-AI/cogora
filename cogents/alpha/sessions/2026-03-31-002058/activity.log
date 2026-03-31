@@ -49,4 +49,9 @@ started: 2026-03-31T00:20:58Z
 - v877 (TV481 = TV350 budget + faster stagnation) qualifying running. Expected to be best variant.
 - v874 (TV350) full results: avg 7.06 across 13 matches. v873 (TV478) definitively better at 10.13.
 - v875/v876: avg 4-5, poor across all matchup types. "Always 2 aligners" harmful without faster stagnation.
-- v877 qualifying: 10.41, 11.72 (avg 11.07). IN COMPETITION. 20+ matches running.
+- v877 qualifying: 10.41, 11.72 (avg 11.07). IN COMPETITION.
+- **v877 (TV481) avg 8.56 across 9 matches**. 2v6 scores: 2.97, 6.25, 6.76, 12.09. Worse than v873's 8-12 range.
+  CONFIRMS: TV350 budget (1,0) + faster stagnation = WORSE than always-2-aligners + faster stagnation.
+  With (1,0) budget, only 1 agent can scramble. With (2,0), both can. 2x scramble pressure = better 2v6.
+- **v873 (TV478) remains BEST at avg 10.13. Goal >10 ACHIEVED.**
+- Variant ranking: v873 (10.13) > v877 (8.56) > v872 (10.01) > v874 (7.06) > v875/v876 (~4-5).
