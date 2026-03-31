@@ -31,3 +31,9 @@ started: 2026-03-31T01:15:29Z
 - **BUG FOUND**: In v879 2v6 vs random-assay (1.92), agent stuck at (-5,3) for 2000+ steps doing desperate_scramble but never moving. Hearts=1 but position frozen. Likely pathfinding blocked by walls, or target at agent's position. Also, germanium bottleneck (ger=3) means can't make more hearts.
 - Created TV485: TV484 + stuck detection (if position unchanged 150 steps, fall back to mining) + economy fix (mine when can't refill hearts in desperate mode).
 - Uploaded v881 (TV485) to qualifying.
+- **v880 (TV484) FINAL: avg 8.71 across 19 matches**.
+  - 6v2 avg 12.66: aligner floor working! (16.25, 16.04, 14.59, 14.41, 12.62, 11.61, 3.13 outlier)
+  - 4v4 avg 8.66: decent (10.07, 10.70, 8.97, 6.87, 6.67)
+  - 2v6 avg 4.80: still terrible (7.50, 5.95, 5.81, 4.94, 3.89, 3.48, 2.06)
+  - 6v2 vs coglet: 3.13 — anomaly, needs investigation
+- v881 qualifying running.
