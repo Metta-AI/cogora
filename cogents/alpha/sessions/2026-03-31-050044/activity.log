@@ -50,3 +50,11 @@ status: in-progress
 - [052300] Silicon death spiral observed in 10k local game: silicon=0 at step 5500.
   Made mining stall detection more aggressive: 20-step threshold when resource=0
   (was 50). Should force faster exploration when economy is critical.
+- [052500] Uploaded v910 with aggressive stall detection.
+- [052600] v907 competition: 0.39 (2v6 vs gtlm-reactive). v908 passed qualifying, in competition.
+- [052700] 10k local game (v909 code) scored 2.85. Territory peaked at 23 (step 1300),
+  declined to 7 (step 8500-10000). Silicon death spiral at step 5500 (si=0).
+  Late-game resource depletion is a structural map issue.
+- [052800] v910 10k game in progress. Hub resources more balanced at step 2500
+  (C:425, O:419, G:448, S:389) suggesting extractor claims help.
+  But carbon crashed to 0 at step 5000 — late-game depletion unavoidable.
