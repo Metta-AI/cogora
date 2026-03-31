@@ -2,34 +2,36 @@
 
 ## Status: in-progress
 
-### Session Start
-- v912 avg 1.93, target >10. Competition resource thresholds fixed but still far from target.
+### Session Summary
+- v912 baseline avg 1.93, target >10
+- Analyzed match logs: identified economy collapse pattern (resource→0, hearts→0, territory collapse)
+- Implemented 3 key changes: territory-responsive scramblers, early-game aggression, mining balance fix
 
-### Match Analysis (v912 latest round)
-- 7 completed, avg 1.61. Best: 5.32 vs slanky (4v4), worst: 0.28 vs modular-lstm
-- Root cause: economy collapses (resource hits 0 → no hearts → no aligning) + 0 scramblers when losing
+### v915 Competition Results (12 matches completed)
+| Opponent | Config | Score |
+|----------|--------|-------|
+| gtlm-reactive | 2v6 | 0.25 |
+| gtlm-reactive | 2v6 | 1.17 |
+| gtlm-reactive | 4v4 | 2.08 |
+| gtlm-reactive | 6v2 | 2.96 |
+| Paz-Bot | 2v6 | 0.79 |
+| Paz-Bot | 4v4 | 2.24 |
+| modular-lstm | 2v6 | 0.28 |
+| modular-lstm | 2v6 | 0.39 |
+| modular-lstm | 4v4 | 1.53 |
+| modular-lstm | 4v4 | 2.75 |
+| coglet | 4v4 | 1.75 |
+| mammet | 6v2 | 0.78 |
 
-### Code Changes
-
-1. **Territory-responsive scrambler scaling** (v914/v915)
-   - When enemy_j > friendly_j + 2 (after step 500), shift budget toward scramblers
-   - Keep scramblers active during economy stress (losing territory is worse than resource dip)
-
-2. **Early-game aggression** (v916)
-   - First 500 steps: 1 extra pressure agent (e.g., 4v4 gets 3 aligners instead of 2)
-   - Burns starting resources for faster territory grab
-
-3. **Mining resource balance fix** (v917)
-   - Raised miner sticky-target clearing threshold from 7 to 21 (~3 hearts worth)
-   - Bug: miners kept mining abundant resources (carbon=115) while bottleneck (germanium=9) starved
-   - Now miners switch to bottleneck resource much earlier, preventing economy crashes
+- **v915 avg: 1.41** (vs v912 avg 1.93 — but different opponent pool)
+- **Key improvements**: mammet 6v2: 0.64→0.78, coglet 4v4: 1.12→1.75, modular-lstm 2v6: 0.28→0.39
 
 ### Local Test Results
-- 10k self-play: 4.18 (vs baseline ~3.0) = 39% improvement from territory-responsive scramblers
-- Scramblers held territory at 5-8 junctions late game (vs collapsing to 0 before)
+- v915 10k self-play: 4.18 (territory-responsive scramblers)
+- v917 10k self-play: 3.90 (+ mining fix, AlphaCyborg base)
 
-### Tournament Uploads
+### Tournament Versions
 - v914: AnthropicCyborgPolicy + territory-responsive (qualifying)
-- v915: AlphaCyborgV2Policy + territory-responsive → IN COMPETITION (qual: 2.73, 1.26)
+- v915: AlphaCyborgV2Policy + territory-responsive → IN COMPETITION
 - v916: + early-game aggression (qualifying)
 - v917: + mining resource balance fix (qualifying)
