@@ -52392,66 +52392,86 @@ class AlphaTournamentV495Policy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
-# ── TV496: TV488 + truly shared world model ──────────────────────────────────
+# ── TV496: TV488 + shared extractor knowledge ────────────────────────────────
 # DISCOVERY: Each agent has its OWN WorldModel instance. When miner 3 finds a
-# germanium extractor, miners 0,1,2,4,5,6,7 DON'T KNOW ABOUT IT. Each agent
-# only knows about entities it has personally observed.
+# germanium extractor, miners 0,1,2,4,5,6,7 DON'T KNOW ABOUT IT.
 #
-# Fix: Pass the SAME SharedWorldModel instance to all agents. This means:
-# - When any agent discovers an extractor, ALL agents can navigate to it
-# - Miners benefit from each other's exploration
-# - Resource bottleneck extractors found faster
-#
-# Risk: The prune_missing_extractors method removes extractors not in current
-# view. With shared model, one agent pruning could remove another agent's
-# known extractor. However, prune only removes extractors within the agent's
-# VISIBLE AREA that aren't actually there, so this should be safe.
+# V1 (truly shared model) FAILED: all agents cluster at same hub/station.
+# V2 (this): Share ONLY extractor knowledge via side channel. Each agent
+# keeps its own world model for hubs/stations/junctions (preserving per-agent
+# navigation), but extractors are shared across the team.
+
+class TeamExtractorSharedWorldModel(SharedWorldModel):
+    """World model that shares extractor discoveries across the team."""
+
+    def __init__(self, shared_extractor_cache: dict[str, KnownEntity]):
+        super().__init__()
+        self._shared_cache = shared_extractor_cache
+
+    def update(self, state):
+        super().update(state)
+        # Copy newly discovered extractors to shared cache
+        for key, entity in self._entities.items():
+            if entity.entity_type.endswith("_extractor"):
+                self._shared_cache[key] = entity
+
+    def entities(self, *, entity_type=None, predicate=None):
+        result = super().entities(entity_type=entity_type, predicate=predicate)
+        # When querying extractors, also include team-shared ones
+        if entity_type and entity_type.endswith("_extractor"):
+            known_positions = {e.position for e in result}
+            for entity in self._shared_cache.values():
+                if entity.entity_type == entity_type and entity.position not in known_positions:
+                    if predicate is None or predicate(entity):
+                        result.append(entity)
+        return result
+
 
 class AlphaTournamentV496Policy(MettagridSemanticPolicy):
-    """TV496: TV488 + truly shared world model."""
+    """TV496: TV488 + shared extractor knowledge."""
     short_names = ["alpha-tournament-v496"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._shared_world_model = SharedWorldModel()
+        self._shared_extractor_cache: dict[str, KnownEntity] = {}
 
     def agent_policy(self, agent_id):
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTournamentV488AgentPolicy(
                 self.policy_env_info, agent_id=agent_id,
-                world_model=self._shared_world_model,  # SAME instance for ALL agents
+                world_model=TeamExtractorSharedWorldModel(self._shared_extractor_cache),
                 shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
     def reset(self):
-        self._shared_world_model.reset()
+        self._shared_extractor_cache.clear()
         super().reset()
 
 
-# ── TV497: TV496 + TV490 combined (shared model + imbalance awareness) ───────
+# ── TV497: TV496 + TV490 combined (shared extractors + imbalance awareness) ──
 
 class AlphaTournamentV497Policy(MettagridSemanticPolicy):
-    """TV497: shared world model + imbalance awareness."""
+    """TV497: shared extractors + imbalance awareness."""
     short_names = ["alpha-tournament-v497"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._shared_world_model = SharedWorldModel()
+        self._shared_extractor_cache: dict[str, KnownEntity] = {}
 
     def agent_policy(self, agent_id):
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTournamentV490AgentPolicy(
                 self.policy_env_info, agent_id=agent_id,
-                world_model=self._shared_world_model,
+                world_model=TeamExtractorSharedWorldModel(self._shared_extractor_cache),
                 shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
 
     def reset(self):
-        self._shared_world_model.reset()
+        self._shared_extractor_cache.clear()
         super().reset()

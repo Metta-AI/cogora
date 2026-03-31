@@ -27,7 +27,10 @@ status: completed
   - 4v4 avg 6.29 (was 8.66) — too many aligners too early, not enough mining
   - 6v2 avg 7.40 (was 11.07) — same issue
   - CONCLUSION: v884 (TV488) remains the best variant. Budget changes are risky.
-- [03:52] Session summary: v884 (TV488) = best at avg 9.58. All variants that modified budget or stagnation regressed.
-  - TV489 (v885): aggressive scramble = 5.90 avg (REGRESSION)
-  - TV490 (v888): faster ramp = 6.91 avg (REGRESSION)
-  - TV488 (v884): aligner floor for both 4v4 and 5+ = 9.58 avg (BEST)
+- [03:52] DISCOVERY: Each agent has its OWN WorldModel — extractor discoveries NOT shared between agents!
+  When miner 3 finds germanium extractor, other miners don't know about it.
+- [03:55] Created TeamExtractorSharedWorldModel — shares ONLY extractor knowledge (not hubs/stations).
+  V1 (fully shared model) FAILED: agents clustered at same hub, all stuck.
+  V2 (extractor-only sharing) works: agents spread to different hubs, extractors shared.
+- [03:57] Uploaded v895 (TV496, shared extractors) and v896 (TV497, shared + imbalance).
+  This is an ARCHITECTURAL improvement, not a budget tweak. Most promising approach yet.
