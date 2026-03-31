@@ -69,3 +69,31 @@ v862 (TV472 = my combined recovery+reactive+floor):
 KEY FINDING: v863 (TV470) 4v4 vs modular-lstm = 11.42 vs v851's 0.99!
 The aligner floor + reactive budget prevents the death spiral.
 Explore-first (v864/TV468) performs worse — idle scramble IS useful.
+
+### Competition Results (round 2)
+v863 (TV470) continues strong:
+- 6v2 vs gtlm: 14.51
+- Aggregate non-2v6: ~12.6 average (very competitive with v716's 15.05)
+
+v861 (TV471/my recovery) — DISAPPOINTING:
+- 6v2 vs coglet: 2.24 (terrible! recovery mode hurting normal play)
+
+v862 (TV472/my combined) — DISAPPOINTING:
+- 6v2 vs coglet: 4.29 (bad)
+
+v860 (TV467/reactive budget only):
+- 6v2 vs modular-lstm: 2.68 (bad)
+
+v865 (TV469/aligner floor only):
+- 6v2 vs gtlm: 13.28 (decent)
+
+LESSON: My recovery mode variants (TV471/TV472) are HURTING normal play.
+The recovery threshold (peak*0.4 + enemy>2x) triggers too easily
+and forces suboptimal behavior. TV470 (budget-only changes) is better.
+
+v866 (from session 231649) = lower 5+ thresholds. In competition now.
+
+### Next Steps
+1. Wait for v866 results
+2. If v863/TV470 avg > v716's 15.05, it's a new #1
+3. Consider combining TV470 budget with TV350 aligner behavior (no recovery mode)
