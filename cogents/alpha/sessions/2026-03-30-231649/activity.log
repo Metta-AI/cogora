@@ -15,3 +15,9 @@ started: 2026-03-30T23:16:49Z
 - v858 competition results: 14.84 (Paz-Bot), 13.28 (gtlm), 13.14 (slanky), 9.52 (modular-lstm), 6.81/1.50 (coglet), 4.74/4.24 (4v4), 2.55/2.68/2.18/0.48 (2v6).
 - Key finding: 6v2 vs coglet scored 1.50 — only 2 aligners at min_res=16-19 (TV350 needs 22 for 3rd). Economy equilibrium at 16 prevents ramp-up.
 - Created TV471: lower 5+ agent thresholds (3 aligners at min_res=15 vs 22). Uploaded as v866.
+- Resolved merge conflict with parallel session (their TV471=hub-recovery, mine renamed to TV473).
+- Uploaded v867 (TV473: lower 5+ thresholds).
+- v866 qualified at 11.92. Competition matches running.
+- v863 (parallel session) scores: 11.42 (4v4 vs modular-lstm!), 14.60 (6v2 Paz-Bot), 1.13 (2v6 mammet).
+- v858 (TV469) competition: 14.84/13.28/13.14/9.52/6.81/4.74/4.24/2.68/2.55/2.18/1.50/0.48.
+- v855 (TV350 re-upload) competition: 11.33 (6v2 gtlm).
