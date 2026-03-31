@@ -76,6 +76,8 @@ class PilotAgentPolicy(SemanticCogAgentPolicy):
         world_model: SharedWorldModel,
         shared_claims: dict[tuple[int, int], tuple[int, int]],
         shared_junctions: dict[tuple[int, int], tuple[str | None, int]],
+        shared_hotspots: dict[tuple[int, int], int] | None = None,
+        shared_team_ids: set[int] | None = None,
         pilot_session: PilotSession,
     ) -> None:
         super().__init__(
@@ -84,6 +86,8 @@ class PilotAgentPolicy(SemanticCogAgentPolicy):
             world_model=world_model,
             shared_claims=shared_claims,
             shared_junctions=shared_junctions,
+            shared_hotspots=shared_hotspots,
+            shared_team_ids=shared_team_ids,
         )
         self._pilot_session = pilot_session
         self._memory = build_pilot_memory_store(pilot_session.artifact_store)
@@ -586,6 +590,7 @@ class PilotCyborgPolicy(MettagridSemanticPolicy):
             session.set_timeout_seconds(timeout_seconds)
 
     def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             if agent_id not in self._pilot_sessions:
                 self._pilot_sessions[agent_id] = self._session_class(
@@ -599,6 +604,8 @@ class PilotCyborgPolicy(MettagridSemanticPolicy):
                 world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims,
                 shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
                 pilot_session=self._pilot_sessions[agent_id],
             )
         return self._agent_policies[agent_id]

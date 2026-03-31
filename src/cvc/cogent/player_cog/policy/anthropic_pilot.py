@@ -1318,11 +1318,12 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Stable role allocation with resource-responsive scaling."""
+        """Stable role allocation with resource-responsive scaling. Uses team size."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         can_hearts = _h.team_can_refill_hearts(state)
-        num_agents = self.policy_env_info.num_agents
+        # Use actual team size, not total game agents
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
 
         if objective == "resource_coverage":
             return 0, 0
@@ -1338,11 +1339,11 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         if num_agents <= 4:
             if step < 100:
                 return 1, 0  # Economy-first: 1 aligner, rest mine
-            # Only ramp up when economy can support it
-            if min_res < 7:
+            if min_res < 7 and not can_hearts:
                 return 1, 0  # Keep mining until we have hearts capacity
             aligner_budget = min(2, num_agents - 1)
-            scrambler_budget = 1 if step >= 500 and num_agents >= 4 and min_res >= 14 else 0
+            # Add scrambler earlier (step 200) to contest territory
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 and min_res >= 7 else 0
             if min_res < 1 and not can_hearts:
                 return 1, 0
             if objective == "economy_bootstrap":
@@ -1622,41 +1623,58 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             print(f"[LLM] step={state.step} agent={self._agent_id} error={e}", flush=True)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Economy-responsive with hysteresis — synced with AlphaCogAgentPolicy."""
+        """Team-size-aware budgets. Uses shared_team_ids for correct team count."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
-        num_agents = self.policy_env_info.num_agents
+        can_hearts = _h.team_can_refill_hearts(state)
+        # Use actual team size, not total game agents
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
 
         if objective == "resource_coverage":
             return 0, 0
 
         if num_agents <= 2:
+            # 2 agents: 1 aligner + 1 miner
+            if step < 30 or (min_res < 1 and not can_hearts):
+                return 0, 0
             if objective == "economy_bootstrap":
                 return 1, 0
             return 1, 0
 
         if num_agents <= 4:
-            if step < 10:
+            # 4 agents: economy-first, then 2 aligners + 1 scrambler
+            if step < 30:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
                 return 1, 0
             aligner_budget = 2
+            # Add scrambler at step 200 to contest enemy territory
             scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
             if objective == "economy_bootstrap":
                 return min(aligner_budget, 1), 0
             return aligner_budget, scrambler_budget
 
-        if step < 10:
-            return min(2, num_agents - 1), 0
+        # 5+ agents: aggressive with scrambler support
+        if step < 30:
+            return 2, 0
         if step < 100:
-            aligner_budget = min(3, num_agents - 2)
+            pressure_budget = min(3, num_agents - 2)
             if objective == "economy_bootstrap":
-                return min(aligner_budget, 2), 0
-            return aligner_budget, 0
+                return min(pressure_budget, 2), 0
+            return pressure_budget, 0
 
-        aligner_budget = min(4, num_agents - 2)
-        scrambler_budget = 1 if step >= 200 else 0
+        pressure_budget = min(num_agents - 2, 5)
+        if min_res < 3 and not can_hearts:
+            pressure_budget = max(2, num_agents // 3)
+        elif min_res < 7:
+            pressure_budget = min(4, num_agents - 2)
 
-        if min_res < 1 and not _h.team_can_refill_hearts(state):
-            aligner_budget = max(aligner_budget - 1, 1)
+        scrambler_budget = 0
+        if step >= 200 and min_res >= 7:
+            scrambler_budget = min(1, pressure_budget // 3)
+        if step >= 3000 and min_res >= 14:
+            scrambler_budget = min(2, pressure_budget // 3)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
 
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
@@ -1673,6 +1691,37 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 20:
                 return True
         return False
+
+    def evaluate_state(self, state: MettagridState) -> Action:
+        action = super().evaluate_state(state)
+        step = state.step or self._step_index
+        role = self._infos.get("role", "?")
+        subtask = self._infos.get("subtask", "?")
+        if step % 500 == 0 or step == 1 or (step % 100 == 0 and self._agent_id == 0):
+            pos = _h.absolute_position(state)
+            hp = int(state.self_state.inventory.get("hp", 0))
+            hearts = int(state.self_state.inventory.get("heart", 0))
+            cargo = _h.resource_total(state)
+            aligner_b = self._infos.get("aligner_budget", "?")
+            scrambler_b = self._infos.get("scrambler_budget", "?")
+            frontier = self._infos.get("frontier_neutral_junctions", "?")
+            team_id = _h.team_id(state)
+            friendly = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner == team_id))
+            enemy = len(self._world_model.entities(
+                entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+            shared = _shared_resources(state)
+            hub = self._nearest_hub(state)
+            hub_pos = (hub.global_x, hub.global_y) if hub else None
+            print(
+                f"[COG] step={step} agent={self._agent_id} pos={pos} hub={hub_pos} role={role} "
+                f"subtask={subtask} hp={hp} hearts={hearts} cargo={cargo} "
+                f"aligners={aligner_b} scramblers={scrambler_b} "
+                f"friendly_j={friendly} enemy_j={enemy} frontier={frontier} "
+                f"hub_res={shared}",
+                flush=True,
+            )
+        return action
 
 
 class AnthropicCyborgPolicy(PilotCyborgPolicy):
