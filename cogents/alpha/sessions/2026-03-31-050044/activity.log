@@ -4,3 +4,8 @@ status: in-progress
 
 ## Log
 - [050044] Session started. Goals: check v903/v901 tournament results, iterate on policy.
+- [050500] Setup complete. v903 matches all still running (20 matches).
+- [050500] Local free-play: AlphaCyborgPolicy scored 1.95 in 3000 steps.
+- [050800] Implemented shared extractor claims to reduce miner clustering.
+  Miners now claim extractors and avoid extractors claimed by teammates.
+  Should help silicon bottleneck (always lowest resource ~380 vs 778+).

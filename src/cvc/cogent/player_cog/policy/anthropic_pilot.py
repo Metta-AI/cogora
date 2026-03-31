@@ -1119,6 +1119,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     """Optimized agent policy: re-alignment boost + stable budgets + scrambler defense."""
 
     def __init__(self, *args, **kwargs):
+        self._shared_extractor_claims: dict[tuple[int, int], tuple[int, int]] = kwargs.pop('shared_extractor_claims', {})
         super().__init__(*args, **kwargs)
         self._last_budget_change_step = 0
         self._last_bias_resource: str | None = None
@@ -1203,7 +1204,45 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 self._clear_sticky_target()
                 return None
 
-        return super()._preferred_miner_extractor(state)
+        result = super()._preferred_miner_extractor(state)
+
+        # Extractor claim: avoid clustering multiple miners on the same extractor.
+        # If the chosen extractor is claimed by another miner, try to find an unclaimed
+        # alternative of the same resource type within reasonable distance.
+        step = state.step or self._step_index
+        _EXTRACTOR_CLAIM_STEPS = 20
+
+        # Clean up expired claims
+        expired = [pos for pos, (_, s) in self._shared_extractor_claims.items() if step - s > _EXTRACTOR_CLAIM_STEPS]
+        for pos in expired:
+            self._shared_extractor_claims.pop(pos, None)
+
+        if result is not None and self._shared_extractor_claims:
+            claim = self._shared_extractor_claims.get(result.position)
+            if claim is not None and claim[0] != self._agent_id and step - claim[1] <= _EXTRACTOR_CLAIM_STEPS:
+                # Claimed by another miner — look for unclaimed alternative
+                current_pos = _h.absolute_position(state)
+                alternatives = self._world_model.entities(
+                    entity_type=result.entity_type,
+                    predicate=lambda entity: (
+                        _h.is_usable_recent_extractor(entity, step=step)
+                        and entity.position != result.position
+                        and self._shared_extractor_claims.get(entity.position) is None
+                    ),
+                )
+                if alternatives:
+                    best_alt = min(alternatives, key=lambda e: _h.manhattan(current_pos, e.position))
+                    alt_dist = _h.manhattan(current_pos, best_alt.position)
+                    orig_dist = _h.manhattan(current_pos, result.position)
+                    # Accept alternative if it's not much farther (within 2x distance + 10 tiles)
+                    if alt_dist <= orig_dist * 2 + 10:
+                        result = best_alt
+
+        # Claim the selected extractor
+        if result is not None:
+            self._shared_extractor_claims[result.position] = (self._agent_id, step)
+
+        return result
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
         """Less conservative retreat (margin=15) + miner hub-distance check."""
@@ -2787,6 +2826,10 @@ class AlphaCyborgPolicy(MettagridSemanticPolicy):
     """Lightweight policy without LLM dependencies."""
     short_names = ["alpha-cyborg"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._shared_extractor_claims: dict[tuple[int, int], tuple[int, int]] = {}
+
     def agent_policy(self, agent_id: int) -> AgentPolicy:
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
@@ -2798,8 +2841,13 @@ class AlphaCyborgPolicy(MettagridSemanticPolicy):
                 shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots,
                 shared_team_ids=self._shared_team_ids,
+                shared_extractor_claims=self._shared_extractor_claims,
             )
         return self._agent_policies[agent_id]
+
+    def reset(self) -> None:
+        super().reset()
+        self._shared_extractor_claims.clear()
 
 
 class AlphaCyborgGlobalRolesPolicy(MettagridSemanticPolicy):
