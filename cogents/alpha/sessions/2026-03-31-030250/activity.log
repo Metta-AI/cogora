@@ -9,3 +9,10 @@ status: in-progress
 
 ## Activity
 - [03:03] Session started. Previous session (032500) interrupted. v884 (TV488) best at avg 9.58. Key: 4v4 aligner floor.
+- [03:05] Continuing from previous session. v885 (TV489, aggressive stagnation scramble) qualifying still running. Checking results.
+- [03:12] v885 (TV489) competition results: avg 5.90 (18 matches) — REGRESSION from v884's 9.58.
+  - 4v4 avg 4.77 (was 8.66) — always-scramble wastes hearts/mining time
+  - 2v6 avg 4.99 (was 8.72) — same problem
+  - 6v2 avg 7.95 (was 11.07) — still worse
+  - CONCLUSION: stagnation scramble changes hurt. TV488 (v884) remains best.
+  - Key lesson: the step%200 time window and min_res>=7 threshold are IMPORTANT for stagnation balance.
