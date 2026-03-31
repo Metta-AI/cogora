@@ -27,3 +27,7 @@ status: in-progress
   - v884 (TV488): avg 9.58 (16 matches) — BEST! 2v6 avg 8.72 (was ~1.5), 4v4 avg 8.66, 6v2 avg 11.07
   - Key win: 4v4 aligner floor (never below 2 aligners) significantly improved 2v6 matchups too.
   - Problem: 6v2 vs coglet scored 2.03, vs modular-lstm scored 2.00. Some 6v2 matchups still bad.
+- [04:15] Studied 6v2 vs coglet (2.03): germanium bottleneck kills hearts. Oxygen hits 764 while germanium=0. Map-dependent extractor distribution.
+- [04:16] Studied 4v4 vs mammet (3.95): same pattern — oxygen surplus (764!), germanium/silicon starve. Territory collapses after step 1000.
+- [04:20] Created TV489: TV488 + aggressive stagnation scramble (always try scramble first, min_res threshold 3 for all sizes, no time window). Stagnation mine fallback.
+- [04:22] Uploaded v885 (TV489) to qualifying.
