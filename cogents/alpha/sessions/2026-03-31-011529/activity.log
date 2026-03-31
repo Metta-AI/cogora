@@ -1,4 +1,4 @@
-status: in-progress
+status: completed
 started: 2026-03-31T01:15:29Z
 
 ## Activity Log
@@ -39,3 +39,10 @@ started: 2026-03-31T01:15:29Z
 - v881 (TV485) qualifying: 12.55, 14.45 (avg 13.50 — highest qualifying ever!). IN COMPETITION.
 - Key learning: In 2v6, early game is everything. v878 vs slanky built 8 junctions by step 1000 (score 13.00) vs 4 junctions vs random-assay (score 1.92). Score driven by first 1000-2000 steps; late game collapse is inevitable.
 - Analyzed stuck-at-position bug: agent sits at (-5,3) for 2000+ steps in desperate_scramble. Hearts=1 but position frozen. TV485 adds stuck detection (150 step threshold) + fallback to mining.
+- **v881 (TV485) REGRESSION: avg ~6.06 across 13 matches** — much worse than v880 (8.71).
+  The `not _h.team_can_refill_hearts(state)` check in desperate mode forces mining when germanium is low,
+  which is exactly wrong — should be scrambling instead. TV485 is a FAILED experiment.
+- **v880 (TV484) is BEST new variant**: 6v2 dramatically improved (avg 12.66), 4v4 solid (avg 8.66),
+  2v6 still fundamental weakness (avg 4.80). Overall avg 8.71 with expanded opponent pool.
+- v873 (TV478) remains best overall at avg 10.13, but against a different (easier) opponent pool.
+- New opponents in tournament: gtlm-reactive-v3, random-assay-test, swoopy-v0, coglet-v0.
