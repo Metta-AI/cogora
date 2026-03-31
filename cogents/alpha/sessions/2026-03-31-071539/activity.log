@@ -19,11 +19,14 @@
 - **4v4 vs slanky (score 5.32, best)**: Good early economy (hub 80-170), 9 junctions by step 500. But collapses late: 2 friendly vs 13 enemy by step 9000. Aligners stuck patrolling hotspots endlessly while enemies dominate.
 - **Core problem**: When frontier=0 and enemy_j=10+, aligners patrol/idle-mine instead of creating new targets. Scramblers needed to convert enemy junctions to neutral to create alignment opportunities.
 
-### Code Changes: Territory-Responsive Scrambler Scaling
+### Code Changes: Territory-Responsive Scrambler Scaling (v914/v915)
 - Modified `_pressure_budgets` in both `AnthropicPilotAgentPolicy` and `AlphaCogV2AgentPolicy`
 - When losing territory (enemy_j > friendly_j + 2 after step 500), shift budget toward scramblers
-  - 5+ agents: scrambler_budget = max(pressure_budget // 2, 1)
-  - 4 agents: 1 aligner + 2 scramblers
-  - 2 agents: 0 aligners + 1 scrambler
-- Also lowered scrambler resource threshold when losing (min_res >= 3 instead of 5)
-- Running local 5k-step test to validate
+- Key refinement: don't reduce pressure_budget for economy when losing territory
+  - Losing all junctions (score=0) is worse than a resource dip
+  - Keep scramblers active when min_res >= 1 or can_hearts, even during economy stress
+- Local self-play test: 2.09 score (5k steps), saw 3 scramblers activate at step 4000+
+- Uploaded: v914 (AnthropicCyborgPolicy), v915 (AlphaCyborgV2Policy)
+
+### Waiting for tournament results
+- v911 (18+ running), v914/v915 (qualifying)

@@ -1529,14 +1529,22 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
             pressure_budget = 3
         elif step < 3000:
             pressure_budget = min(5, num_agents - 2)
-            if min_res < 3 and not can_hearts:
-                pressure_budget = max(2, num_agents // 3)
-            elif min_res < 7:
-                pressure_budget = min(4, num_agents - 2)
+            if not losing_territory:
+                if min_res < 3 and not can_hearts:
+                    pressure_budget = max(2, num_agents // 3)
+                elif min_res < 7:
+                    pressure_budget = min(4, num_agents - 2)
+            else:
+                if min_res < 1 and not can_hearts:
+                    pressure_budget = max(3, num_agents // 3)
         else:
             pressure_budget = min(6, num_agents - 2)
-            if min_res < 3 and not can_hearts:
-                pressure_budget = max(2, num_agents // 3)
+            if not losing_territory:
+                if min_res < 3 and not can_hearts:
+                    pressure_budget = max(2, num_agents // 3)
+            else:
+                if min_res < 1 and not can_hearts:
+                    pressure_budget = max(3, num_agents // 3)
 
         # Team-size cap
         team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
@@ -1545,8 +1553,9 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
 
         # Territory-responsive scrambler scaling
         scrambler_budget = 0
-        if losing_territory and min_res >= 3:
-            scrambler_budget = min(max(pressure_budget // 2, 1), pressure_budget - 1)
+        if losing_territory:
+            if min_res >= 1 or can_hearts:
+                scrambler_budget = min(max(pressure_budget // 2, 1), pressure_budget - 1)
         elif step >= 3000 and min_res >= 5:
             scrambler_budget = min(2, pressure_budget // 3)
         elif step >= 200 and min_res >= 5:
@@ -1969,14 +1978,25 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             pressure_budget = 3
         elif step < 3000:
             pressure_budget = min(5, num_agents - 2)
-            if min_res < 3 and not can_hearts:
-                pressure_budget = max(2, num_agents // 3)
-            elif min_res < 7:
-                pressure_budget = min(4, num_agents - 2)
+            if not losing_territory:
+                # Only reduce for economy when NOT losing territory
+                if min_res < 3 and not can_hearts:
+                    pressure_budget = max(2, num_agents // 3)
+                elif min_res < 7:
+                    pressure_budget = min(4, num_agents - 2)
+            else:
+                # When losing territory, keep higher pressure even with low economy
+                # Losing all junctions (score=0) is worse than resource dip
+                if min_res < 1 and not can_hearts:
+                    pressure_budget = max(3, num_agents // 3)
         else:
             pressure_budget = min(6, num_agents - 2)
-            if min_res < 3 and not can_hearts:
-                pressure_budget = max(2, num_agents // 3)
+            if not losing_territory:
+                if min_res < 3 and not can_hearts:
+                    pressure_budget = max(2, num_agents // 3)
+            else:
+                if min_res < 1 and not can_hearts:
+                    pressure_budget = max(3, num_agents // 3)
 
         # Team-size cap: ensure at least 2 miners in tournament (smaller teams)
         team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
@@ -1985,10 +2005,11 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
 
         # Scramblers: territory-responsive scaling
         scrambler_budget = 0
-        if losing_territory and min_res >= 3:
-            # When losing territory badly, shift heavily toward scramblers
-            # More scramblers = more enemy junctions converted to neutral = more alignment targets
-            scrambler_budget = min(max(pressure_budget // 2, 1), pressure_budget - 1)
+        if losing_territory:
+            # When losing territory, always have scramblers (min_res >= 1 is enough)
+            # Scrambling creates new alignment targets — essential for recovery
+            if min_res >= 1 or can_hearts:
+                scrambler_budget = min(max(pressure_budget // 2, 1), pressure_budget - 1)
         elif step >= 3000 and min_res >= 5:
             scrambler_budget = min(2, pressure_budget // 3)
         elif step >= 200 and min_res >= 5:
