@@ -1342,7 +1342,24 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
                 return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
-        # No expansion target — help economy by mining (idle-mine >> idle-explore in practice)
+        # No expansion target — patrol toward hotspot areas (recently scrambled junctions)
+        # to be positioned for fast re-alignment when junctions get scrambled.
+        if hub is not None and hearts > 0 and self._shared_hotspots:
+            hotspot_targets = []
+            for rel_pos, count in self._shared_hotspots.items():
+                if count <= 0:
+                    continue
+                abs_pos = (hub.global_x + rel_pos[0], hub.global_y + rel_pos[1])
+                dist = _h.manhattan(current_pos, abs_pos)
+                hub_dist = _h.manhattan(hub_pos, abs_pos)
+                if dist > 2 and dist < hp - 20 and hub_dist < 35:
+                    hotspot_targets.append((abs_pos, count, dist))
+            if hotspot_targets:
+                # Prefer high-count hotspots that are relatively close
+                best = min(hotspot_targets, key=lambda t: t[2] - t[1] * 5)
+                return self._move_to_position(state, best[0], summary="patrol_hotspot", vibe="change_vibe_aligner")
+
+        # Fallback: help economy by mining
         return self._miner_action(state, summary_prefix="idle_align_")
 
     def evaluate_state(self, state: MettagridState) -> Action:

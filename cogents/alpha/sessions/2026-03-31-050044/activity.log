@@ -13,3 +13,13 @@ status: in-progress
 - [050900] Uploaded v904 = AlphaCyborgPolicy + extractor claims.
 - [051000] Added early heart skip: aligners skip batching for first 300 steps.
   Go align with 1 heart instead of waiting for 3. Gets first junctions faster.
+- [051200] Added hotspot patrol: idle aligners patrol near recently-scrambled
+  positions instead of mining. Keeps aligners positioned for fast re-alignment.
+- [051200] Test results (3000 steps, 3 games each):
+  - Baseline: avg 1.95
+  - Extractor claims only: avg 2.10 (+8%)
+  - Claims + heart skip: avg 2.03
+  - Claims + heart skip + patrol: avg 2.55 (+31%!)
+  Territory retention dramatically improved: 17-19 junctions at step 2500
+  vs 10-11 without patrol. Hotspot patrol is the biggest win.
+- [051200] Uploaded v904 (claims), v905 (claims+heart skip). Will upload v906 (all three).
