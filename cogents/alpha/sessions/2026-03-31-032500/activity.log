@@ -1,0 +1,11 @@
+# Activity Log — 2026-03-31-032500
+status: in-progress
+
+## Session Goals
+- Fix stuck-at-position bug (desperate_scramble loop)
+- Combine TV478 base + aligner floor (no desperate mode)
+- Upload improved variant and check tournament results
+- Study new opponents
+
+## Activity
+- [03:25] Session started. Context: v873 (TV478) avg 10.13 achieved goal. v880 (TV484) best 6v2 (12.66). Key todo: stuck bug fix + TV478+floor combo.
