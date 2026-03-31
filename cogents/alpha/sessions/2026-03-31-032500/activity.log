@@ -9,3 +9,9 @@ status: in-progress
 
 ## Activity
 - [03:25] Session started. Context: v873 (TV478) avg 10.13 achieved goal. v880 (TV484) best 6v2 (12.66). Key todo: stuck bug fix + TV478+floor combo.
+- [03:30] Analyzed v881 tournament results: avg 7.08 across 17 matches. 7 scores >=10, 7 scores <3. Low scores all 2v6.
+- [03:32] Studied 2v6 vs gtlm-reactive (score 0.31): silicon bottleneck — hub silicon stuck at 2 while others grew to 40+. No silicon extractors near hub area. Structural 2v6 problem.
+- [03:35] Created TV486: TV478 + aligner floor for 5+ (no desperate mode). Clean combo of best features.
+- [03:36] Created TV487: TV486 + stuck detection with explore fallback (not mine — that's what regressed TV485).
+- [03:40] TV486 local test: 6.85 score (8v0 self-play). Normal baseline.
+- [03:42] Uploaded v882 (TV486) and v883 (TV487) to qualifying.
