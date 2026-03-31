@@ -33,4 +33,9 @@ status: completed
   V1 (fully shared model) FAILED: agents clustered at same hub, all stuck.
   V2 (extractor-only sharing) works: agents spread to different hubs, extractors shared.
 - [03:57] Uploaded v895 (TV496, shared extractors) and v896 (TV497, shared + imbalance).
-  This is an ARCHITECTURAL improvement, not a budget tweak. Most promising approach yet.
+- [04:05] TV496 ALSO BROKEN: scored 0.31 locally (TV488 baseline scored 14.96 on same map type).
+  v894 (TV497) scored 0.00 in qualifying. Shared extractor cache causes miner clustering.
+  All agents navigate to same extractor → cluster → die. Need per-agent extractor selection.
+- [04:06] Abandoned shared extractor approach for now. Need more careful implementation
+  that distributes miners to DIFFERENT extractors of the bottleneck type.
+  Key insight: sharing knowledge ≠ better coordination without also sharing TARGET CLAIMS.
