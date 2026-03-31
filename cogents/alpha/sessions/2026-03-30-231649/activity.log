@@ -29,3 +29,6 @@ started: 2026-03-30T23:16:49Z
   - v863 (TV471): 14.60 (Paz-Bot), 11.49 (4v4 Paz-Bot), 11.42 (4v4 modular-lstm!), 1.13 (2v6 mammet), 10.62 (2v6 Paz-Bot)
   - v858 (TV469): avg ~6.3 across 12 matches
   - v855 (TV350): 11.33 (6v2 gtlm)
+  - v866 (TV473 lower thresholds): 16 matches, avg 8.71. 6v2=11.20, 4v4=10.38, 2v6=6.09.
+    Best: 15.75 (4v4 Paz-Bot), 14.28 (6v2 Paz-Bot), 12.98 (2v6 slanky!)
+  - v869 (TV474) in competition, results pending.
