@@ -52269,3 +52269,124 @@ class AlphaTournamentV493Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV494: TV488 + faster aligner ramp ───────────────────────────────────────
+# v884 (TV488) averages 12.92 on normal 4v4 maps and 4.54 on bad maps.
+# Instead of fixing bad maps (structural), boost normal maps by ramping
+# to 3 aligners faster. TV488 requires min_res >= 60 for 3rd aligner in 4v4.
+# Many normal games sit at 30-50 min_res and could benefit from 3 aligners.
+#
+# Change: 3 aligners when min_res >= 30 (was 60) for 4v4.
+# For 5+: 3 aligners when min_res >= 22 (was 35).
+
+class AlphaTournamentV494AgentPolicy(AlphaTournamentV488AgentPolicy):
+    """TV494: TV488 + faster aligner ramp."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2 agents: always both aligners
+        if team_size <= 2:
+            return 2, 0
+
+        # 4 agents: faster 3-aligner ramp
+        if team_size <= 4:
+            if step < 30:
+                return 2, 0
+            aligner_budget = 2
+            if min_res >= 30 and step >= 100:  # Was 60, 200
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: faster ramp
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 2, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 30:  # Was 35 → 3 aligners
+            return 3, 0
+        elif min_res < 60:  # Was 70 → 4 aligners
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV494Policy(MettagridSemanticPolicy):
+    """TV494: TV488 + faster aligner ramp."""
+    short_names = ["alpha-tournament-v494"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV494AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV495: TV494 + TV490 combined (faster ramp + imbalance awareness) ────────
+
+class AlphaTournamentV495AgentPolicy(AlphaTournamentV494AgentPolicy):
+    """TV495: faster ramp + imbalance awareness."""
+
+    def _has_severe_imbalance(self, state):
+        resources = _shared_resources(state)
+        min_res = min(resources.values())
+        max_res = max(resources.values())
+        return max_res > 50 * (min_res + 1) and min_res < 7
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        # Check severe imbalance BEFORE calling parent
+        severe = self._has_severe_imbalance(state) and step > 300
+        if severe and not can_hearts and team_size > 2:
+            if objective == "resource_coverage":
+                return 0, 0
+            return 1, 0  # Drop to 1 aligner, max miners on bottleneck
+
+        return super()._pressure_budgets(state, objective=objective)
+
+    def _aligner_action(self, state):
+        """In severe imbalance, idle aligners mine bottleneck instead of scrambling."""
+        step = state.step or self._step_index
+        severe = self._has_severe_imbalance(state) and step > 300
+
+        # Let parent handle everything normally first
+        action, summary = super()._aligner_action(state)
+
+        # Override idle scramble/explore with mining when imbalanced
+        if severe and summary in ("idle_align_scramble", "stag_scramble", "find_neutral_junction"):
+            return self._miner_action(state, summary_prefix="imbalance_mine_")
+
+        return action, summary
+
+
+class AlphaTournamentV495Policy(MettagridSemanticPolicy):
+    """TV495: faster ramp + imbalance awareness."""
+    short_names = ["alpha-tournament-v495"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV495AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
