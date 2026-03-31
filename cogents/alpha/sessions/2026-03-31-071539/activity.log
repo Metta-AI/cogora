@@ -1,30 +1,18 @@
 # Activity Log — 2026-03-31-071539
 
-## Status: in-progress
+## Status: completed
 
-### Key Findings
-1. v884 (AlphaTournamentPolicy) averaged 9.58 historically but scored 0.75 in current competition
-   - The high scores were against a different/easier opponent pool
-2. Current opponent pool (mammet v13, modular-lstm v13, slanky v112, etc.) is very competitive
-3. Territory-responsive scramblers help late game but hurt 6v2 (fixed in v918/v919)
-4. Mining resource balance fix (threshold 7→21) helps prevent bottleneck crashes
+### Actions
+1. Analyzed v912 match logs (6v2 vs mammet, 4v4 vs slanky)
+2. Implemented territory-responsive scrambler scaling (v914-v915)
+3. Added early-game aggression — extra pressure agent first 500 steps (v916)
+4. Fixed mining resource balance — raise threshold 7→21 (v917)
+5. Fixed 6v2 regression from premature scrambler shift (v918-v919)
+6. Added AlphaCog scoring optimizations to tournament policy (v920)
+7. Uploaded AlphaTournamentPolicy (v921) and enhanced version (v922)
 
-### v915 Competition Results (13 matches, avg 1.37)
-- 4v4: avg 2.02
-- 2v6: avg 0.66
-- 6v2: avg 1.50
-
-### v921 Competition (AlphaTournamentPolicy): 0.75 vs mammet 6v2
-- NOT the 9.58 expected — current opponents are harder
-
-### Code Changes This Session
-1. Territory-responsive scrambler scaling (v914/v915)
-2. Early-game aggression (v916)
-3. Mining resource balance 7→21 (v917)
-4. Fix 6v2 losing_territory gate (v918/v919)
-5. AlphaCog scoring optimizations for tournament (v920)
-6. Upload AlphaTournamentPolicy (v921)
-7. AlphaTournament + mining fix (v922)
-
-### Active Competition
-- v919, v921, v922 all in competition with matches running
+### Results
+- v915 competition: avg 1.37 (13 matches)
+- v921 (AlphaTournament): 0.75 vs mammet, 2.07 vs slanky
+- v919, v921, v922 in competition with 20+ matches running
+- Historical v884 avg 9.58 was against easier opponents
