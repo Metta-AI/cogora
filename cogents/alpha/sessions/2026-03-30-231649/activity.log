@@ -21,3 +21,11 @@ started: 2026-03-30T23:16:49Z
 - v863 (parallel session) scores: 11.42 (4v4 vs modular-lstm!), 14.60 (6v2 Paz-Bot), 1.13 (2v6 mammet).
 - v858 (TV469) competition: 14.84/13.28/13.14/9.52/6.81/4.74/4.24/2.68/2.55/2.18/1.50/0.48.
 - v855 (TV350 re-upload) competition: 11.33 (6v2 gtlm).
+- v867 failed qualifying (server error). Re-uploaded as v868 (TV473).
+- Created TV474: TV471 hub-recovery + TV473 lower thresholds combined. Uploaded as v869.
+- Fixed stray conflict marker in anthropic_pilot.py.
+- v866 now in competition with many matches running. v869 (TV474) qualifying.
+- Summary of competition scores so far:
+  - v863 (TV471): 14.60 (Paz-Bot), 11.49 (4v4 Paz-Bot), 11.42 (4v4 modular-lstm!), 1.13 (2v6 mammet), 10.62 (2v6 Paz-Bot)
+  - v858 (TV469): avg ~6.3 across 12 matches
+  - v855 (TV350): 11.33 (6v2 gtlm)
