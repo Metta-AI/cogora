@@ -147,3 +147,10 @@ v866 (lower 5+ thresholds):
 5. All modifications to the proven TV350 budget/behavior tend to hurt on average
 6. v716 (TV350) 15.05 average remains very hard to beat
 7. Budget-only changes (TV470) help some matchups but likely hurt average
+
+### Session 231654 (continued)
+- Attempted to read slanky source code from Metta-AI/metta repo
+- BLOCKED: GitHub MCP access restricted to metta-ai/cogora only
+- Slanky architecture: goal-based (goals/aligner.py, scrambler.py, survive.py, obs_parser.py)
+- Cannot copy strategies without repo access
+- Added suggestion to expand GitHub repo permissions

@@ -29,6 +29,12 @@ These are ideas that require user action (code changes, environment config, perm
 - **Multi-agent self-play training**: Train against copies of itself for PvP dynamics.
 - **Better scout patterns**: Maybe learn optimal exploration routes from game data.
 
+## Priority 5: Expand GitHub Repo Access
+- **Add `metta-ai/metta` and `metta-ai/co-gas` to allowed GitHub repos** so Alpha can read
+  competitor code (slanky, glanky, modular-lstm policies) for strategy analysis.
+  Slanky code is at: `cog-cyborg/src/cogas_agents/policy/scripted_agent/slanky/`
+  Glanky code is at: `cogas-agents/src/cogas_agents/policy/scripted_agent/glanky/`
+
 ## Deferred
 - AnthropicCyborgPolicy fails locally (API calls retry endlessly in container).
 - coglet-v0 and gtlm-reactive are real competitors — study their strategies.
