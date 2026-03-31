@@ -1969,16 +1969,97 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         return aligner_budget, scrambler_budget
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
-        """Miners: retreat if too far from hub."""
-        if super()._should_retreat(state, role, safe_target):
+        """Less conservative retreat + miner hub-distance check."""
+        hp = int(state.self_state.inventory.get("hp", 0))
+        if safe_target is None:
+            return hp <= _h.retreat_threshold(state, role)
+        safe_steps = max(0, _h.manhattan(_h.absolute_position(state), safe_target.position) - _h._JUNCTION_AOE_RANGE)
+        margin = 15  # Less conservative than default 20
+        if self._in_enemy_aoe(state, _h.absolute_position(state), team_id=_h.team_id(state)):
+            margin += 10
+        margin += int(state.self_state.inventory.get("heart", 0)) * 5
+        margin += min(_h.resource_total(state), 12) // 2
+        if not _h.has_role_gear(state, role):
+            margin += 10
+        if (state.step or 0) >= 2_500:
+            margin += 10 if role in {"aligner", "scrambler"} else 5
+        if hp <= safe_steps + margin:
             return True
         if role == "miner" and safe_target is not None:
             pos = _h.absolute_position(state)
             dist = _h.manhattan(pos, safe_target.position)
-            hp = int(state.self_state.inventory.get("hp", 0))
             if dist > _MINER_MAX_HUB_DISTANCE and hp < dist + 20:
                 return True
         return False
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Improved aligner: expansion toward unreachable junctions + hotspot patrol."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # No frontier — try to expand toward unreachable junctions
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hub_pos = hub.position if hub is not None else current_pos
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 30
+                and _h.manhattan(hub_pos, j.position) < 40
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Patrol hotspot areas (recently scrambled junctions) — low resource threshold
+        min_res = _h.team_min_resource(state)
+        if hub is not None and hearts > 0 and min_res >= 3 and self._shared_hotspots:
+            hotspot_targets = []
+            for rel_pos, count in self._shared_hotspots.items():
+                if count <= 0:
+                    continue
+                abs_pos = (hub.global_x + rel_pos[0], hub.global_y + rel_pos[1])
+                dist = _h.manhattan(current_pos, abs_pos)
+                hub_dist = _h.manhattan(hub_pos, abs_pos)
+                if dist > 2 and dist < hp - 20 and hub_dist < 35:
+                    hotspot_targets.append((abs_pos, count, dist))
+            if hotspot_targets:
+                best = min(hotspot_targets, key=lambda t: t[2] - t[1] * 5)
+                return self._move_to_position(state, best[0], summary="patrol_hotspot", vibe="change_vibe_aligner")
+
+        # Fallback: mine to help economy
+        return self._miner_action(state, summary_prefix="idle_align_")
 
     def evaluate_state(self, state: MettagridState) -> Action:
         action = super().evaluate_state(state)

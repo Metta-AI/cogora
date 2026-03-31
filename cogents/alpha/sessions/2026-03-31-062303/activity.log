@@ -38,3 +38,13 @@ Status: in-progress
   3. Added late-game pressure boost to 6 (was capped at 5)
   4. Made mining stall detection aggressive (20/30/50 thresholds)
   Uploading as v911 to competition.
+- 06:49 Uploaded v911 (AnthropicCyborg + competition fixes) and v912 (AlphaCyborgV2 heuristic-only).
+  Both in qualifying pool. 4 qualifying matches running.
+- 06:50 Local tests show HIGH VARIANCE: map RNG causes wipeouts (0.00) or good runs (6.93).
+  5k-step baseline: 2.81 (run1). V3: 2.35. Not meaningful with 1 run each.
+- 06:52 Added improved _aligner_action to AnthropicPilotAgentPolicy:
+  - Expansion toward unreachable junctions (was just exploring)
+  - Hotspot patrol at min_res >= 3 (was no patrol at all)
+  - Idle-mine fallback (was just exploring aimlessly)
+  - Lower retreat margins (15 instead of 20)
+  Will upload as v913.
