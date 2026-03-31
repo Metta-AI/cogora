@@ -30,3 +30,14 @@ started: 2026-03-31T00:20:58Z
 - Created TV479 (instant 2-aligner for 4v4) → v875, TV480 (reactive 4v4 budget) → v876.
 - Studied aligner_target_score: distance + expansion - network_penalty - hotspot_penalty.
   For 2 agents, may want higher network_weight (prefer hub-adjacent) and positive hotspot (avoid contested).
+- **v873 (TV478) BREAKTHROUGH: avg 10.13 across 11 matches!**
+  - 2v6 scores: 9.15, 8.19, 11.72, 11.45 (massive improvement from 1-3 range!)
+  - 4v4 vs modular-lstm: 10.09 (great!)
+  - 6v2: 12.70, 12.84, 7.05
+  - Key: faster stagnation detection (peak=2, 150 steps, min_step 200) + lower scramble threshold (min_res=3)
+- v872 (TV477) avg 10.01. 2v6 vs modular-lstm = 0.31 (terrible!). "Always 2 aligners" HURT without faster stagnation.
+  But 6v2 vs mammet = 16.92 and 4v4 vs gtlm = 12.80 (good). The 0.31 and 3.88 pull average down.
+- **Key insight**: TV350 budget (1,0 when low resources) is BETTER than always (2,0) for 2 agents.
+  The dedicated miner keeps economy running. But faster stagnation with lower scramble threshold is the real win.
+- Created TV481: TV350 budget (sacred) + TV478's faster stagnation for 2 agents. Best of both worlds.
+  Uploaded as v877.
