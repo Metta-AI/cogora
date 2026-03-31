@@ -18,3 +18,9 @@ started: 2026-03-31T01:15:29Z
 - Created TV484: TV483 + minimum 2 aligners for 5+ agents. Never drop to 1 aligner for 5+ team.
   Budget floor: (2,0) instead of (1,0) when min_res < 10 and can't refill hearts.
 - Uploaded v880 (TV484) to qualifying.
+- v878 (TV482) qualifying: 11.72, 10.41 (avg 11.07). IN COMPETITION with 20+ matches running.
+- v879 (TV483) qualifying: 13.67 (1 completed, 1 running).
+- v880 (TV484) qualifying: still running.
+- v877 updated results (16 completed): avg ~9.36. New: swoopy 2v6=9.84, swoopy 4v4=13.73. Swoopy 6v2=7.78,11.54.
+- Analyzed v877 6v2 vs swoopy (7.78): silicon bottleneck at step 2000 → budget (1,0) with 6 agents → only 1 aligner. Same structural issue as 2v6 collapse — economy panic overrides territory needs.
+- Waiting for v878/v879/v880 competition results to compare.
