@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-31-040204**: **shared_team_ids fix + mining stall detection — budget change REGRESSED** — Fixed PilotCyborgPolicy role assignment, added mining stall detection (50-step timeout). Team-size budget (v900) avg ~1 = MAJOR REGRESSION. Reverted to total num_agents. v903 = proven budget + stall fix (best candidate). v901 = AlphaTournamentPolicy + stall fix. [sessions/2026-03-31-040204/](sessions/2026-03-31-040204/)
 - **2026-03-31-030250**: **v884 (TV488) confirmed best avg 9.58 — all budget mods regress** — TV486-TV495 (v882-v892). 4v4 aligner floor + 5+ floor = best combo. Aggressive scramble (v885=5.90), faster ramp (v888=6.91), scorched earth (v887=4.63) all REGRESSED. Heuristic ceiling ~10 confirmed. [sessions/2026-03-31-030250/](sessions/2026-03-31-030250/)
 - **2026-03-31-032500**: **v884 (TV488) created — 4v4 aligner floor + TV478+floor combo** — Interrupted. Created TV486 (TV478+floor), TV487 (stuck fix), TV488 (4v4 floor), TV489 (aggressive scramble). v884 avg 9.58 (best). [sessions/2026-03-31-032500/](sessions/2026-03-31-032500/)
 - **2026-03-31-011529**: **v880 (TV484) fixes 6v2 with aligner floor (6v2 avg 12.66). TV485 regression.** — TV482-TV485 (v878-v881). Aligner floor: never <2 aligners for 5+. Desperate mode mixed. v881 mining in desperate mode = avg 6.06 (AVOID). v880 avg 8.71 w/ harder opponent pool. [sessions/2026-03-31-011529/](sessions/2026-03-31-011529/)
