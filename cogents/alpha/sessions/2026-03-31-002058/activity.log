@@ -41,3 +41,9 @@ started: 2026-03-31T00:20:58Z
   The dedicated miner keeps economy running. But faster stagnation with lower scramble threshold is the real win.
 - Created TV481: TV350 budget (sacred) + TV478's faster stagnation for 2 agents. Best of both worlds.
   Uploaded as v877.
+- v874 (TV350) completed results: 6v2 Paz-Bot=16.05/13.60, 6v2 modular-lstm=2.82(!), 4v4 gtlm=9.31,
+  4v4 modular-lstm=3.81, 2v6 modular-lstm=2.01, 2v6 mammet=9.54. Avg ~8.16.
+- v875 (TV479) avg ~4.93. v876 (TV480) avg ~4.12. Both bad — "always 2 aligners" without faster stagnation HURTS.
+- **Confirmed: faster stagnation is the key breakthrough.** v873 (TV478) with both changes = 10.13 avg.
+  Without faster stagnation, TV477 variants (v872/v875/v876) all underperform in 2v6.
+- v877 (TV481 = TV350 budget + faster stagnation) qualifying running. Expected to be best variant.
