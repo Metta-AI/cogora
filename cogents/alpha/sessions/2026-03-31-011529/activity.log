@@ -36,4 +36,6 @@ started: 2026-03-31T01:15:29Z
   - 4v4 avg 8.66: decent (10.07, 10.70, 8.97, 6.87, 6.67)
   - 2v6 avg 4.80: still terrible (7.50, 5.95, 5.81, 4.94, 3.89, 3.48, 2.06)
   - 6v2 vs coglet: 3.13 — anomaly, needs investigation
-- v881 qualifying running.
+- v881 (TV485) qualifying: 12.55, 14.45 (avg 13.50 — highest qualifying ever!). IN COMPETITION.
+- Key learning: In 2v6, early game is everything. v878 vs slanky built 8 junctions by step 1000 (score 13.00) vs 4 junctions vs random-assay (score 1.92). Score driven by first 1000-2000 steps; late game collapse is inevitable.
+- Analyzed stuck-at-position bug: agent sits at (-5,3) for 2000+ steps in desperate_scramble. Hearts=1 but position frozen. TV485 adds stuck detection (150 step threshold) + fallback to mining.
