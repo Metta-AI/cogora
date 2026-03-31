@@ -22,4 +22,9 @@ status: in-progress
 - [03:22] Created TV493 (TV490 + TV492 combined): imbalance + 4v4 scrambler. v890.
 - [03:23] Uploaded v886, v887, v889, v890 to qualifying.
 - [03:30] All variants (v886-v890) passed qualifying, in competition now.
-- [03:35] Waiting for competition results. v886 (TV490), v887 (TV491), v888 (TV490-alt), v889 (TV492), v890 (TV493) all competing.
+- [03:40] Early competition results:
+  - v886 (TV490, imbalance awareness): 8.02, 5.48 — limited data, promising
+  - v887 (TV491, scorched earth): 6.32, 4.21, 3.36 — REGRESSION, abandon
+  - v889 (TV492, 4v4 scrambler): avg ~8.33 (8 external matches) — 4v4 hurt (2.72 vs mammet), 6v2 OK
+  - v890 (TV493, combined): 7.42, 5.55 — limited data
+  - None clearly beats v884 (avg 9.80) yet. v887=BAD, v889 scrambler hurts 4v4.
