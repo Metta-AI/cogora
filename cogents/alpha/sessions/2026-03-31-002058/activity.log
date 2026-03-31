@@ -25,3 +25,8 @@ started: 2026-03-31T00:20:58Z
 - v872/v873 competition matches all running (20+ matches). Waiting for results.
 - 4v4 analysis (v870 vs gtlm, 7.21): Territory built to 10 by step 1000, then collapsed to 3 vs 14 by step 2000.
   Stagnation scramble maintained 3 junctions for 3000 more steps but couldn't recover. Structural issue.
+- v874 (TV350 baseline) in competition: many matches running.
+- v872/v873 competition still running (matches take ~10-15 min).
+- Created TV479 (instant 2-aligner for 4v4) → v875, TV480 (reactive 4v4 budget) → v876.
+- Studied aligner_target_score: distance + expansion - network_penalty - hotspot_penalty.
+  For 2 agents, may want higher network_weight (prefer hub-adjacent) and positive hotspot (avoid contested).
