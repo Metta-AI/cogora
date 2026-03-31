@@ -49931,7 +49931,6 @@ class AlphaTournamentV470Policy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
-<<<<<<< HEAD
 # ── TV471: TV350 + hub-focused recovery scramble ────────────────────────────
 # Different approach from TV467-470 (budget-only). TV471 changes WHERE aligners
 # scramble during collapse. Analysis of 6v2 vs modular-lstm showed:
@@ -50234,6 +50233,32 @@ class AlphaTournamentV473Policy(MettagridSemanticPolicy):
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaTournamentV473AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV474: TV471 hub-recovery + TV473 lower thresholds ───────────────────────
+# Combines the best of both: hub-focused recovery scramble (WHERE to scramble)
+# with lower budget thresholds (faster aligner ramp). v863 (TV471) showed
+# 11.42 vs modular-lstm in 4v4 — let's see if faster ramp helps even more.
+
+class AlphaTournamentV474AgentPolicy(AlphaTournamentV471AgentPolicy):
+    """TV474: TV471 hub-recovery + TV473 lower 5+ thresholds."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        return _tv473_pressure_budgets(self, state, objective=objective)
+
+
+class AlphaTournamentV474Policy(MettagridSemanticPolicy):
+    """TV474: TV471 hub-recovery + TV473 lower thresholds."""
+    short_names = ["alpha-tournament-v474"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV474AgentPolicy(
                 self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
                 shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
