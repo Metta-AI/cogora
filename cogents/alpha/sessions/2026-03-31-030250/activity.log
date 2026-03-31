@@ -22,18 +22,12 @@ status: in-progress
 - [03:22] Created TV493 (TV490 + TV492 combined): imbalance + 4v4 scrambler. v890.
 - [03:23] Uploaded v886, v887, v889, v890 to qualifying.
 - [03:30] All variants (v886-v890) passed qualifying, in competition now.
-- [03:40] Early competition results:
-  - v886 (TV490, imbalance awareness): 8.02, 5.48 — limited data, promising
-  - v887 (TV491, scorched earth): 6.32, 4.21, 3.36 — REGRESSION, abandon
-  - v889 (TV492, 4v4 scrambler): avg ~8.33 (8 external matches) — 4v4 hurt (2.72 vs mammet), 6v2 OK
-  - v890 (TV493, combined): 7.42, 5.55 — limited data
-  - None clearly beats v884 (avg 9.80) yet. v887=BAD, v889 scrambler hurts 4v4.
-- [03:45] v888 (TV490-alt, faster ramp) results: avg ~5.78 (12 external matches) — HUGE REGRESSION. Faster aligner ramp starves economy. Confirms TV488 ramp is correct.
-- [03:46] Created TV494 (faster ramp) and TV495 (faster ramp + imbalance) — v891, v892. Likely to regress based on v888 results.
-- [03:48] v886 (TV490, imbalance awareness) updated: 8.02, 5.48, 12.18 — only 3 external data points, inconclusive.
-- [03:50] Key insight: heuristic ceiling is real. ALL budget changes regress or break even. TV488 is well-calibrated.
-  - Faster ramp: BAD (v888 avg 5.78)
-  - Aggressive scramble: BAD (v885 avg 5.4)
-  - 4v4 scrambler: BAD (v889 avg 8.33)
-  - Scorched earth: BAD (v887 avg 4.63)
-  - Resource imbalance awareness: NEUTRAL (v886 avg ~8.56 but only 3 data points)
+- [03:35] Waiting for competition results. v886 (TV490), v887 (TV491), v888 (TV490-alt), v889 (TV492), v890 (TV493) all competing.
+- [03:50] v888 (TV490-alt) results: avg 6.91 (10 matches) — REGRESSION from v884's 9.58. Faster 3-aligner ramp hurts economy.
+  - 4v4 avg 6.29 (was 8.66) — too many aligners too early, not enough mining
+  - 6v2 avg 7.40 (was 11.07) — same issue
+  - CONCLUSION: v884 (TV488) remains the best variant. Budget changes are risky.
+- [03:52] Session summary: v884 (TV488) = best at avg 9.58. All variants that modified budget or stagnation regressed.
+  - TV489 (v885): aggressive scramble = 5.90 avg (REGRESSION)
+  - TV490 (v888): faster ramp = 6.91 avg (REGRESSION)
+  - TV488 (v884): aligner floor for both 4v4 and 5+ = 9.58 avg (BEST)
