@@ -51740,6 +51740,68 @@ class AlphaTournamentV489Policy(MettagridSemanticPolicy):
         return self._agent_policies[agent_id]
 
 
+# ── TV490: TV488 + faster 3 aligner ramp in 4v4 ─────────────────────────────
+# In 4v4, TV488 ramps to 3 aligners only at min_res >= 60. By then, territory
+# may already be lost. Lower threshold to min_res >= 30 to get 3 aligners faster.
+# Also ramp 5+ agents faster: 3 aligners at min_res >= 22 (was 35).
+
+class AlphaTournamentV490AgentPolicy(AlphaTournamentV488AgentPolicy):
+    """TV490: TV488 + faster 3-aligner ramp."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if team_size <= 2:
+            return 2, 0
+
+        # 4 agents: always 2, ramp to 3 at min_res >= 30 (was 60)
+        if team_size <= 4:
+            if step < 30:
+                return 2, 0
+            aligner_budget = 2
+            if min_res >= 30 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: faster 3-aligner ramp (min_res >= 22 for 3, was 35)
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 2, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0  # Now 3 aligners at 22+ (was only at 35+)
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV490Policy(MettagridSemanticPolicy):
+    """TV490: TV488 + faster 3-aligner ramp."""
+    short_names = ["alpha-tournament-v490"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV490AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
 # ── TV490: TV488 + resource imbalance awareness ──────────────────────────────
 # Analysis of worst matches (6v2 vs coglet=2.03, 4v4 vs mammet=3.95):
 # Oxygen at 764 while germanium/carbon/silicon at 0-5.

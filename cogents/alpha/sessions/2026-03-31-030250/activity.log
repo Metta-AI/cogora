@@ -16,3 +16,5 @@ status: in-progress
   - 6v2 avg 7.95 (was 11.07) — still worse
   - CONCLUSION: stagnation scramble changes hurt. TV488 (v884) remains best.
   - Key lesson: the step%200 time window and min_res>=7 threshold are IMPORTANT for stagnation balance.
+- [03:18] Created TV490: TV488 + faster 3-aligner ramp (4v4: 30 instead of 60, 5+: 22→3 aligners instead of 35).
+- [03:19] Uploaded v888 (TV490) to qualifying. (v886-v887 created by parallel session)
