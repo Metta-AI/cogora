@@ -97,3 +97,23 @@ v866 (from session 231649) = lower 5+ thresholds. In competition now.
 1. Wait for v866 results
 2. If v863/TV470 avg > v716's 15.05, it's a new #1
 3. Consider combining TV470 budget with TV350 aligner behavior (no recovery mode)
+
+### v869 Results — CONFIRMS RECOVERY MODE HURTS
+v869 (TV474 = hub-recovery + lower thresholds) from session 231649:
+- 6v2 vs modular-lstm: 3.40 (terrible!) vs v863/TV470: 11.42 in 4v4
+- 6v2 vs mammet: 4.58 (bad)
+- Recovery mode is counterproductive — confirmed again
+- Best result was 4v4 vs mammet: 10.08
+
+### New Uploads
+- v870 = TV475 (TV470 budget + capture-optimized scramble) — in competition
+- v871 = TV476 (TV470 + lower thresholds + reactive) — in competition
+- v869 = TV474 (hub-recovery + lower thresholds) — from session 231649, in competition
+
+### v866 Competition Summary
+v866 (lower 5+ thresholds):
+- 4v4 vs Paz-Bot: 15.75 (best single match!)
+- 4v4 vs mammet: 9.39
+- 4v4 vs slanky: 7.18
+- 6v2 vs mammet: 8.54
+- 2v6 scores: 1.13-10.88 (typical variance)
