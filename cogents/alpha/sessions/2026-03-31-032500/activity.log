@@ -21,3 +21,9 @@ status: in-progress
 - [03:55] Qualifying results: v882=12.55, v883=12.55 (8v0 self-play). All 3 variants passed qualifying, now in competition.
 - [03:57] Studied 4v4 match logs vs coglet (5.03): aligner spends too much time in rebuild_hearts_mine. Resource imbalance (germanium=0) blocks hearts. Budget drops to 1 aligner when can't make hearts → territory stagnates.
 - [04:00] Waiting for competition results for v882, v883, v884.
+- [04:10] Competition results:
+  - v882 (TV486): avg 8.06 (5 matches) — small sample
+  - v883 (TV487): avg 5.58 (4 matches) — small sample, stuck detection may hurt
+  - v884 (TV488): avg 9.58 (16 matches) — BEST! 2v6 avg 8.72 (was ~1.5), 4v4 avg 8.66, 6v2 avg 11.07
+  - Key win: 4v4 aligner floor (never below 2 aligners) significantly improved 2v6 matchups too.
+  - Problem: 6v2 vs coglet scored 2.03, vs modular-lstm scored 2.00. Some 6v2 matchups still bad.
