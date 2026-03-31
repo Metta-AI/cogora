@@ -117,3 +117,33 @@ v866 (lower 5+ thresholds):
 - 4v4 vs slanky: 7.18
 - 6v2 vs mammet: 8.54
 - 2v6 scores: 1.13-10.88 (typical variance)
+
+### v870 Results (TV475 = TV470 + capture scramble)
+- 6v2 vs slanky: 5.87 (bad for 6v2!)
+- 6v2 vs modular-lstm: 6.09 (bad for 6v2!)
+- 4v4 vs slanky: 13.74 (good)
+- 4v4 vs gtlm: 7.21
+- 4v4 vs coglet: 3.33
+- Capture-optimized scramble HURTS 6v2 performance
+
+### v871 Results (TV476 = TV470 + lower thresholds)
+- 6v2 vs mammet: 3.48 (terrible for 6v2!)
+- 6v2 vs random-assay: 9.87
+- 4v4 vs gtlm: 10.56
+- Lower thresholds HURT 6v2 vs mammet
+
+### v869 Full Results (TV474 = hub-recovery + lower thresholds)
+- 6v2 vs gtlm: 11.78
+- 6v2 vs modular-lstm: 3.40, 8.58 (highly variable)
+- 6v2 vs mammet: 4.58
+- 4v4 vs mammet: 10.08
+- 4v4 vs gtlm: 4.66
+
+### KEY CONCLUSIONS
+1. TV470 (v863) budget changes alone = BEST variant (11.42 4v4 vs lstm, 14.60 6v2 vs Paz)
+2. Adding recovery mode (TV471/472) = HURTS
+3. Adding capture scramble (TV475/v870) = HURTS 6v2
+4. Adding lower thresholds (TV476/v871) = HURTS 6v2 vs mammet
+5. All modifications to the proven TV350 budget/behavior tend to hurt on average
+6. v716 (TV350) 15.05 average remains very hard to beat
+7. Budget-only changes (TV470) help some matchups but likely hurt average
