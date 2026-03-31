@@ -141,3 +141,24 @@ mismatch) and rewrites local policy directives to break out of unproductive loop
 - Observations are token-based: each token has `feature.name`, `value`, and `location`
 - Tags identify entity types: `type:junction`, `type:hub`, `team:cogs`, `net:cogs`, etc.
 - Inventory: `inv:heart`, `inv:aligner`, `inv:carbon`, etc.
+
+## CRITICAL: No Shared Mutable State Between Agents
+
+**NEVER use shared mutable state (dicts, sets, lists) between agent policies.**
+Each agent policy instance MUST operate independently with only its own local
+state. Do NOT pass shared references between agents.
+
+Forbidden patterns:
+- Shared dicts passed to multiple `AgentPolicy` instances (e.g., `_shared_claims`,
+  `_shared_extractor_claims`, `_shared_junctions`, `_shared_hotspots`)
+- Any mutable object referenced by more than one agent
+- Global or class-level mutable state accessed by multiple agents
+
+Each agent can only use:
+- Its own `state: MettagridState` (passed each step)
+- Its own instance variables
+- `state.team_summary` for read-only team info (shared inventory, etc.)
+
+If you need coordination between agents, use only the information available
+in `MettagridState` (e.g., `team_summary.shared_inventory`) — never custom
+shared objects.
