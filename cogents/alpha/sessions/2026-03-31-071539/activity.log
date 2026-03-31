@@ -3,31 +3,33 @@
 ## Status: in-progress
 
 ### Session Start
-- Read recent.md: v912 avg 1.93, target >10. Competition resource thresholds fixed but still far from target.
-- Key todos: check v913 results, optimize competition score, improve 2v6 matchup
-- Plan: Check v913 competition results, run local games to analyze current policy, iterate on improvements
+- v912 avg 1.93, target >10. Competition resource thresholds fixed but still far from target.
 
-### Match Analysis
-- v912 competition results (latest round): 7 completed, avg 1.61
-  - Best: 5.32 vs slanky (4v4), worst: 0.28 vs modular-lstm (2v6)
-  - vs mammet: 0.27, 0.64, 1.36 — badly losing
-  - vs swoopy: 1.05-2.89, vs Paz-Bot: 2.46-3.66
+### Match Analysis (v912 latest round)
+- 7 completed, avg 1.61. Best: 5.32 vs slanky (4v4), worst: 0.28 vs modular-lstm
+- Root cause: economy collapses (resource hits 0 → no hearts → no aligning) + 0 scramblers when losing
 
-### Root Cause Analysis: Match Logs
-- **6v2 vs mammet (score 0.64)**: Economy collapse by step 1300 (carbon=0). Only 2 miners for 6 agents. All aligners stuck in rebuild_hearts loop. 0 scramblers = no counterattack.
-- **4v4 vs slanky (score 5.32)**: Good early economy, 9 junctions by step 500. Collapses late: 2 friendly vs 13 enemy by step 9000. Aligners patrol/idle-mine instead of contesting.
+### Code Changes
 
-### Code Changes: Territory-Responsive Scrambler Scaling (v914/v915)
-- When losing territory (enemy_j > friendly_j + 2), shift budget toward scramblers
-- Don't reduce pressure_budget for economy when losing territory
-- Keep scramblers active (min_res >= 1 or can_hearts) even during economy stress
+1. **Territory-responsive scrambler scaling** (v914/v915)
+   - When enemy_j > friendly_j + 2 (after step 500), shift budget toward scramblers
+   - Keep scramblers active during economy stress (losing territory is worse than resource dip)
 
-### Local Test Results (10k steps, self-play)
-- Score: 4.18 (vs previous baseline ~3.0) — 39% improvement
-- Territory trajectory: dominated to step 2000 (17 friendly), gradual decline, but stabilized at 5-8 friendly (vs collapsing to 0 before)
-- Territory-responsive scramblers (3 scramblers) activated at step 5500 and held territory
-- Budget oscillation between 3 and 0 scramblers during economy dips remains an issue
+2. **Early-game aggression** (v916)
+   - First 500 steps: 1 extra pressure agent (e.g., 4v4 gets 3 aligners instead of 2)
+   - Burns starting resources for faster territory grab
+
+3. **Mining resource balance fix** (v917)
+   - Raised miner sticky-target clearing threshold from 7 to 21 (~3 hearts worth)
+   - Bug: miners kept mining abundant resources (carbon=115) while bottleneck (germanium=9) starved
+   - Now miners switch to bottleneck resource much earlier, preventing economy crashes
+
+### Local Test Results
+- 10k self-play: 4.18 (vs baseline ~3.0) = 39% improvement from territory-responsive scramblers
+- Scramblers held territory at 5-8 junctions late game (vs collapsing to 0 before)
 
 ### Tournament Uploads
-- v914: AnthropicCyborgPolicy (LLM) with territory-responsive scrambling — qualifying
-- v915: AlphaCyborgV2Policy (heuristic) with territory-responsive scrambling — qualifying
+- v914: AnthropicCyborgPolicy + territory-responsive (qualifying)
+- v915: AlphaCyborgV2Policy + territory-responsive → IN COMPETITION (qual: 2.73, 1.26)
+- v916: + early-game aggression (qualifying)
+- v917: + mining resource balance fix (qualifying)

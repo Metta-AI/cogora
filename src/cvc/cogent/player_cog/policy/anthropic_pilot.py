@@ -1152,13 +1152,16 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         least = _least_resource(resources)
         least_amount = resources[least]
 
+        # Switch to bottleneck resource earlier (threshold 21 = ~3 hearts).
+        # Previously 7, which meant miners kept mining abundant resources
+        # while bottleneck crept to 0.
         if (
             self._sticky_target_kind is not None
             and self._sticky_target_kind.endswith("_extractor")
         ):
             current_resource = self._sticky_target_kind.removesuffix("_extractor")
             if current_resource != least:
-                if least_amount < 7:
+                if least_amount < 21:
                     self._clear_sticky_target()
                 elif least_amount > 0:
                     max_amount = max(resources.values())
@@ -1166,7 +1169,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                         self._clear_sticky_target()
 
         if self._last_bias_resource is not None and self._last_bias_resource != self._resource_bias:
-            if least_amount < 14:
+            if least_amount < 21:
                 self._clear_sticky_target()
         self._last_bias_resource = self._resource_bias
 
@@ -1183,19 +1186,20 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         self._last_hub_bottleneck_amount = least_amount
 
         # After stalling, force exploration. More aggressive when resource is at 0.
+        # Threshold 21 (~3 hearts) catches bottleneck before economy crashes.
         stall_threshold = 20 if least_amount <= 0 else (30 if least_amount < 3 else 50)
-        if self._mining_stall_steps >= stall_threshold and least_amount < 7:
+        if self._mining_stall_steps >= stall_threshold and least_amount < 21:
             self._clear_sticky_target()
             self._mining_stall_steps = 0  # Reset to avoid infinite clear loop
             # Bump explore index to try a different direction
             self._explore_index += 1 + self._agent_id
             return None  # Force exploration
 
-        # If bottleneck resource is critically low (< 7, can't make hearts)
-        # while other resources are abundant (10x imbalance), and we have no
-        # known extractors for the bottleneck, explore to discover them.
+        # If bottleneck resource is critically low while other resources are
+        # abundant (10x imbalance), and we have no known extractors for the
+        # bottleneck, explore to discover them.
         max_amount = max(resources.values())
-        if least_amount < 7 and max_amount >= least_amount * 10 + 20:
+        if least_amount < 21 and max_amount >= least_amount * 10 + 20:
             step = state.step or self._step_index
             least_extractors = self._world_model.entities(
                 entity_type=f"{least}_extractor",
@@ -1908,20 +1912,24 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         self._last_hub_bottleneck_amount = least_amount
 
         # After stalling, force exploration. More aggressive when resource is at 0.
+        # Higher threshold (< 21, ~3 hearts) catches problems before they become critical.
         stall_threshold = 20 if least_amount <= 0 else (30 if least_amount < 3 else 50)
-        if self._mining_stall_steps >= stall_threshold and least_amount < 7:
+        if self._mining_stall_steps >= stall_threshold and least_amount < 21:
             self._clear_sticky_target()
             self._mining_stall_steps = 0
             self._explore_index += 1 + self._agent_id
             return None
 
-        # Clear sticky target on resource priority change
+        # Clear sticky target on resource priority change.
+        # Threshold of 21 (3 hearts) ensures miners switch to bottleneck before it crashes.
+        # Previously 7, which meant miners kept mining abundant resources while
+        # bottleneck crept to 0.
         if (
             self._sticky_target_kind is not None
             and self._sticky_target_kind.endswith("_extractor")
         ):
             current_resource = self._sticky_target_kind.removesuffix("_extractor")
-            if current_resource != least and least_amount < 7:
+            if current_resource != least and least_amount < 21:
                 self._clear_sticky_target()
 
         return super()._preferred_miner_extractor(state)
