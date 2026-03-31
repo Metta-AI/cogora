@@ -2967,7 +2967,38 @@ class AlphaTournamentAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
     - Idle aligners mine instead of exploring (biggest local improvement: +89%)
     - Team-size-aware budgets (handles 2v6, 4v4, 6v2 tournament formats)
     - Default retreat margin (20) for better survivability in PvP
+    - Mining stall detection: explores for new extractors when stuck
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._mining_stall_steps = 0
+        self._mining_stall_resource: str | None = None
+        self._last_hub_bottleneck_amount: int | None = None
+
+    def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
+        """Mining stall detection: if bottleneck resource isn't recovering, explore."""
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        least_amount = resources[least]
+
+        if self._mining_stall_resource == least and self._last_hub_bottleneck_amount is not None:
+            if least_amount <= self._last_hub_bottleneck_amount:
+                self._mining_stall_steps += 1
+            else:
+                self._mining_stall_steps = 0
+        else:
+            self._mining_stall_steps = 0
+            self._mining_stall_resource = least
+        self._last_hub_bottleneck_amount = least_amount
+
+        if self._mining_stall_steps >= 50 and least_amount < 7:
+            self._clear_sticky_target()
+            self._mining_stall_steps = 0
+            self._explore_index += 1 + self._agent_id
+            return None
+
+        return super()._preferred_miner_extractor(state)
 
     def _should_retreat(self, state: MettagridState, role: str, safe_target: KnownEntity | None) -> bool:
         """Default retreat margin (20) — more conservative than v65's 15 for PvP safety."""
