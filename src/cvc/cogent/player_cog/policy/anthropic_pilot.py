@@ -1852,6 +1852,10 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         self._last_budget_change_step = 0
         num_agents = self.policy_env_info.num_agents
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
+        # Match AlphaCog config: no network penalty (allows wider expansion)
+        # and hotspot re-alignment boost (flip to bonus for scrambled junctions)
+        self._network_weight = 0.0
+        self._hotspot_weight = 8.0
         # Mining stall detection
         self._mining_stall_steps = 0
         self._mining_stall_resource: str | None = None
@@ -1884,6 +1888,14 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             resources = _shared_resources(state)
             least = _least_resource(resources)
             return MacroDirective(resource_bias=least)
+
+    def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
+        """Flip hotspot count to BONUS — prioritize re-aligning scrambled junctions."""
+        if hub is None:
+            return 0
+        rel = (entity.global_x - hub.global_x, entity.global_y - hub.global_y)
+        count = self._shared_hotspots.get(rel, 0)
+        return -min(count, 3)
 
     def _run_llm_analysis(self, state: MettagridState, current_directive: MacroDirective) -> None:
         """Ask the LLM to analyze game state and log insights."""
