@@ -15,3 +15,15 @@ Status: in-progress
   3. Dynamic miner reduction: 1 miner (not 2) when losing territory + economy okay
   4. Earlier 2nd scrambler: step 1000 with min_res >= 14 (was step 3000)
 - 06:33 Running local baseline + V2 tests (10k steps each).
+- 06:37 Results: Baseline=6.93, V2(8-agent)=3.49, V2(4-agent)=1.10. V2 is WORSE!
+  Root cause: earlier 2nd scrambler (step 1000 vs 3000) drains resources faster in self-play.
+  Both sides cancel out — scramblers useless in symmetric self-play.
+- 06:38 KEY INSIGHT: Competition resources are MUCH scarcer (hub max ~50 vs local ~1500).
+  All thresholds calibrated for local (min_res >= 14) never trigger in competition.
+  In competition, the 2nd scrambler gate (step 3000 + min_res >= 14) almost never fires.
+  This means we play with only 1 scrambler for most of the game in competition.
+- 06:40 Created V3 (competition-calibrated): lower resource thresholds.
+  - 2nd scrambler: min_res >= 5 (was 14) — fires in competition
+  - Patrol threshold: min_res >= 3 (was 14) — allows defensive positioning
+  - Kept baseline timing (step 200/3000) — no resource drain in self-play.
+  Running V3 local test to verify no regression.

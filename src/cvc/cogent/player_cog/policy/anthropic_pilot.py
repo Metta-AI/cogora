@@ -1469,26 +1469,19 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
 
 
 class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
-    """Territory-responsive policy: reacts to junction balance, earlier scramblers.
+    """Competition-calibrated policy: lower thresholds for scarce-resource environments.
+
+    In competition, hub resources are much scarcer (~50 max vs ~1500 local).
+    Thresholds calibrated for local play (min_res >= 14) rarely trigger in competition.
 
     Key changes from AlphaCog:
-    1. Territory-responsive budget: when losing territory, shift resources to scramblers
-    2. Lower patrol threshold: idle aligners patrol at min_res >= 7 (not 14)
-    3. Earlier 2nd scrambler: at step 1000 when enemy is contesting (not 3000)
-    4. Dynamic miner reduction: when territory is being lost, reduce to 1 miner
+    1. Lower patrol threshold: min_res >= 3 (was 14) — competition resources are scarce
+    2. Lower 2nd scrambler gate: min_res >= 5 (was 14) at step 3000
+    3. Territory-responsive miner reduction: when losing badly, drop to 1 miner
     """
 
-    def _territory_balance(self, state: MettagridState) -> tuple[int, int]:
-        """Count friendly vs enemy junctions from world model."""
-        team_id = _h.team_id(state)
-        friendly = len(self._world_model.entities(
-            entity_type="junction", predicate=lambda e: e.owner == team_id))
-        enemy = len(self._world_model.entities(
-            entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
-        return friendly, enemy
-
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Territory-responsive budget: reacts to junction balance."""
+        """Competition-calibrated budget: lower resource thresholds."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         can_hearts = _h.team_can_refill_hearts(state)
@@ -1517,11 +1510,7 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
                 return 1, 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: territory-responsive with aggressive peak
-        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
-        friendly, enemy = self._territory_balance(state) if step >= 200 else (0, 0)
-        territory_losing = enemy > friendly and step >= 500
-
+        # 5+ agents: same timing as baseline but lower resource thresholds
         if step < 30:
             return 2, 0
         elif step < 100:
@@ -1537,29 +1526,28 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
             if min_res < 3 and not can_hearts:
                 pressure_budget = max(2, num_agents // 3)
 
-        # Team-size cap: ensure miners, but allow fewer miners when losing territory
+        # Team-size cap: ensure at least 2 miners
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
         if team_size < num_agents and team_size >= 4:
-            min_miners = 1 if territory_losing and min_res >= 7 else 2
-            pressure_budget = min(pressure_budget, max(team_size - min_miners, 2))
+            pressure_budget = min(pressure_budget, max(team_size - 2, 2))
 
-        # Scramblers: territory-responsive timing
+        # Scramblers: LOWER resource thresholds for competition
+        # Competition resources rarely exceed 50, so min_res >= 14 almost never fires.
         scrambler_budget = 0
-        if territory_losing and min_res >= 7:
-            # Losing territory: 2 scramblers to fight back
-            scrambler_budget = min(2, max(pressure_budget // 2, 1))
-        elif step >= 1000 and min_res >= 14:
-            # Late game with healthy economy: 2 scramblers
+        if step >= 3000 and min_res >= 5:
+            # 2nd scrambler at lower threshold (was min_res >= 14)
             scrambler_budget = min(2, pressure_budget // 3)
-        elif step >= 200 and min_res >= 7:
+        elif step >= 200 and min_res >= 5:
+            # 1st scrambler at lower threshold (was min_res >= 7)
             scrambler_budget = min(1, pressure_budget // 3)
 
-        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+        aligner_budget = max(pressure_budget - scrambler_budget, 0)
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
         return aligner_budget, scrambler_budget
 
     def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
-        """Extended aligner with lower patrol threshold."""
+        """Extended aligner with lower patrol threshold for competition."""
         hearts = int(state.self_state.inventory.get("heart", 0))
         hub = self._nearest_hub(state)
         if hearts <= 0:
@@ -1609,9 +1597,10 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
             if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
                 return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
 
-        # Patrol hotspots with LOWER threshold (min_res >= 7 instead of 14)
+        # Patrol hotspots with MUCH LOWER threshold (min_res >= 3 instead of 14)
+        # Competition resources are scarce — 14 almost never triggers.
         min_res = _h.team_min_resource(state)
-        if hub is not None and hearts > 0 and min_res >= 7 and self._shared_hotspots:
+        if hub is not None and hearts > 0 and min_res >= 3 and self._shared_hotspots:
             hotspot_targets = []
             for rel_pos, count in self._shared_hotspots.items():
                 if count <= 0:
