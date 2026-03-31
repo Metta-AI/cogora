@@ -59,3 +59,12 @@ Status: in-progress
   3. Improved aligner: expansion + hotspot patrol + idle-mine (v913 only)
   4. More aggressive mining stall detection (20/30/50 thresholds)
   5. Lower retreat margins (15 instead of 20)
+- 07:00 FIRST COMPETITION RESULTS for v912:
+  4v4 vs slanky: 5.32 (was 1.06 for v910!) — **5x improvement!**
+  4v4 vs random-assay: 1.81
+  4v4 vs Paz-Bot: 2.46
+  4v4 vs mammet: 1.36
+  2v6 vs gtlm: 0.25 (hard matchup)
+  2v6 vs mammet: 0.27
+  11 matches avg: 1.59 (vs v909/v910 avg ~1.33). Improvement confirmed.
+  Best single match: 5.32 (vs prev best 3.85).
