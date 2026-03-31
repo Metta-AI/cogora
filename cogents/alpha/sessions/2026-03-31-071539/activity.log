@@ -4,27 +4,23 @@
 
 ### Session Summary
 - v912 baseline avg 1.93, target >10
-- Analyzed match logs: economy collapse + territory loss pattern
-- Implemented: territory-responsive scramblers, early-game aggression, mining balance fix
-- Found and fixed 6v2 regression from scramblers triggering too early
+- Analyzed match logs, implemented: territory-responsive scramblers, mining fix, 6v2 gate fix
+- KEY FINDING: v884 (AlphaTournamentPolicy) averaged 9.58 with ALL agents as aligners (0 dedicated miners)
+- Current policy's team-size-cap (2 dedicated miners) is the main regression cause
 
 ### v915 Competition Results (13 matches, avg 1.37)
-- 2v6: 0.25, 1.17, 0.28, 0.39, 0.79, 1.08 → avg 0.66
-- 4v4: 2.08, 2.24, 1.53, 2.75, 1.75, 1.76 → avg 2.02
-- 6v2: 2.96, 1.14, 0.74, 1.16 → avg 1.50 (REGRESSED from v912 4.34)
+- 4v4: avg 2.02 (best: 2.75 vs modular-lstm)
+- 2v6: avg 0.66 (0.25-1.17)
+- 6v2: avg 1.50 (REGRESSED from v884's 9.58)
 
-### Problem Found: 6v2 Regression
-- losing_territory fires at step 500 when enemy has 3+ more junctions
-- In 6v2, opponent's 2 agents focus on junctions while our 6 disperse = early junction deficit
-- Scramblers activate prematurely, reducing aligner count when we should overwhelm
-- **Fix (v918/v919)**: Only trigger scrambler shift for majority teams on severe loss (enemy > friendly*2 + 5)
+### Key Insight: 0 Dedicated Miners > 2 Dedicated Miners
+- v884: ALL agents = aligners/scramblers, aligners mine when idle → avg 9.58
+- v915: 2 dedicated miners, fewer aligners → avg 1.37
+- More aligners = more junctions aligned faster
+- Starting resources (24 each) sustain early game without dedicated miners
+- Idle-mining by aligners covers late-game economy needs
 
-### Key Code Changes
-1. Territory-responsive scrambler scaling (v914-v915)
-2. Early-game aggression — extra pressure agent first 500 steps (v916)
-3. Mining resource balance — raise sticky target threshold from 7→21 (v917)
-4. Fix 6v2 losing_territory gate (v918/v919)
-
-### Tournament Versions
-- v915: In competition (avg 1.37, 13 matches)
-- v916-v919: Qualifying with incremental fixes
+### Tournament Uploads
+- v915: AlphaCyborgV2 + territory-responsive (avg 1.37)
+- v916-v920: Various fixes (qualifying)
+- v921: AlphaTournamentPolicy (v884 base) — should be strongest candidate
