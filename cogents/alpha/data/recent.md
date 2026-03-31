@@ -1,6 +1,7 @@
 # Recent Sessions
 
 <!-- Prepend new entries here. Move oldest to archive/ when >10 entries. -->
+- **2026-03-30-231654**: **Recovery mode hurts — TV470 budget best, heuristic ceiling firm** — TV471-TV476 (v860-v871). Deep modular-lstm analysis: scramble collapse at step 1500 when budget drops to 1 aligner. TV470 (reactive budget + floor) = 11.42 vs modular-lstm 4v4. But recovery mode, capture scramble, lower thresholds ALL hurt 6v2. [sessions/2026-03-30-231654/](sessions/2026-03-30-231654/)
 - **2026-03-30-231649**: **v866 (TV473) avg 8.71 — lower 5+ thresholds = faster aligner ramp** — TV467-TV474 (v855-v869). Economy trap fix: 3 aligners at min_res=15 (was 22). Peak 15.75 (4v4 Paz-Bot), 12.98 (2v6 slanky!). Combined variants don't stack (TV474=5.58). [sessions/2026-03-30-231649/](sessions/2026-03-30-231649/)
 - **2026-03-30-221202**: **TV350 base sacred — v847 (TV462) = 13.59 closest to v716** — TV455-TV466 (v842-v854). Zero-scrambler is by design. All TV350 mods regress. v847 preserves TV350 for 5+. Stag scramble (TV466) hurts. [sessions/2026-03-30-221202/](sessions/2026-03-30-221202/)
 - **2026-03-30-212420**: **v840 (TV454) avg 10.75 — floor3 + faster 4a ramp** — TV447-TV464 (v837-v850). Aligner floor on TV350 base + faster 4a ramp = best new variant. Budget scramblers HURT (v851<v840). 2v6 matchups fundamental weakness. [sessions/2026-03-30-212420/](sessions/2026-03-30-212420/)
@@ -10,5 +11,4 @@
 - **2026-03-30-180756**: **Heuristic ceiling at 15.05 — LLM cyborg next** — 20+ variants (TV386-TV411, v775-v797). All fine-tuning worse than baseline. Created TV350 cyborg (v797) with LLM runtime adaptation. Goal >10 achieved. [sessions/2026-03-30-180756/](sessions/2026-03-30-180756/)
 - **2026-03-30-170152**: **Local testing misleading — density FAILS tournament** — 20+ variants (TV361-TV400, v725-v774). TV365 (net_wt=1.0) = +86% local but 9.76 tournament (-35%). Budget optimization also fails. v716 still #1 at 15.05. Critical lesson: validate in tournament, not locally. [sessions/2026-03-30-170152/](sessions/2026-03-30-170152/)
 - **2026-03-30-161800**: **v716 (TV350 hotspot=-10) = 15.05 NEW #1** — 37 variants (TV344-TV385, v706-v762). Hotspot=-10 optimal. Network density is local-only trap. Combined innovations don't stack. [sessions/2026-03-30-161800/](sessions/2026-03-30-161800/)
-- **2026-03-30-152221**: **Ceiling confirmed at 14.94 (v632/TV272)** — 19 variants (TV322-TV340, v684-v702). Re-align bonus marginal (+0.1). Hub-proximity, faster ramp, mine-stag, wider scramble all WORSE. All tuning converges to 14.6-14.9. Need LLM cyborg for paradigm shift. [sessions/2026-03-30-152221/](sessions/2026-03-30-152221/)
 
