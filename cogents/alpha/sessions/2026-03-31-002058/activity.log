@@ -5,3 +5,9 @@ started: 2026-03-31T00:20:58Z
 - Session started. Previous session (2026-03-30-231649) was interrupted — recovered.
 - Context: v716=15.05 (historical #1), goal >10 achieved. Recent uploads v855-v869 in competition.
 - Todos: check v869 (TV474) results, study modular-lstm, 2-agent optimization, RL training.
+- v870 (TV475) and v871 (TV476) now in competition, many matches running.
+- Analyzed v869 2v6 loss vs modular-lstm (1.01): budget dropped to (1,0) at step 200, agent 1 became permanent miner, 0 friendly junctions from step 1200 onwards.
+- Key insight: for 2 agents, budget (1,0) is a death trap. Both agents should always be aligners. When hearts=0, aligners mine anyway. When resources recover, both resume aligning immediately.
+- Created TV477: always (2,0) for 2 agents + TV473 lower thresholds for 4v4 + TV350 sacred base for 5+.
+- Created TV478: TV477 + faster stagnation detection for 2 agents (peak=2/150steps/step200 vs 3/200/300) + lower scramble threshold (min_res=3 vs 7).
+- Both pass local testing (100 steps, no crash). Uploading to qualifying.
