@@ -28,3 +28,6 @@ started: 2026-03-31T01:15:29Z
 - **v880 (TV484) competition: avg 8.59 across 7 matches (early)**. Key: Paz-Bot 6v2=16.04 (aligner floor working!). 4v4s solid: 10.07/10.70/8.97. 2v6 still weak.
 - New opponents in tournament: gtlm-reactive-v3, random-assay-test — harder 2v6 matchups.
 - All three variants below v873 (10.13), but opponent pool has expanded making averages harder.
+- **BUG FOUND**: In v879 2v6 vs random-assay (1.92), agent stuck at (-5,3) for 2000+ steps doing desperate_scramble but never moving. Hearts=1 but position frozen. Likely pathfinding blocked by walls, or target at agent's position. Also, germanium bottleneck (ger=3) means can't make more hearts.
+- Created TV485: TV484 + stuck detection (if position unchanged 150 steps, fall back to mining) + economy fix (mine when can't refill hearts in desperate mode).
+- Uploaded v881 (TV485) to qualifying.

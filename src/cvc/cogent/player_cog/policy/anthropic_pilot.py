@@ -51261,3 +51261,165 @@ class AlphaTournamentV484Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV485: TV484 + stuck detection + 2v6 economy fix ────────────────────────
+# Problem 1: In desperate mode, agent gets stuck at same position for 2000+
+# steps trying to scramble but not moving (pathfinding blocked or target at
+# current position). Fix: track position, if stuck for 150+ steps, fall back
+# to mining to rebuild economy (germanium bottleneck) then try again.
+#
+# Problem 2: In 2v6 desperate mode, both agents are aligners. With 0 friendly
+# junctions, the aligner that has hearts=0 tries rebuild_hearts_mine. But it
+# only mines one resource. The real bottleneck is often germanium.
+# When both agents can't get hearts, one should mine the scarce resource.
+
+class AlphaTournamentV485AgentPolicy(AlphaTournamentV484AgentPolicy):
+    """TV485: TV484 + stuck detection + desperate economy fix."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_desperate_pos = None
+        self._desperate_stuck_steps = 0
+
+    def _aligner_action(self, state):
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+        friendly_count = len(self._known_junctions(state, predicate=lambda j: j.owner == team_id))
+        enemy_count = len(self._known_junctions(state, predicate=lambda j: j.owner not in {None, "neutral", team_id}))
+
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        else:
+            if num_agents <= 2:
+                stag_peak, stag_steps, stag_min_step = 2, 150, 200
+            elif num_agents <= 4:
+                stag_peak, stag_steps, stag_min_step = 5, 300, 500
+            else:
+                stag_peak, stag_steps, stag_min_step = 4, 250, 400
+
+            if (self._peak_junction_count >= stag_peak
+                    and step - self._last_junction_growth_step > stag_steps
+                    and step > stag_min_step):
+                self._stagnation_mode = True
+
+            if step - self._last_junction_growth_step > 500:
+                self._peak_junction_count = max(friendly_count, self._peak_junction_count - 1)
+                self._last_junction_growth_step = step
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            self._last_desperate_pos = None
+            self._desperate_stuck_steps = 0
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            self._last_desperate_pos = None
+            self._desperate_stuck_steps = 0
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                self._last_desperate_pos = None
+                self._desperate_stuck_steps = 0
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        if self._stagnation_mode and hp > 50:
+            desperate = num_agents <= 2 and friendly_count == 0 and enemy_count > 5
+            if desperate:
+                # STUCK DETECTION: if position hasn't changed in 150 steps, mine instead
+                if current_pos == self._last_desperate_pos:
+                    self._desperate_stuck_steps += 1
+                else:
+                    self._last_desperate_pos = current_pos
+                    self._desperate_stuck_steps = 0
+
+                # If stuck or can't refill hearts, mine the bottleneck resource
+                if self._desperate_stuck_steps > 150 or not _h.team_can_refill_hearts(state):
+                    self._desperate_stuck_steps = 0
+                    self._last_desperate_pos = None
+                    # Mine until we can make hearts, then try scrambling again
+                    return self._miner_action(state, summary_prefix="desperate_mine_")
+
+                if hearts > 0:
+                    scramble_target = self._preferred_scramble_target(state)
+                    if scramble_target is not None:
+                        return self._move_to_known(state, scramble_target, summary="desperate_scramble", vibe="change_vibe_scrambler")
+                return self._explore_action(state, role="aligner", summary="desperate_find_junction")
+
+            # Normal stagnation (same as TV483)
+            scramble_res_threshold = 3 if num_agents <= 2 else 7
+            if step % 200 < 100 and hearts > 0 and min_res >= scramble_res_threshold:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV485Policy(MettagridSemanticPolicy):
+    """TV485: TV484 + stuck detection + economy fix."""
+    short_names = ["alpha-tournament-v485"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV485AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
