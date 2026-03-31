@@ -3418,7 +3418,7 @@ class AlphaTournamentAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
         self._last_hub_bottleneck_amount: int | None = None
 
     def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
-        """Mining stall detection: if bottleneck resource isn't recovering, explore."""
+        """Mining stall detection with improved resource balance thresholds."""
         resources = _shared_resources(state)
         least = _least_resource(resources)
         least_amount = resources[least]
@@ -3433,11 +3433,23 @@ class AlphaTournamentAgentPolicy(AlphaV65TrueReplicaAgentPolicy):
             self._mining_stall_resource = least
         self._last_hub_bottleneck_amount = least_amount
 
-        if self._mining_stall_steps >= 50 and least_amount < 7:
+        # Higher threshold (21 = ~3 hearts) catches bottleneck before economy crashes.
+        # More aggressive when resource is at 0.
+        stall_threshold = 20 if least_amount <= 0 else (30 if least_amount < 3 else 50)
+        if self._mining_stall_steps >= stall_threshold and least_amount < 21:
             self._clear_sticky_target()
             self._mining_stall_steps = 0
             self._explore_index += 1 + self._agent_id
             return None
+
+        # Clear sticky target when mining the wrong resource
+        if (
+            self._sticky_target_kind is not None
+            and self._sticky_target_kind.endswith("_extractor")
+        ):
+            current_resource = self._sticky_target_kind.removesuffix("_extractor")
+            if current_resource != least and least_amount < 21:
+                self._clear_sticky_target()
 
         return super()._preferred_miner_extractor(state)
 
