@@ -23,4 +23,8 @@ started: 2026-03-31T01:15:29Z
 - v880 (TV484) qualifying: still running.
 - v877 updated results (16 completed): avg ~9.36. New: swoopy 2v6=9.84, swoopy 4v4=13.73. Swoopy 6v2=7.78,11.54.
 - Analyzed v877 6v2 vs swoopy (7.78): silicon bottleneck at step 2000 → budget (1,0) with 6 agents → only 1 aligner. Same structural issue as 2v6 collapse — economy panic overrides territory needs.
-- Waiting for v878/v879/v880 competition results to compare.
+- **v878 (TV482) competition: avg 8.28 across 16 matches**. 2v6 vs slanky: 13.00 (desperate mode!), but 2v6 vs coglet: 2.21, 2v6 vs gtlm-reactive: 1.19, 6v2 vs modular-lstm: 4.89. TV481 base hurts.
+- **v879 (TV483) competition: avg 8.65 across 14 matches**. Highs: Paz-Bot 4v4=16.81, slanky 6v2=16.34, gtlm 6v2=12.70, Paz-Bot 2v6=11.74. Lows: random-assay 2v6=1.81/1.92, coglet 4v4=1.67/6.11.
+- **v880 (TV484) competition: avg 8.59 across 7 matches (early)**. Key: Paz-Bot 6v2=16.04 (aligner floor working!). 4v4s solid: 10.07/10.70/8.97. 2v6 still weak.
+- New opponents in tournament: gtlm-reactive-v3, random-assay-test — harder 2v6 matchups.
+- All three variants below v873 (10.13), but opponent pool has expanded making averages harder.
