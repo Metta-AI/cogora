@@ -1289,6 +1289,7 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         """Extended aligner: when no frontier, walk toward nearest unreachable junction."""
         hearts = int(state.self_state.inventory.get("heart", 0))
         hub = self._nearest_hub(state)
+        step = state.step or self._step_index
         if hearts <= 0:
             self._clear_target_claim()
             self._clear_sticky_target()
@@ -1297,7 +1298,9 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if hub is not None:
                 return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
             return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
-        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+        # Early game: skip heart batching — go align immediately with 1+ hearts
+        # to get first junctions aligned faster (each junction-tick of score matters)
+        if step >= 300 and _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
             self._clear_target_claim()
             self._clear_sticky_target()
             assert hub is not None

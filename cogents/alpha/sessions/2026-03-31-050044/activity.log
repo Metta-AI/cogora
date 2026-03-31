@@ -9,3 +9,7 @@ status: in-progress
 - [050800] Implemented shared extractor claims to reduce miner clustering.
   Miners now claim extractors and avoid extractors claimed by teammates.
   Should help silicon bottleneck (always lowest resource ~380 vs 778+).
+- [050900] Local test results with extractor claims: 2.21, 2.37, 1.73 (avg 2.10 vs baseline 1.95).
+- [050900] Uploaded v904 = AlphaCyborgPolicy + extractor claims.
+- [051000] Added early heart skip: aligners skip batching for first 300 steps.
+  Go align with 1 heart instead of waiting for 3. Gets first junctions faster.
