@@ -51423,3 +51423,125 @@ class AlphaTournamentV485Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV486: TV478 (best) + aligner floor for 5+ agents (NO desperate mode) ────
+# TV484 combined TV483 (desperate mode) with aligner floor. But desperate mode
+# (from TV483) may hurt in some matchups. TV485 was a regression.
+#
+# TV486: Take only the aligner floor from TV484 and apply it to TV478 directly.
+# This gives us the proven TV478 aligner logic (no desperate mode, clean
+# stagnation handling) plus the aligner floor that prevents 6v2 territory collapse.
+
+class AlphaTournamentV486AgentPolicy(AlphaTournamentV478AgentPolicy):
+    """TV486: TV478 + aligner floor for 5+ agents. No desperate mode."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2 agents: always both aligners (TV477)
+        if team_size <= 2:
+            return 2, 0
+
+        # 4 agents: TV477's faster ramp
+        if team_size <= 4:
+            if step < 30:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV350 base BUT never below 2 aligners (from TV484)
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        # KEY CHANGE: floor of 2 aligners instead of 1 when resources are low
+        if min_res < 10 and not can_hearts:
+            return 2, 0  # Was 1, 0 in TV350/TV477/TV478
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV486Policy(MettagridSemanticPolicy):
+    """TV486: TV478 + aligner floor for 5+ agents. No desperate mode."""
+    short_names = ["alpha-tournament-v486"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV486AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV487: TV486 + stuck detection (explore fallback, not mine) ──────────────
+# TV485 tried mining when stuck — that was a regression because mining in
+# desperate/stagnation mode wastes time. The real fix is: if agent hasn't
+# moved in 100 steps during stagnation, fall back to explore (random movement)
+# to break out of the pathfinding trap, then resume scramble attempts.
+
+class AlphaTournamentV487AgentPolicy(AlphaTournamentV486AgentPolicy):
+    """TV487: TV486 + stuck detection with explore fallback."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_stag_pos = None
+        self._stag_stuck_steps = 0
+
+    def _aligner_action(self, state):
+        step = state.step or self._step_index
+        current_pos = _h.absolute_position(state)
+
+        # Track position changes during stagnation
+        if self._stagnation_mode:
+            if current_pos == self._last_stag_pos:
+                self._stag_stuck_steps += 1
+            else:
+                self._last_stag_pos = current_pos
+                self._stag_stuck_steps = 0
+        else:
+            self._last_stag_pos = None
+            self._stag_stuck_steps = 0
+
+        # If stuck for 100+ steps in stagnation, force explore to break out
+        if self._stagnation_mode and self._stag_stuck_steps > 100:
+            self._stag_stuck_steps = 0
+            self._last_stag_pos = None
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            return self._explore_action(state, role="aligner", summary="stuck_break_explore")
+
+        return super()._aligner_action(state)
+
+
+class AlphaTournamentV487Policy(MettagridSemanticPolicy):
+    """TV487: TV486 + stuck detection (explore, not mine)."""
+    short_names = ["alpha-tournament-v487"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV487AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
