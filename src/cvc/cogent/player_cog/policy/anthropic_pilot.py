@@ -1448,13 +1448,15 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if min_res < 3 and not can_hearts:
                 pressure_budget = max(2, num_agents // 3)
 
-        # Ensure at least 2 dedicated miners: cap pressure to team_size - 2 when
-        # team is smaller than total num_agents. Prevents economy crashes in
-        # 4v4 (2 aligners + 2 miners) and 6v2 (4 pressure + 2 miners).
-        # Preserves proven behavior for 8-agent local play.
+        # Team-size cap with early-game aggression.
+        # First 500 steps: 1 extra pressure agent for territory rush (1 miner).
+        # After 500: sustainable budget with 2+ miners.
         team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
         if team_size < num_agents and team_size >= 4:
-            pressure_budget = min(pressure_budget, max(team_size - 2, 2))
+            if step < 500:
+                pressure_budget = min(pressure_budget, max(team_size - 1, 2))
+            else:
+                pressure_budget = min(pressure_budget, max(team_size - 2, 2))
 
         # Scramblers: delay until economy can support it
         scrambler_budget = 0
@@ -1546,10 +1548,13 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
                 if min_res < 1 and not can_hearts:
                     pressure_budget = max(3, num_agents // 3)
 
-        # Team-size cap
+        # Team-size cap with early-game aggression
         team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
         if team_size < num_agents and team_size >= 4:
-            pressure_budget = min(pressure_budget, max(team_size - 2, 2))
+            if step < 500:
+                pressure_budget = min(pressure_budget, max(team_size - 1, 2))
+            else:
+                pressure_budget = min(pressure_budget, max(team_size - 2, 2))
 
         # Territory-responsive scrambler scaling
         scrambler_budget = 0
@@ -1998,10 +2003,16 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
                 if min_res < 1 and not can_hearts:
                     pressure_budget = max(3, num_agents // 3)
 
-        # Team-size cap: ensure at least 2 miners in tournament (smaller teams)
+        # Team-size cap: ensure miners in tournament (smaller teams)
+        # Early game (first 500 steps): allow 1 extra pressure agent for faster territory grab
+        # Late game: settle into sustainable budget with 2+ miners
         team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
         if team_size < num_agents and team_size >= 4:
-            pressure_budget = min(pressure_budget, max(team_size - 2, 2))
+            if step < 500:
+                # Aggressive early: only 1 miner needed while starting resources last
+                pressure_budget = min(pressure_budget, max(team_size - 1, 2))
+            else:
+                pressure_budget = min(pressure_budget, max(team_size - 2, 2))
 
         # Scramblers: territory-responsive scaling
         scrambler_budget = 0
