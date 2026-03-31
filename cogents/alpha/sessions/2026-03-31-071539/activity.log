@@ -3,26 +3,28 @@
 ## Status: in-progress
 
 ### Key Findings
-1. v884 (AlphaTournamentPolicy) averaged 9.58 with ALL agents as aligners/scramblers, 0 dedicated miners
-2. v915 (AlphaCyborgV2 with team-size cap) averaged 1.37 — team-size miner cap was the main regression
+1. v884 (AlphaTournamentPolicy) averaged 9.58 historically but scored 0.75 in current competition
+   - The high scores were against a different/easier opponent pool
+2. Current opponent pool (mammet v13, modular-lstm v13, slanky v112, etc.) is very competitive
 3. Territory-responsive scramblers help late game but hurt 6v2 (fixed in v918/v919)
+4. Mining resource balance fix (threshold 7→21) helps prevent bottleneck crashes
 
-### Code Changes
+### v915 Competition Results (13 matches, avg 1.37)
+- 4v4: avg 2.02
+- 2v6: avg 0.66
+- 6v2: avg 1.50
+
+### v921 Competition (AlphaTournamentPolicy): 0.75 vs mammet 6v2
+- NOT the 9.58 expected — current opponents are harder
+
+### Code Changes This Session
 1. Territory-responsive scrambler scaling (v914/v915)
-2. Early-game aggression — extra pressure agent first 500 steps (v916)
-3. Mining resource balance — raise threshold 7→21 (v917)
+2. Early-game aggression (v916)
+3. Mining resource balance 7→21 (v917)
 4. Fix 6v2 losing_territory gate (v918/v919)
-5. AlphaCog scoring optimizations for tournament policy (v920)
-6. Upload proven AlphaTournamentPolicy (v921)
-7. Apply mining fix to AlphaTournamentPolicy (v922)
+5. AlphaCog scoring optimizations for tournament (v920)
+6. Upload AlphaTournamentPolicy (v921)
+7. AlphaTournament + mining fix (v922)
 
-### Competition Status
-- v915: In competition, avg 1.37 (13 matches)
-- v919: In competition (18+ matches running)
-- v921: Passed qualifying → competition or waiting
-- v922: Qualifying
-
-### Next Steps
-- Wait for v919/v921/v922 competition results
-- v921 (AlphaTournamentPolicy) should be strongest — historically avg 9.58
-- If v921 confirms, apply our improvements (territory-responsive, mining fix) to v65 base
+### Active Competition
+- v919, v921, v922 all in competition with matches running
