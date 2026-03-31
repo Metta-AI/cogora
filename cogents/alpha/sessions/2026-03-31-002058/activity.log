@@ -11,3 +11,9 @@ started: 2026-03-31T00:20:58Z
 - Created TV477: always (2,0) for 2 agents + TV473 lower thresholds for 4v4 + TV350 sacred base for 5+.
 - Created TV478: TV477 + faster stagnation detection for 2 agents (peak=2/150steps/step200 vs 3/200/300) + lower scramble threshold (min_res=3 vs 7).
 - Both pass local testing (100 steps, no crash). Uploading to qualifying.
+- Uploaded v872 (TV477), v873 (TV478) to qualifying. v874 (TV350 re-upload) also uploaded for comparison.
+- v870 (TV475 capture scramble) UNDERPERFORMS in 6v2: 5.87 vs slanky, 6.09 vs modular-lstm (should be 14+).
+  Capture-optimized scramble HURTS 6v2. Don't use TV475 approach.
+- v871 (TV476 reactive budget) is better: 14.41 6v2 vs mammet, 10.56 4v4 vs gtlm.
+- Competition avg across v870/v871 ~14 matches: ~7.5. Need to improve 2v6 and 4v4 scores.
+- v872/v873/v874 qualifying matches running.
