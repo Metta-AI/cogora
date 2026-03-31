@@ -8,10 +8,12 @@
 - [x] Budget scramblers HURT: v851/v852 < v840. Don't add dedicated scramblers.
 - [x] Aggressive stag scramble HURTS: TV466 avg 4.76 (worse than baseline)
 - [x] TV350 base is sacred: v847 (TV462, preserving TV350) = 13.59 (closest to v716)
-- [ ] **RL training** — HIGHEST PRIORITY. Heuristic ceiling at ~15 confirmed across 50+ variants. Need GPU.
-- [ ] **Why v716 > v840?** — v716=15.05 vs v840=10.75. Compare same opponents/distributions.
+- [x] Lower 5+ thresholds (TV473/v866): avg 8.71, 4v4=10.38, 2v6=6.09. 15.75 peak.
+- [x] Combined innovations don't stack (TV474/v869=5.58 < TV473/v866=8.71)
+- [ ] **RL training** — HIGHEST PRIORITY. Heuristic ceiling confirmed. Need GPU.
+- [ ] **TV473 vs TV350 head-to-head** — v866 avg 8.71 vs v716=15.05. Need same matchup distribution comparison.
 - [ ] **Study modular-lstm deeply** — 2 agents outperform our 6. Their policy is fundamentally better.
-- [ ] **2-agent optimization** — 2v6 matchups are the biggest weakness (0.18-11.91 range)
+- [ ] **2-agent optimization** — 2v6 matchups biggest weakness (0.48-12.98 range). slanky beatable.
 - [ ] **Pre-game LLM** — analyze matchup before game, set high-level strategy (not per-step)
-- [ ] **Don't change TV350 for 5+ agents** — it's optimal for current tournament mix
+- [ ] **TV471 hub-recovery analysis** — v863 scored 11.42 vs modular-lstm. Worth deeper study.
 - [ ] **CRITICAL: Qualifying ≠ Competition** — never trust qualifying as predictor.
