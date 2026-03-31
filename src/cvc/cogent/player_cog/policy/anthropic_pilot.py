@@ -1882,8 +1882,9 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             self._mining_stall_resource = least
         self._last_hub_bottleneck_amount = least_amount
 
-        # After 50 stall steps with critically low resource, force exploration
-        if self._mining_stall_steps >= 50 and least_amount < 7:
+        # After stalling, force exploration. More aggressive when resource is at 0.
+        stall_threshold = 20 if least_amount <= 0 else (30 if least_amount < 3 else 50)
+        if self._mining_stall_steps >= stall_threshold and least_amount < 7:
             self._clear_sticky_target()
             self._mining_stall_steps = 0
             self._explore_index += 1 + self._agent_id
@@ -1901,57 +1902,66 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         return super()._preferred_miner_extractor(state)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Budget allocation. Uses total num_agents (proven to work with 8-agent path)."""
+        """Budget allocation with competition-calibrated thresholds.
+
+        Competition resources are much scarcer than local (hub max ~50 vs ~1500).
+        Lower resource thresholds so scramblers and budget decisions actually fire.
+        """
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         can_hearts = _h.team_can_refill_hearts(state)
-        # Keep total num_agents — v884 avg 9.58 used this successfully
         num_agents = self.policy_env_info.num_agents
 
         if objective == "resource_coverage":
             return 0, 0
 
         if num_agents <= 2:
-            # 2 agents: 1 aligner + 1 miner
-            if step < 30 or (min_res < 1 and not can_hearts):
+            if step < 200 or (min_res < 7 and not can_hearts):
                 return 0, 0
             if objective == "economy_bootstrap":
-                return 1, 0
+                return 0, 0
             return 1, 0
 
         if num_agents <= 4:
-            # 4 agents: economy-first, then 2 aligners + 1 scrambler
-            if step < 30:
+            if step < 100:
                 return 1, 0
             if min_res < 7 and not can_hearts:
                 return 1, 0
-            aligner_budget = 2
-            # Add scrambler at step 200 to contest enemy territory
-            scrambler_budget = 1 if step >= 200 and num_agents >= 4 else 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 and min_res >= 5 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
             if objective == "economy_bootstrap":
-                return min(aligner_budget, 1), 0
+                return 1, 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: aggressive with scrambler support
+        # 5+ agents: economy-responsive with aggressive peak
         if step < 30:
             return 2, 0
-        if step < 100:
-            pressure_budget = min(3, num_agents - 2)
-            if objective == "economy_bootstrap":
-                return min(pressure_budget, 2), 0
-            return pressure_budget, 0
+        elif step < 100:
+            pressure_budget = 3
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            elif min_res < 7:
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
 
-        pressure_budget = min(num_agents - 2, 5)
-        if min_res < 3 and not can_hearts:
-            pressure_budget = max(2, num_agents // 3)
-        elif min_res < 7:
-            pressure_budget = min(4, num_agents - 2)
+        # Team-size cap: ensure at least 2 miners in tournament (smaller teams)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+        if team_size < num_agents and team_size >= 4:
+            pressure_budget = min(pressure_budget, max(team_size - 2, 2))
 
+        # Scramblers: lower thresholds for competition (resources rarely exceed 50)
         scrambler_budget = 0
-        if step >= 200 and min_res >= 7:
-            scrambler_budget = min(1, pressure_budget // 3)
-        if step >= 3000 and min_res >= 14:
+        if step >= 3000 and min_res >= 5:
             scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 200 and min_res >= 5:
+            scrambler_budget = min(1, pressure_budget // 3)
         aligner_budget = max(pressure_budget - scrambler_budget, 0)
 
         if objective == "economy_bootstrap":

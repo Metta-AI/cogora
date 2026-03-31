@@ -27,3 +27,14 @@ Status: in-progress
   - Patrol threshold: min_res >= 3 (was 14) — allows defensive positioning
   - Kept baseline timing (step 200/3000) — no resource drain in self-play.
   Running V3 local test to verify no regression.
+- 06:43 V3 test1 hit a bad map seed (wipeout at step 100). Rerunning.
+- 06:45 CRITICAL FINDING: Tournament policy (AnthropicPilotAgentPolicy) inherits from
+  PilotAgentPolicy → SemanticCogAgentPolicy, NOT from AlphaCogAgentPolicy!
+  Tournament version is missing: extractor claims, aggressive stall detection,
+  hotspot patrol, lower retreat margins, team-size miner cap.
+- 06:47 Fixed AnthropicPilotAgentPolicy._pressure_budgets:
+  1. Added team-size cap (ensure 2 miners in tournament)
+  2. Lowered scrambler thresholds to min_res >= 5 (was 7/14)
+  3. Added late-game pressure boost to 6 (was capped at 5)
+  4. Made mining stall detection aggressive (20/30/50 thresholds)
+  Uploading as v911 to competition.
