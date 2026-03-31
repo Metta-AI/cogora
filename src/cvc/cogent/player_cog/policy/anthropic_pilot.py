@@ -1447,12 +1447,13 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             if min_res < 3 and not can_hearts:
                 pressure_budget = max(2, num_agents // 3)
 
-        # Ensure at least 1 dedicated miner: cap pressure to team_size - 1 when team
-        # is smaller than total num_agents. Preserves proven behavior for 8-agent
-        # local play while preventing economy crashes in 4v4 / 6v2 tournament.
+        # Ensure at least 2 dedicated miners: cap pressure to team_size - 2 when
+        # team is smaller than total num_agents. Prevents economy crashes in
+        # 4v4 (2 aligners + 2 miners) and 6v2 (4 pressure + 2 miners).
+        # Preserves proven behavior for 8-agent local play.
         team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
         if team_size < num_agents and team_size >= 4:
-            pressure_budget = min(pressure_budget, team_size - 1)
+            pressure_budget = min(pressure_budget, max(team_size - 2, 2))
 
         # Scramblers: delay until economy can support it
         scrambler_budget = 0
