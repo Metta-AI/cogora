@@ -1481,7 +1481,7 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
     """
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Competition-calibrated budget: lower resource thresholds."""
+        """Competition-calibrated budget with territory-responsive scrambling."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         can_hearts = _h.team_can_refill_hearts(state)
@@ -1490,11 +1490,21 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
         if objective == "resource_coverage":
             return 0, 0
 
+        # Measure territory for dynamic scrambler scaling
+        team_id = _h.team_id(state)
+        friendly_j = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner == team_id))
+        enemy_j = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+        losing_territory = step >= 500 and enemy_j > friendly_j + 2
+
         if num_agents <= 2:
             if step < 200 or (min_res < 7 and not can_hearts):
                 return 0, 0
             if objective == "economy_bootstrap":
                 return 0, 0
+            if losing_territory and min_res >= 5:
+                return 0, 1
             return 1, 0
 
         if num_agents <= 4:
@@ -1502,15 +1512,17 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
                 return 1, 0
             if min_res < 7 and not can_hearts:
                 return 1, 0
-            aligner_budget = min(2, num_agents - 1)
-            scrambler_budget = 1 if step >= 200 and num_agents >= 4 and min_res >= 7 else 0
             if min_res < 1 and not can_hearts:
                 return 1, 0
             if objective == "economy_bootstrap":
                 return 1, 0
+            if losing_territory and min_res >= 5:
+                return 1, min(2, num_agents - 2)
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 and min_res >= 7 else 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: same timing as baseline but lower resource thresholds
+        # 5+ agents
         if step < 30:
             return 2, 0
         elif step < 100:
@@ -1526,19 +1538,18 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
             if min_res < 3 and not can_hearts:
                 pressure_budget = max(2, num_agents // 3)
 
-        # Team-size cap: ensure at least 2 miners
+        # Team-size cap
         team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
         if team_size < num_agents and team_size >= 4:
             pressure_budget = min(pressure_budget, max(team_size - 2, 2))
 
-        # Scramblers: LOWER resource thresholds for competition
-        # Competition resources rarely exceed 50, so min_res >= 14 almost never fires.
+        # Territory-responsive scrambler scaling
         scrambler_budget = 0
-        if step >= 3000 and min_res >= 5:
-            # 2nd scrambler at lower threshold (was min_res >= 14)
+        if losing_territory and min_res >= 3:
+            scrambler_budget = min(max(pressure_budget // 2, 1), pressure_budget - 1)
+        elif step >= 3000 and min_res >= 5:
             scrambler_budget = min(2, pressure_budget // 3)
         elif step >= 200 and min_res >= 5:
-            # 1st scrambler at lower threshold (was min_res >= 7)
             scrambler_budget = min(1, pressure_budget // 3)
 
         aligner_budget = max(pressure_budget - scrambler_budget, 0)
@@ -1902,10 +1913,12 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         return super()._preferred_miner_extractor(state)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Budget allocation with competition-calibrated thresholds.
+        """Budget allocation with competition-calibrated thresholds and territory-responsive scrambling.
 
-        Competition resources are much scarcer than local (hub max ~50 vs ~1500).
-        Lower resource thresholds so scramblers and budget decisions actually fire.
+        Key changes:
+        - Competition resources are scarce (hub max ~50 vs ~1500 local)
+        - When losing territory (few frontier, many enemy junctions), shift budget
+          toward scramblers to create new alignment opportunities
         """
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
@@ -1915,11 +1928,22 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         if objective == "resource_coverage":
             return 0, 0
 
+        # Measure territory situation for dynamic scrambler scaling
+        team_id = _h.team_id(state)
+        friendly_j = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner == team_id))
+        enemy_j = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+        losing_territory = step >= 500 and enemy_j > friendly_j + 2
+
         if num_agents <= 2:
             if step < 200 or (min_res < 7 and not can_hearts):
                 return 0, 0
             if objective == "economy_bootstrap":
                 return 0, 0
+            # When losing, scramble instead of align
+            if losing_territory and min_res >= 5:
+                return 0, 1
             return 1, 0
 
         if num_agents <= 4:
@@ -1927,12 +1951,15 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
                 return 1, 0
             if min_res < 7 and not can_hearts:
                 return 1, 0
-            aligner_budget = min(2, num_agents - 1)
-            scrambler_budget = 1 if step >= 200 and num_agents >= 4 and min_res >= 5 else 0
             if min_res < 1 and not can_hearts:
                 return 1, 0
             if objective == "economy_bootstrap":
                 return 1, 0
+            # Territory-responsive: shift toward scramblers when losing
+            if losing_territory and min_res >= 5:
+                return 1, min(2, num_agents - 2)
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 and min_res >= 5 else 0
             return aligner_budget, scrambler_budget
 
         # 5+ agents: economy-responsive with aggressive peak
@@ -1956,9 +1983,13 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         if team_size < num_agents and team_size >= 4:
             pressure_budget = min(pressure_budget, max(team_size - 2, 2))
 
-        # Scramblers: lower thresholds for competition (resources rarely exceed 50)
+        # Scramblers: territory-responsive scaling
         scrambler_budget = 0
-        if step >= 3000 and min_res >= 5:
+        if losing_territory and min_res >= 3:
+            # When losing territory badly, shift heavily toward scramblers
+            # More scramblers = more enemy junctions converted to neutral = more alignment targets
+            scrambler_budget = min(max(pressure_budget // 2, 1), pressure_budget - 1)
+        elif step >= 3000 and min_res >= 5:
             scrambler_budget = min(2, pressure_budget // 3)
         elif step >= 200 and min_res >= 5:
             scrambler_budget = min(1, pressure_budget // 3)
@@ -1993,7 +2024,7 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         return False
 
     def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
-        """Improved aligner: expansion toward unreachable junctions + hotspot patrol."""
+        """Improved aligner: expansion, hotspot patrol, and ad-hoc scrambling when idle."""
         hearts = int(state.self_state.inventory.get("heart", 0))
         hub = self._nearest_hub(state)
         if hearts <= 0:

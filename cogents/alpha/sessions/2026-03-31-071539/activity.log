@@ -6,3 +6,24 @@
 - Read recent.md: v912 avg 1.93, target >10. Competition resource thresholds fixed but still far from target.
 - Key todos: check v913 results, optimize competition score, improve 2v6 matchup
 - Plan: Check v913 competition results, run local games to analyze current policy, iterate on improvements
+
+### Match Analysis
+- v912 competition results (latest round): 7 completed, avg 1.61
+  - Best: 5.32 vs slanky (4v4), worst: 0.28 vs modular-lstm (2v6)
+  - vs mammet: 0.27, 0.64, 1.36 — badly losing
+  - vs swoopy: 1.05-2.89, vs Paz-Bot: 2.46-3.66
+- 6+ matches still running
+
+### Root Cause Analysis: Match Logs
+- **6v2 vs mammet (score 0.64)**: Economy collapse by step 1300. Carbon hits 0, aligners stuck in "rebuild_hearts" mining loop. 0 friendly junctions by mid-game. Scramblers at 0 most of the time — no counterattack.
+- **4v4 vs slanky (score 5.32, best)**: Good early economy (hub 80-170), 9 junctions by step 500. But collapses late: 2 friendly vs 13 enemy by step 9000. Aligners stuck patrolling hotspots endlessly while enemies dominate.
+- **Core problem**: When frontier=0 and enemy_j=10+, aligners patrol/idle-mine instead of creating new targets. Scramblers needed to convert enemy junctions to neutral to create alignment opportunities.
+
+### Code Changes: Territory-Responsive Scrambler Scaling
+- Modified `_pressure_budgets` in both `AnthropicPilotAgentPolicy` and `AlphaCogV2AgentPolicy`
+- When losing territory (enemy_j > friendly_j + 2 after step 500), shift budget toward scramblers
+  - 5+ agents: scrambler_budget = max(pressure_budget // 2, 1)
+  - 4 agents: 1 aligner + 2 scramblers
+  - 2 agents: 0 aligners + 1 scrambler
+- Also lowered scrambler resource threshold when losing (min_res >= 3 instead of 5)
+- Running local 5k-step test to validate
