@@ -22,3 +22,25 @@
 - [COG] logging exists in AlphaCogAgentPolicy.evaluate_state but NOT in AnthropicPilotAgentPolicy
   - Unclear if tournament v892 is actually using AnthropicCyborgPolicy or AlphaCyborgPolicy
 - Next: Test scrambler variants locally, fix shared_team_ids bug in PilotCyborgPolicy
+
+### Fixes Applied
+- Fixed PilotCyborgPolicy.agent_policy() to pass shared_team_ids and shared_hotspots
+- Fixed budget code in both AlphaCogAgentPolicy and AnthropicPilotAgentPolicy to use team size
+- Added [COG] logging to AnthropicPilotAgentPolicy for tournament debugging
+- Lowered scrambler threshold to step 200 / min_res 7 (was step 500 / min_res 14 in AlphaCog)
+
+### Uploads
+- v897: AnthropicCyborgPolicy (LLM cyborg) with fixes
+- v898: AlphaCyborgPolicy (lightweight) with fixes
+
+### Match Results Analysis (v895-v896)
+- v895 4v4 vs slanky: 10.21 (good!)
+- v895 2v6 vs Paz-Bot: 13.13 (excellent!)
+- v896 6v2 vs gtlm-reactive: 0.90 (catastrophic)
+- v896 6v2 vs coglet: 2.10 (terrible)
+- v895 6v2 vs slanky: 6.07 (mediocre)
+- 6v2 is fundamentally broken: silicon bottleneck → economy death spiral
+  - All agents camp same silicon extractors for thousands of steps
+  - Hub silicon stays at 2, can't make hearts
+  - 0 friendly junctions from step 600 to 5000
+  - Need: explore outward for new extractors when stuck
