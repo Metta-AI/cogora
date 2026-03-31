@@ -1344,7 +1344,9 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
 
         # No expansion target — patrol toward hotspot areas (recently scrambled junctions)
         # to be positioned for fast re-alignment when junctions get scrambled.
-        if hub is not None and hearts > 0 and self._shared_hotspots:
+        # Only patrol if economy is healthy; otherwise idle-mine to prevent resource crashes.
+        min_res = _h.team_min_resource(state)
+        if hub is not None and hearts > 0 and min_res >= 14 and self._shared_hotspots:
             hotspot_targets = []
             for rel_pos, count in self._shared_hotspots.items():
                 if count <= 0:
@@ -1447,6 +1449,13 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             pressure_budget = min(6, num_agents - 2)
             if min_res < 3 and not can_hearts:
                 pressure_budget = max(2, num_agents // 3)
+
+        # Ensure at least 1 dedicated miner: cap pressure to team_size - 1 when team
+        # is smaller than total num_agents. Preserves proven behavior for 8-agent
+        # local play while preventing economy crashes in 4v4 / 6v2 tournament.
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+        if team_size < num_agents and team_size >= 4:
+            pressure_budget = min(pressure_budget, team_size - 1)
 
         # Scramblers: delay until economy can support it
         scrambler_budget = 0

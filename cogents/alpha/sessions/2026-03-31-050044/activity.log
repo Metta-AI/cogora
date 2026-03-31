@@ -22,4 +22,12 @@ status: in-progress
   - Claims + heart skip + patrol: avg 2.55 (+31%!)
   Territory retention dramatically improved: 17-19 junctions at step 2500
   vs 10-11 without patrol. Hotspot patrol is the biggest win.
-- [051200] Uploaded v904 (claims), v905 (claims+heart skip). Will upload v906 (all three).
+- [051200] Uploaded v904 (claims), v905 (claims+heart skip), v906 (all three).
+- [051400] Analyzed v903 tournament results: avg 1.33 across 18 completed matches.
+  Best: 3.95 (6v2 vs Paz-Bot). Worst: 0.18 (4v4 vs modular-lstm).
+  NOTE: Previous "avg 9.58" was QUALIFYING score, not competition.
+- [051500] Economy crash analysis: tournament match showed carbon=3 at step 2000.
+  Root cause: 5 pressure + 1 miner for 6-agent team. Not enough mining.
+  Added economy gate to hotspot patrol (only patrol if min_res >= 14).
+- [051500] Added team-aware miner floor: pressure capped to team_size-1 when
+  team is smaller than total num_agents. Ensures 1 dedicated miner in tournament.
