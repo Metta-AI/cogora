@@ -1341,12 +1341,12 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return MacroDirective(resource_bias=least)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Stable role allocation with resource-responsive scaling. Uses team size."""
+        """Stable role allocation with resource-responsive scaling."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         can_hearts = _h.team_can_refill_hearts(state)
-        # Use actual team size, not total game agents
-        num_agents = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        # Use total num_agents (proven to work — v884 avg 9.58 used this)
+        num_agents = self.policy_env_info.num_agents
 
         if objective == "resource_coverage":
             return 0, 0
@@ -1373,33 +1373,28 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 return 1, 0
             return aligner_budget, scrambler_budget
 
-        # 5+ agents: economy-responsive — NEVER ramp faster than economy supports
+        # 5+ agents: economy-responsive with aggressive peak
         if step < 30:
             return 2, 0
-        elif step < 200:
-            # Slow ramp: stay at 2-3 pressure, let economy build
-            pressure_budget = 2 if min_res < 14 else 3
+        elif step < 100:
+            pressure_budget = 3  # Ramp up slowly
         elif step < 3000:
-            # Full ramp only when economy is healthy
-            if min_res < 3 and not can_hearts:
-                pressure_budget = 2  # Emergency: save economy
-            elif min_res < 7:
-                pressure_budget = min(3, num_agents - 2)  # Conservative
-            elif min_res < 14:
-                pressure_budget = min(4, num_agents - 2)
-            else:
-                pressure_budget = min(5, num_agents - 2)
-        else:
             pressure_budget = min(5, num_agents - 2)
             if min_res < 3 and not can_hearts:
-                pressure_budget = 2
+                pressure_budget = max(2, num_agents // 3)
+            elif min_res < 7:
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
 
-        # Scramblers: only when economy is truly healthy
+        # Scramblers: delay until economy can support it
         scrambler_budget = 0
-        if step >= 500 and min_res >= 14:
-            scrambler_budget = min(1, pressure_budget // 3)
-        if step >= 3000 and min_res >= 20:
+        if step >= 3000 and min_res >= 14:
             scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 200 and min_res >= 7:
+            scrambler_budget = min(1, pressure_budget // 3)
         aligner_budget = max(pressure_budget - scrambler_budget, 0)
         if objective == "economy_bootstrap":
             return min(aligner_budget, 2), 0
@@ -1690,12 +1685,12 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         return super()._preferred_miner_extractor(state)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
-        """Team-size-aware budgets. Uses shared_team_ids for correct team count."""
+        """Budget allocation. Uses total num_agents (proven to work with 8-agent path)."""
         step = state.step or self._step_index
         min_res = _h.team_min_resource(state)
         can_hearts = _h.team_can_refill_hearts(state)
-        # Use actual team size, not total game agents
-        num_agents = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        # Keep total num_agents — v884 avg 9.58 used this successfully
+        num_agents = self.policy_env_info.num_agents
 
         if objective == "resource_coverage":
             return 0, 0
