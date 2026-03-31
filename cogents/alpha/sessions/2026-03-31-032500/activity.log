@@ -18,3 +18,6 @@ status: in-progress
 - [03:45] Studied 4v4 vs coglet (score 5.03): aligner drops to 1 when min_res<7, spends 100s of steps in rebuild_hearts_mine. Territory stagnates.
 - [03:48] Created TV488: TV486 + 4v4 aligner floor (never below 2 aligners in 4v4 too). Starts with 2 aligners from step 0.
 - [03:50] Uploaded v884 (TV488) to qualifying. Now have 3 variants: v882 (TV486), v883 (TV487), v884 (TV488).
+- [03:55] Qualifying results: v882=12.55, v883=12.55 (8v0 self-play). All 3 variants passed qualifying, now in competition.
+- [03:57] Studied 4v4 match logs vs coglet (5.03): aligner spends too much time in rebuild_hearts_mine. Resource imbalance (germanium=0) blocks hearts. Budget drops to 1 aligner when can't make hearts → territory stagnates.
+- [04:00] Waiting for competition results for v882, v883, v884.
