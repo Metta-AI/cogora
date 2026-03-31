@@ -50888,3 +50888,161 @@ class AlphaTournamentV481Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV482: TV481 + desperate mode for 2 agents ──────────────────────────────
+# Problem: In 2v6, once we lose all junctions (friendly=0, enemy=18), v877
+# gets stuck because:
+# 1. Budget goes (1,0) → 1 miner just mining, not helping recapture
+# 2. Scramble blocked by min_res >= 3 check when germanium bottleneck (ger=1)
+# 3. Scramble only happens in time-window (step%200 < 150), rest is exploring
+#
+# Fix: When 2 agents and 0 friendly junctions in stagnation:
+# - Force (2,0) budget → both agents try to scramble/align
+# - Remove min_res check for scramble → scramble even with low resources
+# - Always scramble (no time window) → maximize pressure on enemy
+
+class AlphaTournamentV482AgentPolicy(AlphaTournamentV481AgentPolicy):
+    """TV482: TV481 + desperate mode for 2 agents when 0 friendly junctions."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        team_id = _h.team_id(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else 8
+
+        # Desperate mode: 2 agents, stagnation, 0 friendly junctions
+        if team_size <= 2 and self._stagnation_mode:
+            friendly_count = len(self._known_junctions(state, predicate=lambda j: j.owner == team_id))
+            if friendly_count == 0:
+                # Both agents should be aligners — mining is pointless with 0 territory
+                return 2, 0
+
+        # Otherwise use TV350's sacred budget
+        return _tv334_pressure_budgets(self, state, objective=objective, threshold_7a=120)
+
+    def _aligner_action(self, state):
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+        friendly_count = len(self._known_junctions(state, predicate=lambda j: j.owner == team_id))
+        enemy_count = len(self._known_junctions(state, predicate=lambda j: j.owner not in {None, "neutral", team_id}))
+
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        else:
+            # FASTER stagnation for 2 agents (from TV478)
+            if num_agents <= 2:
+                stag_peak, stag_steps, stag_min_step = 2, 150, 200
+            elif num_agents <= 4:
+                stag_peak, stag_steps, stag_min_step = 5, 300, 500
+            else:
+                stag_peak, stag_steps, stag_min_step = 4, 250, 400
+
+            if (self._peak_junction_count >= stag_peak
+                    and step - self._last_junction_growth_step > stag_steps
+                    and step > stag_min_step):
+                self._stagnation_mode = True
+
+            if step - self._last_junction_growth_step > 500:
+                self._peak_junction_count = max(friendly_count, self._peak_junction_count - 1)
+                self._last_junction_growth_step = step
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        if self._stagnation_mode and hp > 50:
+            # DESPERATE MODE for 2 agents with 0 friendly junctions
+            desperate = num_agents <= 2 and friendly_count == 0 and enemy_count > 5
+            if desperate:
+                # No min_res check, no time window — always scramble
+                if hearts > 0:
+                    scramble_target = self._preferred_scramble_target(state)
+                    if scramble_target is not None:
+                        return self._move_to_known(state, scramble_target, summary="desperate_scramble", vibe="change_vibe_scrambler")
+                return self._explore_action(state, role="aligner", summary="desperate_find_junction")
+
+            # Normal stagnation scramble (same as TV481)
+            scramble_res_threshold = 3 if num_agents <= 2 else 7
+            scramble_bias = enemy_count - friendly_count
+            scramble_window = 150 if scramble_bias >= 3 else (100 if scramble_bias >= 0 else 50)
+            if step % 200 < scramble_window and hearts > 0 and min_res >= scramble_res_threshold:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV482Policy(MettagridSemanticPolicy):
+    """TV482: TV481 + desperate mode for 2 agents."""
+    short_names = ["alpha-tournament-v482"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV482AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

@@ -6,3 +6,8 @@ started: 2026-03-31T01:15:29Z
 - Context: v716=15.05 (historical #1), v873=10.13 (best recent), v877=11.07 qualifying (competition pending).
 - Key breakthroughs from last session: faster stagnation detection is the key improvement.
 - Todos: check v877 competition results, study modular-lstm, 2-agent optimization.
+- v877 competition results (11 completed): avg 9.16. Scores: coglet 6.82/5.47/10.34, slanky 8.69/13.83, Paz-Bot 12.90/12.09, modular-lstm 10.27 (+2 failed), random-assigner 6.76/10.65, mammet 2.97. Below v873's 10.13.
+- Analyzed v877 2v6 loss vs mammet (2.97): germanium bottleneck (hub ger=1) blocks scrambling (min_res>=3 check). Agent stuck in stag_find_junction with 0 friendly junctions from step 1700 to 4000. Miner ineffective.
+- Root cause: min_res>=3 scramble threshold blocks scramble when germanium=1. Also, (1,0) budget means only 1 agent can scramble.
+- Created TV482: desperate mode for 2 agents when 0 friendly junctions. Forces (2,0) budget, removes min_res check, removes time window for scramble. 5+ agents unchanged.
+- Uploaded v878 (TV482) to qualifying.
