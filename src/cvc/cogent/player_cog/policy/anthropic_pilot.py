@@ -1496,13 +1496,19 @@ class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
         if objective == "resource_coverage":
             return 0, 0
 
-        # Measure territory for dynamic scrambler scaling
+        # Measure territory for dynamic scrambler scaling.
+        # Gate on team size to avoid hurting 6v2 performance.
         team_id = _h.team_id(state)
         friendly_j = len(self._world_model.entities(
             entity_type="junction", predicate=lambda e: e.owner == team_id))
         enemy_j = len(self._world_model.entities(
             entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
-        losing_territory = step >= 500 and enemy_j > friendly_j + 2
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+        opponent_size = num_agents - team_size
+        if team_size <= opponent_size:
+            losing_territory = step >= 500 and enemy_j > friendly_j + 2
+        else:
+            losing_territory = step >= 1000 and enemy_j > friendly_j * 2 + 5
 
         if num_agents <= 2:
             if step < 200 or (min_res < 7 and not can_hearts):
@@ -1950,20 +1956,29 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         if objective == "resource_coverage":
             return 0, 0
 
-        # Measure territory situation for dynamic scrambler scaling
+        # Measure territory situation for dynamic scrambler scaling.
+        # Only trigger losing_territory when we're not the majority team or loss is severe.
+        # In 6v2 (we have 6), we should overwhelm with aligners, not shift to scramblers.
         team_id = _h.team_id(state)
         friendly_j = len(self._world_model.entities(
             entity_type="junction", predicate=lambda e: e.owner == team_id))
         enemy_j = len(self._world_model.entities(
             entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
-        losing_territory = step >= 500 and enemy_j > friendly_j + 2
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+        opponent_size = num_agents - team_size
+        # losing_territory fires when:
+        # - We're minority/equal team AND enemy_j > friendly_j + 2 (moderate loss)
+        # - We're majority team AND enemy_j > friendly_j * 2 + 5 (severe loss only)
+        if team_size <= opponent_size:
+            losing_territory = step >= 500 and enemy_j > friendly_j + 2
+        else:
+            losing_territory = step >= 1000 and enemy_j > friendly_j * 2 + 5
 
         if num_agents <= 2:
             if step < 200 or (min_res < 7 and not can_hearts):
                 return 0, 0
             if objective == "economy_bootstrap":
                 return 0, 0
-            # When losing, scramble instead of align
             if losing_territory and min_res >= 5:
                 return 0, 1
             return 1, 0
@@ -1977,7 +1992,6 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
                 return 1, 0
             if objective == "economy_bootstrap":
                 return 1, 0
-            # Territory-responsive: shift toward scramblers when losing
             if losing_territory and min_res >= 5:
                 return 1, min(2, num_agents - 2)
             aligner_budget = min(2, num_agents - 1)
