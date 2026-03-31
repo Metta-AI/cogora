@@ -3,3 +3,15 @@ Status: in-progress
 
 ## Activity Log
 - 06:23 Session started. Top priority: check v909/v910 competition results.
+- 06:25 Checked v909/v910 competition results. Scores still very low (0.16-3.85).
+  v909 6v2 vs slanky: 2.84, v910 vs Paz-Bot (best): 3.44, v910 vs modular-lstm 2v6: 0.16.
+- 06:28 Analyzed v909 match logs in detail. Key finding: LATE-GAME JUNCTION COLLAPSE.
+  Start: 8 friendly junctions. By step 7000: 2 friendly vs 16 enemy.
+  Slanky with 2 agents outscrambles us with 6. Root cause: not enough scramblers,
+  too many miners, patrol threshold too high (min_res >= 14), budget not territory-responsive.
+- 06:32 Created AlphaCogV2AgentPolicy with territory-responsive improvements:
+  1. Territory-responsive scramblers: when enemy_j > friendly_j, shift to 2 scramblers
+  2. Lower patrol threshold: min_res >= 7 (was 14) for idle aligner hotspot patrol
+  3. Dynamic miner reduction: 1 miner (not 2) when losing territory + economy okay
+  4. Earlier 2nd scrambler: step 1000 with min_res >= 14 (was step 3000)
+- 06:33 Running local baseline + V2 tests (10k steps each).

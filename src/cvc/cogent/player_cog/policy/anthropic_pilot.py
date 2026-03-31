@@ -1468,6 +1468,166 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         return aligner_budget, scrambler_budget
 
 
+class AlphaCogV2AgentPolicy(AlphaCogAgentPolicy):
+    """Territory-responsive policy: reacts to junction balance, earlier scramblers.
+
+    Key changes from AlphaCog:
+    1. Territory-responsive budget: when losing territory, shift resources to scramblers
+    2. Lower patrol threshold: idle aligners patrol at min_res >= 7 (not 14)
+    3. Earlier 2nd scrambler: at step 1000 when enemy is contesting (not 3000)
+    4. Dynamic miner reduction: when territory is being lost, reduce to 1 miner
+    """
+
+    def _territory_balance(self, state: MettagridState) -> tuple[int, int]:
+        """Count friendly vs enemy junctions from world model."""
+        team_id = _h.team_id(state)
+        friendly = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner == team_id))
+        enemy = len(self._world_model.entities(
+            entity_type="junction", predicate=lambda e: e.owner not in {None, "neutral", team_id}))
+        return friendly, enemy
+
+    def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
+        """Territory-responsive budget: reacts to junction balance."""
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        num_agents = self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        if num_agents <= 2:
+            if step < 200 or (min_res < 7 and not can_hearts):
+                return 0, 0
+            if objective == "economy_bootstrap":
+                return 0, 0
+            return 1, 0
+
+        if num_agents <= 4:
+            if step < 100:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            aligner_budget = min(2, num_agents - 1)
+            scrambler_budget = 1 if step >= 200 and num_agents >= 4 and min_res >= 7 else 0
+            if min_res < 1 and not can_hearts:
+                return 1, 0
+            if objective == "economy_bootstrap":
+                return 1, 0
+            return aligner_budget, scrambler_budget
+
+        # 5+ agents: territory-responsive with aggressive peak
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else num_agents
+        friendly, enemy = self._territory_balance(state) if step >= 200 else (0, 0)
+        territory_losing = enemy > friendly and step >= 500
+
+        if step < 30:
+            return 2, 0
+        elif step < 100:
+            pressure_budget = 3
+        elif step < 3000:
+            pressure_budget = min(5, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+            elif min_res < 7:
+                pressure_budget = min(4, num_agents - 2)
+        else:
+            pressure_budget = min(6, num_agents - 2)
+            if min_res < 3 and not can_hearts:
+                pressure_budget = max(2, num_agents // 3)
+
+        # Team-size cap: ensure miners, but allow fewer miners when losing territory
+        if team_size < num_agents and team_size >= 4:
+            min_miners = 1 if territory_losing and min_res >= 7 else 2
+            pressure_budget = min(pressure_budget, max(team_size - min_miners, 2))
+
+        # Scramblers: territory-responsive timing
+        scrambler_budget = 0
+        if territory_losing and min_res >= 7:
+            # Losing territory: 2 scramblers to fight back
+            scrambler_budget = min(2, max(pressure_budget // 2, 1))
+        elif step >= 1000 and min_res >= 14:
+            # Late game with healthy economy: 2 scramblers
+            scrambler_budget = min(2, pressure_budget // 3)
+        elif step >= 200 and min_res >= 7:
+            scrambler_budget = min(1, pressure_budget // 3)
+
+        aligner_budget = max(pressure_budget - scrambler_budget, 1)
+        if objective == "economy_bootstrap":
+            return min(aligner_budget, 2), 0
+        return aligner_budget, scrambler_budget
+
+    def _aligner_action(self, state: MettagridState) -> tuple[Action, str]:
+        """Extended aligner with lower patrol threshold."""
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+        if _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        # No frontier — try to expand toward known unreachable junctions
+        team_id = _h.team_id(state)
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        hub_pos = hub.position if hub is not None else current_pos
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 30
+                and _h.manhattan(hub_pos, j.position) < 40
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 30 and _h.manhattan(hub_pos, nearest.position) < 40:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        # Patrol hotspots with LOWER threshold (min_res >= 7 instead of 14)
+        min_res = _h.team_min_resource(state)
+        if hub is not None and hearts > 0 and min_res >= 7 and self._shared_hotspots:
+            hotspot_targets = []
+            for rel_pos, count in self._shared_hotspots.items():
+                if count <= 0:
+                    continue
+                abs_pos = (hub.global_x + rel_pos[0], hub.global_y + rel_pos[1])
+                dist = _h.manhattan(current_pos, abs_pos)
+                hub_dist = _h.manhattan(hub_pos, abs_pos)
+                if dist > 2 and dist < hp - 20 and hub_dist < 35:
+                    hotspot_targets.append((abs_pos, count, dist))
+            if hotspot_targets:
+                best = min(hotspot_targets, key=lambda t: t[2] - t[1] * 5)
+                return self._move_to_position(state, best[0], summary="patrol_hotspot", vibe="change_vibe_aligner")
+
+        return self._miner_action(state, summary_prefix="idle_align_")
+
+
 class AlphaAggressiveAgentPolicy(AlphaCogAgentPolicy):
     """Aggressive variant: faster early game, idle aligners scramble, more pressure.
 
@@ -2862,6 +3022,34 @@ class AlphaCyborgPolicy(MettagridSemanticPolicy):
         self._shared_team_ids.add(agent_id)
         if agent_id not in self._agent_policies:
             self._agent_policies[agent_id] = AlphaCogAgentPolicy(
+                self.policy_env_info,
+                agent_id=agent_id,
+                world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims,
+                shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots,
+                shared_team_ids=self._shared_team_ids,
+                shared_extractor_claims=self._shared_extractor_claims,
+            )
+        return self._agent_policies[agent_id]
+
+    def reset(self) -> None:
+        super().reset()
+        self._shared_extractor_claims.clear()
+
+
+class AlphaCyborgV2Policy(MettagridSemanticPolicy):
+    """Territory-responsive lightweight policy."""
+    short_names = ["alpha-cyborg-v2"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._shared_extractor_claims: dict[tuple[int, int], tuple[int, int]] = {}
+
+    def agent_policy(self, agent_id: int) -> AgentPolicy:
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaCogV2AgentPolicy(
                 self.policy_env_info,
                 agent_id=agent_id,
                 world_model=SharedWorldModel(),
