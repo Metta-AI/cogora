@@ -1128,6 +1128,10 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
         # Match StableBoost proven config
         self._hotspot_weight = 8.0   # Re-alignment boost (flip hotspot to bonus)
         self._network_weight = 0.0   # No network proximity penalty (allows expansion)
+        # Mining stall detection: if at same extractor too long, explore for new ones
+        self._mining_stall_steps = 0
+        self._mining_stall_resource: str | None = None
+        self._last_hub_bottleneck_amount: int | None = None
 
     def _junction_hotspot_count(self, entity: KnownEntity, hub: KnownEntity | None) -> int:
         """Flip hotspot count to BONUS — prioritize re-aligning scrambled junctions."""
@@ -1140,8 +1144,8 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
     def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
         """Clear sticky target when resource priority changes significantly.
 
-        Also: if the bottleneck resource has no known extractors and is critically
-        low, return None to force exploration (discover missing extractor types).
+        Also detects mining stalls: if bottleneck resource hasn't improved
+        for 50+ steps while we're mining it, force exploration to find new extractors.
         """
         resources = _shared_resources(state)
         least = _least_resource(resources)
@@ -1165,10 +1169,29 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
                 self._clear_sticky_target()
         self._last_bias_resource = self._resource_bias
 
+        # Mining stall detection: if bottleneck resource hasn't improved while
+        # we've been mining it, force exploration to find different extractors.
+        if self._mining_stall_resource == least and self._last_hub_bottleneck_amount is not None:
+            if least_amount <= self._last_hub_bottleneck_amount:
+                self._mining_stall_steps += 1
+            else:
+                self._mining_stall_steps = 0  # Resource recovering, reset
+        else:
+            self._mining_stall_steps = 0
+            self._mining_stall_resource = least
+        self._last_hub_bottleneck_amount = least_amount
+
+        # After 50 steps of stall with critically low resource, force exploration
+        if self._mining_stall_steps >= 50 and least_amount < 7:
+            self._clear_sticky_target()
+            self._mining_stall_steps = 0  # Reset to avoid infinite clear loop
+            # Bump explore index to try a different direction
+            self._explore_index += 1 + self._agent_id
+            return None  # Force exploration
+
         # If bottleneck resource is critically low (< 7, can't make hearts)
         # while other resources are abundant (10x imbalance), and we have no
         # known extractors for the bottleneck, explore to discover them.
-        # This prevents miners from ignoring undiscovered extractor types.
         max_amount = max(resources.values())
         if least_amount < 7 and max_amount >= least_amount * 10 + 20:
             step = state.step or self._step_index
@@ -1578,6 +1601,10 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
         self._last_budget_change_step = 0
         num_agents = self.policy_env_info.num_agents
         self._current_aligner_budget = min(4, max(num_agents - 1, 1))
+        # Mining stall detection
+        self._mining_stall_steps = 0
+        self._mining_stall_resource: str | None = None
+        self._last_hub_bottleneck_amount: int | None = None
 
     def _macro_directive(self, state: MettagridState) -> MacroDirective:
         """Use LLM directive when available, fall back to heuristic resource bias."""
@@ -1621,6 +1648,41 @@ class AnthropicPilotAgentPolicy(PilotAgentPolicy):
             )
         except Exception as e:
             print(f"[LLM] step={state.step} agent={self._agent_id} error={e}", flush=True)
+
+    def _preferred_miner_extractor(self, state: MettagridState) -> KnownEntity | None:
+        """Mining stall detection: if bottleneck resource isn't recovering, explore."""
+        resources = _shared_resources(state)
+        least = _least_resource(resources)
+        least_amount = resources[least]
+
+        # Track stall: bottleneck not improving while we mine it
+        if self._mining_stall_resource == least and self._last_hub_bottleneck_amount is not None:
+            if least_amount <= self._last_hub_bottleneck_amount:
+                self._mining_stall_steps += 1
+            else:
+                self._mining_stall_steps = 0
+        else:
+            self._mining_stall_steps = 0
+            self._mining_stall_resource = least
+        self._last_hub_bottleneck_amount = least_amount
+
+        # After 50 stall steps with critically low resource, force exploration
+        if self._mining_stall_steps >= 50 and least_amount < 7:
+            self._clear_sticky_target()
+            self._mining_stall_steps = 0
+            self._explore_index += 1 + self._agent_id
+            return None
+
+        # Clear sticky target on resource priority change
+        if (
+            self._sticky_target_kind is not None
+            and self._sticky_target_kind.endswith("_extractor")
+        ):
+            current_resource = self._sticky_target_kind.removesuffix("_extractor")
+            if current_resource != least and least_amount < 7:
+                self._clear_sticky_target()
+
+        return super()._preferred_miner_extractor(state)
 
     def _pressure_budgets(self, state: MettagridState, *, objective: str | None = None) -> tuple[int, int]:
         """Team-size-aware budgets. Uses shared_team_ids for correct team count."""
