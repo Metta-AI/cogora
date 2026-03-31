@@ -1,0 +1,10 @@
+# Session 2026-03-31-040204 Activity Log
+
+## Status: in-progress
+
+### Session Start
+- Read recent.md and todos.md for context
+- Previous best: v884 (TV488) avg 9.58, heuristic ceiling ~10 confirmed
+- Goal achieved once: v873 (TV478) avg 10.13
+- All budget/stagnation mods regress from v884 baseline
+- Key todos: RL training (need GPU), resource imbalance awareness, pre-game LLM, study opponents
