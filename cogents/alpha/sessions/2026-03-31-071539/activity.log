@@ -2,25 +2,27 @@
 
 ## Status: in-progress
 
-### Session Summary
-- v912 baseline avg 1.93, target >10
-- Analyzed match logs, implemented: territory-responsive scramblers, mining fix, 6v2 gate fix
-- KEY FINDING: v884 (AlphaTournamentPolicy) averaged 9.58 with ALL agents as aligners (0 dedicated miners)
-- Current policy's team-size-cap (2 dedicated miners) is the main regression cause
+### Key Findings
+1. v884 (AlphaTournamentPolicy) averaged 9.58 with ALL agents as aligners/scramblers, 0 dedicated miners
+2. v915 (AlphaCyborgV2 with team-size cap) averaged 1.37 — team-size miner cap was the main regression
+3. Territory-responsive scramblers help late game but hurt 6v2 (fixed in v918/v919)
 
-### v915 Competition Results (13 matches, avg 1.37)
-- 4v4: avg 2.02 (best: 2.75 vs modular-lstm)
-- 2v6: avg 0.66 (0.25-1.17)
-- 6v2: avg 1.50 (REGRESSED from v884's 9.58)
+### Code Changes
+1. Territory-responsive scrambler scaling (v914/v915)
+2. Early-game aggression — extra pressure agent first 500 steps (v916)
+3. Mining resource balance — raise threshold 7→21 (v917)
+4. Fix 6v2 losing_territory gate (v918/v919)
+5. AlphaCog scoring optimizations for tournament policy (v920)
+6. Upload proven AlphaTournamentPolicy (v921)
+7. Apply mining fix to AlphaTournamentPolicy (v922)
 
-### Key Insight: 0 Dedicated Miners > 2 Dedicated Miners
-- v884: ALL agents = aligners/scramblers, aligners mine when idle → avg 9.58
-- v915: 2 dedicated miners, fewer aligners → avg 1.37
-- More aligners = more junctions aligned faster
-- Starting resources (24 each) sustain early game without dedicated miners
-- Idle-mining by aligners covers late-game economy needs
+### Competition Status
+- v915: In competition, avg 1.37 (13 matches)
+- v919: In competition (18+ matches running)
+- v921: Passed qualifying → competition or waiting
+- v922: Qualifying
 
-### Tournament Uploads
-- v915: AlphaCyborgV2 + territory-responsive (avg 1.37)
-- v916-v920: Various fixes (qualifying)
-- v921: AlphaTournamentPolicy (v884 base) — should be strongest candidate
+### Next Steps
+- Wait for v919/v921/v922 competition results
+- v921 (AlphaTournamentPolicy) should be strongest — historically avg 9.58
+- If v921 confirms, apply our improvements (territory-responsive, mining fix) to v65 base
