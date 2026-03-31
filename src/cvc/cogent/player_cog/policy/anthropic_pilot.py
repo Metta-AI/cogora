@@ -1182,8 +1182,9 @@ class AlphaCogAgentPolicy(SemanticCogAgentPolicy):
             self._mining_stall_resource = least
         self._last_hub_bottleneck_amount = least_amount
 
-        # After 50 steps of stall with critically low resource, force exploration
-        if self._mining_stall_steps >= 50 and least_amount < 7:
+        # After stalling, force exploration. More aggressive when resource is at 0.
+        stall_threshold = 20 if least_amount <= 0 else (30 if least_amount < 3 else 50)
+        if self._mining_stall_steps >= stall_threshold and least_amount < 7:
             self._clear_sticky_target()
             self._mining_stall_steps = 0  # Reset to avoid infinite clear loop
             # Bump explore index to try a different direction

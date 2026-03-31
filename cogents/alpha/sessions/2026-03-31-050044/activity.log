@@ -41,3 +41,12 @@ status: in-progress
   Baseline: 1.95 | Claims: 2.10 | +HeartSkip: 2.03 | +Patrol(ungated): 2.55 |
   +Patrol(gated)+MinerFloor: 2.41. Economy gate reduces local patrol but
   should prevent tournament economy crashes.
+- [052000] v906 competition result: 0.34 (4v4 vs random-assay). Economy crash
+  confirmed — 0 miners, hub resources single-digit from step 500. Miner floor fix critical.
+- [052100] v907 passed qualifying, now in competition.
+  v908 (team_size-1) and v909 (team_size-2) in qualifying.
+- [052100] Uploaded v909 with stronger miner floor (team_size-2 = 2 dedicated miners).
+- [052200] Tournament runs 10000 steps, not 5000! Updated local tests to match.
+- [052300] Silicon death spiral observed in 10k local game: silicon=0 at step 5500.
+  Made mining stall detection more aggressive: 20-step threshold when resource=0
+  (was 50). Should force faster exploration when economy is critical.
