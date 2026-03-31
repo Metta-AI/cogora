@@ -4,34 +4,27 @@
 
 ### Session Summary
 - v912 baseline avg 1.93, target >10
-- Analyzed match logs: identified economy collapse pattern (resource→0, hearts→0, territory collapse)
-- Implemented 3 key changes: territory-responsive scramblers, early-game aggression, mining balance fix
+- Analyzed match logs: economy collapse + territory loss pattern
+- Implemented: territory-responsive scramblers, early-game aggression, mining balance fix
+- Found and fixed 6v2 regression from scramblers triggering too early
 
-### v915 Competition Results (12 matches completed)
-| Opponent | Config | Score |
-|----------|--------|-------|
-| gtlm-reactive | 2v6 | 0.25 |
-| gtlm-reactive | 2v6 | 1.17 |
-| gtlm-reactive | 4v4 | 2.08 |
-| gtlm-reactive | 6v2 | 2.96 |
-| Paz-Bot | 2v6 | 0.79 |
-| Paz-Bot | 4v4 | 2.24 |
-| modular-lstm | 2v6 | 0.28 |
-| modular-lstm | 2v6 | 0.39 |
-| modular-lstm | 4v4 | 1.53 |
-| modular-lstm | 4v4 | 2.75 |
-| coglet | 4v4 | 1.75 |
-| mammet | 6v2 | 0.78 |
+### v915 Competition Results (13 matches, avg 1.37)
+- 2v6: 0.25, 1.17, 0.28, 0.39, 0.79, 1.08 → avg 0.66
+- 4v4: 2.08, 2.24, 1.53, 2.75, 1.75, 1.76 → avg 2.02
+- 6v2: 2.96, 1.14, 0.74, 1.16 → avg 1.50 (REGRESSED from v912 4.34)
 
-- **v915 avg: 1.41** (vs v912 avg 1.93 — but different opponent pool)
-- **Key improvements**: mammet 6v2: 0.64→0.78, coglet 4v4: 1.12→1.75, modular-lstm 2v6: 0.28→0.39
+### Problem Found: 6v2 Regression
+- losing_territory fires at step 500 when enemy has 3+ more junctions
+- In 6v2, opponent's 2 agents focus on junctions while our 6 disperse = early junction deficit
+- Scramblers activate prematurely, reducing aligner count when we should overwhelm
+- **Fix (v918/v919)**: Only trigger scrambler shift for majority teams on severe loss (enemy > friendly*2 + 5)
 
-### Local Test Results
-- v915 10k self-play: 4.18 (territory-responsive scramblers)
-- v917 10k self-play: 3.90 (+ mining fix, AlphaCyborg base)
+### Key Code Changes
+1. Territory-responsive scrambler scaling (v914-v915)
+2. Early-game aggression — extra pressure agent first 500 steps (v916)
+3. Mining resource balance — raise sticky target threshold from 7→21 (v917)
+4. Fix 6v2 losing_territory gate (v918/v919)
 
 ### Tournament Versions
-- v914: AnthropicCyborgPolicy + territory-responsive (qualifying)
-- v915: AlphaCyborgV2Policy + territory-responsive → IN COMPETITION
-- v916: + early-game aggression (qualifying)
-- v917: + mining resource balance fix (qualifying)
+- v915: In competition (avg 1.37, 13 matches)
+- v916-v919: Qualifying with incremental fixes
