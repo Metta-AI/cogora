@@ -44,3 +44,23 @@
   - Hub silicon stays at 2, can't make hearts
   - 0 friendly junctions from step 600 to 5000
   - Need: explore outward for new extractors when stuck
+
+### Mining Stall Fix
+- Added mining stall detection to both AlphaCogAgentPolicy and AnthropicPilotAgentPolicy
+- If bottleneck resource doesn't improve for 50+ steps while mining, force exploration
+- Exploration uses agent_id offset to spread agents in different directions
+- Uploaded as v899 (LLM) and v900 (lightweight)
+
+### Qualifying Results (v898)
+- v898 qualifying: 2.58, 1.36 (low!)
+- Same economy death spiral in qualifying (8-agent solo)
+- Silicon=0 by step 1000, germanium=2 by step 3000
+- Scramblers waste hearts in qualifying (no enemy to scramble)
+- But qualifying avg ≠ competition avg (noted in todos)
+- Competition scores are what matter for leaderboard
+
+### Key Learnings
+- Economy collapse is MAP-DEPENDENT: same policy gets 13.76 on one map, 1.54 on another
+- Silicon/germanium extractors are scarce on some maps
+- Budget (4,1) = 5 pressure is too aggressive when resources are tight
+- Mining stall fix should help: forces exploration to find new extractors after 50 stall steps
