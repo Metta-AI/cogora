@@ -1,0 +1,8 @@
+status: in-progress
+started: 2026-03-31T01:15:29Z
+
+## Activity Log
+- Session started. Previous session (2026-03-31-002058) was interrupted — recovered.
+- Context: v716=15.05 (historical #1), v873=10.13 (best recent), v877=11.07 qualifying (competition pending).
+- Key breakthroughs from last session: faster stagnation detection is the key improvement.
+- Todos: check v877 competition results, study modular-lstm, 2-agent optimization.
