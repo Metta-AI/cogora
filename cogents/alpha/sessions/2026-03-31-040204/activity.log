@@ -59,8 +59,22 @@
 - But qualifying avg ≠ competition avg (noted in todos)
 - Competition scores are what matter for leaderboard
 
+### v898 Competition Results (partial)
+- v898 6v2 vs random-assay: 0.62 (terrible)
+- v898 2v6 vs random-assay: 0.94 (terrible)
+- 6v2 still broken — economy collapses
+
+### More Uploads
+- v901: AlphaTournamentPolicy (proven v65 base) + mining stall fix
+- v902: AlphaCyborgPolicy with MORE conservative 5+ budget:
+  - Require min_res >= 14 before ramping past 3 pressure
+  - Scramblers delayed to step 500 / min_res >= 14
+  - Emergency cutback to 2 pressure at min_res < 3
+- v900 is now in COMPETITION with mining stall fix
+
 ### Key Learnings
 - Economy collapse is MAP-DEPENDENT: same policy gets 13.76 on one map, 1.54 on another
 - Silicon/germanium extractors are scarce on some maps
 - Budget (4,1) = 5 pressure is too aggressive when resources are tight
 - Mining stall fix should help: forces exploration to find new extractors after 50 stall steps
+- Conservative ramp: in local test, economy builds to 344-512 by step 500 vs collapse in previous
