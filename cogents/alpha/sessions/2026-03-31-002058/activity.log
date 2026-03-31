@@ -21,3 +21,7 @@ started: 2026-03-31T00:20:58Z
 - Uploaded v875 (TV479) and v876 (TV480) to qualifying.
 - Summary of variants in qualifying: v872=TV477 (always-2a+faster4v4), v873=TV478 (faster stagnation),
   v874=TV350 (baseline), v875=TV479 (instant 4v4), v876=TV480 (reactive 4v4).
+- v872 qualifying: 10.41, 15.48 (avg 12.95). v873 qualifying: 13.67, 15.68 (avg 14.68). Both IN COMPETITION.
+- v872/v873 competition matches all running (20+ matches). Waiting for results.
+- 4v4 analysis (v870 vs gtlm, 7.21): Territory built to 10 by step 1000, then collapsed to 3 vs 14 by step 2000.
+  Stagnation scramble maintained 3 junctions for 3000 more steps but couldn't recover. Structural issue.
