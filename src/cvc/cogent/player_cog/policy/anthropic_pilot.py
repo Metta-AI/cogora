@@ -51545,3 +51545,67 @@ class AlphaTournamentV487Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV488: TV486 + 4v4 aligner floor (never below 2 aligners) ───────────────
+# In 4v4, TV477 drops to 1 aligner when min_res < 7 and can't make hearts.
+# But the aligner without hearts mines anyway. Having 2 "aligners" (one mining,
+# one exploring/aligning when possible) maintains territorial pressure.
+# 4v4 analysis shows we lose territory during long rebuild_hearts cycles.
+
+class AlphaTournamentV488AgentPolicy(AlphaTournamentV486AgentPolicy):
+    """TV488: TV486 + never below 2 aligners in 4v4."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2 agents: always both aligners (TV477)
+        if team_size <= 2:
+            return 2, 0
+
+        # 4 agents: ALWAYS 2 aligners (floor). Never drop to 1.
+        if team_size <= 4:
+            if step < 30:
+                return 2, 0  # Was 1, 0 — start with 2 from the beginning
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: same as TV486 (TV350 base + 2 aligner floor)
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        if min_res < 10 and not can_hearts:
+            return 2, 0
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV488Policy(MettagridSemanticPolicy):
+    """TV488: TV486 + 4v4 aligner floor."""
+    short_names = ["alpha-tournament-v488"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV488AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]

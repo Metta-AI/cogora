@@ -15,3 +15,6 @@ status: in-progress
 - [03:36] Created TV487: TV486 + stuck detection with explore fallback (not mine — that's what regressed TV485).
 - [03:40] TV486 local test: 6.85 score (8v0 self-play). Normal baseline.
 - [03:42] Uploaded v882 (TV486) and v883 (TV487) to qualifying.
+- [03:45] Studied 4v4 vs coglet (score 5.03): aligner drops to 1 when min_res<7, spends 100s of steps in rebuild_hearts_mine. Territory stagnates.
+- [03:48] Created TV488: TV486 + 4v4 aligner floor (never below 2 aligners in 4v4 too). Starts with 2 aligners from step 0.
+- [03:50] Uploaded v884 (TV488) to qualifying. Now have 3 variants: v882 (TV486), v883 (TV487), v884 (TV488).
