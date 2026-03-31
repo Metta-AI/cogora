@@ -31,3 +31,13 @@ status: in-progress
   Added economy gate to hotspot patrol (only patrol if min_res >= 14).
 - [051500] Added team-aware miner floor: pressure capped to team_size-1 when
   team is smaller than total num_agents. Ensures 1 dedicated miner in tournament.
+- [051700] Analyzed worst v903 match (0.18 vs modular-lstm 4v4):
+  Complete economy collapse. Hub resources < 10 from step 500. 0 aligned junctions
+  from step 2000 onward. Root cause: 4 agents all assigned pressure, 0 miners.
+  Miner floor fix addresses this directly.
+- [051700] Uploaded v907 with all fixes. v905 passed qualifying, in competition.
+  First v905 result: 1.63 (2v6 vs Paz-Bot) = same as v903 on same matchup.
+- [051800] Local test summary (3000 steps, avg scores excluding wipes):
+  Baseline: 1.95 | Claims: 2.10 | +HeartSkip: 2.03 | +Patrol(ungated): 2.55 |
+  +Patrol(gated)+MinerFloor: 2.41. Economy gate reduces local patrol but
+  should prevent tournament economy crashes.
