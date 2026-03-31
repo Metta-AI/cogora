@@ -11,3 +11,10 @@ started: 2026-03-31T01:15:29Z
 - Root cause: min_res>=3 scramble threshold blocks scramble when germanium=1. Also, (1,0) budget means only 1 agent can scramble.
 - Created TV482: desperate mode for 2 agents when 0 friendly junctions. Forces (2,0) budget, removes min_res check, removes time window for scramble. 5+ agents unchanged.
 - Uploaded v878 (TV482) to qualifying.
+- Uploaded v879 (TV483: TV478 base + desperate mode) to qualifying — better base than TV482.
+- Analyzed v877 6v2 loss vs swoopy (7.78): silicon bottleneck (si=4) → budget (1,0) for 6 agents → only 1 aligner.
+  Even with 6 agents, having only 1 aligner against 2 enemy agents means territory collapse.
+  TV350 budget too aggressively drops to 1 aligner when min_res < 10.
+- Created TV484: TV483 + minimum 2 aligners for 5+ agents. Never drop to 1 aligner for 5+ team.
+  Budget floor: (2,0) instead of (1,0) when min_res < 10 and can't refill hearts.
+- Uploaded v880 (TV484) to qualifying.

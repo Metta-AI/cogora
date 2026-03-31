@@ -51046,3 +51046,218 @@ class AlphaTournamentV482Policy(MettagridSemanticPolicy):
                 shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
             )
         return self._agent_policies[agent_id]
+
+
+# ── TV483: TV478 (best, avg 10.13) + desperate mode ─────────────────────────
+# v873 (TV478) is the best variant. It uses always-(2,0) for 2 agents +
+# faster stagnation. But it still blocks scramble when min_res < 3 and
+# only scrambles 50% of time (step%200 < 100).
+#
+# In 2v6, once friendly_count hits 0, the min_res check becomes a trap:
+# germanium bottleneck means min_res=1 → scramble blocked → game over.
+#
+# TV483: when 2 agents have 0 friendly junctions in stagnation mode,
+# remove min_res check and time window for scramble.
+
+class AlphaTournamentV483AgentPolicy(AlphaTournamentV478AgentPolicy):
+    """TV483: TV478 + desperate scramble when 0 friendly junctions."""
+
+    def _aligner_action(self, state):
+        step = state.step or self._step_index
+        team_id = _h.team_id(state)
+        num_agents = len(self._shared_team_ids) if self._shared_team_ids else 8
+        friendly_count = len(self._known_junctions(state, predicate=lambda j: j.owner == team_id))
+        enemy_count = len(self._known_junctions(state, predicate=lambda j: j.owner not in {None, "neutral", team_id}))
+
+        if friendly_count > self._peak_junction_count:
+            self._peak_junction_count = friendly_count
+            self._last_junction_growth_step = step
+            self._stagnation_mode = False
+        else:
+            if num_agents <= 2:
+                stag_peak, stag_steps, stag_min_step = 2, 150, 200
+            elif num_agents <= 4:
+                stag_peak, stag_steps, stag_min_step = 5, 300, 500
+            else:
+                stag_peak, stag_steps, stag_min_step = 4, 250, 400
+
+            if (self._peak_junction_count >= stag_peak
+                    and step - self._last_junction_growth_step > stag_steps
+                    and step > stag_min_step):
+                self._stagnation_mode = True
+
+            if step - self._last_junction_growth_step > 500:
+                self._peak_junction_count = max(friendly_count, self._peak_junction_count - 1)
+                self._last_junction_growth_step = step
+
+        hearts = int(state.self_state.inventory.get("heart", 0))
+        hub = self._nearest_hub(state)
+
+        if hearts <= 0:
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            if not _h.team_can_refill_hearts(state):
+                return self._miner_action(state, summary_prefix="rebuild_hearts_")
+            if hub is not None:
+                return self._move_to_known(state, hub, summary="acquire_heart", vibe="change_vibe_heart")
+            return self._explore_action(state, role="aligner", summary="find_hub_for_heart")
+
+        if num_agents <= 2 and step < 200:
+            pass
+        elif step < 200:
+            pass
+        elif _h.should_batch_hearts(state, role="aligner", hub_position=hub.position if hub else None):
+            self._clear_target_claim()
+            self._clear_sticky_target()
+            assert hub is not None
+            return self._move_to_known(state, hub, summary="batch_hearts", vibe="change_vibe_heart")
+
+        target = self._preferred_alignable_neutral_junction(state)
+        if target is not None:
+            self._claim_target(target.position)
+            self._set_sticky_target(target.position, target.entity_type)
+            return self._move_to_known(state, target, summary="align_junction", vibe="change_vibe_aligner")
+
+        self._clear_target_claim()
+        self._clear_sticky_target()
+        if _h.resource_total(state) > 0:
+            depot = self._nearest_friendly_depot(state)
+            if depot is not None:
+                return self._move_to_known(state, depot, summary="deposit_cargo", vibe="change_vibe_aligner")
+
+        current_pos = _h.absolute_position(state)
+        hp = int(state.self_state.inventory.get("hp", 0))
+        unreachable = self._known_junctions(
+            state, predicate=lambda j: j.owner in {None, "neutral"}
+        )
+        if unreachable:
+            safe_unreachable = [
+                j for j in unreachable
+                if _h.manhattan(current_pos, j.position) < hp - 20
+            ]
+            targets = safe_unreachable if safe_unreachable else unreachable
+            nearest = min(targets, key=lambda j: _h.manhattan(current_pos, j.position))
+            dist = _h.manhattan(current_pos, nearest.position)
+            if dist < hp - 20:
+                return self._move_to_known(state, nearest, summary="expand_toward_junction", vibe="change_vibe_aligner")
+
+        min_res = _h.team_min_resource(state)
+
+        if self._stagnation_mode and hp > 50:
+            # DESPERATE MODE: 2 agents, 0 friendly, many enemy → always scramble, no min_res check
+            desperate = num_agents <= 2 and friendly_count == 0 and enemy_count > 5
+            if desperate:
+                if hearts > 0:
+                    scramble_target = self._preferred_scramble_target(state)
+                    if scramble_target is not None:
+                        return self._move_to_known(state, scramble_target, summary="desperate_scramble", vibe="change_vibe_scrambler")
+                return self._explore_action(state, role="aligner", summary="desperate_find_junction")
+
+            # Normal stagnation (same as TV478)
+            scramble_res_threshold = 3 if num_agents <= 2 else 7
+            if step % 200 < 100 and hearts > 0 and min_res >= scramble_res_threshold:
+                scramble_target = self._preferred_scramble_target(state)
+                if scramble_target is not None:
+                    return self._move_to_known(state, scramble_target, summary="stag_scramble", vibe="change_vibe_scrambler")
+            return self._explore_action(state, role="aligner", summary="stag_find_junction")
+
+        if hearts > 0 and min_res >= 7:
+            scramble_target = self._preferred_scramble_target(state)
+            if scramble_target is not None:
+                return self._move_to_known(state, scramble_target, summary="idle_align_scramble", vibe="change_vibe_scrambler")
+
+        if step % 200 < 100:
+            return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+        if min_res < 30:
+            return self._miner_action(state, summary_prefix="idle_align_")
+        return self._explore_action(state, role="aligner", summary="find_neutral_junction")
+
+
+class AlphaTournamentV483Policy(MettagridSemanticPolicy):
+    """TV483: TV478 + desperate mode for 2 agents."""
+    short_names = ["alpha-tournament-v483"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV483AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
+
+
+# ── TV484: TV483 + aligner floor for 5+ agents ──────────────────────────────
+# Problem: In 6v2 vs swoopy, silicon bottleneck (min_res=4) triggers
+# TV350 budget (1,0) for 6 agents. Only 1 aligner vs enemy 2 → territory collapse.
+# With 5 miners and 1 aligner, economy recovers but territory is lost.
+#
+# Fix: Never drop below 2 aligners for 5+ agents, even when resources are low.
+# Economy rebuilds with 4 miners just as well as 5. Territory needs the 2nd aligner.
+# Also includes TV483's desperate mode for 2 agents.
+
+class AlphaTournamentV484AgentPolicy(AlphaTournamentV483AgentPolicy):
+    """TV484: TV483 + minimum 2 aligners for 5+ agents."""
+
+    def _pressure_budgets(self, state, *, objective=None):
+        step = state.step or self._step_index
+        min_res = _h.team_min_resource(state)
+        can_hearts = _h.team_can_refill_hearts(state)
+        team_size = len(self._shared_team_ids) if self._shared_team_ids else self.policy_env_info.num_agents
+        team_id = _h.team_id(state)
+
+        if objective == "resource_coverage":
+            return 0, 0
+
+        # 2 agents: always both aligners (TV477)
+        if team_size <= 2:
+            # Desperate mode: both scramble when 0 friendly
+            if self._stagnation_mode:
+                friendly_count = len(self._known_junctions(state, predicate=lambda j: j.owner == team_id))
+                if friendly_count == 0:
+                    return 2, 0
+            return 2, 0
+
+        # 4 agents: TV477's faster ramp
+        if team_size <= 4:
+            if step < 30:
+                return 1, 0
+            if min_res < 7 and not can_hearts:
+                return 1, 0
+            aligner_budget = 2
+            if min_res >= 60 and step >= 200:
+                aligner_budget = min(3, team_size - 1)
+            return aligner_budget, 0
+
+        # 5+ agents: TV350 base BUT never below 2 aligners
+        if step < 15:
+            return 2, 0
+        if step < 30 and min_res < 20:
+            return 2, 0
+        # KEY CHANGE: floor of 2 aligners instead of 1
+        if min_res < 10 and not can_hearts:
+            return 2, 0  # Was 1, 0 in TV350
+        elif min_res < 22:
+            return 2, 0
+        elif min_res < 35:
+            return 3, 0
+        elif min_res < 70:
+            return min(4, team_size - 1), 0
+        elif min_res < 120:
+            return min(team_size - 1, 6), 0
+        else:
+            return min(team_size - 1, 7), 0
+
+
+class AlphaTournamentV484Policy(MettagridSemanticPolicy):
+    """TV484: TV483 + aligner floor for 5+ agents."""
+    short_names = ["alpha-tournament-v484"]
+    def agent_policy(self, agent_id):
+        self._shared_team_ids.add(agent_id)
+        if agent_id not in self._agent_policies:
+            self._agent_policies[agent_id] = AlphaTournamentV484AgentPolicy(
+                self.policy_env_info, agent_id=agent_id, world_model=SharedWorldModel(),
+                shared_claims=self._shared_claims, shared_junctions=self._shared_junctions,
+                shared_hotspots=self._shared_hotspots, shared_team_ids=self._shared_team_ids,
+            )
+        return self._agent_policies[agent_id]
